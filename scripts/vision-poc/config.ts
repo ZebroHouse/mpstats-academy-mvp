@@ -7,9 +7,7 @@ export const POC_CONFIG = {
     long: [3600, 10800] as [number, number],
   },
   course_priority: ['01_analytics', '03_ai', '04_workshops'],
-  scene_threshold_initial: 0.3,
-  scene_threshold_steps: [0.5, 0.7],
-  min_interval_seconds: 10,
+  frame_interval_seconds: 60,
   frames_cap_per_video: 120,
   frames_for_poc_sample: 10,
   vlm_models: [
