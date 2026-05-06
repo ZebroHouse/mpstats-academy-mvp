@@ -72,3 +72,10 @@ scripts/export-html.mjs
 
 # Local secrets (never commit)
 .secrets/
+
+# Phase 55 Sprint 1 PoC throwaway artifacts
+scripts/vision-poc/results/frames/
+scripts/vision-poc/results/selected-videos.json
+scripts/vision-poc/results/frames-manifest.json
+scripts/vision-poc/results/vlm-runs.json
+scripts/vision-poc/results/ocr-runs.json
