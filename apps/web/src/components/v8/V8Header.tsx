@@ -27,6 +27,7 @@ export function V8Header({ onDarkHero = true }: V8HeaderProps) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [isAuthed, setIsAuthed] = useState<boolean | null>(null);
+  const [userName, setUserName] = useState<string>('');
   const pathname = usePathname();
 
   useEffect(() => {
@@ -37,12 +38,35 @@ export function V8Header({ onDarkHero = true }: V8HeaderProps) {
 
   useEffect(() => {
     const supabase = createClient();
-    supabase.auth.getUser().then(({ data }) => setIsAuthed(!!data.user));
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) =>
-      setIsAuthed(!!session?.user)
-    );
+    const pickName = (u: { email?: string | null; user_metadata?: Record<string, unknown> } | null) => {
+      if (!u) return '';
+      const meta = u.user_metadata || {};
+      return (
+        (meta.full_name as string) ||
+        (meta.name as string) ||
+        u.email?.split('@')[0] ||
+        ''
+      );
+    };
+    supabase.auth.getUser().then(({ data }) => {
+      setIsAuthed(!!data.user);
+      setUserName(pickName(data.user));
+    });
+    const { data: sub } = supabase.auth.onAuthStateChange((_e, session) => {
+      setIsAuthed(!!session?.user);
+      setUserName(pickName(session?.user ?? null));
+    });
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  const initials = userName
+    ? userName
+        .split(/\s+/)
+        .filter(Boolean)
+        .slice(0, 2)
+        .map((w) => w[0]?.toUpperCase() ?? '')
+        .join('') || userName.slice(0, 2).toUpperCase()
+    : '';
 
   const ctaHref =
     isAuthed === true
@@ -83,13 +107,33 @@ export function V8Header({ onDarkHero = true }: V8HeaderProps) {
 
         {/* Right: Auth + CTA */}
         <div className="hidden md:flex items-center gap-4">
-          <Link
-            href="/login"
-            className="text-[14px] font-medium transition-colors hover:opacity-80"
-            style={{ color: linkColor }}
-          >
-            Войти
-          </Link>
+          {isAuthed ? (
+            <Link
+              href="/profile"
+              className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
+            >
+              <div
+                className="w-8 h-8 rounded-full text-white flex items-center justify-center text-[12px] font-semibold flex-shrink-0"
+                style={{ backgroundColor: BLUE }}
+              >
+                {initials || '··'}
+              </div>
+              <span
+                className="text-[14px] font-medium max-w-[160px] truncate"
+                style={{ color: linkColor }}
+              >
+                {userName || 'Кабинет'}
+              </span>
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="text-[14px] font-medium transition-colors hover:opacity-80"
+              style={{ color: linkColor }}
+            >
+              Войти
+            </Link>
+          )}
           <Link
             href={ctaHref}
             className="inline-flex items-center justify-center rounded-full h-[44px] px-6 text-[14px] font-medium text-white transition-colors"
@@ -139,14 +183,33 @@ export function V8Header({ onDarkHero = true }: V8HeaderProps) {
           >
             Roadmap
           </Link>
-          <Link
-            href="/login"
-            className="block py-3 text-[15px] font-medium"
-            style={{ color: TEXT }}
-            onClick={() => setMobileMenu(false)}
-          >
-            Войти
-          </Link>
+          {isAuthed ? (
+            <Link
+              href="/profile"
+              className="flex items-center gap-2.5 py-3"
+              style={{ color: TEXT }}
+              onClick={() => setMobileMenu(false)}
+            >
+              <div
+                className="w-8 h-8 rounded-full text-white flex items-center justify-center text-[12px] font-semibold flex-shrink-0"
+                style={{ backgroundColor: BLUE }}
+              >
+                {initials || '··'}
+              </div>
+              <span className="text-[15px] font-medium truncate">
+                {userName || 'Кабинет'}
+              </span>
+            </Link>
+          ) : (
+            <Link
+              href="/login"
+              className="block py-3 text-[15px] font-medium"
+              style={{ color: TEXT }}
+              onClick={() => setMobileMenu(false)}
+            >
+              Войти
+            </Link>
+          )}
           <Link
             href={ctaHref}
             className="mt-2 inline-flex items-center justify-center rounded-full h-[48px] w-full text-[15px] font-medium text-white"
