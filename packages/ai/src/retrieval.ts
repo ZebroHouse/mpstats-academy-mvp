@@ -19,18 +19,24 @@ export interface ChunkSearchResult {
   timecode_start: number;
   timecode_end: number;
   similarity: number;
+  source_type: string;
+  trust_tier: number;
 }
 
 export interface SearchOptions {
   query: string;
   limit?: number;
   threshold?: number;
-  lessonId?: string; // Filter to specific lesson
+  lessonId?: string;
   /**
    * When true (default), chunks belonging to hidden lessons or lessons in
    * hidden courses are excluded. Set to false only for admin tooling / audits.
    */
   includeHidden?: boolean;
+  /** Filter by source_type values (OR semantics). Empty/undefined = no filter. */
+  sourceTypes?: string[];
+  /** Filter by trust_tier values (OR semantics). Empty/undefined = no filter. */
+  trustTiers?: number[];
 }
 
 /**
@@ -45,25 +51,35 @@ export interface SearchOptions {
 export async function searchChunks(
   options: SearchOptions
 ): Promise<ChunkSearchResult[]> {
-  const { query, limit = 5, threshold = 0.5, lessonId, includeHidden = false } = options;
+  const {
+    query,
+    limit = 5,
+    threshold = 0.5,
+    lessonId,
+    includeHidden = false,
+    sourceTypes,
+    trustTiers,
+  } = options;
 
-  // 1. Embed the query
   const queryEmbedding = await embedQuery(query);
-
-  // 2. Search via Prisma raw SQL (direct TCP, not PostgREST)
   const embeddingStr = `[${queryEmbedding.join(',')}]`;
 
   const lessonFilter = lessonId ? `AND c.lesson_id LIKE '${lessonId}%'` : '';
 
-  // Default: exclude individually hidden lessons but include all courses
-  // (hidden courses like skill_* still have valuable content for RAG/diagnostics,
-  // they're just not shown in the course list until videos are uploaded)
   const hiddenJoin = includeHidden
     ? ''
     : `INNER JOIN "Lesson" l ON l.id = c.lesson_id`;
-  const hiddenFilter = includeHidden
-    ? ''
-    : `AND l."isHidden" = false`;
+  const hiddenFilter = includeHidden ? '' : `AND l."isHidden" = false`;
+
+  const sourceTypeFilter =
+    sourceTypes && sourceTypes.length > 0
+      ? `AND c.source_type = ANY(ARRAY[${sourceTypes.map((s) => `'${s}'`).join(',')}])`
+      : '';
+
+  const trustTierFilter =
+    trustTiers && trustTiers.length > 0
+      ? `AND c.trust_tier = ANY(ARRAY[${trustTiers.join(',')}])`
+      : '';
 
   const results = await prisma.$queryRawUnsafe<ChunkSearchResult[]>(`
     SELECT
@@ -72,6 +88,8 @@ export async function searchChunks(
       c.content::text as content,
       c.timecode_start::int as timecode_start,
       c.timecode_end::int as timecode_end,
+      c.source_type::text as source_type,
+      c.trust_tier::int as trust_tier,
       (1 - (c.embedding <=> '${embeddingStr}'::vector))::float as similarity
     FROM content_chunk c
     ${hiddenJoin}
@@ -79,6 +97,8 @@ export async function searchChunks(
       AND (1 - (c.embedding <=> '${embeddingStr}'::vector)) > ${threshold}
       ${lessonFilter}
       ${hiddenFilter}
+      ${sourceTypeFilter}
+      ${trustTierFilter}
     ORDER BY c.embedding <=> '${embeddingStr}'::vector
     LIMIT ${limit}
   `);
@@ -119,13 +139,17 @@ export async function getChunksForLesson(
     content: string;
     timecode_start: number;
     timecode_end: number;
+    source_type: string;
+    trust_tier: number;
   }>>`
     SELECT
       id::text as id,
       lesson_id::text as lesson_id,
       content::text as content,
       timecode_start::int as timecode_start,
-      timecode_end::int as timecode_end
+      timecode_end::int as timecode_end,
+      source_type::text as source_type,
+      trust_tier::int as trust_tier
     FROM content_chunk
     WHERE lesson_id = ${lessonId}
     ORDER BY timecode_start ASC
