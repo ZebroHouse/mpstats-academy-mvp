@@ -5,6 +5,9 @@ import { Onest } from 'next/font/google';
 import { V8Header } from '@/components/v8/V8Header';
 import { V8Footer } from '@/components/v8/V8Footer';
 import { Reveal } from '@/components/v8/Reveal';
+import { CourseHeroCTA, CoursePricingSection } from '@/components/v8/CourseAccessCTA';
+
+const COURSE_ID = '05_ozon';
 
 const onest = Onest({
   subsets: ['latin', 'cyrillic'],
@@ -254,15 +257,7 @@ export default function CourseOzonPage() {
 
             {/* CTA */}
             <div className="mt-8 sm:mt-10">
-              <a
-                href="#cta"
-                className="inline-flex items-center justify-center rounded-full h-[52px] sm:h-[58px] px-8 sm:px-10 text-[15px] sm:text-[16px] font-medium text-white transition-colors"
-                style={{ backgroundColor: BLUE }}
-                onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = BLUE_HOVER)}
-                onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = BLUE)}
-              >
-                Начать обучение
-              </a>
+              <CourseHeroCTA courseId={COURSE_ID} />
             </div>
           </div>
 
@@ -455,27 +450,7 @@ export default function CourseOzonPage() {
       </section>
 
       {/* ── 8. CTA ──────────────────────────────────────── */}
-      <section id="cta" style={{ backgroundColor: DARK }} className="py-[60px] sm:py-[80px] lg:py-[100px] px-4 sm:px-6 md:px-10 lg:px-0">
-        <div className="max-w-[720px] mx-auto text-center">
-          <h2 className="text-[24px] sm:text-[32px] md:text-[44px] font-bold leading-[1.1] tracking-tight text-white">
-            Весь каталог за 2 990 &#8381;/мес
-          </h2>
-          <p className="mt-4 sm:mt-5 text-[15px] sm:text-[17px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>
-            Этот курс входит в подписку PLATFORM. Полный доступ к каталогу по 5 осям навыков, AI-диагностика за 10 минут, персональный план обучения.
-          </p>
-          <div className="mt-8 sm:mt-10">
-            <a
-              href="/pricing"
-              className="inline-flex items-center justify-center rounded-full h-[52px] sm:h-[62px] px-10 sm:px-12 text-[15px] sm:text-[16px] font-medium text-white transition-colors"
-              style={{ backgroundColor: BLUE }}
-              onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = BLUE_HOVER)}
-              onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = BLUE)}
-            >
-              Оформить подписку
-            </a>
-          </div>
-        </div>
-      </section>
+      <CoursePricingSection courseId={COURSE_ID} />
 
       <V8Footer wrapperBg="dark" />
     </div>
