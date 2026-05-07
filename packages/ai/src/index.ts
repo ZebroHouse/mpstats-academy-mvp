@@ -31,3 +31,5 @@ export { generateDiagnosticQuestions, CATEGORY_TO_COURSES } from './question-gen
 export type { MockQuestionsFn, GenerateOptions } from './question-generator';
 export { generatedQuestionSchema, generatedQuestionsArraySchema, questionJsonSchema } from './question-schema';
 export type { GeneratedQuestion } from './question-schema';
+
+export { retrieve, PROFILES, type ProfileName, type RetrievalProfile, type RetrieveOptions } from './profiles';
