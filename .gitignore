@@ -82,3 +82,9 @@ scripts/vision-ingest/results/vlm-runs-*.json
 scripts/vision-ingest/results/vlm-runs-*.jsonl
 scripts/vision-ingest/results/embed-runs.json
 scripts/vision-ingest/results/logs/
+
+# Backup runtime — never commit real env or work files
+scripts/backup/.env
+scripts/backup/work/
+scripts/backup/backup.log
+scripts/backup/cron.log
