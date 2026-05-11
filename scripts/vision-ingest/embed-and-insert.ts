@@ -25,6 +25,17 @@ function buildContent(r: VlmRunResult): string {
   return parts.join('. ');
 }
 
+function buildEmbeddingText(r: VlmRunResult): string {
+  if (!r.response) return '';
+  const ext = r.response.extracted ?? {};
+  const parts = [r.response.summary ?? ''];
+  if (ext.urls?.length) parts.push(`URLs: ${ext.urls.join(' | ')}`);
+  if (ext.numbers?.length) parts.push(`Numbers: ${ext.numbers.join(' | ')}`);
+  if (ext.tools?.length) parts.push(`Tools: ${ext.tools.join(' | ')}`);
+  if (ext.other?.length) parts.push(`Other: ${ext.other.join(' | ')}`);
+  return parts.filter(Boolean).join('. ');
+}
+
 async function embedBatch(texts: string[], apiKey: string): Promise<number[][]> {
   const res = await fetch('https://openrouter.ai/api/v1/embeddings', {
     method: 'POST',
@@ -52,10 +63,11 @@ async function main() {
   console.log(`${valid.length}/${runs.length} VLM responses valid (will embed and insert)`);
 
   const contents = valid.map(buildContent);
+  const embeddingTexts = valid.map(buildEmbeddingText);
   const embeddings: number[][] = [];
-  for (let i = 0; i < contents.length; i += INGEST_CONFIG.embedding_batch_size) {
-    const batch = contents.slice(i, i + INGEST_CONFIG.embedding_batch_size);
-    process.stdout.write(`Embedding ${i + 1}-${i + batch.length}/${contents.length}... `);
+  for (let i = 0; i < embeddingTexts.length; i += INGEST_CONFIG.embedding_batch_size) {
+    const batch = embeddingTexts.slice(i, i + INGEST_CONFIG.embedding_batch_size);
+    process.stdout.write(`Embedding ${i + 1}-${i + batch.length}/${embeddingTexts.length}... `);
     const embs = await embedBatch(batch, apiKey);
     embeddings.push(...embs);
     console.log('ok');
