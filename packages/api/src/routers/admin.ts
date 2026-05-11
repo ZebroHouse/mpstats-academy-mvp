@@ -571,6 +571,12 @@ export const adminRouter = router({
   /**
    * Move a lesson to a specific position within its course.
    * Shifts all lessons between old and new positions accordingly.
+   *
+   * Wrapped in a transaction with a temporary "parking" order so the
+   * (courseId, order) UNIQUE constraint stays satisfied during shifts.
+   * Without the parking step, the decrement/increment of the in-between
+   * range collides with the lesson being moved before its final order
+   * is written.
    */
   moveLessonToPosition: adminProcedure
     .input(
@@ -581,55 +587,51 @@ export const adminRouter = router({
     )
     .mutation(async ({ ctx, input }) => {
       try {
-        const lesson = await ctx.prisma.lesson.findUnique({
-          where: { id: input.lessonId },
-          select: { id: true, courseId: true, order: true },
-        });
-        if (!lesson) throw new Error('Lesson not found');
-
-        const oldPos = lesson.order;
-        const newPos = input.targetPosition;
-        if (oldPos === newPos) return lesson;
-
-        // Get all lessons in the course sorted by order
-        const allLessons = await ctx.prisma.lesson.findMany({
-          where: { courseId: lesson.courseId },
-          orderBy: { order: 'asc' },
-          select: { id: true, order: true },
-        });
-
-        // Clamp target to valid range
-        const maxPos = allLessons.length;
-        const clampedNew = Math.min(Math.max(newPos, 1), maxPos);
-
-        // Shift lessons between old and new positions
-        if (oldPos < clampedNew) {
-          // Moving down: shift lessons in (oldPos, clampedNew] up by 1
-          await ctx.prisma.lesson.updateMany({
-            where: {
-              courseId: lesson.courseId,
-              order: { gt: oldPos, lte: clampedNew },
-            },
-            data: { order: { decrement: 1 } },
+        return await ctx.prisma.$transaction(async (tx) => {
+          const lesson = await tx.lesson.findUnique({
+            where: { id: input.lessonId },
+            select: { id: true, courseId: true, order: true },
           });
-        } else {
-          // Moving up: shift lessons in [clampedNew, oldPos) down by 1
-          await ctx.prisma.lesson.updateMany({
-            where: {
-              courseId: lesson.courseId,
-              order: { gte: clampedNew, lt: oldPos },
-            },
-            data: { order: { increment: 1 } },
+          if (!lesson) throw new Error('Lesson not found');
+
+          const oldPos = lesson.order;
+          const newPos = input.targetPosition;
+          if (oldPos === newPos) return lesson;
+
+          const count = await tx.lesson.count({ where: { courseId: lesson.courseId } });
+          const clampedNew = Math.min(Math.max(newPos, 1), count);
+
+          // Park the moving lesson outside the valid range so shifts can
+          // freely traverse its old slot without UNIQUE collisions.
+          const PARK = 1_000_000;
+          await tx.lesson.update({
+            where: { id: input.lessonId },
+            data: { order: PARK },
           });
-        }
 
-        // Place the lesson at target position
-        const updated = await ctx.prisma.lesson.update({
-          where: { id: input.lessonId },
-          data: { order: clampedNew },
+          if (oldPos < clampedNew) {
+            await tx.lesson.updateMany({
+              where: {
+                courseId: lesson.courseId,
+                order: { gt: oldPos, lte: clampedNew },
+              },
+              data: { order: { decrement: 1 } },
+            });
+          } else {
+            await tx.lesson.updateMany({
+              where: {
+                courseId: lesson.courseId,
+                order: { gte: clampedNew, lt: oldPos },
+              },
+              data: { order: { increment: 1 } },
+            });
+          }
+
+          return tx.lesson.update({
+            where: { id: input.lessonId },
+            data: { order: clampedNew },
+          });
         });
-
-        return updated;
       } catch (error) {
         handleDatabaseError(error);
       }

@@ -169,6 +169,7 @@ model Lesson {
   materials LessonMaterial[]
   // ContentChunk связь через lessonId (lesson_id) без FK
 
+  @@unique([courseId, order], name: "Lesson_courseId_order_key")
   @@index([isHidden])
   @@index([courseId, isHidden])
 }
