@@ -325,10 +325,16 @@ export const billingRouter = router({
     }),
 
   /**
-   * Cancel active subscription.
-   * If a CloudPayments recurrent id is stored, cancel on CP side first —
-   * otherwise the card keeps getting charged. Only mark CANCELLED locally
-   * after CP confirms (or there's no CP recurrent to cancel).
+   * Cancel all ACTIVE subscriptions of the user.
+   *
+   * One user can end up with multiple ACTIVE rows in edge cases
+   * (admin billing-test seeding, double-charge races, manual ops).
+   * "Cancel" in the UI must mean "stop charging me, period" — so we
+   * fan out across every ACTIVE sub, cancel on CP first for each
+   * recurrent one, then flip the local row.
+   *
+   * If any CP cancel fails, we abort the whole operation with 500 so
+   * state stays consistent (no half-cancelled-locally / still-active-in-CP).
    */
   cancelSubscription: protectedProcedure.mutation(async ({ ctx }) => {
     const enabled = await isFeatureEnabled('billing_enabled');
@@ -336,24 +342,27 @@ export const billingRouter = router({
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Billing is not enabled' });
     }
 
-    const subscription = await ctx.prisma.subscription.findFirst({
+    const subscriptions = await ctx.prisma.subscription.findMany({
       where: {
         userId: ctx.user.id,
         status: 'ACTIVE',
       },
     });
-    if (!subscription) {
+    if (subscriptions.length === 0) {
       throw new TRPCError({
         code: 'NOT_FOUND',
         message: 'No active subscription found',
       });
     }
 
-    if (subscription.cpSubscriptionId) {
-      const result = await cancelCloudPaymentsSubscription(subscription.cpSubscriptionId);
+    // Phase 1: cancel CP-side for every recurrent. Abort on first failure
+    // — we'd rather show an error than leave a half-applied state.
+    for (const sub of subscriptions) {
+      if (!sub.cpSubscriptionId) continue;
+      const result = await cancelCloudPaymentsSubscription(sub.cpSubscriptionId);
       if (!result.ok) {
         console.error(
-          `[Billing] cancelSubscription: CP cancel failed for sub=${subscription.id} cp=${subscription.cpSubscriptionId}: ${result.reason}`,
+          `[Billing] cancelSubscription: CP cancel failed for sub=${sub.id} cp=${sub.cpSubscriptionId}: ${result.reason}`,
         );
         throw new TRPCError({
           code: 'INTERNAL_SERVER_ERROR',
@@ -363,17 +372,24 @@ export const billingRouter = router({
       }
     }
 
-    const updated = await ctx.prisma.subscription.update({
-      where: { id: subscription.id },
-      data: {
-        status: 'CANCELLED',
-        cancelledAt: new Date(),
-      },
+    // Phase 2: flip every row locally in one transaction.
+    const now = new Date();
+    await ctx.prisma.subscription.updateMany({
+      where: { id: { in: subscriptions.map((s) => s.id) } },
+      data: { status: 'CANCELLED', cancelledAt: now },
     });
+
+    // accessUntil = the latest period end across cancelled subs, so the
+    // user sees the longest remaining access they paid for.
+    const accessUntil = subscriptions.reduce(
+      (latest, s) => (s.currentPeriodEnd > latest ? s.currentPeriodEnd : latest),
+      subscriptions[0].currentPeriodEnd,
+    );
 
     return {
       success: true,
-      accessUntil: updated.currentPeriodEnd,
+      accessUntil,
+      cancelledCount: subscriptions.length,
     };
   }),
 });
