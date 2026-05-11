@@ -25,6 +25,21 @@
 2. Phase 33-03: CQ Dashboard Setup (на стороне CQ команды)
 3. Phase 47: /learn Hub-Layout — навигационный хаб
 
+## Active Branches
+
+| Branch | Worktree | PR | Status |
+|--------|----------|----|----|
+| `phase-55-sprint-2c` | `MAAL-phase55/` | [#4](https://github.com/zebrosha-max/mpstats-academy-mvp/pull/4) | Vision RAG 10→89 lessons of 03_ai, smoke 89%. Awaiting merge. |
+| `phase-55-sprint-3-prep` | `MAAL-phase55/` | (no PR yet) | Foundation work for full-platform vision ingest: docs (ARCHITECTURE.md, PLAYBOOK.md), safety infra, selector v4 with DB-persisted mappings. Based on `phase-55-sprint-2c`. |
+| `phase-53a-referral` | (in main worktree, not active) | (none) | Referral program, awaiting Egor's merge decision. Switch flag i1→i2 scheduled 2026-06-01. |
+| `phase-53b-referral-admin` | (in main worktree, not active) | (none) | Admin moderation UI, QA passed 2026-05-06. Awaits merge after 53A. |
+
+**Cross-AI sync policy (read before editing this file):**
+- `MAAL/CLAUDE.md` (master) — only **shipped** state + 1-line pointers to in-flight branches above.
+- `MAAL-<branch>/CLAUDE.md` (worktree) — full in-flight details. Merges back into master when branch merges.
+- Don't duplicate sprint metrics, decisions, or per-feature details into master — they live on the branch and surface in master at merge time.
+- When creating a new long-lived branch, add a row above. When merging/closing a branch, remove the row.
+
 ## Auth — Phone Collection (Phase 45)
 
 Телефон обязателен для новых регистраций.
