@@ -52,21 +52,25 @@
 
 **Внимание (исторический lesson):** CP хранит `amount` на своей стороне на момент создания подписки. При смене цен отменять старые ACTIVE подписки чтобы автосписания пошли по новым тарифам.
 
-## Last Session (2026-05-11) — CRITICAL billing fix
+## Last Session (2026-05-11) — Cancel flow + Lesson.order tech debt closed
 
-**Закрыт прод-баг: UI «Отменить подписку» НЕ отменяла CP-рекуррент.** Деплои `7ded455` и `df368b3` на проде.
+Закрыты два прод-бага в один день. Деплои на master: `7ded455` → `df368b3` → `79698e5`.
 
-**Что было:** `billing.cancelSubscription` (`packages/api/src/routers/billing.ts`) делал только локальный `UPDATE status='CANCELLED'`, в CloudPayments API не звонил. Юзер видел «Подписка отменена», но карта продолжала списываться каждый период. `handleCheck` принимал любой charge независимо от статуса. Это жило с Phase 19 (helper `cancelCloudPaymentsSubscription` написан, но никогда не подключён, хотя `cpSubscriptionId` хранится с Phase 28).
+**Billing — UI «Отменить подписку» теперь реально отменяет.** Раньше `billing.cancelSubscription` делал только локальный `UPDATE status='CANCELLED'`, в CP API не звонил → карта продолжала списываться. Жило с Phase 19 (helper готов, но никогда не подключён). Теперь `cancelSubscription`:
+- Дёргает `cancelCloudPaymentsSubscription(cpSubscriptionId)` для каждой ACTIVE подписки; CP-ошибка → 500, локальный CANCELLED не ставится.
+- Отменяет **ВСЕ** ACTIVE подписки юзера (`findMany`) — защита от multi-active edge cases.
+- `handleCheck` (subscription-service.ts) отбивает CANCELLED/EXPIRED как defense in depth.
+- Dead helper `apps/web/src/lib/cloudpayments/cancel-api.ts` удалён, новый — `packages/api/src/utils/cloudpayments.ts`.
 
-**Что задеплоено:**
-1. `cancelSubscription` → теперь дёргает `cancelCloudPaymentsSubscription(cpSubscriptionId)` для каждой ACTIVE подписки юзера. CP-ошибка → 500, локальный CANCELLED не ставится (state синхронизирован).
-2. `cancelSubscription` отменяет **ВСЕ** ACTIVE-подписки юзера (`findMany` вместо `findFirst`) — защита от случая когда у юзера 2+ ACTIVE одновременно (admin billing-test, double-charge races).
-3. `handleCheck` (subscription-service.ts) отбивает любой charge на CANCELLED/EXPIRED — defense in depth.
-4. Mёртвый helper `apps/web/src/lib/cloudpayments/cancel-api.ts` (Phase 19, не импортировался) удалён, новый helper в `packages/api/src/utils/cloudpayments.ts` с discriminated result type, treats "already cancelled" as success.
+Боевая проверка: 4 активные 10₽ тестовые подписки закрыты, NextTransaction рекуррента стоял через 7 минут после UI-отмены. Полный лог: `.claude/memory/project_cancel_flow_fix.md`.
 
-**Боевая проверка:** 4 активные 10₽ тестовые подписки отменены — две через новый UI (yandex + evasilev), одна добита вручную через CP API (всплыла именно из-за edge case с multi-ACTIVE). NextTransaction следующего рекуррента стоял через 7 минут после UI-отмены — успели в притык.
+**Lesson.order — prev/next теперь ведёт куда надо.** Тестер Елена 07.05 сообщила, что в курсе Аналитика клик «урок 19» → попадает на «урок 20 с тем же названием». Корень: skill-batch ingests (21.04 + 24.04) ставили skill-урокам `order` от позиции в skill-блоке, игнорируя что в курсе уже были module-уроки с этими order'ами → 9 (courseId, order) дубликатов в БД, UI'шный `findIndex` для prev/next возвращал недетерминированный результат.
+- Перенумеровано 257 уроков в-плейс через `ROW_NUMBER() PARTITION BY courseId ORDER BY order, id`. Tiebreaker `id ASC` даёт детерминистический логичный порядок.
+- Добавлен `@@unique([courseId, order])` constraint + Prisma migration → ingest скрипты больше не могут залить дубликаты.
+- `moveLessonToPosition` переписан в `$transaction` с temp-park (order=1_000_000) → атомарный drag-drop в админке без UNIQUE conflicts.
+- Snapshot до миграции: `.claude/lesson-order-snapshot-2026-05-11.csv` (439 уроков).
 
-Полный лог: `.claude/memory/project_cancel_flow_fix.md`.
+Источник правды для порядка — админка. Методологи двигают drag-drop'ом, теперь это безопасно. Полный лог: `.claude/memory/project_lesson_order_uniqueness_fix.md`.
 
 ## Previous Session (2026-05-05)
 
