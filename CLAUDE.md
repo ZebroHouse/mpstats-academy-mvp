@@ -52,9 +52,9 @@
 
 **Внимание (исторический lesson):** CP хранит `amount` на своей стороне на момент создания подписки. При смене цен отменять старые ACTIVE подписки чтобы автосписания пошли по новым тарифам.
 
-## Last Session (2026-05-11) — Cancel flow + Lesson.order tech debt closed
+## Last Session (2026-05-11) — Cancel flow + Lesson.order tech debt + referral link tweak
 
-Закрыты два прод-бага в один день. Деплои на master: `7ded455` → `df368b3` → `79698e5`.
+Деплои на master: `7ded455` → `df368b3` → `79698e5` → `c473b9b`.
 
 **Billing — UI «Отменить подписку» теперь реально отменяет.** Раньше `billing.cancelSubscription` делал только локальный `UPDATE status='CANCELLED'`, в CP API не звонил → карта продолжала списываться. Жило с Phase 19 (helper готов, но никогда не подключён). Теперь `cancelSubscription`:
 - Дёргает `cancelCloudPaymentsSubscription(cpSubscriptionId)` для каждой ACTIVE подписки; CP-ошибка → 500, локальный CANCELLED не ставится.
@@ -71,6 +71,8 @@
 - Snapshot до миграции: `.claude/lesson-order-snapshot-2026-05-11.csv` (439 уроков).
 
 Источник правды для порядка — админка. Методологи двигают drag-drop'ом, теперь это безопасно. Полный лог: `.claude/memory/project_lesson_order_uniqueness_fix.md`.
+
+**Referral share link → /register?ref= (вместо /).** Идея owner'а: warm-traffic от друга → сразу видит форму регистрации + баннер «+14 дней» вместо маркетинговой главной. `ReferralCodeBlock.tsx` теперь даёт `/register?ref=CODE`. `/register/page.tsx` стал async + auth-guard: залогиненный по чужой ссылке редиректится на `/learn` (иначе видел бы форму, которую не submit'нуть). Старые `/?ref=` ссылки в чатах работают — middleware пишет cookie на ANY URL с `?ref=`. Полный лог: `.claude/memory/project_referral_link_register_target.md`.
 
 ## Previous Session (2026-05-05)
 
