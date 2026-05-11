@@ -204,8 +204,13 @@ function listVideos(courseRoot: string, canonicalModules: Set<string>): VideoCan
           const seconds = Math.round(parseFloat(out2));
           if (!seconds || isNaN(seconds)) continue;
           const rel = relative(courseRoot, full).replace(/\\/g, '/');
-          const moduleMatch = rel.match(/^(m\d+_[^/]+)/);
-          const rawModuleDir = moduleMatch ? moduleMatch[1] : 'unknown';
+          // Filesystem module dirs:
+          //   simple: m01_xxx (01_analytics, 02_ads, 03_ai, 05_ozon), w01_xxx (04_workshops)
+          //   nested: c01_<topic>/m01_<sub> (06_express subcourses)
+          // Take the LAST path segment matching [mwc]<digits>_<topic>.
+          const parts = rel.split('/');
+          const modSegments = parts.filter((p) => /^[mwc]\d+_[^/]+/.test(p));
+          const rawModuleDir = modSegments.length > 0 ? modSegments[modSegments.length - 1] : 'unknown';
           const canonical = resolveCanonical(rawModuleDir);
           let bucket: 'short' | 'medium' | 'long';
           if (seconds < 900) bucket = 'short';
@@ -440,15 +445,28 @@ async function main() {
   console.log(`  mapped (existing): ${mapped.length}`);
   console.log(`  unmapped:          ${unmapped.length}`);
 
-  // Canonical module discovery
+  // Canonical module discovery — handles m/w/c prefixes and nested express (c<NN>_<topic>_m<NN>_<sub>).
+  // Captures the last segment of `(m|w|c)\d+_<topic>` chain.
+  const cf = courseFilter.replace(/'/g, "''");
+  const pattern = `((?:[mwc]\\d+_[a-z_0-9]+_)*[mwc]\\d+_[a-z_0-9]+?)_\\d+$`;
   const moduleRows = await supabaseQuery(
-    `SELECT DISTINCT substring(id from '^${courseFilter.replace(/'/g, "''")}_(m\\d+_[a-z_]+)_\\d+$') AS module
+    `SELECT DISTINCT substring(id from '${pattern}') AS module
      FROM "Lesson"
-     WHERE id LIKE '${courseFilter.replace(/'/g, "''")}_%' AND "isHidden"=false
-       AND substring(id from '^${courseFilter.replace(/'/g, "''")}_(m\\d+_[a-z_]+)_\\d+$') IS NOT NULL
+     WHERE id LIKE '${cf}_%' AND "isHidden"=false
+       AND substring(id from '${pattern}') IS NOT NULL
      ORDER BY module;`,
   );
-  const canonicalModules = new Set<string>(moduleRows.map((r) => r.module).filter(Boolean));
+  // For each match, take the LAST module segment (most specific).
+  const canonicalModules = new Set<string>(
+    moduleRows
+      .map((r) => r.module)
+      .filter(Boolean)
+      .map((m: string) => {
+        // Split on patterns of "[mwc]\d+_..._" boundary and pick last
+        const matches = m.match(/[mwc]\d+_[a-z_0-9]+?(?=(?:_[mwc]\d+_|$))/g);
+        return matches ? matches[matches.length - 1] : m;
+      })
+  );
   console.log(`  canonical modules: ${canonicalModules.size}`);
 
   // 2. List local videos under course root
@@ -475,9 +493,11 @@ async function main() {
   console.log(`  free (unclaimed) videos: ${freeVideos.length}`);
 
   // 3. Group by module
-  function lessonModule(lessonId: string, courseId: string): string {
-    const m = lessonId.match(new RegExp(`^${courseId}_(m\\d+_[a-z_]+)_\\d+$`));
-    return m ? m[1] : 'unknown';
+  // Match the LAST [mwc]<digits>_<topic> segment before the trailing _<digits>.
+  // Handles: m01_xxx (simple), w01_xxx (workshops), and nested c<NN>_<topic>_m<NN>_<sub>.
+  function lessonModule(lessonId: string, _courseId: string): string {
+    const matches = lessonId.match(/[mwc]\d+_[a-z_0-9]+?(?=(?:_[mwc]\d+_|_\d+$))/g);
+    return matches && matches.length > 0 ? matches[matches.length - 1] : 'unknown';
   }
 
   const unmappedByModule = new Map<string, typeof unmapped>();
