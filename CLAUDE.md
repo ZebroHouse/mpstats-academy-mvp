@@ -47,12 +47,13 @@ Sibling project `D:/GpT_docs/Ai_MP_manager/` запустил `prisma db push --
 | v1.4 QA Audit Fixes | Shipped 2026-03-29 (Phases 37-42) |
 | v1.5 Growth & Monetization | In Progress (Phase 44+45+46+48+49+50 shipped) |
 | v1.6 Engagement | In Progress (Phases 51-52 shipped, 53A awaiting merge, 53-54 planned) |
-| v1.7 RAG Quality | Planned (Phase 55 Vision Chunking) |
+| v1.7 RAG Quality | In Progress (Phase 55 Sprint 2 + 2C shipped — 89/440 lessons; Sprint 3 prep on branch `phase-55-sprint-3-prep`) |
 
 **Remaining work:**
 1. Phase 53A — referral, awaiting Egor's merge to master
 2. Phase 33-03: CQ Dashboard Setup (на стороне CQ команды)
 3. Phase 47: /learn Hub-Layout — навигационный хаб
+4. **Phase 55 Sprint 3** — full platform vision-RAG ingest (~351 lessons across 4 courses). Prep in progress: selector v4 + safety infra + docs. See `scripts/vision-ingest/PLAYBOOK.md`.
 
 ## Active Branches
 
@@ -96,7 +97,27 @@ Sibling project `D:/GpT_docs/Ai_MP_manager/` запустил `prisma db push --
 
 **Внимание (исторический lesson):** CP хранит `amount` на своей стороне на момент создания подписки. При смене цен отменять старые ACTIVE подписки чтобы автосписания пошли по новым тарифам.
 
-## Last Session (2026-05-11) — Cancel flow + Lesson.order tech debt + referral link tweak
+## Last Session (2026-05-11 evening) — Phase 55 Sprint 2C shipped + Sprint 3 prep
+
+**Phase 55 Sprint 2C — Vision RAG expansion.** PR #4 на `phase-55-sprint-2c` (3 commits: `fee68bb` → `a664716` → `91636a5`). 79 lessons of `03_ai` ingested → DB теперь содержит 89 lessons с vision-чанками (792 frame chunks total). Стоимость $0.94 (бюджет $2). Smoke test: **16/18 = 88.9%** (pilot baseline 84%, threshold 80%) → GO Sprint 3.
+
+Пайплайн hardened:
+- Selector эволюция v1 (word-overlap, 67% recall) → v2 (greedy bipartite) → v3 (positional) + manual override для m01_intro / m08 = 100% coverage.
+- `vlm-describe.ts` переписан: concurrency=5, AbortController 60s timeout, JSONL incremental save + resume. Пережил mid-run kill в этом спринте.
+- `INGEST_SUFFIX` env var параметризует 5 pipeline-скриптов под изолированные артефакты.
+
+**Sprint 3 prep — на ветке `phase-55-sprint-3-prep` (5 фаз):**
+- P1: `scripts/vision-ingest/ARCHITECTURE.md` + `PLAYBOOK.md` + README + MAAL/CLAUDE.md updates
+- P2: `validate-selection.ts` (pre-flight gate), `smoke-baseline.ts` (auto LLM-judge), safety memory
+- P3: Selector v4 с DB-persisted mappings (`Lesson.metadata.videoSource`) + LLM judge confidence + CSV review flow
+- P4: Regression на 03_ai (ожидаем 89/89 точное соответствие)
+- P5: Dry-run на 1 небольшом курсе перед full Sprint 3
+
+Полные правила (7) — в `.claude/memory/vision-ingest-safety.md`. Cross-AI.
+
+Полный verdict + метрики Sprint 2C — `scripts/vision-ingest/results/decision-sprint2c.md`.
+
+## Previous Session (2026-05-11 daytime) — Cancel flow + Lesson.order tech debt + referral link tweak
 
 Деплои на master: `7ded455` → `df368b3` → `79698e5` → `c473b9b`.
 
@@ -142,7 +163,8 @@ Phase 55 Vision Chunking RAG (v1.7) записано в `.planning/ROADMAP.md`.
 
 | Decision | Choice | Reason |
 |----------|--------|--------|
-| LLM model | GPT-4.1 Nano | QA: 12/15 good questions vs Qwen 5/15 |
+| LLM model (prod) | **GPT-4.1 Mini** | Sprint 2C: 84% smoke vs nano 60% (+24%). x1.5 cost, negligible per-query |
+| LLM judge / VLM | GPT-4.1 Mini | Same model for VLM frame describe + smoke judge |
 | LLM fallback | Qwen 3.5 Flash | Cheaper, decent quality |
 | Auth | Supabase Auth + Yandex ID | Google removed |
 | tRPC batching | splitLink | AI queries (3-10s) must not block page render |
@@ -183,6 +205,10 @@ MAAL/
 │   ├── db/prisma/            # Schema + migrations
 │   └── shared/               # Types
 ├── scripts/                  # seed, ingest, skill-mapping
+│   └── vision-ingest/        # Phase 55 — frame extraction → VLM → embed → DB
+│       ├── PLAYBOOK.md       # Operational guide (gates, rollback, costs)
+│       ├── ARCHITECTURE.md   # System design (data flow, schema, profiles)
+│       └── results/decision-sprint2c.md  # Last sprint outcome
 └── docs/                     # SDD, plans (superpowers/), admin-guides
 ```
 
@@ -219,7 +245,8 @@ MAAL/
 - **Email-канал — CQ, не Resend:** Auth-письма (DOI / recovery / email_change) идут через Supabase webhook hook → `/api/webhooks/supabase-email` → CarrotQuest → CQ SMTP. Resend в Supabase auth-конфиге как fallback, но не активируется. Если в старых memory-заметках читаешь «Resend SMTP» — устарело. Полная схема: `docs/email-architecture.html`
 - **DOI/recovery ссылки:** идут на `/auth/confirm` (наш домен), не на `*.supabase.co` — фикс ERR_CONNECTION_ABORTED у Yandex Browser/AdGuard. См. `.claude/memory/project_auth_confirm_route.md`
 - **`@prisma/client` import в apps/web падает (vite resolve)** — использовать `@mpstats/db` (re-exports)
-- Details: `.claude/memory/cq-integration.md`, `.claude/memory/feedback_doi_resend_protocol.md`
+- **Vision-ingest пайплайн (`scripts/vision-ingest/`):** 7 жёстких safety rules — `AbortController` timeout на каждый external fetch, JSONL resume, pre-flight `validate-selection.ts`, dry-run на новых курсах, `isHidden=false` обязательно, идемпотентный селектор с DB-persisted mappings, cumulative cost logging. Каждое правило прослежено до реального incident'а Sprint 2/2C. Cross-AI authoritative: `.claude/memory/vision-ingest-safety.md`. Запуск любого ingest — только по `scripts/vision-ingest/PLAYBOOK.md`.
+- Details: `.claude/memory/cq-integration.md`, `.claude/memory/feedback_doi_resend_protocol.md`, `.claude/memory/vision-ingest-safety.md`
 
 ## QA
 
