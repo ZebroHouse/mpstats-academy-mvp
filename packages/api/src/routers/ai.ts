@@ -188,6 +188,9 @@ export const aiRouter = router({
         lessonId,
         limit,
         threshold,
+        // Academy-only scope: exclude external sources (e.g. LagerPro tier=2)
+        sourceTypes: ['academy_audio', 'academy_video_frame'],
+        trustTiers: [1],
       });
 
       return {
@@ -218,7 +221,17 @@ export const aiRouter = router({
       // Keyword fallback ensures that simple queries matching lesson titles always
       // return results, even when vector similarity falls below threshold.
       const [chunks, keywordLessons] = await Promise.all([
-        searchChunks({ query: q, limit: 30, threshold: 0.5 }),
+        // Academy-only scope for /learn semantic search — keep top-30 slots
+        // exclusively for academy content; external sources (LagerPro tier=2)
+        // would dilute results since Lesson.findMany enrichment filters them
+        // out downstream anyway.
+        searchChunks({
+          query: q,
+          limit: 30,
+          threshold: 0.5,
+          sourceTypes: ['academy_audio', 'academy_video_frame'],
+          trustTiers: [1],
+        }),
         ctx.prisma.lesson.findMany({
           where: {
             isHidden: false,
