@@ -13,7 +13,9 @@ async function main() {
   if (!serviceKey) throw new Error('SUPABASE_SERVICE_ROLE_KEY required');
   const supabase = createClient(url, serviceKey, { auth: { persistSession: false } });
 
-  const manifest = JSON.parse(readFileSync(join(INGEST_CONFIG.results_dir, 'frames-manifest.json'), 'utf8')) as { videos: VideoExtraction[] };
+  const SUFFIX = process.env.INGEST_SUFFIX?.trim() || '';
+  const manifestFile = SUFFIX ? `frames-manifest-${SUFFIX}.json` : 'frames-manifest.json';
+  const manifest = JSON.parse(readFileSync(join(INGEST_CONFIG.results_dir, manifestFile), 'utf8')) as { videos: VideoExtraction[] };
   let uploaded = 0, skipped = 0, failed = 0;
 
   for (const v of manifest.videos) {

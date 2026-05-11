@@ -46,7 +46,9 @@ function hammingDistance(a: bigint, b: bigint): number {
 }
 
 async function main() {
-  const manifestPath = join(INGEST_CONFIG.results_dir, 'frames-manifest.json');
+  const SUFFIX = process.env.INGEST_SUFFIX?.trim() || '';
+  const manifestFile = SUFFIX ? `frames-manifest-${SUFFIX}.json` : 'frames-manifest.json';
+  const manifestPath = join(INGEST_CONFIG.results_dir, manifestFile);
   const manifest = JSON.parse(readFileSync(manifestPath, 'utf8')) as { videos: VideoExtraction[] };
 
   let totalBefore = 0, totalAfter = 0;

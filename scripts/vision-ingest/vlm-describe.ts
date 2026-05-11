@@ -85,7 +85,10 @@ async function callVlm(prompt: string, imagePath: string, apiKey: string, model:
 async function main() {
   const apiKey = process.env.OPENROUTER_VISION_KEY;
   if (!apiKey) throw new Error('OPENROUTER_VISION_KEY required');
-  const manifest = JSON.parse(readFileSync(join(INGEST_CONFIG.results_dir, 'frames-manifest.json'), 'utf8')) as { videos: VideoExtraction[] };
+  const SUFFIX = process.env.INGEST_SUFFIX?.trim() || '';
+  const manifestFile = SUFFIX ? `frames-manifest-${SUFFIX}.json` : 'frames-manifest.json';
+  const vlmRunsFile = SUFFIX ? `vlm-runs-${SUFFIX}.json` : 'vlm-runs.json';
+  const manifest = JSON.parse(readFileSync(join(INGEST_CONFIG.results_dir, manifestFile), 'utf8')) as { videos: VideoExtraction[] };
   const prompt = readFileSync(join('scripts/vision-ingest/prompts/frame-describe.txt'), 'utf8');
 
   type Job = { lessonId: string; frame: FrameMeta };
@@ -137,7 +140,7 @@ async function main() {
   }
 
   writeFileSync(
-    join(INGEST_CONFIG.results_dir, 'vlm-runs.json'),
+    join(INGEST_CONFIG.results_dir, vlmRunsFile),
     JSON.stringify({ runDate: new Date().toISOString(), model: INGEST_CONFIG.vlm_model, totalCostUSD: totalCost, results }, null, 2),
     'utf8',
   );

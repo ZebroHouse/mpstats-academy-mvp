@@ -58,7 +58,9 @@ async function main() {
   const dbUrl = process.env.DATABASE_URL;
   if (!dbUrl) throw new Error('DATABASE_URL required');
 
-  const runs = JSON.parse(readFileSync(join(INGEST_CONFIG.results_dir, 'vlm-runs.json'), 'utf8')).results as VlmRunResult[];
+  const SUFFIX = process.env.INGEST_SUFFIX?.trim() || '';
+  const vlmRunsFile = SUFFIX ? `vlm-runs-${SUFFIX}.json` : 'vlm-runs.json';
+  const runs = JSON.parse(readFileSync(join(INGEST_CONFIG.results_dir, vlmRunsFile), 'utf8')).results as VlmRunResult[];
   const valid = runs.filter((r) => !r.error && r.response);
   console.log(`${valid.length}/${runs.length} VLM responses valid (will embed and insert)`);
 

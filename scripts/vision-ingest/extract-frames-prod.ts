@@ -101,9 +101,13 @@ function extractForVideo(v: SelectedLesson): VideoExtraction {
 }
 
 async function main() {
-  const selectedPath = join(INGEST_CONFIG.results_dir, 'selected-pilot-lessons.json');
+  const SUFFIX = process.env.INGEST_SUFFIX?.trim() || '';
+  const selectedFile = SUFFIX ? `selected-${SUFFIX}-lessons.json` : 'selected-pilot-lessons.json';
+  const manifestFile = SUFFIX ? `frames-manifest-${SUFFIX}.json` : 'frames-manifest.json';
+
+  const selectedPath = join(INGEST_CONFIG.results_dir, selectedFile);
   if (!existsSync(selectedPath)) {
-    console.error('Run select-pilot-lessons.ts first');
+    console.error(`Run selector first (missing ${selectedFile})`);
     process.exit(1);
   }
   const lessons: SelectedLesson[] = JSON.parse(readFileSync(selectedPath, 'utf8'));
@@ -118,11 +122,11 @@ async function main() {
   }
 
   writeFileSync(
-    join(INGEST_CONFIG.results_dir, 'frames-manifest.json'),
+    join(INGEST_CONFIG.results_dir, manifestFile),
     JSON.stringify({ videos: extractions }, null, 2),
     'utf8',
   );
-  console.log(`\nГотово: frames-manifest.json (${extractions.length} videos, ${extractions.reduce((a, b) => a + b.totalFramesExtracted, 0)} total frames)`);
+  console.log(`\nГотово: ${manifestFile} (${extractions.length} videos, ${extractions.reduce((a, b) => a + b.totalFramesExtracted, 0)} total frames)`);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });
