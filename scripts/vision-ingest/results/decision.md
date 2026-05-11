@@ -2,7 +2,7 @@
 
 **Дата:** 2026-05-07 (pipeline) / 2026-05-11 (smoke + verdict)
 **Ветка:** `phase-55-sprint-2`
-**Verdict:** **RETRY** — frame retrieval работает физически, но visual-queries без явных keyword-якорей часто пропускают frame-источники; accuracy 41% (порог 70%). Нужны фиксы retrieval перед Sprint 2C.
+**Verdict:** **GO Sprint 2C + model switch** — после RETRY (фиксы A1-A3+B1+B2) и model swap эксперимента: переключение `OPENROUTER_DEFAULT_MODEL` на `openai/gpt-4.1-mini` даёт 84% accuracy (выше порога 70%) при ×1.5 цены от nano. Архитектура Sprint 2 (foundation + vision pipeline + few-shot) подтверждена. См. секцию «RETRY Results» ниже.
 
 ---
 
@@ -87,6 +87,61 @@ Pipeline mechanics работают (extract → dedup → VLM → embed → INS
 | A3 | System prompt усилить: «ОБЯЗАТЕЛЬНО цитируй ЭКРАН-источник если он в контексте и вопрос визуальный» | `packages/ai/src/generation.ts` | 0 |
 | A4 | Task 8 `resolveLessonId` SQL: добавить `AND "isHidden" = false` в фильтр; перевыбрать пилотный урок взамен `m01_intro_001` | `scripts/vision-ingest/select-pilot-lessons.ts` + JSON refresh | 0 |
 | A5 | `platformUrl` шаблон в JSON: `/learn/${id}` (single-segment) вместо `/learn/03_ai/${id}` | `select-pilot-lessons.ts` + JSON | 0 |
+
+---
+
+## RETRY Results (2026-05-11 evening)
+
+### Round 1 — фиксы A1+A2+A3 + B1 prompt v2 + B2 few-shot
+7 общих вопросов (m04+m07): test 1 = 36% → test 2/3/4 = 57-64%. Accuracy выросла ~+25% от base, но **застряла на 60-65%** — ниже порога 70%. Few-shot частично помог (Q9 ограничения GPT теперь точно цитируются), частично навредил (token leak MPSTATS в Q1). Capability ceiling **gpt-4.1-nano**.
+
+### Round 2 — model swap experiments (headless smoke, 16 questions)
+
+Тестировали 5 моделей на одних query+context (та же ветка, тот же prompt с few-shot, тот же retrieval):
+
+| Модель | Accuracy 10q | Accuracy 16q | Avg latency | Max latency | Output $/1M |
+|--------|--------------|--------------|-------------|-------------|-------------|
+| gpt-4.1-nano (baseline) | 60% | — | 2-5с | 5с | $0.40 |
+| **gpt-4.1-mini** ⭐ | **85%** | **84%** | **4-6с** | 9с | $0.60 |
+| gpt-4.1 (full) | 85% | — | 2-5с | 5с | $8.00 |
+| DeepSeek V4 Flash | 95% | **94%** | 17-37с | **68с** ❌ | $0.28 |
+| Qwen3.6 35B A3B | 85% | — | 9-77с | 77с ❌ | $1.00 |
+| Gemma 4 31B | — | — | — | — | unavailable on OpenRouter |
+
+**Key findings:**
+
+1. **DeepSeek V4 Flash** даёт лучший accuracy (94%) и дешевле mini, но latency 17-68с — **dealbreaker** для chat-UI (юзер уйдёт). Сильнее в reasoning (Q11 объясняет что значит каждое число, Q15 синтезирует «зачем» из audio + цифры с экрана).
+
+2. **gpt-4.1-mini** — best UX trade-off: 84% accuracy, latency 4-6с, output cost $0.60. Сильнее DeepSeek в number-extraction (Q12 вытащил `121 016 906 ₽` точно — DeepSeek дал только название метрик).
+
+3. **gpt-4.1 full** не оправдывает x13 цены — тот же 85% accuracy что mini.
+
+4. **Qwen3.6 35B A3B** — latency unacceptable (77с на одном Q5).
+
+### Production decision
+
+**Switch `OPENROUTER_DEFAULT_MODEL` на `openai/gpt-4.1-mini`.**
+
+Cost vs nano:
+- nano: $0.10 in / $0.40 out per 1M
+- mini: $0.15 in / $0.60 out per 1M
+- **Ratio: x1.5** на обоих направлениях
+
+Per-query estimate (≈1500 in + 200 out tokens):
+- nano: $0.00023 / query
+- mini: $0.00035 / query
+- Delta: +$0.00012 / query → **+$1.20 per 10 000 queries** (negligible)
+
+Accuracy +24% (60% → 84%). UX без регрессии (latency 4-6с vs nano 2-5с).
+
+### Backlog (Phase 56 — RAG Quality v1.8+)
+
+1. **Hybrid model routing** через `isVisualQuery()` (уже реализован в `packages/ai/src/profiles.ts`):
+   - audio-only concept queries → nano (60% но достаточно для простых концептов, дёшево)
+   - visual-mixed queries → mini (best UX)
+   - explanatory queries требующие deep reasoning → DeepSeek V4 Flash с timeout 30с + fallback на mini
+2. **Retrieval miss fix** на Q6-type (выручка ниши не попадает в top-8 даже с lower frame threshold)
+3. **Query expansion** перед embedding: «выручка» → «выручка, оборот, продажи, ₽» — для лучшего semantic recall чисел
 
 ---
 
