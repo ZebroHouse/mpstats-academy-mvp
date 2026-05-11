@@ -365,6 +365,16 @@ export async function handleCheck(
       return false;
     }
 
+    // Defense in depth: if the subscription is already cancelled/refunded
+    // locally but CP still tries to charge (because our cancel API call
+    // failed or never ran), reject the charge here so the card is not hit.
+    if (subscription.status === 'CANCELLED' || subscription.status === 'EXPIRED') {
+      console.warn(
+        `[Subscription] handleCheck: subscription ${invoiceId} status=${subscription.status}, declining`,
+      );
+      return false;
+    }
+
     console.log(
       `[Subscription] handleCheck: accepted payment for user ${accountId}, subscription ${invoiceId}`,
     );

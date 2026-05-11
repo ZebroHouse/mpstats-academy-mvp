@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { router, publicProcedure, protectedProcedure, superadminProcedure } from '../trpc';
 import { isFeatureEnabled } from '../utils/feature-flags';
+import { cancelCloudPaymentsSubscription } from '../utils/cloudpayments';
 import { buildReceipt } from '@mpstats/shared';
 
 /**
@@ -325,7 +326,9 @@ export const billingRouter = router({
 
   /**
    * Cancel active subscription.
-   * Calls CloudPayments API, then marks subscription as CANCELLED.
+   * If a CloudPayments recurrent id is stored, cancel on CP side first —
+   * otherwise the card keeps getting charged. Only mark CANCELLED locally
+   * after CP confirms (or there's no CP recurrent to cancel).
    */
   cancelSubscription: protectedProcedure.mutation(async ({ ctx }) => {
     const enabled = await isFeatureEnabled('billing_enabled');
@@ -333,7 +336,6 @@ export const billingRouter = router({
       throw new TRPCError({ code: 'NOT_FOUND', message: 'Billing is not enabled' });
     }
 
-    // Find active subscription
     const subscription = await ctx.prisma.subscription.findFirst({
       where: {
         userId: ctx.user.id,
@@ -347,12 +349,20 @@ export const billingRouter = router({
       });
     }
 
-    // Cancel locally — CP cancel API requires their subscription ID which
-    // we don't store yet (paymentSchema: 'Single' mode). When switching to
-    // real recurrent billing, store CP subscription ID from webhook Token field
-    // and call https://api.cloudpayments.ru/subscriptions/cancel with it.
-    //
-    // CP cancel webhook (if it arrives) is handled idempotently by our webhook handler.
+    if (subscription.cpSubscriptionId) {
+      const result = await cancelCloudPaymentsSubscription(subscription.cpSubscriptionId);
+      if (!result.ok) {
+        console.error(
+          `[Billing] cancelSubscription: CP cancel failed for sub=${subscription.id} cp=${subscription.cpSubscriptionId}: ${result.reason}`,
+        );
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message:
+            'Не удалось отменить подписку на стороне платёжной системы. Попробуйте позже или напишите в поддержку.',
+        });
+      }
+    }
+
     const updated = await ctx.prisma.subscription.update({
       where: { id: subscription.id },
       data: {
