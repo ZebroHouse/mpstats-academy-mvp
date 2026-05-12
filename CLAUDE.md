@@ -1,9 +1,38 @@
 # CLAUDE.md — MPSTATS Academy MVP
 
-**Last updated:** 2026-05-11
+**Last updated:** 2026-05-12
 
 > Детали по сессиям, спринтам, Supabase, деплою, CQ, staging — в `.claude/memory/`.
 > Индекс: `.claude/memory/MEMORY.md`. История сессий: `.claude/memory/session-history.md`.
+
+## 🚨 PROD DATABASE SAFETY (incident 2026-05-12 — read FIRST)
+
+Supabase project `saecuecevicwjkpmaoot` = **live production** для platform.mpstats.academy. 158 paying users, 124 subs, 81 payments, 8801 RAG content_chunks.
+
+### MAAL's authoritative schema
+
+`packages/db/prisma/schema.prisma` в этом репозитории — **единственный источник истины** для DDL этой БД. Все таблицы Supabase должны быть там задекларированы.
+
+### Incident 2026-05-12
+
+Sibling project `D:/GpT_docs/Ai_MP_manager/` запустил `prisma db push --accept-data-loss` против shared MAAL Supabase из СВОЕЙ schema.prisma (только `aim_*` таблицы). Prisma снесла 24 MAAL prod таблицы (всё, что не задекларировано в той schema). Восстановлено через **Supabase PITR backup** (~12 часов потерь активной работы).
+
+### Правила (zero exceptions)
+
+1. **`prisma db push` против этой БД делать ТОЛЬКО из этого репозитория** (MAAL), где schema.prisma декларирует все 24+ таблицы. Никогда из соседнего проекта/папки.
+2. **Перед db push на prod** — проверить что `DATABASE_URL` указывает на staging/dev, не на prod. Чек по project ref: prod = `saecuecevicwjkpmaoot`.
+3. **`--accept-data-loss` на prod БД** — НИКОГДА. На staging — только с свежим backup.
+4. **Если новому проекту нужна БД** — отдельный Supabase project, НЕ shared с MAAL. (Free tier до лимитов — бесплатно.)
+5. **PITR backup retention** — поддерживать включённым на этом проекте. Стоит того.
+
+### Recovery procedure (если повторится)
+
+1. Supabase dashboard → Project saecuecevicwjkpmaoot → Database → Backups
+2. PITR (Point-in-Time Recovery) → выбрать момент до инцидента
+3. Restore. Время — минуты, не часы.
+4. После restore — пересоздать любые ВАЛИДНЫЕ таблицы соседних проектов, которые могли пропасть
+
+Подробный root-cause analysis: `~/.claude/projects/D--GpT-docs/memory/feedback_prisma_shared_db_disaster.md`
 
 ## Current Status
 
