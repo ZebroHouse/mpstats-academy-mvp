@@ -18,6 +18,9 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // `server-only` throws in non-server contexts; stub it out for jsdom tests.
+      // Production behavior enforced by Next.js bundler.
+      'server-only': path.resolve(__dirname, './tests/server-only-stub.ts'),
     },
   },
 });

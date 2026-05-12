@@ -54,7 +54,8 @@ describe('YandexProvider', () => {
     expect(parsed.searchParams.get('redirect_uri')).toBe(
       'https://platform.mpstats.academy/api/auth/yandex/callback'
     );
-    expect(parsed.searchParams.get('scope')).toBe('login:email login:info');
+    // Phase 45 added `login:default_phone` to collect phone via Yandex OAuth.
+    expect(parsed.searchParams.get('scope')).toBe('login:email login:info login:default_phone');
     expect(parsed.searchParams.get('state')).toBe('test-state-123');
   });
 
@@ -112,10 +113,10 @@ describe('YandexProvider', () => {
     expect(info.email).toBe('ivan@yandex.ru');
     expect(info.name).toBe('Ivan Petrov');
 
-    // Verify correct Authorization header
+    // Verify correct Authorization header (objectContaining so AbortSignal etc are ignored)
     expect(mockFetch).toHaveBeenCalledWith(
       'https://login.yandex.ru/info?format=json',
-      { headers: { Authorization: 'OAuth ya-token-abc' } }
+      expect.objectContaining({ headers: { Authorization: 'OAuth ya-token-abc' } })
     );
   });
 

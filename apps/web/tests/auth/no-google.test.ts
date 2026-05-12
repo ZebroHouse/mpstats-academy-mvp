@@ -5,6 +5,7 @@ import * as path from 'path';
 const SRC_DIR = path.resolve(__dirname, '../../src');
 const LOGIN_PAGE = path.join(SRC_DIR, 'app/(auth)/login/page.tsx');
 const REGISTER_PAGE = path.join(SRC_DIR, 'app/(auth)/register/page.tsx');
+const REGISTER_FORM = path.join(SRC_DIR, 'app/(auth)/register/register-form.tsx');
 const ACTIONS_FILE = path.join(SRC_DIR, 'lib/auth/actions.ts');
 const LANDING_PAGE = path.join(SRC_DIR, 'app/page.tsx');
 
@@ -34,8 +35,10 @@ describe('No Google OAuth references remain', () => {
     expect(content).toContain('signInWithYandex');
   });
 
-  it('register/page.tsx imports signInWithYandex from actions', () => {
-    const content = fs.readFileSync(REGISTER_PAGE, 'utf-8');
+  it('register-form.tsx imports signInWithYandex from actions', () => {
+    // After Phase 53A refactor, register/page.tsx became an async wrapper and
+    // the form moved to register-form.tsx where the Yandex button lives.
+    const content = fs.readFileSync(REGISTER_FORM, 'utf-8');
     expect(content).toContain('signInWithYandex');
   });
 

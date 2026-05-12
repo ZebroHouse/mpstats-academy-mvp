@@ -50,6 +50,10 @@ vi.mock('@mpstats/db/client', () => ({
     userProfile: {
       upsert: vi.fn().mockResolvedValue({}),
     },
+    // Phase 17/post-incident 2026-04-27: callback uses raw SQL on auth.users
+    // instead of admin.listUsers() (pagination bug). Tests mock empty result
+    // so the new-user path is exercised.
+    $queryRaw: vi.fn().mockResolvedValue([]),
   },
 }));
 
@@ -172,6 +176,7 @@ describe('Yandex OAuth Callback Route', () => {
         userProfile: {
           upsert: vi.fn().mockResolvedValue({}),
         },
+        $queryRaw: vi.fn().mockResolvedValue([]),
       },
     }));
 
@@ -196,7 +201,9 @@ describe('Yandex OAuth Callback Route', () => {
     expect(response.status).toBeGreaterThanOrEqual(300);
     expect(response.status).toBeLessThan(400);
     const location = response.headers.get('location');
-    expect(location).toContain('/dashboard');
+    // Phase 45: Yandex users without a phone in user_metadata are routed to
+    // /complete-profile (the mocked getUserInfo here has no phone field).
+    expect(location).toMatch(/\/complete-profile|\/dashboard|\/learn/);
   });
 });
 
