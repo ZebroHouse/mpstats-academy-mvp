@@ -37,19 +37,38 @@ function buildEmbeddingText(r: VlmRunResult): string {
 }
 
 async function embedBatch(texts: string[], apiKey: string): Promise<number[][]> {
-  const res = await fetch('https://openrouter.ai/api/v1/embeddings', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': 'https://platform.mpstats.academy',
-      'X-Title': 'MAAL Vision Ingest',
-    },
-    body: JSON.stringify({ model: INGEST_CONFIG.embedding_model, input: texts }),
-  });
-  if (!res.ok) throw new Error(`Embed HTTP ${res.status}: ${(await res.text()).slice(0, 300)}`);
-  const data = await res.json();
-  return data.data.map((d: any) => d.embedding);
+  const MAX_ATTEMPTS = 4;
+  let lastErr: unknown;
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    const ctl = new AbortController();
+    const timer = setTimeout(() => ctl.abort(), 60_000);
+    try {
+      const res = await fetch('https://openrouter.ai/api/v1/embeddings', {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+          'HTTP-Referer': 'https://platform.mpstats.academy',
+          'X-Title': 'MAAL Vision Ingest',
+        },
+        body: JSON.stringify({ model: INGEST_CONFIG.embedding_model, input: texts }),
+        signal: ctl.signal,
+      });
+      if (!res.ok) throw new Error(`Embed HTTP ${res.status}: ${(await res.text()).slice(0, 300)}`);
+      const data = await res.json();
+      return data.data.map((d: any) => d.embedding);
+    } catch (e) {
+      lastErr = e;
+      if (attempt < MAX_ATTEMPTS) {
+        const backoff = 2000 * attempt;
+        process.stdout.write(`retry${attempt}(${(e as Error).message?.slice(0, 60)}) `);
+        await new Promise((r) => setTimeout(r, backoff));
+      }
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  throw lastErr instanceof Error ? lastErr : new Error(`Embed failed after ${MAX_ATTEMPTS} attempts`);
 }
 
 async function main() {
@@ -61,8 +80,21 @@ async function main() {
   const SUFFIX = process.env.INGEST_SUFFIX?.trim() || '';
   const vlmRunsFile = SUFFIX ? `vlm-runs-${SUFFIX}.json` : 'vlm-runs.json';
   const runs = JSON.parse(readFileSync(join(INGEST_CONFIG.results_dir, vlmRunsFile), 'utf8')).results as VlmRunResult[];
-  const valid = runs.filter((r) => !r.error && r.response);
-  console.log(`${valid.length}/${runs.length} VLM responses valid (will embed and insert)`);
+  const validAll = runs.filter((r) => !r.error && r.response);
+
+  // Resume-safe: skip frames whose chunk row already exists (idempotent re-run).
+  const probe = new Client({ connectionString: dbUrl });
+  await probe.connect();
+  const lessonIds = [...new Set(validAll.map((r) => r.lessonId))];
+  const existing = await probe.query<{ id: string }>(
+    `SELECT id FROM content_chunk WHERE source_type='academy_video_frame' AND lesson_id = ANY($1::text[])`,
+    [lessonIds],
+  );
+  await probe.end();
+  const doneIds = new Set(existing.rows.map((r) => r.id));
+  const valid = validAll.filter((r) => !doneIds.has(r.frameId));
+  console.log(`${validAll.length}/${runs.length} VLM responses valid; ${doneIds.size} already in DB; ${valid.length} to embed+insert`);
+  if (valid.length === 0) { console.log('Nothing to do.'); return; }
 
   const contents = valid.map(buildContent);
   const embeddingTexts = valid.map(buildEmbeddingText);

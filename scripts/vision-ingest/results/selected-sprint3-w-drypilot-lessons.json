@@ -1,0 +1,62 @@
+[
+  {
+    "localPath": "E:/Academy Courses/04_workshops/w01_feb_ads/den_1.mp4",
+    "filename": "den_1.mp4",
+    "durationSeconds": 6296,
+    "durationFormatted": "104:56",
+    "bucketSize": "long",
+    "module": "w01_feb_ads",
+    "category": "mpstats_cabinet",
+    "lessonId": "04_workshops_w01_feb_ads_001",
+    "lessonTitle": "Ошибки селлеров, которые сливают бюджет и мешают продвижению",
+    "platformUrl": "https://platform.mpstats.academy/learn/04_workshops_w01_feb_ads_001"
+  },
+  {
+    "localPath": "E:/Academy Courses/04_workshops/w01_feb_ads/den_2.mp4",
+    "filename": "den_2.mp4",
+    "durationSeconds": 7637,
+    "durationFormatted": "127:17",
+    "bucketSize": "long",
+    "module": "w01_feb_ads",
+    "category": "mpstats_cabinet",
+    "lessonId": "04_workshops_w01_feb_ads_002",
+    "lessonTitle": "Страх и ненависть на Wildberries: как сделать рекламу ещё эффективнее",
+    "platformUrl": "https://platform.mpstats.academy/learn/04_workshops_w01_feb_ads_002"
+  },
+  {
+    "localPath": "E:/Academy Courses/04_workshops/w01_feb_ads/den_3.mp4",
+    "filename": "den_3.mp4",
+    "durationSeconds": 7303,
+    "durationFormatted": "121:43",
+    "bucketSize": "long",
+    "module": "w01_feb_ads",
+    "category": "mpstats_cabinet",
+    "lessonId": "04_workshops_w01_feb_ads_003",
+    "lessonTitle": "Внешняя реклама для маркетплейсов: пошаговый план",
+    "platformUrl": "https://platform.mpstats.academy/learn/04_workshops_w01_feb_ads_003"
+  },
+  {
+    "localPath": "E:/Academy Courses/04_workshops/w02_mar_detox/den_1._filtr_oshibok_kak_konversii_pokazhut_pochem.mp4",
+    "filename": "den_1._filtr_oshibok_kak_konversii_pokazhut_pochem.mp4",
+    "durationSeconds": 6595,
+    "durationFormatted": "109:55",
+    "bucketSize": "long",
+    "module": "w02_mar_detox",
+    "category": "mpstats_cabinet",
+    "lessonId": "04_workshops_w02_mar_detox_001",
+    "lessonTitle": "Фильтр ошибок как конверсии покажут, почему ты не зарабатываешь",
+    "platformUrl": "https://platform.mpstats.academy/learn/04_workshops_w02_mar_detox_001"
+  },
+  {
+    "localPath": "E:/Academy Courses/04_workshops/w02_mar_detox/den_2._kak_vystroit_plan_rosta_na_god.mp4",
+    "filename": "den_2._kak_vystroit_plan_rosta_na_god.mp4",
+    "durationSeconds": 5787,
+    "durationFormatted": "96:27",
+    "bucketSize": "long",
+    "module": "w02_mar_detox",
+    "category": "mpstats_cabinet",
+    "lessonId": "04_workshops_w02_mar_detox_002",
+    "lessonTitle": "Как выстроить план роста на год",
+    "platformUrl": "https://platform.mpstats.academy/learn/04_workshops_w02_mar_detox_002"
+  }
+]
