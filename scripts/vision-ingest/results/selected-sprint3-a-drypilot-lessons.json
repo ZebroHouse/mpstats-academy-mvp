@@ -1,0 +1,62 @@
+[
+  {
+    "localPath": "E:/Academy Courses/01_analytics/m00_bonus_autobidder/bidder._poshagovaya_nastroika..mp4",
+    "filename": "bidder._poshagovaya_nastroika..mp4",
+    "durationSeconds": 3721,
+    "durationFormatted": "62:01",
+    "bucketSize": "long",
+    "module": "m00_bonus_autobidder",
+    "category": "mpstats_cabinet",
+    "lessonId": "01_analytics_m00_bonus_autobidder_001",
+    "lessonTitle": "Биддер. Пошаговая настройка.",
+    "platformUrl": "https://platform.mpstats.academy/learn/01_analytics_m00_bonus_autobidder_001"
+  },
+  {
+    "localPath": "E:/Academy Courses/01_analytics/m01_start/002_dlya_chego_nuzhna_analitika_dlya_biznesa_na_mp.mp4",
+    "filename": "002_dlya_chego_nuzhna_analitika_dlya_biznesa_na_mp.mp4",
+    "durationSeconds": 1639,
+    "durationFormatted": "27:19",
+    "bucketSize": "medium",
+    "module": "m01_start",
+    "category": "ui_demo",
+    "lessonId": "01_analytics_m01_start_002",
+    "lessonTitle": "Для чего нужна аналитика для бизнеса на МП",
+    "platformUrl": "https://platform.mpstats.academy/learn/01_analytics_m01_start_002"
+  },
+  {
+    "localPath": "E:/Academy Courses/01_analytics/m02_economics/001_yunit_ekonomika_pogruzhenie.mp4",
+    "filename": "001_yunit_ekonomika_pogruzhenie.mp4",
+    "durationSeconds": 1401,
+    "durationFormatted": "23:21",
+    "bucketSize": "medium",
+    "module": "m02_economics",
+    "category": "ui_demo",
+    "lessonId": "01_analytics_m02_economics_001",
+    "lessonTitle": "Юнит-экономика: погружение в ключевые показатели",
+    "platformUrl": "https://platform.mpstats.academy/learn/01_analytics_m02_economics_001"
+  },
+  {
+    "localPath": "E:/Academy Courses/01_analytics/m02_economics/002_1_yunit_ekonomika_wb_rabota_s_tablitsey_1.mp4",
+    "filename": "002_1_yunit_ekonomika_wb_rabota_s_tablitsey_1.mp4",
+    "durationSeconds": 1196,
+    "durationFormatted": "19:56",
+    "bucketSize": "medium",
+    "module": "m02_economics",
+    "category": "ui_demo",
+    "lessonId": "01_analytics_m02_economics_002",
+    "lessonTitle": "Обзор и настройка таблицы | Unit-экономика WB работа с таблицей, 1",
+    "platformUrl": "https://platform.mpstats.academy/learn/01_analytics_m02_economics_002"
+  },
+  {
+    "localPath": "E:/Academy Courses/01_analytics/m02_economics/002_2_yunit_ekonomika_wb_rabota_s_tablitsey_2.mp4",
+    "filename": "002_2_yunit_ekonomika_wb_rabota_s_tablitsey_2.mp4",
+    "durationSeconds": 802,
+    "durationFormatted": "13:22",
+    "bucketSize": "short",
+    "module": "m02_economics",
+    "category": "theory",
+    "lessonId": "01_analytics_m02_economics_003",
+    "lessonTitle": "Заполняем \"Вводные данные по товару\" и \"Переменные расходы\"| Unit-экономика WB работа с таблицей, 2",
+    "platformUrl": "https://platform.mpstats.academy/learn/01_analytics_m02_economics_003"
+  }
+]
