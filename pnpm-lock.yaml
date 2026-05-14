@@ -45,6 +45,9 @@ importers:
       '@koiztech/next-yandex-metrika':
         specifier: ^0.0.8
         version: 0.0.8(next@14.2.35(@babel/core@7.28.5)(@opentelemetry/api@1.9.1)(@playwright/test@1.57.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mpstats/ai':
+        specifier: workspace:*
+        version: link:../../packages/ai
       '@mpstats/api':
         specifier: workspace:*
         version: link:../../packages/api

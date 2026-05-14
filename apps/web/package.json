@@ -17,6 +17,7 @@
   "dependencies": {
     "@kinescope/react-kinescope-player": "^0.5.4",
     "@koiztech/next-yandex-metrika": "^0.0.8",
+    "@mpstats/ai": "workspace:*",
     "@mpstats/api": "workspace:*",
     "@mpstats/db": "workspace:*",
     "@mpstats/shared": "workspace:*",
