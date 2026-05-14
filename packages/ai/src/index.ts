@@ -33,3 +33,11 @@ export { generatedQuestionSchema, generatedQuestionsArraySchema, questionJsonSch
 export type { GeneratedQuestion } from './question-schema';
 
 export { retrieve, PROFILES, type ProfileName, type RetrievalProfile, type RetrieveOptions } from './profiles';
+
+// RAG public wrapper (Stage 5 — REST/MCP consumers)
+export { searchChunksPublic, DEEPLINK_BASE } from './rag-public';
+export type {
+  PublicChunk,
+  SearchChunksPublicOptions,
+  SearchChunksPublicResult,
+} from './rag-public';
