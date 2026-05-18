@@ -1,0 +1,62 @@
+[
+  {
+    "localPath": "E:/Academy Courses/02_ads/m00_bonus_ai_external/001_1_ii_dlya_kreativov_i_seo_tekstov.mov",
+    "filename": "001_1_ii_dlya_kreativov_i_seo_tekstov.mov",
+    "durationSeconds": 2913,
+    "durationFormatted": "48:33",
+    "bucketSize": "long",
+    "module": "m00_bonus_ai_external",
+    "category": "mpstats_cabinet",
+    "lessonId": "02_ads_m00_bonus_ai_external_001",
+    "lessonTitle": "ИИ для креативов и SEO-текстов",
+    "platformUrl": "https://platform.mpstats.academy/learn/02_ads_m00_bonus_ai_external_001"
+  },
+  {
+    "localPath": "E:/Academy Courses/02_ads/m00_bonus_ai_external/001_2_seo_yadro_za_7_minut_klyuchi_chastotnost.mp4",
+    "filename": "001_2_seo_yadro_za_7_minut_klyuchi_chastotnost.mp4",
+    "durationSeconds": 2120,
+    "durationFormatted": "35:20",
+    "bucketSize": "medium",
+    "module": "m00_bonus_ai_external",
+    "category": "ui_demo",
+    "lessonId": "02_ads_m00_bonus_ai_external_002",
+    "lessonTitle": "SEO-ядро за 7 минут Ключи + Частотность",
+    "platformUrl": "https://platform.mpstats.academy/learn/02_ads_m00_bonus_ai_external_002"
+  },
+  {
+    "localPath": "E:/Academy Courses/02_ads/m00_bonus_ai_external/002_1_obyazatelnaya_i_neobyazatelnaya_markirovka_rekla.mp4",
+    "filename": "002_1_obyazatelnaya_i_neobyazatelnaya_markirovka_rekla.mp4",
+    "durationSeconds": 1350,
+    "durationFormatted": "22:30",
+    "bucketSize": "medium",
+    "module": "m00_bonus_ai_external",
+    "category": "ui_demo",
+    "lessonId": "02_ads_m00_bonus_ai_external_003",
+    "lessonTitle": "Обязательная и необязательная маркировка рекламы",
+    "platformUrl": "https://platform.mpstats.academy/learn/02_ads_m00_bonus_ai_external_003"
+  },
+  {
+    "localPath": "E:/Academy Courses/02_ads/m00_bonus_ai_external/002_2_formaty_sotrudnichestva_s_blogerami.mp4",
+    "filename": "002_2_formaty_sotrudnichestva_s_blogerami.mp4",
+    "durationSeconds": 1605,
+    "durationFormatted": "26:45",
+    "bucketSize": "medium",
+    "module": "m00_bonus_ai_external",
+    "category": "ui_demo",
+    "lessonId": "02_ads_m00_bonus_ai_external_004",
+    "lessonTitle": "Форматы сотрудничества с блогерами",
+    "platformUrl": "https://platform.mpstats.academy/learn/02_ads_m00_bonus_ai_external_004"
+  },
+  {
+    "localPath": "E:/Academy Courses/02_ads/m00_bonus_ai_external/002_3_kak_iskat_blogerov_ruchnoy_poisk.mp4",
+    "filename": "002_3_kak_iskat_blogerov_ruchnoy_poisk.mp4",
+    "durationSeconds": 1167,
+    "durationFormatted": "19:27",
+    "bucketSize": "medium",
+    "module": "m00_bonus_ai_external",
+    "category": "ui_demo",
+    "lessonId": "02_ads_m00_bonus_ai_external_005",
+    "lessonTitle": "Как искать блогеров - ручной поиск",
+    "platformUrl": "https://platform.mpstats.academy/learn/02_ads_m00_bonus_ai_external_005"
+  }
+]

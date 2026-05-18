@@ -1,0 +1,62 @@
+[
+  {
+    "localPath": "E:/Academy Courses/06_express/c01_ai_content/m01_content/001_kontent_kotoryy_prodaet.mp4",
+    "filename": "001_kontent_kotoryy_prodaet.mp4",
+    "durationSeconds": 4348,
+    "durationFormatted": "72:28",
+    "bucketSize": "long",
+    "module": "m01_content",
+    "category": "mpstats_cabinet",
+    "lessonId": "06_express_c01_ai_content_m01_content_001",
+    "lessonTitle": "Контент, который продает",
+    "platformUrl": "https://platform.mpstats.academy/learn/06_express_c01_ai_content_m01_content_001"
+  },
+  {
+    "localPath": "E:/Academy Courses/06_express/c01_ai_content/m02_video/001_video_i_reklama_s_umom.mp4",
+    "filename": "001_video_i_reklama_s_umom.mp4",
+    "durationSeconds": 3589,
+    "durationFormatted": "59:49",
+    "bucketSize": "long",
+    "module": "m02_video",
+    "category": "mpstats_cabinet",
+    "lessonId": "06_express_c01_ai_content_m02_video_002",
+    "lessonTitle": "Видео и реклама с умом",
+    "platformUrl": "https://platform.mpstats.academy/learn/06_express_c01_ai_content_m02_video_002"
+  },
+  {
+    "localPath": "E:/Academy Courses/06_express/c01_ai_content/m03_prompts/001_magiya_promtov_kak_neyroset_poymet_zadachu.mp4",
+    "filename": "001_magiya_promtov_kak_neyroset_poymet_zadachu.mp4",
+    "durationSeconds": 820,
+    "durationFormatted": "13:40",
+    "bucketSize": "short",
+    "module": "m03_prompts",
+    "category": "theory",
+    "lessonId": "06_express_c01_ai_content_m03_prompts_003",
+    "lessonTitle": "Магия Промтов: Как нейросеть поймет задачу",
+    "platformUrl": "https://platform.mpstats.academy/learn/06_express_c01_ai_content_m03_prompts_003"
+  },
+  {
+    "localPath": "E:/Academy Courses/06_express/c01_ai_content/m03_prompts/002_layfhaki_tochnyh_zaprosov_k_neyroseti_validatsiya.mp4",
+    "filename": "002_layfhaki_tochnyh_zaprosov_k_neyroseti_validatsiya.mp4",
+    "durationSeconds": 858,
+    "durationFormatted": "14:18",
+    "bucketSize": "short",
+    "module": "m03_prompts",
+    "category": "theory",
+    "lessonId": "06_express_c01_ai_content_m03_prompts_004",
+    "lessonTitle": "Лайфхаки точных запросов к нейросети: валидация и контроль качества",
+    "platformUrl": "https://platform.mpstats.academy/learn/06_express_c01_ai_content_m03_prompts_004"
+  },
+  {
+    "localPath": "E:/Academy Courses/06_express/c02_seo/m01_search/001_kak_kartochka_popadaet_v_vydachu.mp4",
+    "filename": "001_kak_kartochka_popadaet_v_vydachu.mp4",
+    "durationSeconds": 2226,
+    "durationFormatted": "37:06",
+    "bucketSize": "medium",
+    "module": "m01_search",
+    "category": "ui_demo",
+    "lessonId": "06_express_c02_seo_m01_search_001",
+    "lessonTitle": "Как карточка попадает в выдачу",
+    "platformUrl": "https://platform.mpstats.academy/learn/06_express_c02_seo_m01_search_001"
+  }
+]

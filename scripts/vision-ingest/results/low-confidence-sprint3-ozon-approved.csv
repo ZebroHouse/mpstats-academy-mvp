@@ -1,0 +1,3 @@
+lessonId,courseId,module,lessonTitle,candidateFilename,candidateLocalPath,score,llmConfidence,llmRationale,approved_lessonId
+05_ozon_m00_knowledge_base_007,05_ozon,m00_knowledge_base,Работа с ассортиментом,005_2_chast_2_assortiment.mp4,E:/Academy Courses/05_ozon/m00_knowledge_base/005_2_chast_2_assortiment.mp4,5.00,,,05_ozon_m00_knowledge_base_007
+05_ozon_m04_analytics_014,05_ozon,m04_analytics,"Разбор вопросов по рекламе на Ozon: ДРР, аналитика и запуск",013_efir_vopros_otvet_s_andreem_kotylko.mov,E:/Academy Courses/05_ozon/m04_analytics/013_efir_vopros_otvet_s_andreem_kotylko.mov,5.50,,,05_ozon_m04_analytics_014

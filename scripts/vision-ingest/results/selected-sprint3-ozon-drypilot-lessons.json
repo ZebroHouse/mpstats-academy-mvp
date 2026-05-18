@@ -1,0 +1,62 @@
+[
+  {
+    "localPath": "E:/Academy Courses/05_ozon/m00_knowledge_base/000_kak_rabotat_s_bazoy_znaniy.mov",
+    "filename": "000_kak_rabotat_s_bazoy_znaniy.mov",
+    "durationSeconds": 66,
+    "durationFormatted": "1:06",
+    "bucketSize": "short",
+    "module": "m00_knowledge_base",
+    "category": "theory",
+    "lessonId": "05_ozon_m00_knowledge_base_001",
+    "lessonTitle": "Как работать с Базой знаний",
+    "platformUrl": "https://platform.mpstats.academy/learn/05_ozon_m00_knowledge_base_001"
+  },
+  {
+    "localPath": "E:/Academy Courses/05_ozon/m00_knowledge_base/001_kak_vybrat_shemu_prodazh.mp4",
+    "filename": "001_kak_vybrat_shemu_prodazh.mp4",
+    "durationSeconds": 1526,
+    "durationFormatted": "25:26",
+    "bucketSize": "medium",
+    "module": "m00_knowledge_base",
+    "category": "ui_demo",
+    "lessonId": "05_ozon_m00_knowledge_base_002",
+    "lessonTitle": "Как выбрать схему продаж",
+    "platformUrl": "https://platform.mpstats.academy/learn/05_ozon_m00_knowledge_base_002"
+  },
+  {
+    "localPath": "E:/Academy Courses/05_ozon/m00_knowledge_base/002_registratsiya_na_ozon_seller.mp4",
+    "filename": "002_registratsiya_na_ozon_seller.mp4",
+    "durationSeconds": 531,
+    "durationFormatted": "8:51",
+    "bucketSize": "short",
+    "module": "m00_knowledge_base",
+    "category": "theory",
+    "lessonId": "05_ozon_m00_knowledge_base_003",
+    "lessonTitle": "Регистрация на OZON Seller",
+    "platformUrl": "https://platform.mpstats.academy/learn/05_ozon_m00_knowledge_base_003"
+  },
+  {
+    "localPath": "E:/Academy Courses/05_ozon/m00_knowledge_base/003_nyuansy_ozon_i_obzor_kabineta.mp4",
+    "filename": "003_nyuansy_ozon_i_obzor_kabineta.mp4",
+    "durationSeconds": 2153,
+    "durationFormatted": "35:53",
+    "bucketSize": "medium",
+    "module": "m00_knowledge_base",
+    "category": "ui_demo",
+    "lessonId": "05_ozon_m00_knowledge_base_004",
+    "lessonTitle": "Нюансы OZON и обзор кабинета",
+    "platformUrl": "https://platform.mpstats.academy/learn/05_ozon_m00_knowledge_base_004"
+  },
+  {
+    "localPath": "E:/Academy Courses/05_ozon/m00_knowledge_base/004_podbor_tovara_dlya_starta_na_ozon.mp4",
+    "filename": "004_podbor_tovara_dlya_starta_na_ozon.mp4",
+    "durationSeconds": 1964,
+    "durationFormatted": "32:44",
+    "bucketSize": "medium",
+    "module": "m00_knowledge_base",
+    "category": "ui_demo",
+    "lessonId": "05_ozon_m00_knowledge_base_005",
+    "lessonTitle": "Подбор товара для старта на OZON",
+    "platformUrl": "https://platform.mpstats.academy/learn/05_ozon_m00_knowledge_base_005"
+  }
+]
