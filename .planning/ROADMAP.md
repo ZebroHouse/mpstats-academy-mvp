@@ -1239,7 +1239,7 @@ Plans:
 
 **Зависимости:** нет блокеров.
 
-**Plans:** 1/4 plans executed
+**Plans:** 2/4 plans executed
 
 Plans:
 **Wave 1**
@@ -1248,7 +1248,7 @@ Plans:
 
 **Wave 2** *(blocked on Wave 1 completion)*
 
-- [ ] 56-02-PLAN.md — tRPC-роутер onboarding (getState + complete) + unit-тесты
+- [x] 56-02-PLAN.md — tRPC-роутер onboarding (getState + complete) + unit-тесты
 
 **Wave 3** *(blocked on Wave 2 completion)*
 

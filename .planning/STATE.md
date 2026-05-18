@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Engagement
 status: Phase 51 shipped (Notification Center Foundation)
-stopped_at: Phase 56 Plan 01 complete
-last_updated: "2026-05-18T10:20:03.552Z"
+stopped_at: Phase 56 Plan 02 complete
+last_updated: "2026-05-18T10:36:00.000Z"
 progress:
   total_phases: 4
   completed_phases: 1
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 ## Current Position
 
 Phase: 56 (entry-flow-redesign) — EXECUTING
-Plan: 2 of 4 (56-01 complete)
+Plan: 3 of 4 (56-01, 56-02 complete)
 
 ## Performance Metrics
 
@@ -157,6 +157,9 @@ Full v1.1 decision history: `milestones/v1.1-ROADMAP.md`
 - [49-05]: Inline confirmation modal без shadcn Dialog — паттерн HideConfirmDialog уже в codebase
 - [56-01]: String[] вместо Prisma enum для marketplaces/goals — повторяет паттерн toursCompleted
 - [56-01]: Additive-миграция на prod (nullable/DEFAULT колонки) применена через Supabase Management API query endpoint, _prisma_migrations синхронизирована ручным INSERT — zero data-loss (170 users целы)
+- [56-02]: onboarding tRPC-роутер — копия паттерна profile.ts (protectedProcedure + ensureUserProfile + handleDatabaseError); z.enum whitelist на marketplaces/goals/experienceLevel отклоняет tampered-ключи до DB-записи
+- [56-02]: Гард (main)/layout читает onboardingCompletedAt напрямую через prisma — getState оставлен для /profile; один лишний select-field, ноль новых round-trip'ов
+- [56-02]: Unit-тест onboarding: ctx prisma stub дискриминирует middleware-findUnique (lastActiveAt debounce) по select-аргументу, возвращая свежий lastActiveAt → debounce пропускает side-effect update
 
 ### Blockers/Concerns
 
@@ -236,11 +239,13 @@ None.
 | 49    | 02   | 6min     | 3     | 8     |
 | 49    | 03   | 12min    | 2     | 9     |
 | 49    | 05   | 38min    | 3     | 7     |
+| 56    | 01   | 10min    | 2     | 2     |
+| 56    | 02   | 6min     | 2     | 3     |
 
 ## Session Continuity
 
-Last session: 2026-05-18T10:20:03.552Z
-Stopped at: Phase 56 Plan 01 complete (schema +5 полей UserProfile, prod migration applied)
+Last session: 2026-05-18T10:36:00.000Z
+Stopped at: Phase 56 Plan 02 complete (onboarding tRPC-роутер getState + complete, зарегистрирован в appRouter, 4 unit-теста зелёные)
 
 ### Session 2026-03-12 — Billing Payment Flow Testing & Fixes
 
