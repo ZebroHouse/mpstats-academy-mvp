@@ -2,6 +2,7 @@ import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { ensureUserProfile } from '../utils/ensure-user-profile';
 import { handleDatabaseError } from '../utils/db-errors';
+import { cqSetUserProps, cqTrackEvent } from '../utils/carrotquest';
 
 // Locked qualification keys (CONTEXT.md Data Model). z.enum whitelists reject
 // tampered keys before they reach the DB (Security V5 / threat T-56-04).
@@ -47,10 +48,38 @@ export const onboardingRouter = router({
     .mutation(async ({ ctx, input }) => {
       try {
         await ensureUserProfile(ctx.prisma, ctx.user);
+
+        // Capture prior state so the completion event fires only once.
+        const prior = await ctx.prisma.userProfile.findUnique({
+          where: { id: ctx.user.id },
+          select: { onboardingCompletedAt: true },
+        });
+        const wasFirstCompletion = prior?.onboardingCompletedAt == null;
+
         const profile = await ctx.prisma.userProfile.update({
           where: { id: ctx.user.id },
           data: { ...input, onboardingCompletedAt: new Date() },
         });
+
+        // Mirror qualification to CarrotQuest — best-effort, never blocks
+        // onboarding. The DB write above is already committed.
+        try {
+          await cqSetUserProps(ctx.user.id, {
+            pa_marketplaces: input.marketplaces.join(', '),
+            pa_experience: input.experienceLevel ?? '',
+            pa_goals: input.goals.join(', '),
+            pa_goal_text: input.goalText ?? '',
+          });
+          if (wasFirstCompletion) {
+            await cqTrackEvent(ctx.user.id, 'pa_onboarding_completed');
+          }
+        } catch (cqError) {
+          console.error(
+            '[onboarding.complete] CarrotQuest mirror failed:',
+            cqError,
+          );
+        }
+
         return profile;
       } catch (error) {
         handleDatabaseError(error);
