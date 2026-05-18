@@ -8,6 +8,9 @@
 - 🔄 **v1.3 Pre-release** — Phases 22-36 (in progress)
 - 📋 **v1.4 QA Audit Fixes** — Phases 37-42 (planned)
 - 📋 **v1.5 Growth & Monetization** — Phases 43+ (planned)
+- 🔄 **v1.6 Engagement** — Phases 51-54 (in progress)
+- 🔄 **v1.7 RAG Quality** — Phases 55+ (in progress)
+- 📋 **v1.8 Launch Readiness** — Phases 56+ (planned)
 
 ## Phases
 
@@ -78,6 +81,15 @@ Full details: see Phase Details below
   - [x] Sprint 1 (PoC, shipped 2026-05-06) — gpt-4.1-mini selected, 87.5% accuracy, OCR dropped. PR #1 awaiting merge.
   - [ ] Sprint 2 (Foundation + Pilot, spec+plan ready 2026-05-07) — schema migration source_type/trust_tier + retrieval profiles + 10-lesson 03_ai pilot. Awaiting execution.
   - [ ] Sprint 2C / 3 — full 03_ai (87) или full platform (~440) + UI tooltip + auto-ingest. Зависит от Sprint 2B gate.
+
+</details>
+
+<details>
+<summary>📋 v1.8 Launch Readiness (Phase 56+) — PLANNED</summary>
+
+**Milestone Goal:** Доработка платформы до боевого коммерческого запуска — направления из плана CPO (Влад Токарев, «План доработки платформы», май 2026): унификация диагностики, реферальная программа, развилка входа, админка с загрузкой видео, поиск-утилита, комьюнити-блок.
+
+- [ ] Phase 56: Entry Flow Redesign — онбординг-визард `/welcome` + развилка диагностика/каталог + снятие жёсткого гейта диагностики
 
 </details>
 
@@ -1061,3 +1073,39 @@ Plans:
 **Зависимости:** нет блокеров. Может стартовать в любой момент после согласования бюджета и приоритета.
 
 **Plans:** TBD (создаются после PoC по итогам выбора VLM)
+
+## v1.8 Launch Readiness (Phase 56+)
+
+### Phase 56: Entry Flow Redesign — развилка входа на платформу
+
+**Goal:** Новый пользователь получает комфортный вход — мягкий онбординг-визард с равноценным выбором пути (диагностика или каталог уроков) вместо обязательной диагностики. Уроки доступны в рамках подписки без прохождения диагностики.
+
+**Source:** План CPO (Влад Токарев), НАПРАВЛЕНИЕ 03 + ПРОТОТИП 03. Дизайн-спек: `docs/superpowers/specs/2026-05-18-entry-flow-redesign-design.md`.
+
+**Мотивация:**
+- Жёсткий гейт диагностики на странице урока (`learn/[id]/page.tsx:641-645`) — без пройденной диагностики весь контент урока подменяется блокирующим баннером. Опытный селлер упирается в стену, новичок получает нерелевантный план — оба теряются на activation.
+- Платформа не собирает квалификацию (маркетплейс / опыт / цели) — нет основы для персонализации.
+
+**Scope:**
+- Новый роут `/welcome` — онбординг-визард: намерение+цели → маркетплейсы → опыт → развилка (standalone-роут, полноэкранный layout вне `(main)`)
+- 5 новых полей `UserProfile`: `onboardingCompletedAt`, `marketplaces[]`, `experienceLevel`, `goals[]`, `goalText` + schema migration
+- tRPC-роутер `onboarding` (`getState`, `complete`)
+- Гард в server-layout `(main)`: редирект на `/welcome` при `onboardingCompletedAt == null` (ловит и текущих ~200 пользователей)
+- Снятие жёсткого гейта диагностики в `learn/[id]/page.tsx`; `DiagnosticGateBanner` → ненавязчивый закрываемый хинт
+- Редактирование квалификации в `/profile`
+
+**Out of scope:** редизайн библиотеки/плейбуков; AI-ответ на экране 1 (v3, отложено до стабилизации поиска); счётчики дашборда (НАПРАВЛЕНИЕ 06); диагностика как лид-магнит; подписочный гейт `lesson.locked`/`LockOverlay` не затрагивается.
+
+**Success Criteria** (what must be TRUE):
+  1. Новый пользователь после регистрации попадает в `/welcome`-визард (3 шага + развилка), не сразу на `/dashboard`
+  2. Квалификация (маркетплейсы / опыт / цели / свободный текст) сохраняется в `UserProfile` через `onboarding.complete`
+  3. С развилки пользователь уходит в `/diagnostic` или `/learn` — обе карточки равноценны
+  4. Без пройденной диагностики пользователь смотрит все уроки в рамках своей подписки; жёсткий гейт снят, подписочный `LockOverlay` сохранён
+  5. Визард показывается один раз; повторные входы → `/dashboard`. Текущие ~200 пользователей видят визард один раз при следующем входе
+  6. Квалификацию можно отредактировать в `/profile`
+
+**Handoff:** собранные `marketplaces` + `goals` — вход для будущего направления «Унификация диагностики» (НАПРАВЛЕНИЕ 01).
+
+**Зависимости:** нет блокеров.
+
+**Plans:** TBD (создаются через `/gsd-plan-phase 56`)
