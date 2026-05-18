@@ -56,9 +56,13 @@ export const jobRouter = router({
         const summaries = jobs.map((job) => {
           const lessons = job.lessons;
           const completed = lessons.filter(
-            (jl) => jl.lesson.progress[0]?.status === 'COMPLETED',
+            (jl) => jl.lesson.progress.some((p) => p.status === 'COMPLETED'),
           ).length;
           const isRecommended = lessons.some((jl) => trackLessonIds.has(jl.lessonId));
+          const primaryAxis = (job.axes as string[])[0] ?? 'ANALYTICS';
+          if ((job.axes as string[]).length === 0) {
+            console.warn(`[job.getCatalog] job "${job.slug}" has empty axes — placed in ANALYTICS`);
+          }
           return {
             id: job.id, slug: job.slug, title: job.title, description: job.description,
             marketplace: job.marketplace as JobMarketplace,
@@ -67,7 +71,7 @@ export const jobRouter = router({
             totalDurationMin: lessons.reduce((s, jl) => s + (jl.lesson.duration ?? 0), 0),
             completedLessons: completed,
             isRecommended,
-            _primaryAxis: (job.axes as string[])[0] ?? 'ANALYTICS',
+            _primaryAxis: primaryAxis,
           };
         });
 
