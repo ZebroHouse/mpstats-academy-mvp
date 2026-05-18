@@ -65,7 +65,7 @@ export function QualificationSection() {
       marketplaces: marketplaces as never[],
       experienceLevel: experienceLevel as never,
       goals: goals as never[],
-      goalText: goalText.trim() || undefined,
+      goalText: goalText.trim() || null,
     });
   };
 

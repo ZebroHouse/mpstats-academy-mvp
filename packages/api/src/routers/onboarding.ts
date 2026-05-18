@@ -41,7 +41,7 @@ export const onboardingRouter = router({
         marketplaces: z.array(z.enum(MARKETPLACES)).default([]),
         experienceLevel: z.enum(EXPERIENCE).nullable().optional(),
         goals: z.array(z.enum(GOALS)).default([]),
-        goalText: z.string().trim().max(500).optional(),
+        goalText: z.string().trim().max(500).nullable().optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {

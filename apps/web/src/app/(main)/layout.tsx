@@ -56,8 +56,10 @@ export default async function MainLayout({
   });
 
   // Onboarding guard (Phase 56): users who never passed the /welcome wizard
-  // are bounced there. redirect() throws — must be after all awaits, before return.
-  if (profile && profile.onboardingCompletedAt === null) {
+  // are bounced there. A null profile means the lazily-created UserProfile row
+  // doesn't exist yet (e.g. first Yandex OAuth login) — also pre-wizard, so guard it.
+  // redirect() throws — must be after all awaits, before return.
+  if (!profile || profile.onboardingCompletedAt === null) {
     redirect('/welcome');
   }
 
