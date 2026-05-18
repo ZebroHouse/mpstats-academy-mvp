@@ -347,3 +347,42 @@ export const MATERIAL_ALLOWED_MIME_TYPES = [
 export const MATERIAL_MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB (D-12)
 export const MATERIAL_SIGNED_URL_TTL = 3600; // 1 hour (D-10)
 export const MATERIAL_STORAGE_BUCKET = 'lesson-materials';
+
+// ============== LIBRARY REDESIGN (Phase 57): JOB CATALOG ==============
+
+export type JobMarketplace = 'WB' | 'OZON' | 'BOTH';
+
+export interface JobSummary {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  marketplace: JobMarketplace;
+  axes: string[];               // canonical 5
+  lessonCount: number;
+  totalDurationMin: number;
+  completedLessons: number;     // прогресс юзера
+  isRecommended: boolean;       // джоба из трека/диагностики
+}
+
+export interface JobCatalogAxis {
+  axis: string;                 // ANALYTICS | MARKETING | CONTENT | OPERATIONS | FINANCE
+  title: string;                // «Аналитика» и т.д.
+  jobs: JobSummary[];
+}
+
+export interface JobLessonItem {
+  id: string;
+  title: string;
+  durationMin: number;
+  order: number;
+  status: 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED';
+  watchedPercent: number;
+  locked: boolean;
+}
+
+export interface JobDetail extends JobSummary {
+  outcomes: string[];
+  skillBlocks: string[];
+  lessons: JobLessonItem[];
+}
