@@ -1108,4 +1108,10 @@ Plans:
 
 **Зависимости:** нет блокеров.
 
-**Plans:** TBD (создаются через `/gsd-plan-phase 56`)
+**Plans:** 4 plans
+
+Plans:
+- [ ] 56-01-PLAN.md — Schema +5 полей UserProfile + [BLOCKING] additive-миграция на prod
+- [ ] 56-02-PLAN.md — tRPC-роутер onboarding (getState + complete) + unit-тесты
+- [ ] 56-03-PLAN.md — /welcome route + fullscreen layout + визард (3 шага + развилка) + гард (main)
+- [ ] 56-04-PLAN.md — Де-гейтинг урока + DiagnosticGateBanner в хинт + редактирование квалификации в /profile
