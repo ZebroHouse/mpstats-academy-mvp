@@ -100,12 +100,16 @@ Archive directory `D:/GpT_docs/MPSTATS ACADEMY ADAPTIVE LEARNING/MAAL-phase55/` 
 
 **Внимание (исторический lesson):** CP хранит `amount` на своей стороне на момент создания подписки. При смене цен отменять старые ACTIVE подписки чтобы автосписания пошли по новым тарифам.
 
-## Last Session (2026-05-19) — status sync: Phase 53/55/56 shipped, Phase 57 in flight
+## Last Session (2026-05-19) — Phase 56 + referral banner shipped to prod, entry-flow hotfix
 
-Сверка с git — фазы, числившиеся «в работе», давно в master:
-- **Phase 53A + 53B — Referral Program** (merged 2026-05-05/06). Реферальные коды, ручная активация пакетов, 14-дневный TRIAL, анти-фрод; админка модерации `/admin/referrals`. Переключение флага i1→i2 — вручную ~2026-06-01.
-- **Phase 55 Sprint 3 — Vision-RAG full platform** (PR #6, merged 2026-05-18). Ингест 5 курсов (04_workshops 24, 01_analytics 40, 02_ads 64, 05_ozon 76, 06_express 64), smoke 89-100%, покрытие платформы ~91.5%.
-- **Phase 56 — Entry-flow redesign + CQ mirroring** (merged 2026-05-19). Онбординг-визард `/welcome`, 5 полей квалификации в `UserProfile`, зеркалирование в CarrotQuest.
+**Задеплоено на прод в этой сессии:**
+- **Phase 56 — Entry-flow redesign + CQ mirroring** (merged → prod, master `230d4a3`). Онбординг-визард `/welcome` (3 шага + развилка диагностика/каталог), 5 полей квалификации в `UserProfile` + additive-миграция (применена на prod), снятие жёсткого гейта диагностики (`DiagnosticGateBanner` → закрываемый хинт), редактирование квалификации в `/profile`, зеркалирование ответов визарда в CarrotQuest (`pa_marketplaces/experience/goals/goal_text` props + событие `pa_onboarding_completed`). Все ~170 существующих юзеров видят визард при следующем входе (one-time). GSD verification — `human_needed`: 2 пункта в `.planning/phases/56-entry-flow-redesign/56-HUMAN-UAT.md` (реальный Yandex-OAuth новый аккаунт + E2E-прогон в CI).
+- **Phase 56 hotfix** (master `b8242c3`) — петля на развилке визарда: `router.push` → Next Router Cache отдавал протухший рендер `(main)`-гарда → юзера зацикливало назад в визард. Фикс: уход с развилки через `window.location.assign` (жёсткая навигация). Инцидент на `evasilev@mpstats.io`, подтверждён резолвлен. См. Gotchas + регресс-тест `apps/web/tests/unit/welcome-page.test.tsx`.
+- **Реферальный баннер** (ПРОТОТИП 02 плана CPO; master `6615611`). Закрываемая промо-полоса в `(main)` поверх хедера — «Приведи друга → 14 дней доступа», CTA → `/profile/referral`. Все залогиненные, скрыт на `/profile/referral`, повтор через 14 дней после закрытия. `apps/web/src/components/referral/ReferralBanner.tsx`.
+
+**Смержено ранее (status-sync с git):**
+- **Phase 53A + 53B — Referral Program** (merged 2026-05-05/06). Реферальные коды, ручная активация пакетов, 14-дневный TRIAL, анти-фрод; админка `/admin/referrals`. Флаг i1→i2 — вручную ~2026-06-01.
+- **Phase 55 Sprint 3 — Vision-RAG full platform** (PR #6, merged 2026-05-18). 5 курсов, smoke 89-100%, покрытие ~91.5%.
 
 **Phase 57 — Library Redesign** (`/learn` на джобах) — в работе: ветка `worktree-phase-57-library-redesign` + PR #8, на staging. Детали — в Active Branches и `.claude/memory/`.
 
@@ -251,6 +255,7 @@ MAAL/
 - **Email-канал — CQ, не Resend:** Auth-письма (DOI / recovery / email_change) идут через Supabase webhook hook → `/api/webhooks/supabase-email` → CarrotQuest → CQ SMTP. Resend в Supabase auth-конфиге как fallback, но не активируется. Если в старых memory-заметках читаешь «Resend SMTP» — устарело. Полная схема: `docs/email-architecture.html`
 - **DOI/recovery ссылки:** идут на `/auth/confirm` (наш домен), не на `*.supabase.co` — фикс ERR_CONNECTION_ABORTED у Yandex Browser/AdGuard. См. `.claude/memory/project_auth_confirm_route.md`
 - **`@prisma/client` import в apps/web падает (vite resolve)** — использовать `@mpstats/db` (re-exports)
+- **Server-side `redirect()`-гард в layout + soft `router.push` = петля.** Гард в `(main)`-layout (напр. онбординг-редирект на `/welcome` при `onboardingCompletedAt == null`) рендерится на сервере. После клиентской `router.push` Next отдаёт протухший RSC-сегмент гарда из Router Cache → свежезаписанный флаг не виден, юзера зацикливает назад. tRPC-мутация кеш Next инвалидировать НЕ может. Уходить из gated-перехода — жёсткой навигацией (`window.location.assign`), не `router.push`. Инцидент 2026-05-19 (развилка визарда Phase 56)
 - **Vision-ingest пайплайн (`scripts/vision-ingest/`):** 7 жёстких safety rules — `AbortController` timeout на каждый external fetch, JSONL resume, pre-flight `validate-selection.ts`, dry-run на новых курсах, `isHidden=false` обязательно, идемпотентный селектор с DB-persisted mappings, cumulative cost logging. Каждое правило прослежено до реального incident'а Sprint 2/2C. Cross-AI authoritative: `.claude/memory/vision-ingest-safety.md`. Запуск любого ingest — только по `scripts/vision-ingest/PLAYBOOK.md`.
 - Details: `.claude/memory/cq-integration.md`, `.claude/memory/feedback_doi_resend_protocol.md`, `.claude/memory/vision-ingest-safety.md`
 
