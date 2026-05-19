@@ -19,6 +19,13 @@ import type { LessonWithProgress } from '@mpstats/shared';
 
 const INITIAL_LESSONS_SHOWN = 5;
 
+const PROGRESS_FILTER_LABELS: Record<ProgressFilter, string> = {
+  ALL: 'Все',
+  NOT_STARTED: 'Не начато',
+  IN_PROGRESS: 'В процессе',
+  COMPLETED: 'Завершено',
+};
+
 function pluralLessons(n: number): string {
   if (n % 10 === 1 && n % 100 !== 11) return `${n} урок`;
   if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return `${n} урока`;
@@ -80,7 +87,7 @@ function LearnPageInner() {
 
   const { data: courses, isLoading: coursesLoading, error: coursesError } = trpc.learning.getCourses.useQuery();
   const { data: recommendedPath } = trpc.learning.getRecommendedPath.useQuery();
-  const { data: jobAxes } = trpc.job.getCatalog.useQuery({ marketplace });
+  const { data: jobAxes, isLoading: jobsLoading, error: jobsError } = trpc.job.getCatalog.useQuery({ marketplace });
 
   // Search query
   const { data: searchResults, isLoading: searchLoading, error: searchError } = trpc.ai.searchLessons.useQuery(
@@ -321,8 +328,8 @@ function LearnPageInner() {
         )}
       </div>
 
-      {/* MarketplaceSwitch — under header, hidden during search */}
-      {searchQuery.length === 0 && (
+      {/* MarketplaceSwitch — under header, jobs lens only, hidden during search */}
+      {searchQuery.length === 0 && lens === 'jobs' && (
         <div>
           <MarketplaceSwitch value={marketplace} onChange={setMarketplace} />
         </div>
@@ -418,27 +425,24 @@ function LearnPageInner() {
         <div className="space-y-4">
           {/* Thin progress filter */}
           <div className="flex gap-2 flex-wrap">
-            {(['ALL', 'NOT_STARTED', 'IN_PROGRESS', 'COMPLETED'] as ProgressFilter[]).map((f) => {
-              const labels: Record<ProgressFilter, string> = {
-                ALL: 'Все', NOT_STARTED: 'Не начато', IN_PROGRESS: 'В процессе', COMPLETED: 'Завершено',
-              };
-              return (
-                <button
-                  key={f}
-                  onClick={() => setProgressFilter(f)}
-                  className={cn(
-                    'px-3 py-1.5 rounded-lg text-body-sm font-medium transition-colors',
-                    progressFilter === f
-                      ? 'bg-mp-blue-500 text-white'
-                      : 'bg-white border border-mp-gray-200 text-mp-gray-600 hover:bg-mp-gray-50',
-                  )}
-                >
-                  {labels[f]}
-                </button>
-              );
-            })}
+            {(['ALL', 'NOT_STARTED', 'IN_PROGRESS', 'COMPLETED'] as ProgressFilter[]).map((f) => (
+              <button
+                key={f}
+                onClick={() => setProgressFilter(f)}
+                className={cn(
+                  'px-3 py-1.5 rounded-lg text-body-sm font-medium transition-colors',
+                  progressFilter === f
+                    ? 'bg-mp-blue-500 text-white'
+                    : 'bg-white border border-mp-gray-200 text-mp-gray-600 hover:bg-mp-gray-50',
+                )}
+              >
+                {PROGRESS_FILTER_LABELS[f]}
+              </button>
+            ))}
           </div>
-          <JobCatalog axes={jobAxes ?? []} progressFilter={progressFilter} />
+          {jobsLoading && <div className="h-32 bg-mp-gray-200 rounded-xl animate-pulse" />}
+          {jobsError && <p className="text-body-sm text-red-500 py-6 text-center">Не удалось загрузить каталог джоб.</p>}
+          {!jobsLoading && !jobsError && <JobCatalog axes={jobAxes ?? []} progressFilter={progressFilter} />}
         </div>
       ) : (
         /* Courses lens — existing courses accordion */
