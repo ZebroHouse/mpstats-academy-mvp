@@ -1,7 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { trpc } from '@/lib/trpc/client';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
@@ -19,12 +18,16 @@ type Step = 1 | 2 | 3 | 'fork';
  * Onboarding wizard orchestrator.
  * Client-side useState stepper (1 → 2 → 3 → fork). Answers accumulate locally;
  * a single onboarding.complete mutation persists everything at the fork.
- * router.push is strictly inside onSuccess — navigating before the mutation
- * resolves would leave onboardingCompletedAt null and trigger a redirect loop.
+ *
+ * Navigation off the fork uses a hard load (window.location.assign), NOT
+ * router.push. The (main) layout guard redirects to /welcome while
+ * onboardingCompletedAt is null; after a soft navigation Next's client Router
+ * Cache can replay a stale pre-onboarding render of that guard — bouncing the
+ * user back into the wizard even though complete() already wrote the flag
+ * (prod incident 2026-05-19). A full load discards the Router Cache so the
+ * guard re-renders server-side against the freshly-written flag.
  */
 export default function WelcomePage() {
-  const router = useRouter();
-
   const [step, setStep] = useState<Step>(1);
   const [goals, setGoals] = useState<string[]>([]);
   const [goalText, setGoalText] = useState('');
@@ -46,7 +49,7 @@ export default function WelcomePage() {
         marketplaces: marketplaces as never,
         experienceLevel: experienceLevel as never,
       },
-      { onSuccess: () => router.push(dest) },
+      { onSuccess: () => window.location.assign(dest) },
     );
   };
 
