@@ -1,6 +1,6 @@
 # CLAUDE.md — MPSTATS Academy MVP
 
-**Last updated:** 2026-05-14
+**Last updated:** 2026-05-19
 
 > Детали по сессиям, спринтам, Supabase, деплою, CQ, staging — в `.claude/memory/`.
 > Индекс: `.claude/memory/MEMORY.md`. История сессий: `.claude/memory/session-history.md`.
@@ -46,23 +46,25 @@ Sibling project `D:/GpT_docs/Ai_MP_manager/` запустил `prisma db push --
 | v1.3 Pre-release | Shipped (Phases 22-36) |
 | v1.4 QA Audit Fixes | Shipped 2026-03-29 (Phases 37-42) |
 | v1.5 Growth & Monetization | In Progress (Phase 44+45+46+48+49+50 shipped) |
-| v1.6 Engagement | In Progress (Phases 51-52 shipped, 53A awaiting merge, 53-54 planned) |
-| v1.7 RAG Quality | In Progress (Phase 55 Sprint 2 + 2C + Sprint 3 prep shipped — 89/440 lessons; Sprint 3 actual pending) |
+| v1.6 Engagement | In Progress (Phases 51-53 + 56 shipped; 54 planned) |
+| v1.7 RAG Quality | In Progress (Phase 55 Sprints 2/2C/3 shipped — full-platform vision-RAG, 91.5% coverage) |
+| v1.8 Library Redesign | Phase 57 — code complete, on staging, PR #8 (see Active Branches) |
 
 **Remaining work:**
-1. Phase 53A — referral, awaiting Egor's merge to master
-2. Phase 33-03: CQ Dashboard Setup (на стороне CQ команды)
-3. Phase 47: /learn Hub-Layout — навигационный хаб
-4. **Phase 55 Sprint 3** — full-platform vision-RAG ingest (~301 unmapped lessons across 04_workshops, 01_analytics, 02_ads, 05_ozon, 06_express). All tooling ready. Procedure: `scripts/vision-ingest/PLAYBOOK.md`. Safety rules: `.claude/memory/vision-ingest-safety.md`.
+1. **Phase 57 — Library Redesign** (`/learn` job catalog) — code complete, on staging, PR #8. Awaiting content-team JOB-PROPOSAL validation + staging QA before merge (see Active Branches).
+2. **Phase 58 — diagnostic on jobs** (Phase 57 follow-up) — not started; needs a spec. Diagnostic recommends whole jobs instead of loose lessons.
+3. Phase 33-03: CQ Dashboard Setup (на стороне CQ команды).
+
+_Done since 2026-05-14: Phase 53A + 53B (referral) merged, Phase 55 Sprint 3 merged (vision-RAG full platform), Phase 56 (entry-flow) merged. Phase 47 (hub-layout) superseded by Phase 57._
 
 ## Active Branches
 
 | Branch | Worktree | PR | Status |
 |--------|----------|----|----|
-| `phase-53a-referral` | (not active) | (none) | Referral program, awaiting Egor's merge decision. Switch flag i1→i2 scheduled 2026-06-01. |
-| `phase-53b-referral-admin` | (not active) | (none) | Admin moderation UI, QA passed 2026-05-06. Awaits merge after 53A. |
+| `worktree-phase-57-library-redesign` | `.claude/worktrees/phase-57-library-redesign` | #8 | Library redesign (`/learn` job catalog). Code complete, on staging with 29 provisional jobs. Awaiting content-team JOB-PROPOSAL validation + QA. ⚠️ Stray commit `79036f1` on master must be removed before merge (conflicts in `packages/shared/src/types/index.ts`). |
 
-Phase 55 vision-RAG branches (sprint-2c + sprint-3-prep) merged to master 2026-05-12 — see Last Session.
+Phase 53A + 53B (referral) merged to master. Phase 55 Sprint 3 (vision-RAG, 91.5% platform coverage) merged. Phase 56 (entry-flow) merged.
+Referral flag i1→i2 switch still scheduled ~2026-06-01 (manual: DB INSERT + env + rebuild).
 Archive directory `D:/GpT_docs/MPSTATS ACADEMY ADAPTIVE LEARNING/MAAL-phase55/` (orphan, not a worktree) holds Sprint 2C VLM dumps (`results/vlm-runs-sprint2c.json` 1.7MB, 644 frame jpgs in `results/frames/`) — useful if a re-ingest is needed without re-running LLM. Safe to delete to free ~300MB when no longer needed.
 
 **Cross-AI sync policy (read before editing this file):**
@@ -98,7 +100,16 @@ Archive directory `D:/GpT_docs/MPSTATS ACADEMY ADAPTIVE LEARNING/MAAL-phase55/` 
 
 **Внимание (исторический lesson):** CP хранит `amount` на своей стороне на момент создания подписки. При смене цен отменять старые ACTIVE подписки чтобы автосписания пошли по новым тарифам.
 
-## Last Session (2026-05-12) — Phase 55 Sprint 2C + Sprint 3 prep shipped to master + PITR recovery + L2 backup
+## Last Session (2026-05-19) — status sync: Phase 53/55/56 shipped, Phase 57 in flight
+
+Сверка с git — фазы, числившиеся «в работе», давно в master:
+- **Phase 53A + 53B — Referral Program** (merged 2026-05-05/06). Реферальные коды, ручная активация пакетов, 14-дневный TRIAL, анти-фрод; админка модерации `/admin/referrals`. Переключение флага i1→i2 — вручную ~2026-06-01.
+- **Phase 55 Sprint 3 — Vision-RAG full platform** (PR #6, merged 2026-05-18). Ингест 5 курсов (04_workshops 24, 01_analytics 40, 02_ads 64, 05_ozon 76, 06_express 64), smoke 89-100%, покрытие платформы ~91.5%.
+- **Phase 56 — Entry-flow redesign + CQ mirroring** (merged 2026-05-19). Онбординг-визард `/welcome`, 5 полей квалификации в `UserProfile`, зеркалирование в CarrotQuest.
+
+**Phase 57 — Library Redesign** (`/learn` на джобах) — в работе: ветка `worktree-phase-57-library-redesign` + PR #8, на staging. Детали — в Active Branches и `.claude/memory/`.
+
+## Previous Session (2026-05-12) — Phase 55 Sprint 2C + Sprint 3 prep shipped to master + PITR recovery + L2 backup
 
 **Two PRs merged to master:**
 - `a3967ce` — Sprint 2C: 79 lessons of `03_ai` ingested (DB: 89 lessons / 792 frame chunks). Smoke 16/18 = 88.9% with `gpt-4.1-mini`. Cost $0.94.
