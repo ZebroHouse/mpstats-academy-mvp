@@ -241,12 +241,21 @@ export const aiRouter = router({
               { description: { contains: q, mode: 'insensitive' } },
             ],
           },
-          select: { id: true },
+          select: { id: true, title: true, description: true },
           take: 20,
         }),
       ]);
 
-      const keywordMatchIds = new Set(keywordLessons.map((l) => l.id));
+      const qLower = q.toLowerCase();
+      const titleMatchIds = new Set(
+        keywordLessons.filter((l) => l.title.toLowerCase().includes(qLower)).map((l) => l.id),
+      );
+      const descMatchIds = new Set(
+        keywordLessons
+          .filter((l) => !titleMatchIds.has(l.id) && (l.description ?? '').toLowerCase().includes(qLower))
+          .map((l) => l.id),
+      );
+      const keywordMatchIds = new Set<string>([...titleMatchIds, ...descMatchIds]);
 
       if (chunks.length === 0 && keywordMatchIds.size === 0) {
         return { query: input.query, results: [], totalChunks: 0 };
@@ -312,11 +321,12 @@ export const aiRouter = router({
         }
       }
 
-      // 6. Merge and sort: keyword matches rank above vector matches,
-      // then by chunk similarity for ties/vector-only results.
+      // 6. Merge and sort by best similarity (floor-boosted for keyword matches).
+      const TITLE_FLOOR = 0.8;
+      const DESC_FLOOR = 0.65;
+
       const results: SearchLessonResult[] = lessons.map((lesson) => {
         const chunkList = lessonChunksMap.get(lesson.id) || [];
-        const isKeywordMatch = keywordMatchIds.has(lesson.id);
         const locked = !isLessonAccessible(
           { order: lesson.order, courseId: lesson.courseId },
           subs,
@@ -332,9 +342,14 @@ export const aiRouter = router({
         }));
 
         const vectorBest = snippets.length > 0 ? Math.max(...snippets.map((s) => s.similarity)) : 0;
-        // Keyword matches are surfaced first (similarity=1.0) so users always
-        // find lessons whose titles/descriptions contain their query terms.
-        const bestSimilarity = isKeywordMatch ? 1 : vectorBest;
+        // Keyword match acts as a floor on similarity, not a ceiling: a strong
+        // semantic hit can still outrank a keyword match.
+        const floor = titleMatchIds.has(lesson.id)
+          ? TITLE_FLOOR
+          : descMatchIds.has(lesson.id)
+            ? DESC_FLOOR
+            : 0;
+        const bestSimilarity = Math.max(vectorBest, floor);
 
         return {
           lesson: {
