@@ -3,11 +3,11 @@
 import { useState, useEffect } from 'react';
 
 const EXAMPLE_QUERIES = [
-  'Как снизить рекламные расходы',
-  'Стратегия контента для маркетплейсов',
-  'Финансовая модель юнит-экономики',
-  'SEO оптимизация карточки товара',
-  'Анализ конкурентов и ниш',
+  'Юнит-экономика',
+  'Реклама на WB',
+  'SEO карточки',
+  'Анализ ниши',
+  'Контент-стратегия',
 ];
 
 interface SearchBarProps {
@@ -80,7 +80,7 @@ export function SearchBar({ onSearch, onClear, isSearching, hasResults }: Search
           value={inputValue}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          placeholder={isMobile ? 'Опишите задачу...' : 'Опишите задачу — например: как снизить ДРР на Wildberries'}
+          placeholder={isMobile ? 'Поиск по урокам...' : 'Напишите тему, которая вас интересует'}
           className="flex-1 h-full bg-transparent text-body text-mp-gray-900 placeholder:text-mp-gray-400 focus:outline-none"
         />
 
