@@ -1,14 +1,22 @@
-import { describe, it, expect, vi, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, cleanup } from '@testing-library/react';
 import { SearchBar } from '@/components/learning/SearchBar';
 
+let originalInnerWidth: number;
+
+beforeEach(() => {
+  originalInnerWidth = window.innerWidth;
+  Object.defineProperty(window, 'innerWidth', { configurable: true, value: 1024, writable: true });
+});
+
 afterEach(() => {
+  Object.defineProperty(window, 'innerWidth', { configurable: true, value: originalInnerWidth, writable: true });
   cleanup();
 });
 
 describe('SearchBar', () => {
   it('uses the honest-framing desktop placeholder', () => {
-    // jsdom default innerWidth is 1024 → desktop branch
+    // innerWidth set to 1024 in beforeEach → desktop branch
     const { container } = render(
       <SearchBar onSearch={vi.fn()} onClear={vi.fn()} isSearching={false} hasResults={false} />,
     );
