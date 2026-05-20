@@ -86,7 +86,9 @@ describe('ai.searchLessons ranking', () => {
       { id: 'ch1', lesson_id: 'l2', content: 'про маржу подробно', timecode_start: 0, timecode_end: 10, source_type: 'academy_audio', trust_tier: 1, similarity: 0.92 },
     ]);
     mockLessonFindMany
-      .mockResolvedValueOnce([{ id: 'l1', title: 'Юнит-экономика и маржа', description: 'X' }]) // keyword query
+      // 1st findMany: keyword query (id/title/description)
+      .mockResolvedValueOnce([{ id: 'l1', title: 'Юнит-экономика и маржа', description: 'X' }])
+      // 2nd findMany: enrichment (full lesson rows)
       .mockResolvedValueOnce([
         lessonRow({ id: 'l1', title: 'Юнит-экономика и маржа' }),
         lessonRow({ id: 'l2', title: 'Другой урок' }),
@@ -104,7 +106,9 @@ describe('ai.searchLessons ranking', () => {
   it('title-only keyword match gets floor 0.8 when there are no chunks', async () => {
     mockSearchChunks.mockResolvedValue([]);
     mockLessonFindMany
+      // 1st findMany: keyword query (id/title/description)
       .mockResolvedValueOnce([{ id: 'l1', title: 'SEO карточки товара', description: '' }])
+      // 2nd findMany: enrichment (full lesson rows)
       .mockResolvedValueOnce([lessonRow({ id: 'l1', title: 'SEO карточки товара' })]);
 
     const res = await caller().searchLessons({ query: 'SEO' });
@@ -115,7 +119,9 @@ describe('ai.searchLessons ranking', () => {
   it('description-only keyword match gets floor 0.65', async () => {
     mockSearchChunks.mockResolvedValue([]);
     mockLessonFindMany
+      // 1st findMany: keyword query (id/title/description)
       .mockResolvedValueOnce([{ id: 'l1', title: 'Совсем другое', description: 'упоминается рекламный кабинет' }])
+      // 2nd findMany: enrichment (full lesson rows)
       .mockResolvedValueOnce([lessonRow({ id: 'l1', title: 'Совсем другое', description: 'упоминается рекламный кабинет' })]);
 
     const res = await caller().searchLessons({ query: 'рекламный' });
@@ -127,7 +133,9 @@ describe('ai.searchLessons ranking', () => {
       { id: 'ch1', lesson_id: 'l1', content: 'snippet', timecode_start: 0, timecode_end: 10, source_type: 'academy_audio', trust_tier: 1, similarity: 0.7 },
     ]);
     mockLessonFindMany
+      // 1st findMany: keyword query (id/title/description)
       .mockResolvedValueOnce([]) // no keyword match
+      // 2nd findMany: enrichment (full lesson rows)
       .mockResolvedValueOnce([lessonRow({ id: 'l1' })]);
 
     const res = await caller().searchLessons({ query: 'непохожая фраза' });
