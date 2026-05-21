@@ -306,9 +306,6 @@ export default function TrackPage() {
                         showCourse
                         courseName={l.courseName as string}
                         locked={l.locked}
-                        onRemoveFromTrack={() =>
-                          removeFromTrackMutation.mutate({ lessonId: l.id })
-                        }
                       />
                     ))}
                   </div>
