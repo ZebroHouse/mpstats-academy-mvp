@@ -7,7 +7,7 @@ import {
 } from '@/lib/referral/attribution';
 
 // Routes that require authentication
-const protectedRoutes = ['/dashboard', '/diagnostic', '/learn', '/profile', '/admin', '/complete-profile'];
+const protectedRoutes = ['/dashboard', '/diagnostic', '/learn', '/profile', '/admin', '/complete-profile', '/welcome'];
 
 function decorateWithReferral(response: NextResponse, refCode: string | null): NextResponse {
   if (refCode) {
@@ -35,7 +35,7 @@ export async function middleware(request: NextRequest) {
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
       cookies: {
         getAll() {

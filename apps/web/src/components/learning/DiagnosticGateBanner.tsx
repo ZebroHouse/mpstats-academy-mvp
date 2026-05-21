@@ -1,32 +1,59 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { Card, CardContent } from '@/components/ui/card';
+import { Sparkles, X } from 'lucide-react';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
+const DISMISS_KEY = 'diagnosticHintDismissed';
+
+/**
+ * Ненавязчивая закрываемая хинт-карточка диагностики над плеером урока.
+ * НЕ блокирует видео. Показывается только пока пользователь не прошёл
+ * диагностику и не закрыл подсказку. Dismissal хранится в localStorage.
+ */
 export function DiagnosticGateBanner() {
+  const [dismissed, setDismissed] = useState(true);
+
+  useEffect(() => {
+    setDismissed(localStorage.getItem(DISMISS_KEY) === 'true');
+  }, []);
+
+  if (dismissed) {
+    return null;
+  }
+
+  const handleDismiss = () => {
+    localStorage.setItem(DISMISS_KEY, 'true');
+    setDismissed(true);
+  };
+
   return (
-    <Card className="shadow-mp-card border-mp-blue-200 bg-gradient-to-br from-mp-blue-50 to-white">
-      <CardContent className="py-12 text-center">
-        {/* Lock icon */}
-        <div className="w-16 h-16 rounded-2xl bg-mp-blue-100 flex items-center justify-center mx-auto mb-4">
-          <svg className="w-8 h-8 text-mp-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
-              d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-          </svg>
-        </div>
-        <h2 className="text-heading text-mp-gray-900 mb-2">
-          Пройди диагностику, чтобы получить доступ
-        </h2>
-        <p className="text-body text-mp-gray-500 mb-6 max-w-md mx-auto">
-          Диагностика определит твои сильные и слабые стороны, и мы подберём персональный трек обучения
-        </p>
-        <Link href="/diagnostic">
-          <Button size="lg">
-            Начать диагностику
+    <Card className="border-l-4 border-mp-blue-500 bg-mp-blue-50 p-4">
+      <div className="flex items-start gap-3">
+        <Sparkles className="mt-0.5 size-5 shrink-0 text-mp-blue-600" />
+        <div className="flex-1 space-y-1">
+          <h3 className="text-heading-sm text-mp-gray-900">
+            Пройди диагностику — соберём персональный трек
+          </h3>
+          <p className="text-body-sm text-mp-gray-600">
+            Точная карта навыков и уроки под ваши слабые места.
+          </p>
+          <Button asChild variant="link" size="sm" className="h-auto px-0">
+            <Link href="/diagnostic">Пройти →</Link>
           </Button>
-        </Link>
-      </CardContent>
+        </div>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={handleDismiss}
+          aria-label="Закрыть подсказку"
+          className="shrink-0 text-mp-gray-500"
+        >
+          <X className="size-4" />
+        </Button>
+      </div>
     </Card>
   );
 }

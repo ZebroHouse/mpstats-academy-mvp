@@ -32,6 +32,11 @@ model UserProfile {
   yandexId  String?  @unique // For Phase 17 Yandex ID OAuth binding
   phone     String?
   toursCompleted String[] @default([]) // Onboarding tour state (per-user, not per-device): ['dashboard', 'learn', 'lesson']
+  onboardingCompletedAt DateTime?               // Phase 56: null = show wizard; now() when fork passed
+  marketplaces          String[]  @default([])  // Phase 56: WB|OZON|YANDEX|ALIEXPRESS|MEGAMARKET|OWN_SHOP|OTHER
+  experienceLevel       String?                 // Phase 56: PROSPECTING|BEGINNER|STABLE|ADVANCED
+  goals                 String[]  @default([])  // Phase 56: SALES|ADS|CONTENT|ANALYTICS|OPERATIONS|FINANCE|NEW_MARKETPLACE
+  goalText              String?                 // Phase 56: free text from step 1
   referralCode   String?  @unique // Phase 53A: user's own shareable referral code
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt

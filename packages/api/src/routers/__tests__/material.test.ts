@@ -28,8 +28,8 @@ vi.mock('../../utils/access', () => ({
 // Нужны env vars иначе getSupabaseAdmin throws
 process.env.NEXT_PUBLIC_SUPABASE_URL =
   process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://example.supabase.co';
-process.env.SUPABASE_SERVICE_ROLE_KEY =
-  process.env.SUPABASE_SERVICE_ROLE_KEY || 'test-service-role-key';
+process.env.SUPABASE_SECRET_KEY =
+  process.env.SUPABASE_SECRET_KEY || 'test-service-role-key';
 
 import { materialRouter } from '../material';
 import { checkLessonAccess } from '../../utils/access';

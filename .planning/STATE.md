@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.6
 milestone_name: Engagement
-status: Phase 51 shipped (Notification Center Foundation)
-stopped_at: Completed 51-07-PLAN.md
-last_updated: "2026-04-30T14:30:00Z"
+status: Phase 56 complete (Entry Flow Redesign)
+stopped_at: Phase 56 Plan 04 complete — phase 56 complete
+last_updated: "2026-05-18T12:00:00.000Z"
 progress:
-  total_phases: 28
-  completed_phases: 25
-  total_plans: 59
-  completed_plans: 59
-  percent: 100
+  total_phases: 4
+  completed_phases: 1
+  total_plans: 9
+  completed_plans: 9
+  percent: 25
 ---
 
 # Project State
@@ -20,12 +20,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Core value:** Пользователь проходит AI-диагностику, получает точную карту навыков и персонализированный трек обучения из реальных данных
-**Current focus:** Phase 51 Notification Center Foundation shipped 2026-04-30 (staging-only; prod deploy pending)
+**Current focus:** Phase 56 — entry-flow-redesign
 
 ## Current Position
 
-Phase: 51 (notification-center-foundation) — COMPLETE
-Plan: 7 of 7 (51-07-polish shipped) + post-deploy hotfix (NotificationBell badge color + style alignment)
+Phase: 56 (entry-flow-redesign) — COMPLETE
+Plan: 4 of 4 (56-01, 56-02, 56-03, 56-04 complete)
 
 ## Performance Metrics
 
@@ -155,6 +155,17 @@ Full v1.1 decision history: `milestones/v1.1-ROADMAP.md`
 - [49-05]: XHR PUT (не fetch) для upload progress events — fetch не имеет upload progress API
 - [49-05]: Один [id]/page.tsx для create+edit (params.id === 'new' as discriminator)
 - [49-05]: Inline confirmation modal без shadcn Dialog — паттерн HideConfirmDialog уже в codebase
+- [56-01]: String[] вместо Prisma enum для marketplaces/goals — повторяет паттерн toursCompleted
+- [56-01]: Additive-миграция на prod (nullable/DEFAULT колонки) применена через Supabase Management API query endpoint, _prisma_migrations синхронизирована ручным INSERT — zero data-loss (170 users целы)
+- [56-02]: onboarding tRPC-роутер — копия паттерна profile.ts (protectedProcedure + ensureUserProfile + handleDatabaseError); z.enum whitelist на marketplaces/goals/experienceLevel отклоняет tampered-ключи до DB-записи
+- [56-02]: Гард (main)/layout читает onboardingCompletedAt напрямую через prisma — getState оставлен для /profile; один лишний select-field, ноль новых round-trip'ов
+- [56-02]: Unit-тест onboarding: ctx prisma stub дискриминирует middleware-findUnique (lastActiveAt debounce) по select-аргументу, возвращая свежий lastActiveAt → debounce пропускает side-effect update
+- [56-03]: /welcome — standalone top-level роут вне (main), свой fullscreen layout + server-side auth-guard; гард (main)/layout читает onboardingCompletedAt прямым prisma.findUnique (один select-field, ноль новых round-trip'ов)
+- [56-03]: Визард — клиентский useState-степпер (1|2|3|'fork'), одна финальная мутация onboarding.complete на развилке; router.push строго в onSuccess — защита от redirect-loop при сбое мутации
+- [56-03]: /welcome добавлен и в middleware protectedRoutes, и в welcome/layout getUser-проверку — defense in depth (middleware быстрее, layout надёжнее)
+- [56-04]: Жёсткий гейт диагностики на уроке снят — урок доступен на подписке без теста; удалена ТОЛЬКО ветка hasDiagnostic === false, подписочный LockOverlay нетронут
+- [56-04]: DiagnosticGateBanner — закрываемый хинт; dismissed инициализируется true (не false), чтобы карточка не мелькала у юзеров с установленным localStorage-флагом до useEffect-проверки
+- [56-04]: QualificationSection вынесена в отдельный компонент (паттерн SecurityCard) — profile/page.tsx уже 838 строк; переиспользует welcome-options без хардкода списков
 
 ### Blockers/Concerns
 
@@ -234,11 +245,15 @@ None.
 | 49    | 02   | 6min     | 3     | 8     |
 | 49    | 03   | 12min    | 2     | 9     |
 | 49    | 05   | 38min    | 3     | 7     |
+| 56    | 01   | 10min    | 2     | 2     |
+| 56    | 02   | 6min     | 2     | 3     |
+| 56    | 03   | 9min     | 3     | 11    |
+| 56    | 04   | 6min     | 2     | 4     |
 
 ## Session Continuity
 
-Last session: 2026-04-27T08:48:00Z
-Stopped at: Completed 49-05-PLAN.md (admin CRUD UI for materials: list page, create/edit form with XOR source toggle, drag-n-drop file upload via signed PUT URL, multi-attach combobox, sidebar nav entry — methodologists can now manage 62+ materials autonomously)
+Last session: 2026-05-18T12:00:00.000Z
+Stopped at: Phase 56 Plan 04 complete — Phase 56 (Entry Flow Redesign) завершена (де-гейтинг урока + DiagnosticGateBanner → закрываемый хинт + редактирование квалификации в /profile)
 
 ### Session 2026-03-12 — Billing Payment Flow Testing & Fixes
 

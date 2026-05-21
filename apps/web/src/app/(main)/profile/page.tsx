@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import { trpc } from '@/lib/trpc/client';
 import { cn } from '@/lib/utils';
 import { SkillRadarChart } from '@/components/charts/RadarChart';
+import { QualificationSection } from '@/components/profile/QualificationSection';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 
@@ -495,6 +496,9 @@ export default function ProfilePage() {
             hasPassword={profile?.hasPassword ?? false}
             oauthProviders={profile?.oauthProviders ?? []}
           />
+
+          {/* Квалификация — редактирование данных онбординга */}
+          <QualificationSection />
 
 
           {/* Subscription section — only if billing enabled */}

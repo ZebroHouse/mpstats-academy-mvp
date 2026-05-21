@@ -1,7 +1,7 @@
 /**
  * Supabase Admin Client (server-only).
  *
- * Uses SUPABASE_SERVICE_ROLE_KEY for privileged operations:
+ * Uses SUPABASE_SECRET_KEY for privileged operations:
  * - Creating users via Admin API
  * - Generating magic links for session creation
  * - Managing user metadata
@@ -18,11 +18,11 @@ export function getSupabaseAdmin(): SupabaseClient {
   if (adminClient) return adminClient;
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const serviceRoleKey = process.env.SUPABASE_SECRET_KEY;
 
   if (!url || !serviceRoleKey) {
     throw new Error(
-      'Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY environment variables'
+      'Missing NEXT_PUBLIC_SUPABASE_URL or SUPABASE_SECRET_KEY environment variables'
     );
   }
 

@@ -640,12 +640,12 @@ export default function LessonPage() {
 
       {lesson.locked ? (
         <LockOverlay lessonTitle={lesson.title} />
-      ) : hasDiagnostic === false ? (
-        <DiagnosticGateBanner />
       ) : (
       <div className="grid lg:grid-cols-3 gap-6">
         {/* Left column: Video + Summary + Navigation */}
         <div className="lg:col-span-2 space-y-4">
+          {/* Non-blocking diagnostic hint (dismissible) */}
+          {hasDiagnostic === false && <DiagnosticGateBanner />}
           {/* Video player */}
           <Card data-tour="lesson-video" id="video-player" className="overflow-hidden shadow-mp-card">
             <VideoPlayer

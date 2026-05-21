@@ -35,7 +35,9 @@ export type CQEventName =
   // Referral (Phase 53A)
   | 'pa_referral_trial_started'
   | 'pa_referral_friend_registered'
-  | 'pa_referral_friend_paid';
+  | 'pa_referral_friend_paid'
+  // Onboarding (Phase 56)
+  | 'pa_onboarding_completed';
 
 /**
  * Event data payload — flat key-value map sent alongside the event.

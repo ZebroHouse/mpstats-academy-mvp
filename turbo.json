@@ -8,7 +8,7 @@
       "outputs": [".next/**", "!.next/cache/**", "dist/**"],
       "env": [
         "NEXT_PUBLIC_*",
-        "SUPABASE_SERVICE_ROLE_KEY",
+        "SUPABASE_SECRET_KEY",
         "OPENROUTER_API_KEY",
         "DATABASE_URL",
         "DIRECT_URL",

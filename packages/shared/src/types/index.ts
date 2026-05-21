@@ -318,7 +318,8 @@ export const MATERIAL_MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB (D-12)
 export const MATERIAL_SIGNED_URL_TTL = 3600; // 1 hour (D-10)
 export const MATERIAL_STORAGE_BUCKET = 'lesson-materials';
 
-// ── Library redesign (Phase 57): Job catalog ──
+// ============== LIBRARY REDESIGN (Phase 57): JOB CATALOG ==============
+
 export type JobMarketplace = 'WB' | 'OZON' | 'BOTH';
 
 export interface JobSummary {

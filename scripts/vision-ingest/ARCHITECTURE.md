@@ -353,7 +353,7 @@ Concurrency: 5 workers (`CONCURRENCY = 5`). 60s per-request timeout via `AbortCo
 
 ### 6.5 Upload to Storage (`upload-frames-storage.ts`)
 
-For each frame in the manifest: read JPG, upload to `lesson-frames/<lessonId>/frame_NNN_MM-SS.jpg` with `contentType: 'image/jpeg', upsert: true`. Uses `SUPABASE_SERVICE_ROLE_KEY` (no RLS bypass needed — bucket is service-role only).
+For each frame in the manifest: read JPG, upload to `lesson-frames/<lessonId>/frame_NNN_MM-SS.jpg` with `contentType: 'image/jpeg', upsert: true`. Uses `SUPABASE_SECRET_KEY` (no RLS bypass needed — bucket is service-role only).
 
 ### 6.6 Embed + insert (`embed-and-insert.ts`)
 

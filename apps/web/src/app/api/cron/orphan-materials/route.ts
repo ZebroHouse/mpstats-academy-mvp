@@ -50,7 +50,7 @@ async function handle(request: NextRequest) {
   try {
     const sb = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      process.env.SUPABASE_SECRET_KEY!,
     );
 
     // 1) Walk bucket and collect all file paths with timestamps

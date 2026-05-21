@@ -16,7 +16,7 @@
  *   npx tsx scripts/tag-lessons.ts --dry-run
  *   npx tsx scripts/tag-lessons.ts --skip-stage2
  *
- * Environment: OPENROUTER_API_KEY, DATABASE_URL, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+ * Environment: OPENROUTER_API_KEY, DATABASE_URL, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SECRET_KEY
  * Cost estimate: ~$0.05 (405 calls x ~700 tokens + 1 clustering call)
  */
 

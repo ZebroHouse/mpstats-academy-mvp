@@ -53,8 +53,16 @@ export default async function MainLayout({
   // Fetch UserProfile for UserNav (single source of truth per D-04, D-05)
   const profile = await prisma.userProfile.findUnique({
     where: { id: user.id },
-    select: { name: true, avatarUrl: true },
+    select: { name: true, avatarUrl: true, onboardingCompletedAt: true },
   });
+
+  // Onboarding guard (Phase 56): users who never passed the /welcome wizard
+  // are bounced there. A null profile means the lazily-created UserProfile row
+  // doesn't exist yet (e.g. first Yandex OAuth login) — also pre-wizard, so guard it.
+  // redirect() throws — must be after all awaits, before return.
+  if (!profile || profile.onboardingCompletedAt === null) {
+    redirect('/welcome');
+  }
 
   // Generate HMAC hash for Carrot Quest user identification
   const cqUserAuthKey = process.env.CARROTQUEST_USER_AUTH_KEY || '';

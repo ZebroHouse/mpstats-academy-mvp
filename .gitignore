@@ -88,3 +88,6 @@ scripts/backup/.env
 scripts/backup/work/
 scripts/backup/backup.log
 scripts/backup/cron.log
+
+# Local git worktrees (created by sub-agent workflows)
+.claude/worktrees/

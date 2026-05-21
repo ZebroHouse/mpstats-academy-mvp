@@ -11,6 +11,7 @@ import { materialRouter } from './routers/material';
 import { notificationsRouter } from './routers/notifications';
 import { referralRouter } from './routers/referral';
 import { jobRouter } from './routers/job';
+import { onboardingRouter } from './routers/onboarding';
 
 export const appRouter = router({
   profile: profileRouter,
@@ -25,6 +26,7 @@ export const appRouter = router({
   notifications: notificationsRouter,
   referral: referralRouter,
   job: jobRouter,
+  onboarding: onboardingRouter,
 });
 
 export type AppRouter = typeof appRouter;
