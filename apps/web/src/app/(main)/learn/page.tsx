@@ -335,22 +335,36 @@ function LearnPageInner() {
         </div>
       )}
 
-      {/* Compact track banner — shown when there's track data, outside of search mode */}
-      {searchQuery.length === 0 && recommendedPath && recommendedPath.totalLessons > 0 && (
+      {/* Track banner — always visible (outside search), with empty state for new users */}
+      {searchQuery.length === 0 && (
         <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl border border-mp-gray-200 bg-white shadow-mp-card animate-slide-up">
-          <span className="text-body-sm font-semibold text-mp-gray-700">
-            Мой трек · {recommendedPath.completedLessons}/{recommendedPath.totalLessons}
-          </span>
-          <div className="flex gap-2">
-            <Link href="/learn/track">
-              <Button variant="outline" size="sm">Открыть трек</Button>
-            </Link>
-            {nextLesson && (
-              <Link href={`/learn/${nextLesson.id}`}>
-                <Button size="sm">Продолжить</Button>
+          {recommendedPath && recommendedPath.totalLessons > 0 ? (
+            <>
+              <span className="text-body-sm font-semibold text-mp-gray-700">
+                Мой трек · {recommendedPath.completedLessons}/{recommendedPath.totalLessons}
+              </span>
+              <div className="flex gap-2">
+                <Link href="/learn/track">
+                  <Button variant="outline" size="sm">Открыть трек</Button>
+                </Link>
+                {nextLesson && (
+                  <Link href={`/learn/${nextLesson.id}`}>
+                    <Button size="sm">Продолжить</Button>
+                  </Link>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-body-sm font-semibold text-mp-gray-700">Мой трек пустой</span>
+                <span className="text-caption text-mp-gray-500">Пройди диагностику, и мы соберём программу под тебя</span>
+              </div>
+              <Link href="/diagnostic">
+                <Button size="sm">Пройти диагностику</Button>
               </Link>
-            )}
-          </div>
+            </>
+          )}
         </div>
       )}
 
