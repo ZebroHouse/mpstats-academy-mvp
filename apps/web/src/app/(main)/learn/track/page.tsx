@@ -127,6 +127,17 @@ export default function TrackPage() {
     recommendedPath.completedLessons === recommendedPath.totalLessons &&
     recommendedPath.totalLessons > 0;
 
+  // Dedup set: lesson IDs that appear in playbooks — excluded from custom/flat sections
+  const playbookLessonIds = useMemo(
+    () =>
+      new Set(
+        ((recommendedPath as any)?.addedJobs ?? []).flatMap((pb: any) =>
+          pb.lessons.map((l: any) => l.id),
+        ),
+      ),
+    [recommendedPath],
+  );
+
   // First unfinished lesson for "Продолжить с того места"
   const firstUnfinishedLesson = useMemo(() => {
     if (!recommendedPath?.lessons) return null;
@@ -248,6 +259,66 @@ export default function TrackPage() {
         </div>
       )}
 
+      {/* ── Мои плейбуки ────────────────────────────────────────────────── */}
+      {(recommendedPath as any)?.addedJobs && (recommendedPath as any).addedJobs.length > 0 && (
+        <section className="space-y-4">
+          <h2 className="text-heading font-bold text-mp-gray-900">Мои плейбуки</h2>
+          <div className="space-y-3">
+            {(recommendedPath as any).addedJobs.map((pb: any) => {
+              const total = pb.lessons.length;
+              const completed = pb.lessons.filter((l: any) => l.status === 'COMPLETED').length;
+              const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
+              return (
+                <div
+                  key={pb.id}
+                  className="bg-white border border-mp-gray-200 rounded-xl p-4 shadow-mp-card"
+                >
+                  <div className="flex items-center justify-between gap-3 mb-3">
+                    <div>
+                      <h3 className="text-body font-semibold text-mp-gray-900">{pb.title}</h3>
+                      <span className="text-caption text-mp-gray-400">
+                        {completed}/{total} уроков
+                      </span>
+                    </div>
+                    <Link
+                      href={`/learn/job/${pb.slug}`}
+                      className="text-body-sm text-mp-blue-500 hover:underline shrink-0"
+                    >
+                      Открыть плейбук →
+                    </Link>
+                  </div>
+                  <div className="h-1.5 bg-mp-gray-200 rounded-full overflow-hidden mb-3">
+                    <div
+                      className={pct === 100 ? 'h-full bg-mp-green-500' : 'h-full bg-mp-blue-500'}
+                      style={{ width: `${pct}%` }}
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    {pb.lessons.map((l: any, idx: number) => (
+                      <LessonCard
+                        key={l.id}
+                        lesson={
+                          {
+                            ...l,
+                            title: `${idx + 1}. ${l.title}`,
+                          } as LessonWithProgress
+                        }
+                        showCourse
+                        courseName={l.courseName as string}
+                        locked={l.locked}
+                        onRemoveFromTrack={() =>
+                          removeFromTrackMutation.mutate({ lessonId: l.id })
+                        }
+                      />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
+
       {/* ── Case A: No diagnostic, no track ─────────────────────────────── */}
       {hasDiagnostic === false && !recommendedPath && (
         <Card className="shadow-mp-card border-mp-blue-200 bg-gradient-to-br from-mp-blue-50 to-white">
@@ -332,7 +403,9 @@ export default function TrackPage() {
               {recommendedPath
                 .sections!.map((section: any) => ({
                   ...section,
-                  _filteredLessons: section.lessons as any[],
+                  _filteredLessons: (section.lessons as any[]).filter(
+                    (l: any) => !playbookLessonIds.has(l.id),
+                  ),
                 }))
                 .filter((section: any) => {
                   // hide empty custom section
@@ -474,13 +547,16 @@ export default function TrackPage() {
             /* Fallback: flat list for old-format paths */
             <div className="space-y-3">
               {(() => {
+                const dedupedLessons = recommendedPath.lessons.filter(
+                  (l: any) => !playbookLessonIds.has(l.id),
+                );
                 const showGating =
                   recommendedPath.hasPlatformSubscription === false &&
-                  recommendedPath.lessons.some((l: any) => l.locked);
-                const visibleCount = showGating ? 3 : recommendedPath.lessons.length;
-                const visibleLessons = recommendedPath.lessons.slice(0, visibleCount);
+                  dedupedLessons.some((l: any) => l.locked);
+                const visibleCount = showGating ? 3 : dedupedLessons.length;
+                const visibleLessons = dedupedLessons.slice(0, visibleCount);
                 const hiddenLessons = showGating
-                  ? recommendedPath.lessons.slice(visibleCount)
+                  ? dedupedLessons.slice(visibleCount)
                   : [];
 
                 return (

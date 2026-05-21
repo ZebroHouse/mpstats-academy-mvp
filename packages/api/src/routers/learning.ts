@@ -274,7 +274,7 @@ export const learningRouter = router({
     try {
       const path = await ctx.prisma.learningPath.findUnique({
         where: { userId: ctx.user.id },
-        select: { lessons: true, generatedAt: true },
+        select: { lessons: true, generatedAt: true, addedJobs: true },
       });
 
       if (!path || !path.lessons) {
@@ -311,6 +311,37 @@ export const learningRouter = router({
           locked,
         };
       };
+
+      // ── Fetch added jobs (playbooks) ──
+      const addedJobIds: string[] = Array.isArray(path.addedJobs) ? (path.addedJobs as string[]) : [];
+      const addedJobsRaw = addedJobIds.length > 0
+        ? await ctx.prisma.job.findMany({
+            where: { id: { in: addedJobIds }, isPublished: true },
+            include: {
+              lessons: {
+                orderBy: { order: 'asc' },
+                include: {
+                  lesson: {
+                    include: {
+                      progress: { where: { path: { userId: ctx.user.id } } },
+                      course: { select: { title: true, isHidden: true } },
+                    },
+                  },
+                },
+              },
+            },
+          })
+        : [];
+
+      const addedJobsPayload = addedJobsRaw.map((j) => ({
+        id: j.id,
+        slug: j.slug,
+        title: j.title,
+        marketplace: j.marketplace,
+        lessons: j.lessons
+          .filter((jl) => !jl.lesson.isHidden)
+          .map((jl) => buildLessonData(jl.lesson)),
+      }));
 
       // ── New sectioned format (version: 2) ──
       if (!Array.isArray(parsed) && parsed.version === 2) {
@@ -354,6 +385,7 @@ export const learningRouter = router({
           completedLessons: completedCount,
           hasPlatformSubscription,
           isSectioned: true as const,
+          addedJobs: addedJobsPayload,
         };
       }
 
@@ -389,6 +421,7 @@ export const learningRouter = router({
         completedLessons: completedCount,
         hasPlatformSubscription,
         isSectioned: false as const,
+        addedJobs: addedJobsPayload,
       };
     } catch (error) {
       handleDatabaseError(error);
