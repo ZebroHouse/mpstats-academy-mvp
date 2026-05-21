@@ -3,6 +3,7 @@ import { router, protectedProcedure } from '../trpc';
 import { handleDatabaseError } from '../utils/db-errors';
 import { getUserActiveSubscriptions, getUserAdminBypass, isLessonAccessible } from '../utils/access';
 import { isFeatureEnabled } from '../utils/feature-flags';
+import { extractLessonIds } from '../utils/lesson-ids';
 import type { JobCatalogAxis, JobDetail, JobMarketplace } from '@mpstats/shared';
 
 const AXIS_TITLES: Record<string, string> = {
@@ -94,7 +95,7 @@ export const jobRouter = router({
     .input(z.object({ slug: z.string() }))
     .query(async ({ ctx, input }): Promise<JobDetail | null> => {
       try {
-        const [job, subs, billingEnabled, isAdminBypass] = await Promise.all([
+        const [job, subs, billingEnabled, isAdminBypass, lp] = await Promise.all([
           ctx.prisma.job.findUnique({
             where: { slug: input.slug },
             include: {
@@ -111,8 +112,15 @@ export const jobRouter = router({
           getUserActiveSubscriptions(ctx.user.id, ctx.prisma),
           isFeatureEnabled('billing_enabled'),
           getUserAdminBypass(ctx.user.id, ctx.prisma),
+          ctx.prisma.learningPath.findUnique({
+            where: { userId: ctx.user.id },
+            select: { addedJobs: true },
+          }),
         ]);
         if (!job || !job.isPublished) return null;
+
+        const addedJobs: string[] = Array.isArray(lp?.addedJobs) ? (lp!.addedJobs as string[]) : [];
+        const isInTrack = addedJobs.includes(job.id);
 
         const lessons = job.lessons.map((jl) => {
           const l = jl.lesson;
@@ -135,6 +143,7 @@ export const jobRouter = router({
           totalDurationMin: lessons.reduce((s, l) => s + l.durationMin, 0),
           completedLessons: lessons.filter((l) => l.status === 'COMPLETED').length,
           isRecommended: false,
+          isInTrack,
           lessons,
         };
       } catch (error) {
@@ -143,12 +152,3 @@ export const jobRouter = router({
     }),
 });
 
-/** Извлекает плоский список lessonId из JSON learningPath (старый и sectioned формат). */
-function extractLessonIds(raw: unknown): string[] {
-  if (Array.isArray(raw)) return raw as string[];
-  if (raw && typeof raw === 'object' && 'sections' in raw) {
-    const sections = (raw as { sections?: { lessonIds?: string[] }[] }).sections ?? [];
-    return sections.flatMap((s) => s.lessonIds ?? []);
-  }
-  return [];
-}

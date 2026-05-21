@@ -354,4 +354,5 @@ export interface JobDetail extends JobSummary {
   outcomes: string[];
   skillBlocks: string[];
   lessons: JobLessonItem[];
+  isInTrack: boolean;
 }

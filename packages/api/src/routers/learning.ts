@@ -5,6 +5,8 @@ import { ensureUserProfile } from '../utils/ensure-user-profile';
 import { handleDatabaseError } from '../utils/db-errors';
 import { getUserActiveSubscriptions, getUserAdminBypass, isLessonAccessible, checkLessonAccess } from '../utils/access';
 import { isFeatureEnabled } from '../utils/feature-flags';
+import { extractLessonIds } from '../utils/lesson-ids';
+import { lessonsToRemoveOnJobRemove } from './learning-jobs-utils';
 import { parseLearningPath } from '@mpstats/shared';
 import type { CourseWithProgress, LessonWithProgress, LearningPathSection, SectionedLearningPath } from '@mpstats/shared';
 import { generateSectionedPath } from './diagnostic';
@@ -1058,6 +1060,85 @@ export const learningRouter = router({
         return { added: validIds.length };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
+        handleDatabaseError(error);
+      }
+    }),
+
+  // Add all lessons of a job to the user's custom track section
+  addJobToTrack: protectedProcedure
+    .input(z.object({ jobId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const job = await ctx.prisma.job.findUnique({
+          where: { id: input.jobId },
+          include: { lessons: { select: { lessonId: true }, orderBy: { order: 'asc' } } },
+        });
+        if (!job || !job.isPublished) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Джоба не найдена' });
+        }
+        const lessonIds = job.lessons.map((jl) => jl.lessonId);
+
+        const existing = await ctx.prisma.learningPath.findUnique({
+          where: { userId: ctx.user.id },
+          select: { lessons: true, addedJobs: true },
+        });
+
+        const currentLessons: string[] = extractLessonIds(existing?.lessons ?? []);
+        const currentAddedJobs: string[] = Array.isArray(existing?.addedJobs) ? (existing!.addedJobs as string[]) : [];
+        const nextLessons = Array.from(new Set([...currentLessons, ...lessonIds]));
+        const nextAddedJobs = currentAddedJobs.includes(input.jobId)
+          ? currentAddedJobs
+          : [...currentAddedJobs, input.jobId];
+
+        await ctx.prisma.learningPath.upsert({
+          where: { userId: ctx.user.id },
+          create: { userId: ctx.user.id, lessons: nextLessons as any, addedJobs: nextAddedJobs as any },
+          update: { lessons: nextLessons as any, addedJobs: nextAddedJobs as any },
+        });
+        return { added: lessonIds.length, jobId: input.jobId };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        handleDatabaseError(error);
+      }
+    }),
+
+  // Remove all lessons of a job from the user's track (preserving lessons shared with other added jobs)
+  removeJobFromTrack: protectedProcedure
+    .input(z.object({ jobId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const lp = await ctx.prisma.learningPath.findUnique({
+          where: { userId: ctx.user.id },
+          select: { lessons: true, addedJobs: true },
+        });
+        if (!lp) return { removed: 0 };
+
+        const addedJobs: string[] = Array.isArray(lp.addedJobs) ? (lp.addedJobs as string[]) : [];
+        if (!addedJobs.includes(input.jobId)) return { removed: 0 };
+
+        const remainingJobIds = addedJobs.filter((id) => id !== input.jobId);
+        const jobsLessons = await ctx.prisma.job.findMany({
+          where: { id: { in: [input.jobId, ...remainingJobIds] } },
+          include: { lessons: { select: { lessonId: true } } },
+        });
+        const targetJob = jobsLessons.find((j) => j.id === input.jobId);
+        const otherJobs = jobsLessons
+          .filter((j) => j.id !== input.jobId)
+          .map((j) => ({ id: j.id, lessonIds: j.lessons.map((l) => l.lessonId) }));
+        const toRemove = lessonsToRemoveOnJobRemove(
+          targetJob?.lessons.map((l) => l.lessonId) ?? [],
+          otherJobs,
+        );
+
+        const currentLessons: string[] = extractLessonIds(lp.lessons ?? []);
+        const nextLessons = currentLessons.filter((id) => !toRemove.includes(id));
+
+        await ctx.prisma.learningPath.update({
+          where: { userId: ctx.user.id },
+          data: { lessons: nextLessons as any, addedJobs: remainingJobIds as any },
+        });
+        return { removed: toRemove.length };
+      } catch (error) {
         handleDatabaseError(error);
       }
     }),
