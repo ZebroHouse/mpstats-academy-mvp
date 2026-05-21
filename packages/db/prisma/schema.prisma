@@ -207,7 +207,8 @@ model LearningPath {
   id          String   @id @default(cuid())
   userId      String   @unique
   generatedAt DateTime @default(now())
-  lessons     Json // ordered array of lessonIds with metadata
+  lessons     Json     // ordered array of lessonIds with metadata
+  addedJobs   Json     @default("[]") // string[] — slugs/IDs of jobs the user manually added to track via "+ В трек"
 
   user     UserProfile      @relation(fields: [userId], references: [id], onDelete: Cascade)
   progress LessonProgress[]
