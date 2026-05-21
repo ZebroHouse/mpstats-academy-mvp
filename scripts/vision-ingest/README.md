@@ -77,6 +77,6 @@ Different sprints don't collide. Pilot artifacts remain untouched on Sprint 2C r
 - `ffmpeg` ≥6.x + `ffprobe` in PATH (frame extraction + duration probing)
 - `sharp` (npm) — perceptual hash for dedup
 - Node 22.x+, tsx ≥4.21
-- Env: `DATABASE_URL`, `SUPABASE_MGMT_TOKEN`, `SUPABASE_SERVICE_ROLE_KEY`, `OPENROUTER_VISION_KEY`, `OPENROUTER_DEFAULT_MODEL`
+- Env: `DATABASE_URL`, `SUPABASE_MGMT_TOKEN`, `SUPABASE_SECRET_KEY`, `OPENROUTER_VISION_KEY`, `OPENROUTER_DEFAULT_MODEL`
 
 See [PLAYBOOK §0](./PLAYBOOK.md#0-prerequisites) for full env setup.

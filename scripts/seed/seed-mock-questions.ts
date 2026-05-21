@@ -10,7 +10,7 @@
  *   pnpm tsx scripts/seed/seed-mock-questions.ts --dry-run
  *   pnpm tsx scripts/seed/seed-mock-questions.ts --output path/to/file.ts
  *
- * Requires: OPENROUTER_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY in .env
+ * Requires: OPENROUTER_API_KEY, NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SECRET_KEY in .env
  */
 
 import * as fs from 'fs';
@@ -136,7 +136,7 @@ function getOpenRouter(): OpenAI {
 
 function getSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const key = process.env.SUPABASE_SECRET_KEY;
   if (!url || !key) throw new Error('Supabase credentials not set');
   return createClient(url, key);
 }
