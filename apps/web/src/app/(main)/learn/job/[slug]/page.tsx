@@ -12,9 +12,6 @@ export default function JobPage() {
   const { slug } = useParams<{ slug: string }>();
   const { data: job, isLoading } = trpc.job.getJob.useQuery({ slug });
 
-  if (isLoading) return <div className="p-8 text-center text-mp-gray-500">Загрузка...</div>;
-  if (!job) notFound();
-
   const utils = trpc.useUtils();
   const addToTrack = trpc.learning.addJobToTrack.useMutation({
     onSuccess: () => {
@@ -32,6 +29,9 @@ export default function JobPage() {
     },
     onError: () => toast.error('Не удалось убрать из трека'),
   });
+
+  if (isLoading) return <div className="p-8 text-center text-mp-gray-500">Загрузка...</div>;
+  if (!job) notFound();
 
   const pct = job.lessonCount > 0 ? Math.round((job.completedLessons / job.lessonCount) * 100) : 0;
   const nextLesson = job.lessons.find((l) => l.status !== 'COMPLETED' && !l.locked);
