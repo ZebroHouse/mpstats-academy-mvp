@@ -6,6 +6,9 @@ Entries referenced by CLAUDE.md and Phase plans.
 - [Session History](session-history.md) — Detailed notes for all dev sessions (phases 1-53)
 - [Sprint Progress](sprint-progress.md) — Completed sprints 0-5 with task IDs (all done)
 
+## Security incidents
+- [incident_2026-05-21_supabase_keys_leak.md](incident_2026-05-21_supabase_keys_leak.md) — service_role JWT в `2026-05-07-phase-55-sprint-2-pilot.md:1604`. Полная миграция MAAL+go_mpstats+academy-marketing-agent на `sb_publishable_*`/`sb_secret_*` ключи + ротация postgres пароля. Legacy JWT revoked.
+
 ## Infra & Platform
 - [Supabase Details](supabase-details.md) — RLS strategy, keep-alive, test users, auth gotchas
 - [Deploy Details](deploy-details.md) — VPS 89.208.106.208, Docker, Nginx, domain migration

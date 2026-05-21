@@ -100,7 +100,22 @@ Archive directory `D:/GpT_docs/MPSTATS ACADEMY ADAPTIVE LEARNING/MAAL-phase55/` 
 
 **Внимание (исторический lesson):** CP хранит `amount` на своей стороне на момент создания подписки. При смене цен отменять старые ACTIVE подписки чтобы автосписания пошли по новым тарифам.
 
-## Last Session (2026-05-19) — Phase 56 + referral banner shipped to prod, entry-flow hotfix
+## Last Session (2026-05-21) — Supabase keys migration after JWT leak
+
+**Инцидент:** в коммите `76356cf` файл `docs/superpowers/plans/2026-05-07-phase-55-sprint-2-pilot.md:1604` содержал ЖИВОЙ `SUPABASE_SERVICE_ROLE_KEY` (полный JWT, exp 2035) — оставлен AI-агентом вместо placeholder'а в shell-command example. Полная утечка bypass-RLS доступа к `saecuecevicwjkpmaoot`.
+
+**Сделано:**
+- **Postgres пароль ротирован** (новый `<new-postgres-password>`) — обновлён в MAAL прод/staging .env, backup-cron .env, локально (3 файла), worktree (2 файла). Прод и staging пересозданы, `database: connected`.
+- **Миграция формата API-ключей: legacy `anon`/`service_role` JWT → новые `sb_publishable_*`/`sb_secret_*`** (Supabase deprecates legacy keys к концу 2026). Code rename: `NEXT_PUBLIC_SUPABASE_ANON_KEY` → `_PUBLISHABLE_KEY`, `SUPABASE_SERVICE_ROLE_KEY` → `SECRET_KEY` (26 файлов, master `4cfeee8`). Полный rebuild MAAL prod+staging (build-time inlining `NEXT_PUBLIC_*` в Next.js bundle).
+- **Параллельно: миграция go_mpstats и academy-marketing-agent** на ту же модель (общий Supabase проект с MAAL). go_mpstats — 8 файлов, master `75e96dd`.
+- **Legacy JWT-based API keys revoked** в Supabase Dashboard → утёкший в git history JWT мёртв.
+- GH Actions secrets обновлены (`NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_PUBLISHABLE_KEY` для keepalive).
+
+**Worktree `phase-57-library-redesign`:** значения ключей обновлены, имена переменных НЕ переименованы (бранч в работе, код на старых именах). При merge — accept master-версию переименованных файлов.
+
+**Деталь инцидента + recovery + правила:** [.claude/memory/incident_2026-05-21_supabase_keys_leak.md](.claude/memory/incident_2026-05-21_supabase_keys_leak.md). Глобальное правило про секреты в docs — обновлено в `~/.claude/CLAUDE.md`.
+
+## Previous Session (2026-05-19) — Phase 56 + referral banner shipped to prod, entry-flow hotfix
 
 **Задеплоено на прод в этой сессии:**
 - **Phase 56 — Entry-flow redesign + CQ mirroring** (merged → prod, master `230d4a3`). Онбординг-визард `/welcome` (3 шага + развилка диагностика/каталог), 5 полей квалификации в `UserProfile` + additive-миграция (применена на prod), снятие жёсткого гейта диагностики (`DiagnosticGateBanner` → закрываемый хинт), редактирование квалификации в `/profile`, зеркалирование ответов визарда в CarrotQuest (`pa_marketplaces/experience/goals/goal_text` props + событие `pa_onboarding_completed`). Все ~170 существующих юзеров видят визард при следующем входе (one-time). GSD verification — `human_needed`: 2 пункта в `.planning/phases/56-entry-flow-redesign/56-HUMAN-UAT.md` (реальный Yandex-OAuth новый аккаунт + E2E-прогон в CI).
