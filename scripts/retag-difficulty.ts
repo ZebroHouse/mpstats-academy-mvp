@@ -35,7 +35,7 @@ const openrouter = new OpenAI({
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  process.env.SUPABASE_SECRET_KEY!,
 );
 
 const MODEL = process.env.OPENROUTER_DEFAULT_MODEL || 'google/gemini-3.1-flash-lite-preview';

@@ -9,8 +9,8 @@ interface VideoExtraction { lessonId: string; frames: FrameMeta[]; }
 
 async function main() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://saecuecevicwjkpmaoot.supabase.co';
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!serviceKey) throw new Error('SUPABASE_SERVICE_ROLE_KEY required');
+  const serviceKey = process.env.SUPABASE_SECRET_KEY;
+  if (!serviceKey) throw new Error('SUPABASE_SECRET_KEY required');
   const supabase = createClient(url, serviceKey, { auth: { persistSession: false } });
 
   const SUFFIX = process.env.INGEST_SUFFIX?.trim() || '';

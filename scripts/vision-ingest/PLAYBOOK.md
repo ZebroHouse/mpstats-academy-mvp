@@ -26,12 +26,12 @@ Operational guide for running a vision-RAG ingest sprint on MAAL.
 DATABASE_URL=postgresql://...           # Direct Postgres for content_chunk INSERTs
 SUPABASE_MGMT_TOKEN=sbp_...             # Management API (SQL queries via /v1/projects/{ref}/database/query)
 SUPABASE_PROJECT_REF=saecuecevicwjkpmaoot
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGc...    # Storage uploads (lesson-frames bucket)
+SUPABASE_SECRET_KEY=eyJhbGc...    # Storage uploads (lesson-frames bucket)
 OPENROUTER_VISION_KEY=sk-or-v1-...      # VLM + embeddings (can reuse OPENROUTER_API_KEY value)
 OPENROUTER_DEFAULT_MODEL=openai/gpt-4.1-mini   # Production default (validated Sprint 2)
 ```
 
-> **Get tokens from:** `MAAL/.env` (DATABASE_URL, SUPABASE_SERVICE_ROLE_KEY, OPENROUTER_API_KEY), memory `reference_supabase_mgmt.md` (SUPABASE_MGMT_TOKEN).
+> **Get tokens from:** `MAAL/.env` (DATABASE_URL, SUPABASE_SECRET_KEY, OPENROUTER_API_KEY), memory `reference_supabase_mgmt.md` (SUPABASE_MGMT_TOKEN).
 > **Never commit `.env`.** `.gitignore` covers it.
 
 ### Baseline state to verify before starting
@@ -300,7 +300,7 @@ WHERE source_type='academy_video_frame'
 # Delete corresponding Supabase Storage objects
 node -e "
 const { createClient } = require('@supabase/supabase-js');
-const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SERVICE_ROLE_KEY);
+const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_SECRET_KEY);
 const ids = ['lesson_id_1', 'lesson_id_2'];
 (async () => {
   for (const id of ids) {

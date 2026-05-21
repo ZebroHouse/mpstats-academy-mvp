@@ -73,7 +73,7 @@ describe('Yandex OAuth Callback Route', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://test.supabase.co');
-    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'test-anon-key');
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY', 'test-anon-key');
     vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'https://platform.mpstats.academy');
   });
 
