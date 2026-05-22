@@ -1,6 +1,6 @@
 # CLAUDE.md — MPSTATS Academy MVP
 
-**Last updated:** 2026-05-19
+**Last updated:** 2026-05-22
 
 > Детали по сессиям, спринтам, Supabase, деплою, CQ, staging — в `.claude/memory/`.
 > Индекс: `.claude/memory/MEMORY.md`. История сессий: `.claude/memory/session-history.md`.
@@ -48,22 +48,19 @@ Sibling project `D:/GpT_docs/Ai_MP_manager/` запустил `prisma db push --
 | v1.5 Growth & Monetization | In Progress (Phase 44+45+46+48+49+50 shipped) |
 | v1.6 Engagement | In Progress (Phases 51-53 + 56 shipped; 54 planned) |
 | v1.7 RAG Quality | In Progress (Phase 55 Sprints 2/2C/3 shipped — full-platform vision-RAG, 91.5% coverage) |
-| v1.8 Library Redesign | Phase 57 — code complete, on staging, PR #8 (see Active Branches) |
+| v1.8 Library Redesign | Shipped 2026-05-22 (Phase 57 — `/learn` job catalog + polish + hidden-lesson auto-sync) |
 
 **Remaining work:**
-1. **Phase 57 — Library Redesign** (`/learn` job catalog) — code complete, on staging, PR #8. Awaiting content-team JOB-PROPOSAL validation + staging QA before merge (see Active Branches).
-2. **Phase 58 — diagnostic on jobs** (Phase 57 follow-up) — not started; needs a spec. Diagnostic recommends whole jobs instead of loose lessons.
-3. Phase 33-03: CQ Dashboard Setup (на стороне CQ команды).
+1. **Phase 58 — diagnostic on jobs** (Phase 57 follow-up) — not started; needs a spec. Diagnostic recommends whole jobs instead of loose lessons.
+2. Phase 33-03: CQ Dashboard Setup (на стороне CQ команды).
 
-_Done since 2026-05-14: Phase 53A + 53B (referral) merged, Phase 55 Sprint 3 merged (vision-RAG full platform), Phase 56 (entry-flow) merged. Phase 47 (hub-layout) superseded by Phase 57._
+_Done since 2026-05-14: Phase 53A + 53B (referral) merged, Phase 55 Sprint 3 merged (vision-RAG full platform), Phase 56 (entry-flow) merged, Phase 57 (library redesign) shipped 2026-05-22. Phase 47 (hub-layout) superseded by Phase 57._
 
 ## Active Branches
 
-| Branch | Worktree | PR | Status |
-|--------|----------|----|----|
-| `worktree-phase-57-library-redesign` | `.claude/worktrees/phase-57-library-redesign` | #8 | Library redesign (`/learn` job catalog). Code complete, on staging with 29 provisional jobs. Awaiting content-team JOB-PROPOSAL validation + QA. ⚠️ Stray commit `79036f1` on master must be removed before merge (conflicts in `packages/shared/src/types/index.ts`). |
+_No long-lived branches in flight._ Worktree `worktree-phase-57-library-redesign` (PR #8 + #9 merged) preserved at `.claude/worktrees/phase-57-library-redesign/` for reference; safe to `git worktree remove` once not needed.
 
-Phase 53A + 53B (referral) merged to master. Phase 55 Sprint 3 (vision-RAG, 91.5% platform coverage) merged. Phase 56 (entry-flow) merged.
+Phase 53A + 53B (referral) merged to master. Phase 55 Sprint 3 (vision-RAG, 91.5% platform coverage) merged. Phase 56 (entry-flow) merged. Phase 57 (library redesign) merged via PR #8 (`bb84013`) + PR #9 hidden-lesson auto-sync (`3059ad8`).
 Referral flag i1→i2 switch still scheduled ~2026-06-01 (manual: DB INSERT + env + rebuild).
 Archive directory `D:/GpT_docs/MPSTATS ACADEMY ADAPTIVE LEARNING/MAAL-phase55/` (orphan, not a worktree) holds Sprint 2C VLM dumps (`results/vlm-runs-sprint2c.json` 1.7MB, 644 frame jpgs in `results/frames/`) — useful if a re-ingest is needed without re-running LLM. Safe to delete to free ~300MB when no longer needed.
 
@@ -100,7 +97,20 @@ Archive directory `D:/GpT_docs/MPSTATS ACADEMY ADAPTIVE LEARNING/MAAL-phase55/` 
 
 **Внимание (исторический lesson):** CP хранит `amount` на своей стороне на момент создания подписки. При смене цен отменять старые ACTIVE подписки чтобы автосписания пошли по новым тарифам.
 
-## Last Session (2026-05-21) — Supabase keys migration after JWT leak
+## Last Session (2026-05-22) — Phase 57 Library Redesign shipped to prod
+
+**PR #8 (`bb84013`) + PR #9 (`3059ad8`) merged to master and deployed to prod (https://platform.mpstats.academy).**
+
+- **PR #8 — Phase 57 base + polish round.** Job catalog `/learn` live: lens «По задачам / Все курсы», WB/Ozon switch, 29 jobs across 5 axes. New screens `/learn/job/[slug]` (with «+ В трек» toggle + chevron affordance) and `/learn/track` (with «Мои плейбуки» section + dedup). Always-visible track banner on `/learn` with empty-state CTA to `/diagnostic`. Polish round added: `LearningPath.addedJobs` Json column (additive migration `20260521000000_learning_path_added_jobs` applied to prod), tRPC `learning.addJobToTrack` / `removeJobFromTrack`, `JobDetail.isInTrack`. Critical Rules-of-Hooks fix on `/learn/job/[slug]` — `useMutation`/`useUtils` were below `if (isLoading) return`, broke hook count, produced "first-load Ошибка загрузки, retry works" symptom across all playbooks; hoisted hooks above early returns (`72facc9`). Content team approved `JOB-PROPOSAL.validated.json` byte-identical to provisional — no re-seed needed.
+- **PR #9 — Hidden-lesson auto-sync.** DB-level filter `where: { lesson: { isHidden: false, course: { isHidden: false } } }` added to JobLesson includes in `job.getCatalog`, `job.getJob`, `learning.getRecommendedPath.addedJobsRaw`. Admin sets `Lesson.isHidden=true` (or course-level) → urok auto-disappears from job cards, job detail, playbooks; `lessonCount`/`totalDurationMin`/`completedLessons` auto-recompute. `JobLesson` rows preserved — restoring `isHidden=false` brings lesson back into jobs. Use case: duplicate "Автобидер. Пошаговая настройка" lessons — owner now hides one via admin, no SQL needed.
+
+**Staging deploy gotchas captured this session (see `.claude/memory/`):**
+- `feedback_rules_of_hooks_early_returns.md` — Rules of Hooks pattern with «first load fails, retry works» symptom.
+- `feedback_staging_docker_no_cache_required.md` — Always `--no-cache` on docker rebuild when .tsx/.ts changed + `grep` content-check in `.next` bundle BEFORE declaring deploy successful. Avoids "healthy container running stale bundle" trap.
+
+**Phase 58 (next, separate spec):** migrate diagnostic onto jobs — `diagnostic.ts` recommends whole jobs; track becomes job-aware. Phase 57 built bridge data (`Job.axes` canonical-5 + `Job.skillBlocks`), did not touch `diagnostic.ts`.
+
+## Previous Session (2026-05-21) — Supabase keys migration after JWT leak
 
 **Инцидент:** в коммите `76356cf` файл `docs/superpowers/plans/2026-05-07-phase-55-sprint-2-pilot.md:1604` содержал ЖИВОЙ `SUPABASE_SERVICE_ROLE_KEY` (полный JWT, exp 2035) — оставлен AI-агентом вместо placeholder'а в shell-command example. Полная утечка bypass-RLS доступа к `saecuecevicwjkpmaoot`.
 
