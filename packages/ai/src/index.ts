@@ -41,3 +41,8 @@ export type {
   SearchChunksPublicOptions,
   SearchChunksPublicResult,
 } from './rag-public';
+
+// Intent resolution (Track B — job recommendations via user intent)
+export { resolveIntent } from './intent';
+export type { IntentResult, IntentAction, JobCandidate } from './intent';
+export type { ResolveArgs } from './intent/resolve';
