@@ -27,6 +27,11 @@ vi.mock('@/lib/trpc/client', () => ({
         useMutation: () => ({ mutate: mutateMock, isPending: false }),
       },
     },
+    intent: {
+      resolve: {
+        useMutation: () => ({ mutate: vi.fn(), isPending: false }),
+      },
+    },
   },
 }));
 vi.mock('sonner', () => ({ toast: { error: vi.fn() } }));
