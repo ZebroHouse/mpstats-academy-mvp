@@ -7,12 +7,11 @@ import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LessonCard } from '@/components/learning/LessonCard';
-import { SearchBar } from '@/components/learning/SearchBar';
-import { FilterPanel, type FilterState } from '@/components/learning/FilterPanel';
-import { SearchResultCard } from '@/components/learning/SearchResultCard';
+import { AgentSearch } from '@/components/learning/AgentSearch';
 import { CourseLockBanner } from '@/components/learning/PaywallBanner';
 import { MarketplaceSwitch } from '@/components/learning/MarketplaceSwitch';
 import { JobCatalog, type ProgressFilter } from '@/components/learning/JobCatalog';
+import type { FilterState } from '@/components/learning/FilterPanel';
 import { trpc } from '@/lib/trpc/client';
 import { cn } from '@/lib/utils';
 import type { LessonWithProgress } from '@mpstats/shared';
@@ -74,8 +73,6 @@ function LearnPageInner() {
   const [progressFilter, setProgressFilter] = useState<ProgressFilter>('ALL');
   const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set());
 
-  // Search state
-  const [searchQuery, setSearchQuery] = useState('');
   const searchParams = useSearchParams();
   const router = useRouter();
   const pathname = usePathname();
@@ -88,12 +85,6 @@ function LearnPageInner() {
   const { data: courses, isLoading: coursesLoading, error: coursesError } = trpc.learning.getCourses.useQuery();
   const { data: recommendedPath } = trpc.learning.getRecommendedPath.useQuery();
   const { data: jobAxes, isLoading: jobsLoading, error: jobsError } = trpc.job.getCatalog.useQuery({ marketplace });
-
-  // Search query
-  const { data: searchResults, isLoading: searchLoading, error: searchError } = trpc.ai.searchLessons.useQuery(
-    { query: searchQuery },
-    { enabled: searchQuery.length > 0 }
-  );
 
   // Auto-expand course from URL hash (e.g. /learn#01_analytics)
   useEffect(() => {
@@ -117,6 +108,19 @@ function LearnPageInner() {
     if (!recommendedPath?.sections) return new Set<string>();
     return new Set(recommendedPath.sections.flatMap((s: any) => s.lessons.map((l: any) => l.id as string)));
   }, [recommendedPath]);
+
+  // O(1) lookup for job metadata used by AgentSearch
+  const jobsById = useMemo(() => {
+    const map: Record<string, { title: string; lessonCount: number; slug: string }> = {};
+    if (jobAxes) {
+      for (const axis of jobAxes) {
+        for (const job of axis.jobs) {
+          map[job.id] = { title: job.title, lessonCount: job.lessonCount, slug: job.slug };
+        }
+      }
+    }
+    return map;
+  }, [jobAxes]);
 
   // Track management mutations
   const utils = trpc.useUtils();
@@ -181,34 +185,6 @@ function LearnPageInner() {
     if (!courses) return [];
     return courses.map(c => ({ id: c.id, title: c.title }));
   }, [courses]);
-
-  // Filter search results client-side
-  const filteredSearchResults = useMemo(() => {
-    if (!searchResults?.results) return [];
-    return searchResults.results.filter(r => {
-      if (filters.category !== 'ALL' && r.lesson.skillCategory !== filters.category) return false;
-      if (filters.status !== 'ALL' && r.status !== filters.status) return false;
-      if (filters.difficulty !== 'ALL' && r.lesson.skillLevel !== filters.difficulty) return false;
-      if (filters.courseId !== 'ALL' && r.lesson.courseId !== filters.courseId) return false;
-      if (filters.duration !== 'ALL') {
-        const d = r.lesson.duration;
-        if (filters.duration === 'short' && d > 10) return false;
-        if (filters.duration === 'medium' && (d <= 10 || d > 30)) return false;
-        if (filters.duration === 'long' && d <= 30) return false;
-      }
-      if (filters.topics.length > 0) {
-        if (!filters.topics.some(t => r.lesson.topics.includes(t))) return false;
-      }
-      if (filters.marketplace !== 'ALL') {
-        if (filters.marketplace === 'OZON') {
-          if (r.lesson.courseId !== '05_ozon') return false;
-        } else {
-          if (r.lesson.courseId === '05_ozon') return false;
-        }
-      }
-      return true;
-    });
-  }, [searchResults, filters]);
 
   // Unified filter function for courses view
   const filterLesson = (lesson: LessonWithProgress) => {
@@ -308,8 +284,7 @@ function LearnPageInner() {
             Персональный план на основе диагностики
           </p>
         </div>
-        {searchQuery.length === 0 && (
-          <div data-tour="learn-view-toggle" className="flex gap-2">
+        <div data-tour="learn-view-toggle" className="flex gap-2">
             <Button
               variant={lens === 'jobs' ? 'default' : 'outline'}
               size="sm"
@@ -325,19 +300,17 @@ function LearnPageInner() {
               Все курсы
             </Button>
           </div>
-        )}
       </div>
 
-      {/* MarketplaceSwitch — under header, jobs lens only, hidden during search */}
-      {searchQuery.length === 0 && lens === 'jobs' && (
+      {/* MarketplaceSwitch — under header, jobs lens only */}
+      {lens === 'jobs' && (
         <div>
           <MarketplaceSwitch value={marketplace} onChange={setMarketplace} />
         </div>
       )}
 
-      {/* Track banner — always visible (outside search), with empty state for new users */}
-      {searchQuery.length === 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl border border-mp-gray-200 bg-white shadow-mp-card animate-slide-up">
+      {/* Track banner — always visible, with empty state for new users */}
+      <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl border border-mp-gray-200 bg-white shadow-mp-card animate-slide-up">
           {recommendedPath && recommendedPath.totalLessons > 0 ? (
             <>
               <span className="text-body-sm font-semibold text-mp-gray-700">
@@ -366,75 +339,13 @@ function LearnPageInner() {
             </>
           )}
         </div>
-      )}
 
-      {/* Search Bar */}
+      {/* Agent Search */}
       <div data-tour="learn-search">
-        <SearchBar
-          onSearch={(q) => setSearchQuery(q)}
-          onClear={() => setSearchQuery('')}
-          isSearching={searchLoading}
-          hasResults={searchQuery.length > 0}
-        />
+        <AgentSearch jobsById={jobsById} />
       </div>
 
-      {searchQuery.length > 0 ? (
-        /* Search Results View — with full FilterPanel */
-        <div>
-          <div data-tour="learn-filters">
-            <FilterPanel
-              filters={filters}
-              onFiltersChange={setFilters}
-              availableTopics={availableTopics}
-              availableCourses={availableCourses}
-            />
-          </div>
-          {searchLoading && (
-            <p className="text-body-sm text-mp-gray-500 mt-4">Ищем релевантные уроки...</p>
-          )}
-          {searchError && (
-            <p className="text-body-sm text-red-500 mt-4">Не удалось выполнить поиск. Попробуйте ещё раз.</p>
-          )}
-          {!searchLoading && searchResults && (
-            <>
-              <p className="text-body-sm text-mp-gray-500 mb-3 mt-4" aria-live="polite">
-                {filteredSearchResults.length} уроков найдено
-              </p>
-              {filteredSearchResults.length > 0 ? (
-                <div className="space-y-3" aria-busy={searchLoading}>
-                  {filteredSearchResults.map((result, i) => (
-                    <div key={result.lesson.id} className="animate-slide-up" style={{ animationDelay: `${i * 50}ms` }}>
-                      <SearchResultCard result={result} />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                /* Empty search state */
-                <div className="py-12 text-center">
-                  <svg className="w-16 h-16 text-mp-gray-300 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                  </svg>
-                  <h3 className="text-heading text-mp-gray-900 mb-2">Ничего не найдено</h3>
-                  <p className="text-body text-mp-gray-500 mb-4">
-                    Попробуйте переформулировать запрос или выберите один из популярных топиков
-                  </p>
-                  <div className="flex flex-wrap gap-2 justify-center">
-                    {availableTopics.slice(0, 5).map(topic => (
-                      <button
-                        key={topic}
-                        onClick={() => setSearchQuery(topic)}
-                        className="px-3 py-1 rounded-full bg-mp-gray-100 text-body-sm text-mp-gray-600 hover:bg-mp-gray-200 cursor-pointer transition-colors"
-                      >
-                        {topic}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-      ) : lens === 'jobs' ? (
+      {lens === 'jobs' ? (
         /* Jobs lens — job catalog with thin progress filter */
         <div className="space-y-4">
           {/* Thin progress filter */}
