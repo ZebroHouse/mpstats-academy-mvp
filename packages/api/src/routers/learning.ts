@@ -319,6 +319,7 @@ export const learningRouter = router({
             where: { id: { in: addedJobIds }, isPublished: true },
             include: {
               lessons: {
+                where: { lesson: { isHidden: false, course: { isHidden: false } } },
                 orderBy: { order: 'asc' },
                 include: {
                   lesson: {
@@ -338,9 +339,7 @@ export const learningRouter = router({
         slug: j.slug,
         title: j.title,
         marketplace: j.marketplace,
-        lessons: j.lessons
-          .filter((jl) => !jl.lesson.isHidden)
-          .map((jl) => buildLessonData(jl.lesson)),
+        lessons: j.lessons.map((jl) => buildLessonData(jl.lesson)),
       }));
 
       // ── New sectioned format (version: 2) ──

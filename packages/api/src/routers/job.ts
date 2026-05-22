@@ -33,6 +33,7 @@ export const jobRouter = router({
             where: { isPublished: true },
             include: {
               lessons: {
+                where: { lesson: { isHidden: false, course: { isHidden: false } } },
                 include: {
                   lesson: {
                     select: {
@@ -100,6 +101,7 @@ export const jobRouter = router({
             where: { slug: input.slug },
             include: {
               lessons: {
+                where: { lesson: { isHidden: false, course: { isHidden: false } } },
                 orderBy: { order: 'asc' },
                 include: {
                   lesson: {
