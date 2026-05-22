@@ -59,8 +59,6 @@ export async function searchJobsByEmbedding(
   }));
 }
 
-interface JobLessonRow { lesson_id: string; job_id: string }
-
 export async function aggregateChunksToJobs(
   query: string,
   opts: { chunkLimit?: number } = {},
@@ -77,14 +75,12 @@ export async function aggregateChunksToJobs(
   const lessonIds = Array.from(new Set(chunks.map((c) => c.lesson_id).filter(Boolean) as string[]));
   if (lessonIds.length === 0) return [];
 
-  const idList = lessonIds.map((id) => `'${id}'`).join(',');
-  const map = await prisma.$queryRawUnsafe<JobLessonRow[]>(
-    `SELECT jl."lessonId"::text AS lesson_id, jl."jobId"::text AS job_id
-     FROM "JobLesson" jl
-     WHERE jl."lessonId" IN (${idList})`,
-  );
+  const mapRows = await prisma.jobLesson.findMany({
+    where: { lessonId: { in: lessonIds } },
+    select: { lessonId: true, jobId: true },
+  });
   const lessonToJob = new Map<string, string>();
-  for (const row of map) lessonToJob.set(row.lesson_id, row.job_id);
+  for (const row of mapRows) lessonToJob.set(row.lessonId, row.jobId);
 
   // Aggregate per job: top similarity + top-2 snippets
   const acc = new Map<string, { topSim: number; snippets: Array<{ content: string; similarity: number }> }>();

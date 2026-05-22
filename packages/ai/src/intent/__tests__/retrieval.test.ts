@@ -3,11 +3,16 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const mockEmbed = vi.hoisted(() => vi.fn());
 const mockRawQuery = vi.hoisted(() => vi.fn());
 const mockSearchChunks = vi.hoisted(() => vi.fn());
+const mockJobLessonFindMany = vi.hoisted(() => vi.fn());
 
 vi.mock('../../embeddings', () => ({ embedQuery: mockEmbed }));
 vi.mock('../../retrieval', () => ({ searchChunks: mockSearchChunks }));
 vi.mock('@mpstats/db/client', () => ({
-  prisma: { $queryRawUnsafe: mockRawQuery, job: { findMany: vi.fn() } },
+  prisma: {
+    $queryRawUnsafe: mockRawQuery,
+    jobLesson: { findMany: mockJobLessonFindMany },
+    job: { findMany: vi.fn() },
+  },
 }));
 
 import { searchJobsByEmbedding, aggregateChunksToJobs, mergeJobCandidates } from '../retrieval';
@@ -36,9 +41,9 @@ describe('aggregateChunksToJobs', () => {
       { id: 'c3', lesson_id: 'l1', content: 's3', similarity: 0.55 },
     ]);
     // l1→j1, l2→j1 (both lessons belong to the same job)
-    mockRawQuery.mockResolvedValue([
-      { lesson_id: 'l1', job_id: 'j1' },
-      { lesson_id: 'l2', job_id: 'j1' },
+    mockJobLessonFindMany.mockResolvedValue([
+      { lessonId: 'l1', jobId: 'j1' },
+      { lessonId: 'l2', jobId: 'j1' },
     ]);
     const out = await aggregateChunksToJobs('q', { chunkLimit: 30 });
     expect(out).toHaveLength(1);

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import type { IntentResult } from '@mpstats/ai';
 import { trpc } from '@/lib/trpc/client';
 
 interface JobMeta { title: string; lessonCount: number; slug: string }
@@ -9,7 +10,7 @@ interface Props { jobsById: Record<string, JobMeta> }
 export function AgentSearch({ jobsById }: Props) {
   const [query, setQuery] = useState('');
   const [conversationState, setConversationState] = useState<string | undefined>();
-  const [result, setResult] = useState<any>(null);
+  const [result, setResult] = useState<IntentResult | null>(null);
 
   const resolveMutation = trpc.intent.resolve.useMutation();
   const addJobMutation = trpc.learning.addJobToTrack.useMutation();
@@ -51,7 +52,7 @@ export function AgentSearch({ jobsById }: Props) {
         <div className="rounded-lg border p-4 space-y-2">
           <p className="font-medium">{result.question}</p>
           <div className="flex flex-wrap gap-2">
-            {result.options.map((o: any) => (
+            {result.options.map((o) => (
               <button key={o.label} onClick={() => pickOption(o.intent)} className="px-3 py-1 rounded-full bg-mp-gray-100 hover:bg-mp-gray-200">
                 {o.label}
               </button>
@@ -63,7 +64,7 @@ export function AgentSearch({ jobsById }: Props) {
       {result?.mode === 'recommend' && (
         <div className="space-y-3">
           <p>{result.answer}</p>
-          {result.jobs.map((j: any) => {
+          {result.jobs.map((j) => {
             const meta = jobsById[j.jobId];
             const href = meta?.slug ? `/learn/job/${meta.slug}` : undefined;
             return (
@@ -94,7 +95,7 @@ export function AgentSearch({ jobsById }: Props) {
         <div className="rounded-lg border p-4">
           <p>{result.answer}</p>
           <ul className="mt-2 space-y-1">
-            {result.lessons.map((l: any) => (
+            {result.lessons.map((l) => (
               <li key={l.lessonId} className="text-sm">{l.reason}</li>
             ))}
           </ul>
