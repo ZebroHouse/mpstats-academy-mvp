@@ -12,6 +12,7 @@ import { notificationsRouter } from './routers/notifications';
 import { referralRouter } from './routers/referral';
 import { jobRouter } from './routers/job';
 import { onboardingRouter } from './routers/onboarding';
+import { intentRouter } from './routers/intent';
 
 export const appRouter = router({
   profile: profileRouter,
@@ -27,6 +28,7 @@ export const appRouter = router({
   referral: referralRouter,
   job: jobRouter,
   onboarding: onboardingRouter,
+  intent: intentRouter,
 });
 
 export type AppRouter = typeof appRouter;
