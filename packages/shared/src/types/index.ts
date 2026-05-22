@@ -207,36 +207,6 @@ export interface CourseWithProgress extends Course {
   progressPercent: number;
 }
 
-// ============== LIBRARY (Skill-based content) ==============
-
-export interface LibraryLesson {
-  id: string;
-  title: string;
-  duration: number;
-  order: number;
-  videoUrl: string;
-  videoId: string | null;
-  status: LessonStatus;
-  watchedPercent: number;
-  locked: boolean;
-}
-
-export interface LibraryBlock {
-  block: string;       // skill block slug: "assortment_management"
-  title: string;       // "Управление ассортиментом"
-  description: string; // block description from taxonomy
-  lessons: LibraryLesson[];
-}
-
-export interface LibraryAxis {
-  axis: string;        // "ANALYTICS", "MARKETING", etc.
-  title: string;       // "Аналитика"
-  blocks: LibraryBlock[];
-  totalLessons: number;
-}
-
-export type LibraryData = LibraryAxis[];
-
 // ============== SEARCH RESULTS (Phase 30) ==============
 
 export interface SearchSnippet {
@@ -385,4 +355,5 @@ export interface JobDetail extends JobSummary {
   outcomes: string[];
   skillBlocks: string[];
   lessons: JobLessonItem[];
+  isInTrack: boolean;
 }

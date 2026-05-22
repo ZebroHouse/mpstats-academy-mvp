@@ -6,48 +6,31 @@ import { useSearchParams, useRouter, usePathname } from 'next/navigation';
 import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { LessonCard } from '@/components/learning/LessonCard';
 import { SearchBar } from '@/components/learning/SearchBar';
 import { FilterPanel, type FilterState } from '@/components/learning/FilterPanel';
-import dynamic from 'next/dynamic';
 import { SearchResultCard } from '@/components/learning/SearchResultCard';
 import { CourseLockBanner } from '@/components/learning/PaywallBanner';
-
-// Client-only + no SSR — избегаем hydration mismatch на staging, где сервер
-// и клиент могут получить разные значения process.env.NEXT_PUBLIC_SHOW_LIBRARY
-// (сервер — runtime env, клиент — build-time inline).
-const LibrarySection = dynamic(
-  () => import('@/components/learning/LibrarySection').then((m) => m.LibrarySection),
-  { ssr: false }
-);
+import { MarketplaceSwitch } from '@/components/learning/MarketplaceSwitch';
+import { JobCatalog, type ProgressFilter } from '@/components/learning/JobCatalog';
 import { trpc } from '@/lib/trpc/client';
 import { cn } from '@/lib/utils';
 import type { LessonWithProgress } from '@mpstats/shared';
 
 const INITIAL_LESSONS_SHOWN = 5;
 
+const PROGRESS_FILTER_LABELS: Record<ProgressFilter, string> = {
+  ALL: 'Все',
+  NOT_STARTED: 'Не начато',
+  IN_PROGRESS: 'В процессе',
+  COMPLETED: 'Завершено',
+};
+
 function pluralLessons(n: number): string {
   if (n % 10 === 1 && n % 100 !== 11) return `${n} урок`;
   if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return `${n} урока`;
   return `${n} уроков`;
 }
-
-const SECTION_DESCRIPTIONS: Record<string, (count: number) => string> = {
-  custom: (n) => pluralLessons(n),
-  errors: (n) => `${pluralLessons(n)} по темам, где были ошибки`,
-  deepening: (n) => `${pluralLessons(n)} для слабых навыков`,
-  growth: (n) => `${pluralLessons(n)} для средних навыков`,
-  advanced: (n) => `${pluralLessons(n)} повышенной сложности`,
-};
-
-const SECTION_STYLES: Record<string, { icon: string; bgColor: string; borderColor: string; textColor: string; badgeColor: string }> = {
-  errors: { icon: '!', bgColor: 'bg-red-50', borderColor: 'border-red-200', textColor: 'text-red-700', badgeColor: 'bg-red-100 text-red-700' },
-  deepening: { icon: '\u2193', bgColor: 'bg-mp-blue-50', borderColor: 'border-mp-blue-200', textColor: 'text-mp-blue-700', badgeColor: 'bg-mp-blue-100 text-mp-blue-700' },
-  growth: { icon: '\u2191', bgColor: 'bg-mp-green-50', borderColor: 'border-mp-green-200', textColor: 'text-mp-green-700', badgeColor: 'bg-mp-green-100 text-mp-green-700' },
-  advanced: { icon: '\u2605', bgColor: 'bg-yellow-50', borderColor: 'border-yellow-200', textColor: 'text-yellow-700', badgeColor: 'bg-yellow-100 text-yellow-700' },
-  custom: { icon: '\u2764', bgColor: 'bg-purple-50', borderColor: 'border-purple-200', textColor: 'text-purple-700', badgeColor: 'bg-purple-100 text-purple-700' },
-};
 
 function isDatabaseUnavailable(errorMessage: string): boolean {
   return errorMessage === 'DATABASE_UNAVAILABLE' || errorMessage.includes('DATABASE_UNAVAILABLE');
@@ -86,10 +69,10 @@ export default function LearnPage() {
 }
 
 function LearnPageInner() {
-  const [viewMode, setViewMode] = useState<'path' | 'courses'>('courses');
-  const [viewModeInitialized, setViewModeInitialized] = useState(false);
+  const [lens, setLens] = useState<'jobs' | 'courses'>('jobs');
+  const [marketplace, setMarketplace] = useState<'WB' | 'OZON'>('WB');
+  const [progressFilter, setProgressFilter] = useState<ProgressFilter>('ALL');
   const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set());
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['errors']));
 
   // Search state
   const [searchQuery, setSearchQuery] = useState('');
@@ -103,9 +86,8 @@ function LearnPageInner() {
   }, [router, pathname]);
 
   const { data: courses, isLoading: coursesLoading, error: coursesError } = trpc.learning.getCourses.useQuery();
-  const { data: path, isLoading: pathLoading, error: pathError } = trpc.learning.getPath.useQuery();
-  const { data: hasDiagnostic, isLoading: diagLoading } = trpc.diagnostic.hasCompletedDiagnostic.useQuery();
   const { data: recommendedPath } = trpc.learning.getRecommendedPath.useQuery();
+  const { data: jobAxes, isLoading: jobsLoading, error: jobsError } = trpc.job.getCatalog.useQuery({ marketplace });
 
   // Search query
   const { data: searchResults, isLoading: searchLoading, error: searchError } = trpc.ai.searchLessons.useQuery(
@@ -113,20 +95,12 @@ function LearnPageInner() {
     { enabled: searchQuery.length > 0 }
   );
 
-  // Smart default: show "Мой трек" if user has completed diagnostic
-  useEffect(() => {
-    if (!diagLoading && !viewModeInitialized) {
-      setViewMode(hasDiagnostic ? 'path' : 'courses');
-      setViewModeInitialized(true);
-    }
-  }, [hasDiagnostic, diagLoading, viewModeInitialized]);
-
   // Auto-expand course from URL hash (e.g. /learn#01_analytics)
   useEffect(() => {
     const hash = window.location.hash.slice(1);
     if (hash && courses?.some((c) => c.id === hash)) {
       setExpandedCourses((prev) => new Set(prev).add(hash));
-      setViewMode('courses');
+      setLens('courses');
       setTimeout(() => {
         document.getElementById(`course-${hash}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }, 100);
@@ -141,7 +115,6 @@ function LearnPageInner() {
   // O(1) lookup for lessons in user's track (all sections)
   const trackLessonIds = useMemo(() => {
     if (!recommendedPath?.sections) return new Set<string>();
-
     return new Set(recommendedPath.sections.flatMap((s: any) => s.lessons.map((l: any) => l.id as string)));
   }, [recommendedPath]);
 
@@ -154,14 +127,12 @@ function LearnPageInner() {
       const prev = utils.learning.getRecommendedPath.getData();
       utils.learning.getRecommendedPath.setData(undefined, (old: typeof prev) => {
         if (!old) return old;
-    
         const sections: any[] = old.sections ? [...old.sections.map((s: any) => ({ ...s, lessons: [...s.lessons] }))] : [];
         let customIdx = sections.findIndex((s: any) => s.id === 'custom');
         if (customIdx < 0) {
           sections.unshift({ id: 'custom', title: 'Мои уроки', description: '0', lessons: [], lessonIds: [] });
           customIdx = 0;
         }
-        // Try to find lesson data from courses
         const lessonData = courses?.flatMap(c => c.lessons).find(l => l.id === lessonId);
         const alreadyExists = sections[customIdx].lessons.some((l: any) => l.id === lessonId);
         if (!alreadyExists && lessonData) {
@@ -177,37 +148,6 @@ function LearnPageInner() {
     },
     onSuccess: () => toast.success('Добавлено в трек'),
     onSettled: () => utils.learning.getRecommendedPath.invalidate(),
-  });
-
-  const removeFromTrackMutation = trpc.learning.removeFromTrack.useMutation({
-    onMutate: async ({ lessonId }) => {
-      await utils.learning.getRecommendedPath.cancel();
-      const prev = utils.learning.getRecommendedPath.getData();
-      utils.learning.getRecommendedPath.setData(undefined, (old: typeof prev) => {
-        if (!old || !old.sections) return old;
-    
-        const sections = old.sections.map((s: any) => ({
-          ...s,
-          lessons: s.lessons.filter((l: any) => l.id !== lessonId),
-        }));
-        return { ...old, sections } as any;
-      });
-      return { prev };
-    },
-    onError: (_err: unknown, _vars: unknown, ctx: any) => {
-      if (ctx?.prev) utils.learning.getRecommendedPath.setData(undefined, ctx.prev);
-      toast.error('Не удалось убрать урок');
-    },
-    onSuccess: () => toast.success('Убрано из трека'),
-    onSettled: () => utils.learning.getRecommendedPath.invalidate(),
-  });
-
-  const rebuildTrackMutation = trpc.learning.rebuildTrack.useMutation({
-    onSuccess: () => {
-      toast.success('Трек перестроен');
-      utils.learning.getRecommendedPath.invalidate();
-    },
-    onError: () => toast.error('Не удалось перестроить трек'),
   });
 
   const addLessonsToTrackMutation = trpc.learning.addLessonsToTrack.useMutation({
@@ -263,7 +203,6 @@ function LearnPageInner() {
         if (filters.marketplace === 'OZON') {
           if (r.lesson.courseId !== '05_ozon') return false;
         } else {
-          // WB = everything except OZON course
           if (r.lesson.courseId === '05_ozon') return false;
         }
       }
@@ -271,7 +210,7 @@ function LearnPageInner() {
     });
   }, [searchResults, filters]);
 
-  // Unified filter function for courses/track views
+  // Unified filter function for courses view
   const filterLesson = (lesson: LessonWithProgress) => {
     if (filters.category !== 'ALL' && lesson.skillCategory !== filters.category) return false;
     if (filters.status !== 'ALL' && lesson.status !== filters.status) return false;
@@ -291,7 +230,6 @@ function LearnPageInner() {
       if (filters.marketplace === 'OZON') {
         if (courseId !== '05_ozon') return false;
       } else {
-        // WB = everything except OZON course
         if (courseId === '05_ozon') return false;
       }
     }
@@ -299,8 +237,8 @@ function LearnPageInner() {
     return true;
   };
 
-  const isLoading = coursesLoading || pathLoading || (diagLoading && !viewModeInitialized);
-  const error = coursesError || pathError;
+  const isLoading = coursesLoading;
+  const error = coursesError;
 
   const toggleCourseExpanded = (courseId: string) => {
     setExpandedCourses((prev) => {
@@ -312,29 +250,6 @@ function LearnPageInner() {
       }
       return next;
     });
-  };
-
-  const toggleSection = (sectionId: string) => {
-    setExpandedSections((prev) => {
-      const next = new Set(prev);
-      if (next.has(sectionId)) next.delete(sectionId);
-      else next.add(sectionId);
-      return next;
-    });
-  };
-
-  const isSectioned = useMemo(
-    () => recommendedPath?.isSectioned === true && !!recommendedPath?.sections,
-    [recommendedPath],
-  );
-
-  // Stats
-  // Per D-05, D-06: use recommendedPath as primary source, path as fallback (users without diagnostic)
-  const stats = {
-    total: recommendedPath?.totalLessons ?? path?.totalLessons ?? 0,
-    completed: recommendedPath?.completedLessons ?? path?.completedLessons ?? 0,
-    inProgress: (recommendedPath?.lessons ?? path?.lessons ?? [])
-      .filter((l: { status: string }) => l.status === 'IN_PROGRESS').length,
   };
 
   if (isLoading) {
@@ -378,10 +293,10 @@ function LearnPageInner() {
     );
   }
 
-  // Track completion state
-  const isTrackComplete = recommendedPath &&
-    recommendedPath.completedLessons === recommendedPath.totalLessons &&
-    recommendedPath.totalLessons > 0;
+  // Next unfinished lesson from track (for "Продолжить" button)
+  const nextLesson = recommendedPath?.lessons.find(
+    (l) => l.status === 'IN_PROGRESS' || l.status === 'NOT_STARTED'
+  );
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -393,27 +308,65 @@ function LearnPageInner() {
             Персональный план на основе диагностики
           </p>
         </div>
-        {!viewModeInitialized ? (
-          <div className="h-10 bg-mp-gray-200 rounded-lg w-48 animate-pulse" />
-        ) : searchQuery.length === 0 && (
+        {searchQuery.length === 0 && (
           <div data-tour="learn-view-toggle" className="flex gap-2">
             <Button
-              variant={viewMode === 'path' ? 'default' : 'outline'}
+              variant={lens === 'jobs' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setViewMode('path')}
+              onClick={() => setLens('jobs')}
             >
-              Мой трек
+              По задачам
             </Button>
             <Button
-              variant={viewMode === 'courses' ? 'default' : 'outline'}
+              variant={lens === 'courses' ? 'default' : 'outline'}
               size="sm"
-              onClick={() => setViewMode('courses')}
+              onClick={() => setLens('courses')}
             >
               Все курсы
             </Button>
           </div>
         )}
       </div>
+
+      {/* MarketplaceSwitch — under header, jobs lens only, hidden during search */}
+      {searchQuery.length === 0 && lens === 'jobs' && (
+        <div>
+          <MarketplaceSwitch value={marketplace} onChange={setMarketplace} />
+        </div>
+      )}
+
+      {/* Track banner — always visible (outside search), with empty state for new users */}
+      {searchQuery.length === 0 && (
+        <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl border border-mp-gray-200 bg-white shadow-mp-card animate-slide-up">
+          {recommendedPath && recommendedPath.totalLessons > 0 ? (
+            <>
+              <span className="text-body-sm font-semibold text-mp-gray-700">
+                Мой трек · {recommendedPath.completedLessons}/{recommendedPath.totalLessons}
+              </span>
+              <div className="flex gap-2">
+                <Link href="/learn/track">
+                  <Button variant="outline" size="sm">Открыть трек</Button>
+                </Link>
+                {nextLesson && (
+                  <Link href={`/learn/${nextLesson.id}`}>
+                    <Button size="sm">Продолжить</Button>
+                  </Link>
+                )}
+              </div>
+            </>
+          ) : (
+            <>
+              <div className="flex flex-col gap-0.5">
+                <span className="text-body-sm font-semibold text-mp-gray-700">Мой трек пустой</span>
+                <span className="text-caption text-mp-gray-500">Пройди диагностику, и мы соберём программу под тебя</span>
+              </div>
+              <Link href="/diagnostic">
+                <Button size="sm">Пройти диагностику</Button>
+              </Link>
+            </>
+          )}
+        </div>
+      )}
 
       {/* Search Bar */}
       <div data-tour="learn-search">
@@ -425,68 +378,26 @@ function LearnPageInner() {
         />
       </div>
 
-      {/* Filters */}
-      <div data-tour="learn-filters">
-        <FilterPanel
-          filters={filters}
-          onFiltersChange={setFilters}
-          availableTopics={availableTopics}
-          availableCourses={availableCourses}
-        />
-      </div>
-
-      {/* Track progress bar (only in "Мой трек" view with data, not in search mode) */}
-      {searchQuery.length === 0 && viewMode === 'path' && recommendedPath && recommendedPath.totalLessons > 0 && (
-        <div className="animate-slide-up" style={{ animationDelay: '25ms' }}>
-          <div className="flex justify-between text-body-sm text-mp-gray-600 mb-2">
-            <span>Прогресс трека</span>
-            <span className="font-medium">{recommendedPath.completedLessons}/{recommendedPath.totalLessons} уроков завершено</span>
-          </div>
-          <div className="h-2 bg-mp-gray-200 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-mp-green-500 rounded-full transition-all duration-500"
-              style={{ width: `${Math.round((recommendedPath.completedLessons / recommendedPath.totalLessons) * 100)}%` }}
+      {searchQuery.length > 0 ? (
+        /* Search Results View — with full FilterPanel */
+        <div>
+          <div data-tour="learn-filters">
+            <FilterPanel
+              filters={filters}
+              onFiltersChange={setFilters}
+              availableTopics={availableTopics}
+              availableCourses={availableCourses}
             />
           </div>
-        </div>
-      )}
-
-      {/* Stats */}
-      {searchQuery.length === 0 && (
-        <div className="grid grid-cols-3 gap-2 sm:gap-4 animate-slide-up" style={{ animationDelay: '50ms' }}>
-          <Card className="shadow-mp-card">
-            <CardContent className="py-5 text-center">
-              <div className="text-display-sm font-bold text-mp-green-500">{stats.completed}</div>
-              <div className="text-body-sm text-mp-gray-500">Завершено</div>
-            </CardContent>
-          </Card>
-          <Card className="shadow-mp-card">
-            <CardContent className="py-5 text-center">
-              <div className="text-display-sm font-bold text-mp-blue-500">{stats.inProgress}</div>
-              <div className="text-body-sm text-mp-gray-500">В процессе</div>
-            </CardContent>
-          </Card>
-          <Card className="shadow-mp-card">
-            <CardContent className="py-5 text-center">
-              <div className="text-display-sm font-bold text-mp-gray-900">{stats.total}</div>
-              <div className="text-body-sm text-mp-gray-500">Всего</div>
-            </CardContent>
-          </Card>
-        </div>
-      )}
-
-      {searchQuery.length > 0 ? (
-        /* Search Results View */
-        <div>
           {searchLoading && (
-            <p className="text-body-sm text-mp-gray-500">Ищем релевантные уроки...</p>
+            <p className="text-body-sm text-mp-gray-500 mt-4">Ищем релевантные уроки...</p>
           )}
           {searchError && (
-            <p className="text-body-sm text-red-500">Не удалось выполнить поиск. Попробуйте ещё раз.</p>
+            <p className="text-body-sm text-red-500 mt-4">Не удалось выполнить поиск. Попробуйте ещё раз.</p>
           )}
           {!searchLoading && searchResults && (
             <>
-              <p className="text-body-sm text-mp-gray-500 mb-3" aria-live="polite">
+              <p className="text-body-sm text-mp-gray-500 mb-3 mt-4" aria-live="polite">
                 {filteredSearchResults.length} уроков найдено
               </p>
               {filteredSearchResults.length > 0 ? (
@@ -523,309 +434,32 @@ function LearnPageInner() {
             </>
           )}
         </div>
-      ) : viewMode === 'path' ? (
-        <>
-          {/* Case A: No diagnostic completed and no custom track -- show CTA banner */}
-          {hasDiagnostic === false && !recommendedPath && (
-            <Card className="shadow-mp-card border-mp-blue-200 bg-gradient-to-br from-mp-blue-50 to-white">
-              <CardContent className="py-12 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-mp-blue-100 flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-mp-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
-                  </svg>
-                </div>
-                <h2 className="text-heading text-mp-gray-900 mb-2">Персональный трек обучения</h2>
-                <p className="text-body text-mp-gray-500 mb-6 max-w-md mx-auto">
-                  Пройди диагностику, чтобы получить персональный трек обучения на основе твоих навыков
-                </p>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  <Link href="/diagnostic">
-                    <Button size="lg">Начать диагностику</Button>
-                  </Link>
-                  <Button variant="outline" size="lg" onClick={() => setViewMode('courses')}>
-                    Собрать вручную из каталога
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Case A2: Diagnostic done but track ended up empty (user removed all lessons) */}
-          {hasDiagnostic && recommendedPath && recommendedPath.totalLessons === 0 && (
-            <Card className="shadow-mp-card border-mp-blue-200 bg-gradient-to-br from-mp-blue-50 to-white">
-              <CardContent className="py-10 text-center">
-                <h2 className="text-heading text-mp-gray-900 mb-2">Трек пуст</h2>
-                <p className="text-body text-mp-gray-500 mb-6 max-w-md mx-auto">
-                  Ты убрал все уроки из трека. Можно пересобрать его автоматически или добавить нужные уроки из каталога.
-                </p>
-                <div className="flex flex-wrap gap-2 justify-center">
-                  <Button
-                    size="lg"
-                    onClick={() => rebuildTrackMutation.mutate()}
-                    disabled={rebuildTrackMutation.isPending}
-                  >
-                    {rebuildTrackMutation.isPending ? 'Пересобираем...' : 'Перестроить по диагностике'}
-                  </Button>
-                  <Button variant="outline" size="lg" onClick={() => setViewMode('courses')}>
-                    Собрать вручную из каталога
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Case B: Track complete -- congratulatory message */}
-          {hasDiagnostic && isTrackComplete && (
-            <Card className="shadow-mp-card border-mp-green-200 bg-gradient-to-br from-mp-green-50 to-white">
-              <CardContent className="py-12 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-mp-green-100 flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-mp-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h2 className="text-heading text-mp-gray-900 mb-2">Отличная работа!</h2>
-                <p className="text-body text-mp-gray-500 mb-6 max-w-md mx-auto">
-                  Ты завершил все рекомендованные уроки. Пройди диагностику снова, чтобы проверить прогресс!
-                </p>
-                <Link href="/diagnostic">
-                  <Button size="lg">Проверь свой прогресс</Button>
-                </Link>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Case C: Normal track with lessons */}
-          {recommendedPath && !isTrackComplete && recommendedPath.lessons.length > 0 && (
-            <div data-tour="learn-sections" className="space-y-4">
-              {isSectioned ? (
-                /* Sectioned accordion view */
-                <>
-                  {/* Track management header */}
-                  <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
-                    <span className="text-body-sm text-mp-gray-500">
-                      {recommendedPath.totalLessons} уроков в треке
-                    </span>
-                    <div className="flex flex-wrap gap-2">
-                      <Button
-                        variant="default"
-                        size="sm"
-                        onClick={() => setViewMode('courses')}
-                        title="Открыть каталог курсов и добавить нужные уроки в трек"
-                      >
-                        <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                        </svg>
-                        Добавить уроки
-                      </Button>
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button variant="outline" size="sm" disabled={rebuildTrackMutation.isPending}>
-                            <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                            </svg>
-                            Перестроить по диагностике
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>Перестроить трек по диагностике?</AlertDialogTitle>
-                            <AlertDialogDescription>
-                              Соберём трек заново на основе твоей последней диагностики. Удалённые вручную уроки могут вернуться, секция «Мои уроки» сохранится.
-                              <br /><br />
-                              <strong>Важно:</strong> эта кнопка не учитывает фильтры выше — она пересобирает рекомендации по твоим слабым навыкам. Чтобы добавить уроки конкретного курса в трек — закрой это окно, открой «Все курсы» и нажимай «+ В трек» на нужных уроках или весь курс целиком.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Отмена</AlertDialogCancel>
-                            <AlertDialogAction onClick={() => rebuildTrackMutation.mutate()}>
-                              Перестроить по диагностике
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    </div>
-                  </div>
-                  <p className="text-caption text-mp-gray-400 mb-3">
-                    Фильтры скрывают уроки в текущем треке. Чтобы добавить новые — открой «Все курсы» и нажимай «+ В трек».
-                  </p>
-                  {recommendedPath.sections!
-                    .map(section => ({
-                      ...section,
-                      _filteredLessons: section.lessons.filter((l: any) => filterLesson(l as LessonWithProgress)),
-                    }))
-                    .filter(section => {
-                      // D-06: hide empty custom section
-                      if (section.id === 'custom' && (!section.lessons || section.lessons.length === 0)) return false;
-                      return section._filteredLessons.length > 0;
-                    })
-                    .map((section) => {
-                    const style = SECTION_STYLES[section.id] || SECTION_STYLES.growth;
-                    const isOpen = expandedSections.has(section.id);
-                    const completedInSection = section._filteredLessons.filter((l: { status: string }) => l.status === 'COMPLETED').length;
-
-                    return (
-                      <Card key={section.id} className={`shadow-mp-card ${style.borderColor}`}>
-                        {/* Section header -- clickable to expand/collapse */}
-                        <button
-                          onClick={() => toggleSection(section.id)}
-                          className={`w-full text-left px-6 py-4 flex items-center justify-between ${style.bgColor} rounded-t-lg`}
-                        >
-                          <div className="flex items-center gap-3">
-                            <span className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${style.badgeColor}`}>
-                              {style.icon}
-                            </span>
-                            <div>
-                              <h3 className={`text-heading font-semibold ${style.textColor}`}>{section.title}</h3>
-                              <p className="text-body-sm text-mp-gray-500">{(SECTION_DESCRIPTIONS[section.id] || SECTION_DESCRIPTIONS.growth)(section.lessons.length)}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-3">
-                            <span className="text-body-sm text-mp-gray-500">
-                              {completedInSection}/{section._filteredLessons.length}
-                            </span>
-                            <svg className={`w-5 h-5 text-mp-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                            </svg>
-                          </div>
-                        </button>
-
-                        {/* Section content -- collapsible */}
-                        {isOpen && (
-                          <CardContent className="pt-3 pb-4 px-2 sm:px-6 overflow-hidden">
-                            <div className="grid gap-2 sm:gap-3">
-                              {section._filteredLessons
-                                .map((lesson: any, idx: number) => (
-                                <LessonCard
-                                  key={lesson.id}
-                                  lesson={{ ...lesson, title: `${idx + 1}. ${lesson.title}` } as LessonWithProgress}
-                                  showCourse
-                                  courseName={((lesson as unknown) as Record<string, unknown>).courseName as string}
-                                  isRecommended={section.id === 'errors'}
-                                  locked={lesson.locked}
-                                  onRemoveFromTrack={() => removeFromTrackMutation.mutate({ lessonId: lesson.id })}
-                                />
-                              ))}
-                            </div>
-                          </CardContent>
-                        )}
-                      </Card>
-                    );
-                  })}
-                  {/* All sections empty after filtering — congratulation placeholder */}
-                  {recommendedPath.sections!.every(section =>
-                    section.lessons.filter((l: any) => filterLesson(l as LessonWithProgress)).length === 0
-                  ) && (
-                    <Card className="shadow-mp-card">
-                      <CardContent className="py-8 text-center">
-                        <div className="w-16 h-16 rounded-2xl bg-mp-green-100 flex items-center justify-center mx-auto mb-4">
-                          <svg className="w-8 h-8 text-mp-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                        <p className="text-body font-medium text-mp-green-700">Отличный результат! Все темы освоены.</p>
-                      </CardContent>
-                    </Card>
-                  )}
-                  {/* Re-diagnostic CTA when errors section is fully completed */}
-                  {recommendedPath.sections!.find((s: { id: string }) => s.id === 'errors')?.lessons.every((l: { status: string }) => l.status === 'COMPLETED') && (
-                    <Card className="shadow-mp-card border-mp-green-200 bg-gradient-to-br from-mp-green-50 to-white">
-                      <CardContent className="py-8 text-center">
-                        <h3 className="text-heading text-mp-gray-900 mb-2">Отлично! Все ошибки проработаны</h3>
-                        <p className="text-body text-mp-gray-500 mb-4">
-                          Хочешь проверить, как вырос твой уровень? Пройди диагностику снова!
-                        </p>
-                        <Link href="/diagnostic">
-                          <Button variant="outline">Пройти диагностику снова</Button>
-                        </Link>
-                      </CardContent>
-                    </Card>
-                  )}
-                </>
-              ) : (
-                /* Fallback: flat list for old-format paths */
-                <div className="space-y-3">
-                  {(() => {
-                    const showGating = recommendedPath.hasPlatformSubscription === false
-                      && recommendedPath.lessons.some(l => l.locked);
-                    const visibleCount = showGating ? 3 : recommendedPath.lessons.length;
-                    const visibleLessons = recommendedPath.lessons.slice(0, visibleCount);
-                    const hiddenLessons = showGating ? recommendedPath.lessons.slice(visibleCount) : [];
-
-                    return (
-                      <>
-                        {visibleLessons
-                          .filter((lesson) => filterLesson(lesson as LessonWithProgress))
-                          .map((lesson, idx: number) => (
-                          <LessonCard
-                            key={lesson.id}
-                            lesson={{ ...lesson, title: `${idx + 1}. ${lesson.title}` } as LessonWithProgress}
-                            showCourse
-                            courseName={((lesson as unknown) as Record<string, unknown>).courseName as string}
-                            isRecommended
-                            locked={lesson.locked}
-                          />
-                        ))}
-                        {hiddenLessons.length > 0 && (
-                          <>
-                            <div className="blur-sm pointer-events-none select-none space-y-3">
-                              {hiddenLessons.map((lesson, idx) => (
-                                <LessonCard
-                                  key={lesson.id}
-                                  lesson={{ ...lesson, title: `${visibleCount + idx + 1}. ${lesson.title}` } as LessonWithProgress}
-                                  showCourse
-                                  courseName={((lesson as unknown) as Record<string, unknown>).courseName as string}
-                                  locked
-                                />
-                              ))}
-                            </div>
-                            <Card className="shadow-mp-card border-mp-blue-200 bg-gradient-to-br from-mp-blue-50 to-white">
-                              <CardContent className="py-8 text-center">
-                                <h3 className="text-heading text-mp-gray-900 mb-2">
-                                  Получите полный персональный трек
-                                </h3>
-                                <p className="text-body text-mp-gray-500 mb-4">
-                                  Ещё {hiddenLessons.length} уроков доступны с полной подпиской
-                                </p>
-                                <Link href="/pricing">
-                                  <Button size="lg">Оформить полный доступ</Button>
-                                </Link>
-                              </CardContent>
-                            </Card>
-                          </>
-                        )}
-                      </>
-                    );
-                  })()}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Case D: Diagnostic done but empty or no path (all skills above target) */}
-          {hasDiagnostic && (!recommendedPath || (recommendedPath && recommendedPath.lessons.length === 0)) && !isTrackComplete && (
-            <Card className="shadow-mp-card border-mp-green-200 bg-gradient-to-br from-mp-green-50 to-white">
-              <CardContent className="py-12 text-center">
-                <div className="w-16 h-16 rounded-2xl bg-mp-green-100 flex items-center justify-center mx-auto mb-4">
-                  <svg className="w-8 h-8 text-mp-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
-                </div>
-                <h2 className="text-heading text-mp-gray-900 mb-2">Отличный результат!</h2>
-                <p className="text-body text-mp-gray-500 mb-6 max-w-md mx-auto">
-                  Все навыки на высоком уровне. Можешь изучать любые курсы или пройти диагностику снова для проверки.
-                </p>
-                <div className="flex gap-3 justify-center">
-                  <Button variant="outline" onClick={() => setViewMode('courses')}>Все курсы</Button>
-                  <Link href="/diagnostic">
-                    <Button>Проверить прогресс</Button>
-                  </Link>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-        </>
+      ) : lens === 'jobs' ? (
+        /* Jobs lens — job catalog with thin progress filter */
+        <div className="space-y-4">
+          {/* Thin progress filter */}
+          <div className="flex gap-2 flex-wrap">
+            {(['ALL', 'NOT_STARTED', 'IN_PROGRESS', 'COMPLETED'] as ProgressFilter[]).map((f) => (
+              <button
+                key={f}
+                onClick={() => setProgressFilter(f)}
+                className={cn(
+                  'px-3 py-1.5 rounded-lg text-body-sm font-medium transition-colors',
+                  progressFilter === f
+                    ? 'bg-mp-blue-500 text-white'
+                    : 'bg-white border border-mp-gray-200 text-mp-gray-600 hover:bg-mp-gray-50',
+                )}
+              >
+                {PROGRESS_FILTER_LABELS[f]}
+              </button>
+            ))}
+          </div>
+          {jobsLoading && <div className="h-32 bg-mp-gray-200 rounded-xl animate-pulse" />}
+          {jobsError && <p className="text-body-sm text-red-500 py-6 text-center">Не удалось загрузить каталог джоб.</p>}
+          {!jobsLoading && !jobsError && <JobCatalog axes={jobAxes ?? []} progressFilter={progressFilter} />}
+        </div>
       ) : (
-        /* Courses view */
+        /* Courses lens — existing courses accordion */
         <div data-tour="learn-add-to-track" className="space-y-6">
           {courses?.map((course) => {
             // Apply filters to lessons in course view
@@ -959,15 +593,8 @@ function LearnPageInner() {
               </Card>
             );
           })}
-
         </div>
       )}
-
-      {/* Library: skill-based lessons. Видна в обоих view (path и courses). Gate на
-          рендер и данные — внутри LibrarySection (runtime env-check + tRPC query). */}
-      <div className="mt-6">
-        <LibrarySection />
-      </div>
     </div>
   );
 }

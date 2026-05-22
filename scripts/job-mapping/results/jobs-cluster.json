@@ -1,0 +1,809 @@
+{
+  "phase": "cluster",
+  "model": "openai/gpt-4.1-mini",
+  "timestamp": "2026-05-19T07:43:11.289Z",
+  "total_jobs": 29,
+  "jobs": [
+    {
+      "title": "Настроить автобиддер для эффективного управления рекламой на Wildberries",
+      "description": "Пошаговая настройка автобиддера для оптимизации рекламных ставок, автоматическое минусование неэффективных ключевых фраз и повышение эффективности рекламных кампаний на Wildberries.",
+      "outcomes": [
+        "Автоматически управлять ставками в рекламных кампаниях",
+        "Оптимизировать рекламный бюджет за счет исключения неэффективных ключевых слов",
+        "Повысить CTR и конверсии рекламных кампаний"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "MARKETING"
+      ],
+      "skill_blocks": [
+        "ANALYTICS/ads_autobidder"
+      ],
+      "marketplace": "WB",
+      "lesson_ids": [
+        "01_analytics_m00_bonus_autobidder_001",
+        "02_ads_m08_autobidder_001",
+        "03_ai_m06_neuro_ads_002",
+        "03_ai_m06_neuro_ads_005"
+      ]
+    },
+    {
+      "title": "Понять и использовать аналитику для принятия бизнес-решений на маркетплейсах",
+      "description": "Изучение ключевых показателей, формирование гипотез и определение KPI для управления продажами и увеличения прибыли на маркетплейсах.",
+      "outcomes": [
+        "Формировать и проверять гипотезы для выбора товара и стратегии",
+        "Определять ключевые бизнес-вопросы и KPI",
+        "Использовать аналитику для минимизации потерь и увеличения прибыли"
+      ],
+      "axes": [
+        "ANALYTICS"
+      ],
+      "skill_blocks": [
+        "ANALYTICS/business_analytics"
+      ],
+      "marketplace": "WB",
+      "lesson_ids": [
+        "01_analytics_m01_start_002"
+      ]
+    },
+    {
+      "title": "Рассчитать и анализировать юнит-экономику товара на Wildberries",
+      "description": "Пошаговый расчет юнит-экономики с учетом всех расходов, параметров продавца, маркетинга и коммерческих затрат для оценки прибыльности товара.",
+      "outcomes": [
+        "Рассчитать себестоимость и прибыльность товара",
+        "Определить оптимальную цену и параметры продажи",
+        "Оценить эффективность маркетинговых затрат и внутреннего маркетинга"
+      ],
+      "axes": [
+        "FINANCE",
+        "ANALYTICS"
+      ],
+      "skill_blocks": [
+        "FINANCE/unit_economics"
+      ],
+      "marketplace": "WB",
+      "lesson_ids": [
+        "01_analytics_m02_economics_001",
+        "01_analytics_m02_economics_002",
+        "01_analytics_m02_economics_003",
+        "01_analytics_m02_economics_004",
+        "01_analytics_m02_economics_005",
+        "01_analytics_m02_economics_006",
+        "01_analytics_m02_economics_007",
+        "01_analytics_m02_economics_008"
+      ]
+    },
+    {
+      "title": "Определить ценовой сегмент и принять решение об участии в акциях на Wildberries",
+      "description": "Анализ ценовых сегментов и условий акций для правильного позиционирования товара и максимизации выгоды от участия в маркетплейсных акциях.",
+      "outcomes": [
+        "Определить ценовой сегмент товара",
+        "Сформировать визуальное позиционирование в зависимости от сегмента",
+        "Принять обоснованное решение об участии в акциях"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "MARKETING"
+      ],
+      "skill_blocks": [
+        "MARKETING/promotion_analysis"
+      ],
+      "marketplace": "WB",
+      "lesson_ids": [
+        "01_analytics_m02_economics_012",
+        "01_analytics_m02_economics_013"
+      ]
+    },
+    {
+      "title": "Провести детальный конкурентный анализ и определить потенциал ниши на Wildberries",
+      "description": "Классификация конкурентов, анализ ассортимента, цен, отзывов и рыночной емкости для принятия стратегических решений по ассортименту и продвижению.",
+      "outcomes": [
+        "Определить типы и группы конкурентов",
+        "Рассчитать емкость рынка и сезонность",
+        "Провести SWOT-анализ конкурентов и выявить точки роста"
+      ],
+      "axes": [
+        "ANALYTICS"
+      ],
+      "skill_blocks": [
+        "ANALYTICS/competitor_analysis"
+      ],
+      "marketplace": "WB",
+      "lesson_ids": [
+        "01_analytics_m03_competitors_001",
+        "01_analytics_m03_competitors_002",
+        "01_analytics_m03_competitors_003",
+        "01_analytics_m03_competitors_004",
+        "01_analytics_m03_competitors_005",
+        "01_analytics_m03_competitors_006",
+        "01_analytics_m03_competitors_007",
+        "01_analytics_m03_competitors_008",
+        "01_analytics_m03_competitors_009",
+        "01_analytics_m03_competitors_010",
+        "01_analytics_m03_competitors_011",
+        "01_analytics_m03_competitors_012",
+        "01_analytics_m03_competitors_013",
+        "01_analytics_m03_competitors_014"
+      ]
+    },
+    {
+      "title": "Избежать ошибок и выбрать товар для запуска на Wildberries",
+      "description": "Анализ типичных ошибок, формирование целей запуска, оценка рисков и расчет объема первой закупки для успешного старта продаж.",
+      "outcomes": [
+        "Избежать типичных ошибок при выборе товара",
+        "Сформулировать реалистичную цель запуска",
+        "Рассчитать необходимый объем первой закупки"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "OPERATIONS"
+      ],
+      "skill_blocks": [
+        "OPERATIONS/product_selection"
+      ],
+      "marketplace": "WB",
+      "lesson_ids": [
+        "01_analytics_m04_product_selection_001",
+        "01_analytics_m04_product_selection_002",
+        "01_analytics_m04_product_selection_009",
+        "01_analytics_m04_product_selection_010"
+      ]
+    },
+    {
+      "title": "Провести анализ и сегментацию товарных категорий для расширения ассортимента на Wildberries",
+      "description": "Определение перспективных категорий, анализ ключевых показателей и критериев отбора для планирования расширения товарной матрицы.",
+      "outcomes": [
+        "Определить перспективные товарные категории",
+        "Проанализировать прибыльность и потенциал категорий",
+        "Отобрать категории под бюджет и бизнес-план"
+      ],
+      "axes": [
+        "ANALYTICS"
+      ],
+      "skill_blocks": [
+        "ANALYTICS/category_selection"
+      ],
+      "marketplace": "WB",
+      "lesson_ids": [
+        "01_analytics_m04_product_selection_020",
+        "skill_analytics_category_selection_002",
+        "skill_analytics_category_selection_003",
+        "skill_analytics_category_selection_004"
+      ]
+    },
+    {
+      "title": "Оптимизировать ассортимент с помощью ABC/XYZ-анализа на Wildberries",
+      "description": "Классификация товаров по важности и анализ остатков для оптимизации управления запасами и повышения эффективности продаж.",
+      "outcomes": [
+        "Классифицировать товары по ABC-аналитике",
+        "Определить приоритеты в управлении ассортиментом",
+        "Оптимизировать запасы и отгрузки по регионам"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "OPERATIONS"
+      ],
+      "skill_blocks": [
+        "ANALYTICS/assortment_management"
+      ],
+      "marketplace": "WB",
+      "lesson_ids": [
+        "01_analytics_m05_assortment_001",
+        "01_analytics_m05_assortment_008",
+        "skill_analytics_assortment_001",
+        "skill_analytics_assortment_002"
+      ]
+    },
+    {
+      "title": "Создать и оптимизировать продающий контент для карточки товара с помощью нейросетей на Wildberries",
+      "description": "Использование AI для генерации уникального торгового предложения, SEO-текстов, инфографики и визуального контента для повышения конверсии и вовлечения покупателей.",
+      "outcomes": [
+        "Сформировать уникальное торговое предложение (УТП)",
+        "Создать SEO-оптимизированные тексты и инфографику",
+        "Автоматизировать создание визуального контента и ответов на отзывы"
+      ],
+      "axes": [
+        "CONTENT",
+        "MARKETING"
+      ],
+      "skill_blocks": [
+        "CONTENT/ai_content_creation"
+      ],
+      "marketplace": "WB",
+      "lesson_ids": [
+        "02_ads_m00_bonus_ai_external_001",
+        "02_ads_m00_bonus_ai_external_002",
+        "03_ai_m01_intro_008",
+        "03_ai_m05_neurotexts_001",
+        "03_ai_m05_neurotexts_003",
+        "03_ai_m05_neurotexts_004",
+        "03_ai_m05_neurotexts_005",
+        "03_ai_m05_neurotexts_006",
+        "03_ai_m05_neurotexts_007",
+        "03_ai_m05_neurotexts_008",
+        "03_ai_m05_neurotexts_009",
+        "03_ai_m03_visual_009",
+        "03_ai_m03_visual_010",
+        "03_ai_m03_visual_011",
+        "03_ai_m03_visual_012",
+        "03_ai_m03_visual_013",
+        "03_ai_m03_visual_014",
+        "03_ai_m03_visual_015"
+      ]
+    },
+    {
+      "title": "Провести SEO-оптимизацию карточки товара на Wildberries",
+      "description": "Сбор и обновление SEO-ключей, правильное оформление карточки и проверка индексации для повышения видимости и конверсии товара.",
+      "outcomes": [
+        "Собрать релевантные SEO-ключи",
+        "Оптимизировать заголовок, описание и характеристики",
+        "Проверить индексацию и исправить SEO-ошибки"
+      ],
+      "axes": [
+        "CONTENT",
+        "MARKETING"
+      ],
+      "skill_blocks": [
+        "MARKETING/seo_optimization"
+      ],
+      "marketplace": "WB",
+      "lesson_ids": [
+        "02_ads_m00_bonus_ai_external_002",
+        "02_ads_m02_top_001",
+        "02_ads_m02_top_002",
+        "02_ads_m02_top_003",
+        "02_ads_m02_top_004",
+        "02_ads_m02_top_005",
+        "02_ads_m02_top_006",
+        "02_ads_m02_top_007",
+        "skill_marketing_seo_optimization_001",
+        "skill_marketing_seo_optimization_002",
+        "skill_marketing_seo_optimization_003",
+        "skill_marketing_seo_optimization_004"
+      ]
+    },
+    {
+      "title": "Провести аудит и улучшить карточку фокусного товара на Wildberries",
+      "description": "Выявление причин просадки продаж, аудит карточки по чек-листу и оптимизация визуального и текстового контента для повышения конверсии и удержания заказов.",
+      "outcomes": [
+        "Обнаружить причины снижения продаж",
+        "Провести аудит карточки товара",
+        "Оптимизировать контент под целевую аудиторию"
+      ],
+      "axes": [
+        "CONTENT",
+        "ANALYTICS"
+      ],
+      "skill_blocks": [
+        "ANALYTICS/product_card_improvement"
+      ],
+      "marketplace": "WB",
+      "lesson_ids": [
+        "skill_analytics_product_card_improvement_001",
+        "skill_analytics_product_card_improvement_002",
+        "skill_analytics_product_card_improvement_003"
+      ]
+    },
+    {
+      "title": "Провести анализ и оптимизацию рекламных кампаний на Wildberries",
+      "description": "Анализ эффективности рекламы, выявление слабых мест, формулирование гипотез и оптимизация бюджета для повышения продаж и снижения затрат.",
+      "outcomes": [
+        "Понять эффективность рекламных кампаний",
+        "Выявить точки просадки и слабые места",
+        "Оптимизировать рекламный бюджет и ставки"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "MARKETING"
+      ],
+      "skill_blocks": [
+        "MARKETING/ad_campaigns"
+      ],
+      "marketplace": "WB",
+      "lesson_ids": [
+        "02_ads_m01_prep_001",
+        "02_ads_m01_prep_002",
+        "02_ads_m01_prep_003",
+        "02_ads_m01_prep_004",
+        "02_ads_m01_prep_005",
+        "02_ads_m07_optimization_001",
+        "02_ads_m07_optimization_002",
+        "02_ads_m07_optimization_003",
+        "02_ads_m07_optimization_004",
+        "02_ads_m07_optimization_005",
+        "skill_marketing_ad_metrics_001",
+        "skill_marketing_ad_metrics_002",
+        "skill_marketing_ad_metrics_003",
+        "04_workshops_w01_feb_ads_001",
+        "04_workshops_w01_feb_ads_002",
+        "04_workshops_w04_may_navigator_001",
+        "04_workshops_w04_may_navigator_002",
+        "04_workshops_w05_jun_seo_002",
+        "04_workshops_w09_oct_ai2_001",
+        "04_workshops_w09_oct_ai2_002"
+      ]
+    },
+    {
+      "title": "Настроить и оптимизировать рекламные кампании с использованием ручных и автоматических ставок на Wildberries",
+      "description": "Запуск и управление рекламой с единой и ручной ставками, оптимизация бюджета, выбор ключевых слов и зон показов для повышения эффективности рекламы.",
+      "outcomes": [
+        "Запустить рекламную кампанию с единой ставкой",
+        "Перейти на ручное управление ставками",
+        "Оптимизировать ставки и удалить неэффективные запросы"
+      ],
+      "axes": [
+        "MARKETING"
+      ],
+      "skill_blocks": [
+        "MARKETING/ads_tools"
+      ],
+      "marketplace": "WB",
+      "lesson_ids": [
+        "02_ads_m05_tools_002",
+        "02_ads_m05_tools_003",
+        "02_ads_m05_tools_005",
+        "02_ads_m05_tools_006"
+      ]
+    },
+    {
+      "title": "Создать и оптимизировать визуальный контент для карточки товара на Wildberries",
+      "description": "Создание фото, видео, инфографики и баннеров с помощью нейросетей и AI-инструментов для повышения CTR и конверсии карточки товара.",
+      "outcomes": [
+        "Создать привлекательные фото и видео для карточки товара",
+        "Сформировать продающую инфографику и визуальные блоки",
+        "Провести A/B тестирование визуального контента"
+      ],
+      "axes": [
+        "CONTENT",
+        "MARKETING"
+      ],
+      "skill_blocks": [
+        "CONTENT/visual_content"
+      ],
+      "marketplace": "WB",
+      "lesson_ids": [
+        "02_ads_m03_visual_ctr_001",
+        "02_ads_m03_visual_ctr_002",
+        "02_ads_m03_visual_ctr_003",
+        "02_ads_m03_visual_ctr_004",
+        "02_ads_m03_visual_ctr_005",
+        "02_ads_m03_visual_ctr_007",
+        "02_ads_m03_visual_ctr_008",
+        "02_ads_m03_visual_ctr_009",
+        "03_ai_m03_visual_001",
+        "03_ai_m03_visual_002",
+        "03_ai_m03_visual_003",
+        "03_ai_m03_visual_004",
+        "03_ai_m03_visual_005",
+        "03_ai_m03_visual_006",
+        "03_ai_m03_visual_007",
+        "03_ai_m03_visual_008",
+        "03_ai_m03_visual_009",
+        "03_ai_m03_visual_010",
+        "03_ai_m03_visual_011",
+        "03_ai_m03_visual_012",
+        "03_ai_m03_visual_013",
+        "03_ai_m03_visual_014",
+        "03_ai_m03_visual_015",
+        "03_ai_m04_neurovideo_001",
+        "03_ai_m04_neurovideo_002",
+        "03_ai_m04_neurovideo_003",
+        "03_ai_m04_neurovideo_004",
+        "03_ai_m04_neurovideo_005",
+        "03_ai_m04_neurovideo_006",
+        "03_ai_m04_neurovideo_007",
+        "03_ai_m04_neurovideo_008",
+        "03_ai_m04_neurovideo_009",
+        "03_ai_m04_neurovideo_010",
+        "03_ai_m04_neurovideo_011",
+        "03_ai_m04_neurovideo_012"
+      ]
+    },
+    {
+      "title": "Использовать нейросети для анализа целевой аудитории и создания маркетинговых сообщений на Wildberries",
+      "description": "Сбор и анализ отзывов, формирование портретов покупателей, выявление болей и барьеров, создание УТП и tone of voice для повышения конверсии.",
+      "outcomes": [
+        "Собрать и проанализировать отзывы и вопросы покупателей",
+        "Выявить боли, мотивации и барьеры целевой аудитории",
+        "Создать уникальные торговые предложения и адаптировать tone of voice"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "CONTENT",
+        "MARKETING"
+      ],
+      "skill_blocks": [
+        "ANALYTICS/target_audience_analysis"
+      ],
+      "marketplace": "WB",
+      "lesson_ids": [
+        "03_ai_m02_neuroanalytics_004",
+        "03_ai_m02_neuroanalytics_005",
+        "03_ai_m02_neuroanalytics_006",
+        "03_ai_m02_neuroanalytics_007",
+        "03_ai_m02_neuroanalytics_008",
+        "03_ai_m02_neuroanalytics_009",
+        "skill_analytics_target_audience_001",
+        "skill_analytics_target_audience_002",
+        "skill_analytics_target_audience_003",
+        "skill_analytics_target_audience_004"
+      ]
+    },
+    {
+      "title": "Создать и настроить персонального GPT-ассистента для автоматизации задач селлера на Wildberries",
+      "description": "Разработка и настройка чат-бота для автоматизации аналитики, SEO, создания контента и управления задачами с использованием ChatGPT.",
+      "outcomes": [
+        "Автоматизировать рутинные операции и сбор данных",
+        "Создать и протестировать собственного нейроассистента",
+        "Оптимизировать промты и инструкции для повышения качества ответов"
+      ],
+      "axes": [
+        "OPERATIONS",
+        "CONTENT",
+        "ANALYTICS"
+      ],
+      "skill_blocks": [
+        "OPERATIONS/ai_assistants"
+      ],
+      "marketplace": "WB",
+      "lesson_ids": [
+        "03_ai_m08_neurointegrator_001",
+        "03_ai_m08_neurointegrator_002",
+        "03_ai_m08_neurointegrator_003",
+        "03_ai_m08_neurointegrator_004",
+        "03_ai_m08_neurointegrator_005",
+        "03_ai_m08_neurointegrator_006"
+      ]
+    },
+    {
+      "title": "Использовать AI-инструменты для анализа и оптимизации рекламных кампаний на Wildberries",
+      "description": "Автоматизация анализа рекламных данных, формирование гипотез, контроль эффективности и оптимизация бюджета с помощью GPT и специализированных ассистентов.",
+      "outcomes": [
+        "Быстро выявлять слабые и сильные места рекламы",
+        "Формировать и проверять гипотезы для оптимизации",
+        "Контролировать окупаемость и маржинальность рекламы"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "MARKETING"
+      ],
+      "skill_blocks": [
+        "ANALYTICS/ads_ai_analysis"
+      ],
+      "marketplace": "WB",
+      "lesson_ids": [
+        "03_ai_m06_neuro_ads_001",
+        "03_ai_m06_neuro_ads_006",
+        "03_ai_m06_neuro_ads_007",
+        "03_ai_m06_neuro_ads_008"
+      ]
+    },
+    {
+      "title": "Выбрать и проанализировать нишу для запуска товара с помощью нейросети на Wildberries",
+      "description": "Комплексный анализ спроса, конкуренции, маржинальности и сезонности с использованием AI для выбора прибыльной ниши и принятия решения о запуске.",
+      "outcomes": [
+        "Выбрать прибыльную нишу и подниши",
+        "Проверить гипотезы и валидировать спрос",
+        "Составить портрет покупателя и оценить риски"
+      ],
+      "axes": [
+        "ANALYTICS"
+      ],
+      "skill_blocks": [
+        "ANALYTICS/niche_analysis"
+      ],
+      "marketplace": "WB",
+      "lesson_ids": [
+        "03_ai_m07_neuroscout_001",
+        "03_ai_m07_neuroscout_002",
+        "03_ai_m07_neuroscout_003",
+        "03_ai_m07_neuroscout_004",
+        "03_ai_m07_neuroscout_005",
+        "03_ai_m07_neuroscout_006",
+        "03_ai_m07_neuroscout_007",
+        "03_ai_m07_neuroscout_008",
+        "03_ai_m07_neuroscout_009",
+        "03_ai_m07_neuroscout_010",
+        "03_ai_m07_neuroscout_011",
+        "03_ai_m07_neuroscout_012",
+        "03_ai_m07_neuroscout_013",
+        "03_ai_m07_neuroscout_014"
+      ]
+    },
+    {
+      "title": "Обеспечить безопасный доступ и оплату зарубежных AI-сервисов для работы с маркетплейсами",
+      "description": "Настройка VPN, выбор и оплата сервисов нейросетей для стабильной и безопасной работы с зарубежными инструментами автоматизации и аналитики.",
+      "outcomes": [
+        "Настроить платный VPN для доступа к зарубежным сервисам",
+        "Оплатить зарубежные AI-сервисы безопасно и удобно",
+        "Обеспечить стабильную работу с нейросетями и AI-инструментами"
+      ],
+      "axes": [
+        "OPERATIONS"
+      ],
+      "skill_blocks": [
+        "OPERATIONS/ai_tools_setup"
+      ],
+      "marketplace": "WB",
+      "lesson_ids": [
+        "03_ai_m01_intro_003",
+        "03_ai_m01_intro_004",
+        "03_ai_m01_intro_006",
+        "03_ai_m01_intro_007",
+        "03_ai_m01_intro_008",
+        "03_ai_m01_intro_009",
+        "03_ai_m01_intro_010",
+        "03_ai_m01_intro_011",
+        "03_ai_m01_intro_012",
+        "03_ai_m01_intro_015",
+        "03_ai_m09_neuroassistant_001"
+      ]
+    },
+    {
+      "title": "Понять и использовать внутреннюю аналитику маркетплейсов Wildberries и Ozon",
+      "description": "Отслеживание продаж, позиций, конверсий и других ключевых метрик в личных кабинетах для принятия оперативных решений и оптимизации бизнеса.",
+      "outcomes": [
+        "Отслеживать ежедневные продажи и динамику заказов",
+        "Анализировать внутренние данные для выявления проблем",
+        "Использовать аналитику для управления ассортиментом и рекламой"
+      ],
+      "axes": [
+        "ANALYTICS"
+      ],
+      "skill_blocks": [
+        "ANALYTICS/internal_analytics"
+      ],
+      "marketplace": "BOTH",
+      "lesson_ids": [
+        "skill_analytics_internal_analytics_001",
+        "skill_analytics_internal_analytics_002"
+      ]
+    },
+    {
+      "title": "Провести стратегическое планирование бизнеса на маркетплейсе Wildberries",
+      "description": "Построение стратегии развития, выбор приоритетов, декомпозиция целей и контроль реализации для долгосрочного роста и адаптации к рынку.",
+      "outcomes": [
+        "Определить стратегические цели и планы",
+        "Провести внутренний и внешний анализ бизнеса",
+        "Разбить стратегию на этапы и контролировать выполнение"
+      ],
+      "axes": [
+        "OPERATIONS",
+        "ANALYTICS"
+      ],
+      "skill_blocks": [
+        "OPERATIONS/strategic_planning"
+      ],
+      "marketplace": "WB",
+      "lesson_ids": [
+        "skill_analytics_strategic_planning_001",
+        "skill_analytics_strategic_planning_002",
+        "skill_analytics_strategic_planning_003",
+        "skill_analytics_strategic_planning_004"
+      ]
+    },
+    {
+      "title": "Понять и использовать особенности работы с маркетплейсом Ozon",
+      "description": "Регистрация, выбор схемы продаж, работа с ассортиментом, маркировкой, упаковкой и логистикой для успешного старта и развития на Ozon.",
+      "outcomes": [
+        "Зарегистрироваться и начать работу на Ozon",
+        "Выбрать оптимальную схему продаж и поставщика",
+        "Организовать логистику и маркировку товара"
+      ],
+      "axes": [
+        "OPERATIONS"
+      ],
+      "skill_blocks": [
+        "OPERATIONS/ozon_basics"
+      ],
+      "marketplace": "OZON",
+      "lesson_ids": [
+        "05_ozon_m00_knowledge_base_001",
+        "05_ozon_m00_knowledge_base_002",
+        "05_ozon_m00_knowledge_base_003",
+        "05_ozon_m00_knowledge_base_004",
+        "05_ozon_m00_knowledge_base_005",
+        "05_ozon_m00_knowledge_base_006",
+        "05_ozon_m00_knowledge_base_007",
+        "05_ozon_m00_knowledge_base_008",
+        "05_ozon_m00_knowledge_base_009",
+        "05_ozon_m00_knowledge_base_010",
+        "05_ozon_m00_knowledge_base_011",
+        "05_ozon_m00_knowledge_base_012",
+        "05_ozon_m00_knowledge_base_013",
+        "05_ozon_m00_knowledge_base_014",
+        "05_ozon_m00_knowledge_base_015",
+        "05_ozon_m00_knowledge_base_016",
+        "05_ozon_m00_knowledge_base_017",
+        "05_ozon_m00_knowledge_base_018"
+      ]
+    },
+    {
+      "title": "Рассчитать и оптимизировать юнит-экономику товара на Ozon",
+      "description": "Расчет плановой и фактической юнит-экономики с учетом логистики, комиссий, рекламы и складских расходов для оценки прибыльности и принятия решений.",
+      "outcomes": [
+        "Посчитать расходы и прибыльность товара",
+        "Оптимизировать логистику и распределение по кластерам",
+        "Анализировать влияние рекламы и возвратов на экономику"
+      ],
+      "axes": [
+        "FINANCE",
+        "ANALYTICS"
+      ],
+      "skill_blocks": [
+        "FINANCE/unit_economics_ozon"
+      ],
+      "marketplace": "OZON",
+      "lesson_ids": [
+        "05_ozon_m01_economics_001",
+        "05_ozon_m01_economics_002",
+        "05_ozon_m01_economics_003",
+        "05_ozon_m01_economics_004",
+        "05_ozon_m01_economics_005",
+        "05_ozon_m01_economics_006",
+        "05_ozon_m01_economics_007",
+        "05_ozon_m01_economics_008",
+        "05_ozon_m01_economics_009"
+      ]
+    },
+    {
+      "title": "Создать и оптимизировать карточку товара на Ozon для повышения продаж",
+      "description": "Подготовка полного и корректного контента, выбор категории, создание рич-контента и объединение карточек для улучшения видимости и конверсии.",
+      "outcomes": [
+        "Создать полную и привлекательную карточку товара",
+        "Оптимизировать SEO и визуальный контент",
+        "Объединить варианты товара для повышения рейтинга"
+      ],
+      "axes": [
+        "CONTENT",
+        "MARKETING"
+      ],
+      "skill_blocks": [
+        "CONTENT/product_card_ozon"
+      ],
+      "marketplace": "OZON",
+      "lesson_ids": [
+        "05_ozon_m02_product_card_001",
+        "05_ozon_m02_product_card_002",
+        "05_ozon_m02_product_card_003",
+        "05_ozon_m02_product_card_004",
+        "05_ozon_m02_product_card_005",
+        "05_ozon_m02_product_card_006",
+        "05_ozon_m02_product_card_007",
+        "05_ozon_m02_product_card_008",
+        "05_ozon_m02_product_card_009"
+      ]
+    },
+    {
+      "title": "Понять и использовать инструменты продвижения и акций на Ozon",
+      "description": "Управление рейтингом продавца, отзывами, бонусами, акциями и программами лояльности для повышения продаж и видимости товаров.",
+      "outcomes": [
+        "Повысить рейтинг продавца и управлять отзывами",
+        "Использовать бонусы и акции для стимулирования продаж",
+        "Участвовать в глобальных акциях и создавать собственные"
+      ],
+      "axes": [
+        "MARKETING"
+      ],
+      "skill_blocks": [
+        "MARKETING/promotion_ozon"
+      ],
+      "marketplace": "OZON",
+      "lesson_ids": [
+        "05_ozon_m03_promotion_001",
+        "05_ozon_m03_promotion_002",
+        "05_ozon_m03_promotion_003",
+        "05_ozon_m03_promotion_004",
+        "05_ozon_m03_promotion_005",
+        "05_ozon_m03_promotion_006",
+        "05_ozon_m03_promotion_007",
+        "05_ozon_m03_promotion_008",
+        "05_ozon_m03_promotion_009",
+        "05_ozon_m03_promotion_010",
+        "05_ozon_m03_promotion_011",
+        "05_ozon_m03_promotion_012",
+        "05_ozon_m03_promotion_013",
+        "05_ozon_m03_promotion_014",
+        "05_ozon_m03_promotion_015"
+      ]
+    },
+    {
+      "title": "Использовать аналитику Ozon для оценки спроса, позиций и конкурентной среды",
+      "description": "Анализ поисковых запросов, позиций товаров, динамики продаж, воронки продаж и географии для оптимизации ассортимента и маркетинговых стратегий.",
+      "outcomes": [
+        "Проанализировать популярные поисковые запросы и позиции",
+        "Оценить конкурентную позицию и динамику продаж",
+        "Оптимизировать логистику и проводить A/B тесты"
+      ],
+      "axes": [
+        "ANALYTICS"
+      ],
+      "skill_blocks": [
+        "ANALYTICS/ozon_analytics"
+      ],
+      "marketplace": "OZON",
+      "lesson_ids": [
+        "05_ozon_m04_analytics_001",
+        "05_ozon_m04_analytics_002",
+        "05_ozon_m04_analytics_003",
+        "05_ozon_m04_analytics_004",
+        "05_ozon_m04_analytics_005",
+        "05_ozon_m04_analytics_006",
+        "05_ozon_m04_analytics_007",
+        "05_ozon_m04_analytics_008",
+        "05_ozon_m04_analytics_009",
+        "05_ozon_m04_analytics_010",
+        "05_ozon_m04_analytics_011",
+        "05_ozon_m04_analytics_012",
+        "05_ozon_m04_analytics_013",
+        "05_ozon_m04_analytics_014"
+      ]
+    },
+    {
+      "title": "Понять и использовать виды рекламы на Ozon для увеличения продаж",
+      "description": "Изучение рекламных инструментов, стратегий, настройка кампаний, анализ эффективности и оптимизация бюджета для достижения максимальной отдачи.",
+      "outcomes": [
+        "Выбрать и настроить виды рекламы на Ozon",
+        "Оптимизировать рекламные кампании и бюджеты",
+        "Анализировать эффективность и корректировать стратегии"
+      ],
+      "axes": [
+        "MARKETING"
+      ],
+      "skill_blocks": [
+        "MARKETING/ads_ozon"
+      ],
+      "marketplace": "OZON",
+      "lesson_ids": [
+        "05_ozon_m05_ads_001",
+        "05_ozon_m05_ads_002",
+        "05_ozon_m05_ads_003",
+        "05_ozon_m05_ads_004",
+        "05_ozon_m05_ads_005",
+        "05_ozon_m05_ads_006",
+        "05_ozon_m05_ads_007"
+      ]
+    },
+    {
+      "title": "Понять финансовые процессы и отчеты при работе с Ozon",
+      "description": "Изучение графика выплат, финансовых отчетов, налоговой отчетности и оптимизация денежных потоков для эффективного управления финансами на Ozon.",
+      "outcomes": [
+        "Понять график и суммы выплат от Ozon",
+        "Использовать финансовые отчеты для оценки прибыли",
+        "Вести корректный учет для налоговой и оптимизировать налогообложение"
+      ],
+      "axes": [
+        "FINANCE"
+      ],
+      "skill_blocks": [
+        "FINANCE/ozon_finance"
+      ],
+      "marketplace": "OZON",
+      "lesson_ids": [
+        "05_ozon_m06_finance_001",
+        "05_ozon_m06_finance_002",
+        "05_ozon_m06_finance_003"
+      ]
+    },
+    {
+      "title": "Настроить и использовать внешние рекламные кампании с блогерами для Ozon",
+      "description": "Организация сотрудничества с блогерами, запуск внешних рекламных кампаний, оптимизация бюджета и систематизация работы для привлечения целевого трафика.",
+      "outcomes": [
+        "Настроить внешние рекламные кампании с блогерами",
+        "Оптимизировать внутренний рекламный бюджет",
+        "Построить системную работу с блогерами для регулярного трафика"
+      ],
+      "axes": [
+        "MARKETING"
+      ],
+      "skill_blocks": [
+        "MARKETING/external_ads_ozon"
+      ],
+      "marketplace": "OZON",
+      "lesson_ids": [
+        "05_ozon_m07_external_ads_001"
+      ]
+    }
+  ],
+  "orphans": []
+}

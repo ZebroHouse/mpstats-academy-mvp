@@ -26,7 +26,6 @@ services:
         # env для Next.js SWC инлайнинга — флаг получается empty и SHOW_LIBRARY не работает.
         # Новые фича-флаги: добавляй тут как literal "true"/"false".
         NEXT_PUBLIC_STAGING: "true"
-        NEXT_PUBLIC_SHOW_LIBRARY: "true"
     ports:
       - "127.0.0.1:3001:3000"
     env_file:

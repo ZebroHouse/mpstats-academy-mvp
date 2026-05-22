@@ -1,13 +1,14 @@
 import { z } from 'zod';
-import { Prisma } from '@mpstats/db';
 import { TRPCError } from '@trpc/server';
 import { router, protectedProcedure } from '../trpc';
 import { ensureUserProfile } from '../utils/ensure-user-profile';
 import { handleDatabaseError } from '../utils/db-errors';
 import { getUserActiveSubscriptions, getUserAdminBypass, isLessonAccessible, checkLessonAccess } from '../utils/access';
 import { isFeatureEnabled } from '../utils/feature-flags';
+import { extractLessonIds } from '../utils/lesson-ids';
+import { lessonsToRemoveOnJobRemove } from './learning-jobs-utils';
 import { parseLearningPath } from '@mpstats/shared';
-import type { CourseWithProgress, LessonWithProgress, LearningPathSection, SectionedLearningPath, LibraryData, LibraryAxis } from '@mpstats/shared';
+import type { CourseWithProgress, LessonWithProgress, LearningPathSection, SectionedLearningPath } from '@mpstats/shared';
 import { generateSectionedPath } from './diagnostic';
 
 function pluralLessons(n: number): string {
@@ -87,156 +88,6 @@ export const learningRouter = router({
         }),
       };
       });
-    } catch (error) {
-      handleDatabaseError(error);
-    }
-  }),
-
-  // Get library content — lessons from hidden skill courses, grouped by axis → skill block
-  getLibrary: protectedProcedure.query(async ({ ctx }): Promise<LibraryData> => {
-    try {
-      // Taxonomy: axis titles and block metadata
-      const AXIS_TITLES: Record<string, string> = {
-        ANALYTICS: 'Аналитика',
-        MARKETING: 'Маркетинг',
-        CONTENT: 'Контент',
-        OPERATIONS: 'Операции',
-        FINANCE: 'Финансы',
-      };
-
-      const BLOCK_META: Record<string, { title: string; description: string }> = {
-        'ANALYTICS/competitor_analysis': { title: 'Анализ конкурентов', description: 'Сравнение карточек, цен, позиций, аудит конкурентных преимуществ' },
-        'ANALYTICS/market_trends': { title: 'Мониторинг трендов и спроса', description: 'Сезонность, новые тренды, изменения в спросе' },
-        'ANALYTICS/product_metrics': { title: 'Аналитика товарных показателей', description: 'Продажи, возвраты, конверсии, ABC/XYZ' },
-        'ANALYTICS/assortment_management': { title: 'Управление ассортиментом', description: 'Фокусные товары, локомотивы, сезонные товары' },
-        'ANALYTICS/target_audience': { title: 'Анализ целевой аудитории', description: 'Сегментация ЦА, анализ отзывов, портрет клиента' },
-        'ANALYTICS/product_niche_selection': { title: 'Выбор товара и ниши', description: 'Анализ ниш, оценка спроса и конкуренции' },
-        'ANALYTICS/sales_funnel': { title: 'Воронка продаж', description: 'Показ→клик→корзина→заказ→выкуп, CTR/CR' },
-        'ANALYTICS/data_tools': { title: 'Инструменты аналитики', description: 'MPSTATS, личный кабинет, таблицы, дашборды' },
-        'MARKETING/seo_optimization': { title: 'SEO-оптимизация', description: 'Ключи, заголовки, индексация, релевантность' },
-        'MARKETING/ad_campaign_setup': { title: 'Настройка рекламных кампаний', description: 'Создание РК, таргетинг, типы кампаний' },
-        'MARKETING/ad_strategy': { title: 'Рекламные стратегии', description: 'Вывод товара, масштабирование, DRR-контроль' },
-        'MARKETING/ad_optimization': { title: 'Оптимизация и аналитика РК', description: 'Ставки, CTR, CPC, ROI, A/B тесты' },
-        'MARKETING/autobidder': { title: 'Автобиддер', description: 'Автоматические ставки, правила, стратегии' },
-        'MARKETING/external_advertising': { title: 'Внешняя реклама', description: 'Яндекс.Директ, VK, соцсети, внешний трафик' },
-        'MARKETING/influencer_marketing': { title: 'Работа с блогерами', description: 'Выбор блогеров, форматы сотрудничества' },
-        'MARKETING/card_conversion': { title: 'Конверсия карточки', description: 'Визуал, CTR, A+ контент, рич-контент' },
-        'CONTENT/product_photography': { title: 'Фото и инфографика', description: 'Фото товаров, инфографика, требования площадок' },
-        'CONTENT/video_content': { title: 'Видеоконтент', description: 'Сценарии, съёмка, монтаж видео' },
-        'CONTENT/copywriting': { title: 'Тексты и описания', description: 'Описания, УТП, характеристики, rich-контент' },
-        'CONTENT/neural_content': { title: 'Нейросети для контента', description: 'ChatGPT, Midjourney для текстов и изображений' },
-        'CONTENT/neural_analytics': { title: 'Нейроаналитика', description: 'Нейросети для анализа данных и автоматизации' },
-        'CONTENT/reviews_management': { title: 'Работа с отзывами', description: 'Анализ отзывов, ответы, управление репутацией' },
-        'OPERATIONS/logistics_fbo_fbs': { title: 'Логистика FBO/FBS', description: 'Схемы поставок, склады WB и собственные' },
-        'OPERATIONS/inventory_management': { title: 'Управление запасами', description: 'Прогнозирование остатков, планирование закупок' },
-        'OPERATIONS/ozon_specifics': { title: 'Специфика Ozon', description: 'Кабинет, продвижение, реклама на Ozon' },
-        'OPERATIONS/platform_tools': { title: 'Инструменты платформ', description: 'Личный кабинет, акции, программы лояльности' },
-        'OPERATIONS/process_automation': { title: 'Автоматизация процессов', description: 'Таблицы, скрипты, автоматизация рутины' },
-        'FINANCE/unit_economics': { title: 'Юнит-экономика', description: 'Себестоимость, маржа, точка безубыточности' },
-        'FINANCE/pricing': { title: 'Ценообразование', description: 'Стратегия цен, скидки, влияние на маржу' },
-        'FINANCE/ad_budgeting': { title: 'Бюджетирование рекламы', description: 'Рекламный бюджет, DRR, ROAS' },
-        'FINANCE/business_planning': { title: 'Бизнес-планирование', description: 'Стратегия масштабирования, финмодель' },
-        'FINANCE/cost_management': { title: 'Управление затратами', description: 'Оптимизация расходов, снижение себестоимости' },
-      };
-
-      // Get all lessons with skillBlocks metadata (Phase 46: moved into regular
-      // courses; skill_* courses exist but are empty holders. Filter by having
-      // skillBlocks + visible video — not by course prefix).
-      const lessons = await ctx.prisma.lesson.findMany({
-        where: {
-          isHidden: false,
-          videoId: { not: null },
-          skillBlocks: { not: Prisma.JsonNull },
-        },
-        include: {
-          progress: {
-            where: { path: { userId: ctx.user.id } },
-          },
-        },
-        orderBy: { order: 'asc' },
-      });
-
-      // Double-check skillBlocks presence (Json field semantics differ per driver)
-      const lessonsWithBlocks = lessons.filter((l) => l.skillBlocks != null);
-
-      if (lessonsWithBlocks.length === 0) return [];
-
-      // Check access
-      const [subs, billingEnabled, isAdminBypass] = await Promise.all([
-        getUserActiveSubscriptions(ctx.user.id, ctx.prisma),
-        isFeatureEnabled('billing_enabled'),
-        getUserAdminBypass(ctx.user.id, ctx.prisma),
-      ]);
-
-      // Group lessons by axis → block
-      type LessonRow = typeof lessonsWithBlocks[number];
-      const axisMap = new Map<string, Map<string, LessonRow[]>>();
-
-      for (const lesson of lessonsWithBlocks) {
-        const blocks = (lesson.skillBlocks as string[] | null) || [];
-        for (const blockId of blocks) {
-          const [axis] = blockId.split('/');
-          if (!axis) continue;
-
-          if (!axisMap.has(axis)) axisMap.set(axis, new Map());
-          const blockMap = axisMap.get(axis)!;
-          if (!blockMap.has(blockId)) blockMap.set(blockId, []);
-          blockMap.get(blockId)!.push(lesson);
-        }
-      }
-
-      // Build response
-      const result: LibraryAxis[] = [];
-      const axisOrder = ['ANALYTICS', 'MARKETING', 'CONTENT', 'OPERATIONS', 'FINANCE'];
-
-      for (const axis of axisOrder) {
-        const blockMap = axisMap.get(axis);
-        if (!blockMap) continue;
-
-        const blocks = [...blockMap.entries()]
-          .map(([blockId, blockLessons]) => {
-            const meta = BLOCK_META[blockId] || { title: blockId, description: '' };
-            // Deduplicate lessons (a lesson can appear in multiple blocks)
-            const uniqueLessons = [...new Map(blockLessons.map(l => [l.id, l])).values()];
-
-            return {
-              block: blockId.split('/')[1] || blockId,
-              title: meta.title,
-              description: meta.description,
-              lessons: uniqueLessons.map((l) => {
-                const locked = !isLessonAccessible(
-                  { order: l.order, courseId: l.courseId },
-                  subs, billingEnabled, isAdminBypass,
-                );
-                return {
-                  id: l.id,
-                  title: l.title,
-                  duration: l.duration || 0,
-                  order: l.order,
-                  videoUrl: locked ? '' : (l.videoUrl || ''),
-                  videoId: locked ? null : l.videoId,
-                  status: (l.progress[0]?.status || 'NOT_STARTED') as 'NOT_STARTED' | 'IN_PROGRESS' | 'COMPLETED',
-                  watchedPercent: l.progress[0]?.watchedPercent || 0,
-                  locked,
-                };
-              }),
-            };
-          })
-          .filter((b) => b.lessons.length > 0)
-          .sort((a, b) => a.title.localeCompare(b.title, 'ru'));
-
-        if (blocks.length > 0) {
-          result.push({
-            axis,
-            title: AXIS_TITLES[axis] || axis,
-            blocks,
-            // Count unique lessons (a lesson can appear in multiple blocks)
-            totalLessons: new Set(blocks.flatMap((b) => b.lessons.map((l) => l.id))).size,
-          });
-        }
-      }
-
-      return result;
     } catch (error) {
       handleDatabaseError(error);
     }
@@ -423,7 +274,7 @@ export const learningRouter = router({
     try {
       const path = await ctx.prisma.learningPath.findUnique({
         where: { userId: ctx.user.id },
-        select: { lessons: true, generatedAt: true },
+        select: { lessons: true, generatedAt: true, addedJobs: true },
       });
 
       if (!path || !path.lessons) {
@@ -460,6 +311,37 @@ export const learningRouter = router({
           locked,
         };
       };
+
+      // ── Fetch added jobs (playbooks) ──
+      const addedJobIds: string[] = Array.isArray(path.addedJobs) ? (path.addedJobs as string[]) : [];
+      const addedJobsRaw = addedJobIds.length > 0
+        ? await ctx.prisma.job.findMany({
+            where: { id: { in: addedJobIds }, isPublished: true },
+            include: {
+              lessons: {
+                orderBy: { order: 'asc' },
+                include: {
+                  lesson: {
+                    include: {
+                      progress: { where: { path: { userId: ctx.user.id } } },
+                      course: { select: { title: true, isHidden: true } },
+                    },
+                  },
+                },
+              },
+            },
+          })
+        : [];
+
+      const addedJobsPayload = addedJobsRaw.map((j) => ({
+        id: j.id,
+        slug: j.slug,
+        title: j.title,
+        marketplace: j.marketplace,
+        lessons: j.lessons
+          .filter((jl) => !jl.lesson.isHidden)
+          .map((jl) => buildLessonData(jl.lesson)),
+      }));
 
       // ── New sectioned format (version: 2) ──
       if (!Array.isArray(parsed) && parsed.version === 2) {
@@ -503,6 +385,7 @@ export const learningRouter = router({
           completedLessons: completedCount,
           hasPlatformSubscription,
           isSectioned: true as const,
+          addedJobs: addedJobsPayload,
         };
       }
 
@@ -538,6 +421,7 @@ export const learningRouter = router({
         completedLessons: completedCount,
         hasPlatformSubscription,
         isSectioned: false as const,
+        addedJobs: addedJobsPayload,
       };
     } catch (error) {
       handleDatabaseError(error);
@@ -1209,6 +1093,85 @@ export const learningRouter = router({
         return { added: validIds.length };
       } catch (error) {
         if (error instanceof TRPCError) throw error;
+        handleDatabaseError(error);
+      }
+    }),
+
+  // Add all lessons of a job to the user's custom track section
+  addJobToTrack: protectedProcedure
+    .input(z.object({ jobId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const job = await ctx.prisma.job.findUnique({
+          where: { id: input.jobId },
+          include: { lessons: { select: { lessonId: true }, orderBy: { order: 'asc' } } },
+        });
+        if (!job || !job.isPublished) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Джоба не найдена' });
+        }
+        const lessonIds = job.lessons.map((jl) => jl.lessonId);
+
+        const existing = await ctx.prisma.learningPath.findUnique({
+          where: { userId: ctx.user.id },
+          select: { lessons: true, addedJobs: true },
+        });
+
+        const currentLessons: string[] = extractLessonIds(existing?.lessons ?? []);
+        const currentAddedJobs: string[] = Array.isArray(existing?.addedJobs) ? (existing!.addedJobs as string[]) : [];
+        const nextLessons = Array.from(new Set([...currentLessons, ...lessonIds]));
+        const nextAddedJobs = currentAddedJobs.includes(input.jobId)
+          ? currentAddedJobs
+          : [...currentAddedJobs, input.jobId];
+
+        await ctx.prisma.learningPath.upsert({
+          where: { userId: ctx.user.id },
+          create: { userId: ctx.user.id, lessons: nextLessons as any, addedJobs: nextAddedJobs as any },
+          update: { lessons: nextLessons as any, addedJobs: nextAddedJobs as any },
+        });
+        return { added: lessonIds.length, jobId: input.jobId };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        handleDatabaseError(error);
+      }
+    }),
+
+  // Remove all lessons of a job from the user's track (preserving lessons shared with other added jobs)
+  removeJobFromTrack: protectedProcedure
+    .input(z.object({ jobId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const lp = await ctx.prisma.learningPath.findUnique({
+          where: { userId: ctx.user.id },
+          select: { lessons: true, addedJobs: true },
+        });
+        if (!lp) return { removed: 0 };
+
+        const addedJobs: string[] = Array.isArray(lp.addedJobs) ? (lp.addedJobs as string[]) : [];
+        if (!addedJobs.includes(input.jobId)) return { removed: 0 };
+
+        const remainingJobIds = addedJobs.filter((id) => id !== input.jobId);
+        const jobsLessons = await ctx.prisma.job.findMany({
+          where: { id: { in: [input.jobId, ...remainingJobIds] } },
+          include: { lessons: { select: { lessonId: true } } },
+        });
+        const targetJob = jobsLessons.find((j) => j.id === input.jobId);
+        const otherJobs = jobsLessons
+          .filter((j) => j.id !== input.jobId)
+          .map((j) => ({ id: j.id, lessonIds: j.lessons.map((l) => l.lessonId) }));
+        const toRemove = lessonsToRemoveOnJobRemove(
+          targetJob?.lessons.map((l) => l.lessonId) ?? [],
+          otherJobs,
+        );
+
+        const currentLessons: string[] = extractLessonIds(lp.lessons ?? []);
+        const nextLessons = currentLessons.filter((id) => !toRemove.includes(id));
+
+        await ctx.prisma.learningPath.update({
+          where: { userId: ctx.user.id },
+          data: { lessons: nextLessons as any, addedJobs: remainingJobIds as any },
+        });
+        return { removed: toRemove.length };
+      } catch (error) {
         handleDatabaseError(error);
       }
     }),

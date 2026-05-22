@@ -178,6 +178,7 @@ model Lesson {
   course   Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
   progress LessonProgress[]
   materials LessonMaterial[]
+  jobLessons JobLesson[]
   // ContentChunk связь через lessonId (lesson_id) без FK
 
   @@unique([courseId, order], name: "Lesson_courseId_order_key")
@@ -211,7 +212,8 @@ model LearningPath {
   id          String   @id @default(cuid())
   userId      String   @unique
   generatedAt DateTime @default(now())
-  lessons     Json // ordered array of lessonIds with metadata
+  lessons     Json     // ordered array of lessonIds with metadata
+  addedJobs   Json     @default("[]") // string[] — slugs/IDs of jobs the user manually added to track via "+ В трек"
 
   user     UserProfile      @relation(fields: [userId], references: [id], onDelete: Cascade)
   progress LessonProgress[]
@@ -587,4 +589,46 @@ model ReferralBonusPackage {
   sourceReferral Referral    @relation(fields: [sourceReferralId], references: [id], onDelete: Cascade)
 
   @@index([ownerUserId, status])
+}
+
+// ============== JOBS (Phase 57 — Library Redesign) ==============
+
+enum JobMarketplace {
+  WB
+  OZON
+  BOTH
+}
+
+/// Джоба — курируемый упорядоченный набор уроков под одну задачу селлера.
+/// Course-agnostic: уроки могут быть из разных курсов. Выводится из контента
+/// (scripts/job-mapping), валидируется контент-командой, наполняется seed-jobs.ts.
+model Job {
+  id           String         @id @default(cuid())
+  slug         String         @unique // URL: /learn/job/<slug>
+  title        String // глагол + результат: "Посчитать юнит-экономику товара"
+  description  String
+  outcomes     Json           @default("[]") // string[] — "что ты сможешь после"
+  axes         Json           @default("[]") // canonical 5 категорий — мост к диагностике
+  skillBlocks  Json           @default("[]") // 32-блочные теги — точный мост к диагностике
+  marketplace  JobMarketplace @default(WB)
+  displayOrder Int            @default(0) // порядок внутри оси в каталоге
+  isPublished  Boolean        @default(false)
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  lessons      JobLesson[]
+
+  @@index([isPublished])
+}
+
+/// Упорядоченная M2M связь Job ↔ Lesson. Урок может входить в несколько джоб.
+model JobLesson {
+  jobId    String
+  lessonId String
+  order    Int // порядок прохождения урока внутри джобы
+
+  job    Job    @relation(fields: [jobId], references: [id], onDelete: Cascade)
+  lesson Lesson @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@id([jobId, lessonId])
+  @@index([lessonId])
 }

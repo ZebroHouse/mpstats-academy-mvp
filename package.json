@@ -17,6 +17,7 @@
     "db:generate": "turbo run db:generate --filter=@mpstats/db",
     "db:studio": "turbo run db:studio --filter=@mpstats/db",
     "db:seed-billing": "npx tsx scripts/seed/seed-billing.ts",
+    "db:seed-jobs": "npx tsx scripts/seed/seed-jobs.ts",
     "tag-lessons": "npx tsx scripts/tag-lessons.ts",
     "clean": "turbo run clean && rm -rf node_modules"
   },

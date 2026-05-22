@@ -80,7 +80,7 @@ export function SearchBar({ onSearch, onClear, isSearching, hasResults }: Search
           value={inputValue}
           onChange={handleChange}
           onKeyDown={handleKeyDown}
-          placeholder={isMobile ? 'Поиск по урокам...' : 'Опишите проблему, например: как снизить ДРР на Wildberries'}
+          placeholder={isMobile ? 'Опишите задачу...' : 'Опишите задачу — например: как снизить ДРР на Wildberries'}
           className="flex-1 h-full bg-transparent text-body text-mp-gray-900 placeholder:text-mp-gray-400 focus:outline-none"
         />
 

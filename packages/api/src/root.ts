@@ -10,6 +10,7 @@ import { promoRouter } from './routers/promo';
 import { materialRouter } from './routers/material';
 import { notificationsRouter } from './routers/notifications';
 import { referralRouter } from './routers/referral';
+import { jobRouter } from './routers/job';
 import { onboardingRouter } from './routers/onboarding';
 
 export const appRouter = router({
@@ -24,6 +25,7 @@ export const appRouter = router({
   material: materialRouter,
   notifications: notificationsRouter,
   referral: referralRouter,
+  job: jobRouter,
   onboarding: onboardingRouter,
 });
 
