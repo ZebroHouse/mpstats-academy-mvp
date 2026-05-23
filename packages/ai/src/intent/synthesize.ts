@@ -24,31 +24,71 @@ const llmSchema = z.discriminatedUnion('mode', [
   z.object({ mode: z.literal('empty'), message: z.string() }),
 ]);
 
-const SYSTEM = `Ты — ассистент учебной платформы MPSTATS Academy. Тебе дают свободный текст пользователя и список кандидатов-джобов (учебных наборов). Твоя задача:
+const SYSTEM = `Ты — ассистент учебной платформы MPSTATS Academy. Тебе дают свободный текст пользователя и список кандидатов-джобов (учебных наборов). Верни строго JSON по одной из схем ниже:
 
-1. Если запрос конкретный и среди кандидатов есть один-три явно подходящих джоба → mode:"recommend". Дай короткий 1-2 предложения ответ и выбери 1-3 jobId из кандидатов, к каждому — однострочный reason ("почему этот набор").
-2. Если запрос размыт и кандидаты охватывают несколько разных тем → mode:"clarify". Сформулируй один уточняющий вопрос и 2-4 опции (label + intent для следующего шага). Опции — из кластеров кандидатов.
-3. Если ни один джоб не сильный (топ-кандидат < 0.55 по combinedScore) → mode:"fallback". Объясни и предложи 1-3 отдельных урока (lessonId из snippets уроков).
-4. Если кандидатов вообще нет — mode:"empty".
+ВАРИАНТ 1 — recommend (есть 1-3 явно подходящих джоба среди кандидатов):
+{"mode":"recommend","answer":"<строка 1-2 предложения>","jobs":[{"jobId":"<id из кандидатов>","reason":"<строка>"}, ...до 3]}
 
-КРИТИЧНО: jobId выбирать ТОЛЬКО из переданных кандидатов. Никаких выдуманных ID.`;
+ВАРИАНТ 2 — clarify (используй ТОЛЬКО когда запрос — это одно общее слово БЕЗ глагола и без конкретики:
+   - примеры clarify: "реклама", "аналитика", "продажи", "Ozon", "Wildberries", "карточки", "товары"
+   - НЕ clarify если в запросе есть конкретный глагол/намерение ("хочу научиться X", "как сделать Y") — это recommend
+   Сформулируй один уточняющий вопрос и 2-4 опции (label + intent для следующего запроса), отражающие основные подтемы из кандидатов):
+{"mode":"clarify","question":"<строка>","options":[{"label":"<строка>","intent":"<строка для след.запроса>"}, ...2-4]}
+
+ВАРИАНТ 3 — fallback (используй ТОЛЬКО если ни один из кандидатов даже отдалённо не подходит к запросу и есть отдельные урок-snippets):
+{"mode":"fallback","answer":"<строка>","lessons":[{"lessonId":"<id из snippets>","reason":"<строка>"}, ...до 3]}
+
+ВАРИАНТ 4 — empty (нет кандидатов или ничего не подходит):
+{"mode":"empty","message":"<строка>"}
+
+КРИТИЧНО:
+- Используй РОВНО те имена полей, что указаны выше (answer, jobs, lessons, jobId, lessonId, question, options).
+- jobId выбирать ТОЛЬКО из переданных кандидатов. Никаких выдуманных ID.
+- НЕ используй "recommendations", "message" вместо "answer" в recommend/fallback, не возвращай lessons как массив строк.
+- Без markdown, без текста вокруг JSON.`;
 
 export interface SynthesizeArgs {
   query: string;
   candidates: JobCandidate[];
   conversationState?: string;
+  forceClarify?: boolean;
+}
+
+function isBroadQuery(q: string): boolean {
+  const tokens = q.trim().toLowerCase().split(/\s+/).filter(Boolean);
+  if (tokens.length > 2) return false;
+  // single token, or 2 tokens without verb-like intent (как, хочу, помоги, что, где, когда)
+  const verbMarkers = ['как', 'хочу', 'помоги', 'что', 'где', 'когда', 'почему', 'нужн', 'надо'];
+  return !tokens.some((t) => verbMarkers.some((v) => t.startsWith(v)));
 }
 
 export async function synthesizeIntentResponse(args: SynthesizeArgs): Promise<IntentResult> {
   if (args.candidates.length === 0) {
+    if (isBroadQuery(args.query) || args.forceClarify) {
+      return {
+        mode: 'clarify',
+        question: `Уточни запрос «${args.query}» — что именно интересует?`,
+        options: [
+          { label: 'Wildberries', intent: `${args.query} на Wildberries` },
+          { label: 'Ozon', intent: `${args.query} на Ozon` },
+          { label: 'С чего начать', intent: `${args.query} — с чего начать` },
+        ],
+        conversationState: randomUUID(),
+      };
+    }
     return {
       mode: 'empty',
       message: 'По этой теме точного материала не нашёл. Открой каталог или фильтры рядом.',
     };
   }
 
+  const broad = args.forceClarify || isBroadQuery(args.query);
   const userMsg = JSON.stringify({
     query: args.query,
+    queryIsBroadSingleTerm: broad,
+    instruction: broad
+      ? 'Запрос — широкое одиночное слово/термин. ОБЯЗАТЕЛЬНО используй mode:"clarify" — задай уточняющий вопрос и предложи 2-4 опции из главных подтем кандидатов.'
+      : undefined,
     candidates: args.candidates.map((c) => ({
       jobId: c.jobId,
       title: c.title,
@@ -82,6 +122,10 @@ export async function synthesizeIntentResponse(args: SynthesizeArgs): Promise<In
 
   const parsed = llmSchema.safeParse(raw);
   if (!parsed.success) {
+    if (process.env.INTENT_DEBUG) {
+      console.error('[intent.synthesize] zod fail:', JSON.stringify(raw).slice(0, 500));
+      console.error('[intent.synthesize] zod errors:', parsed.error.errors.slice(0, 3));
+    }
     return { mode: 'empty', message: 'Не получилось разобрать ответ. Открой каталог.' };
   }
 

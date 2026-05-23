@@ -10,7 +10,7 @@ export interface ResolveArgs {
 
 export async function resolveIntent(args: ResolveArgs): Promise<IntentResult> {
   const [embHits, chunkHits] = await Promise.all([
-    searchJobsByEmbedding(args.query, { limit: 10, threshold: 0.5 }),
+    searchJobsByEmbedding(args.query, { limit: 10, threshold: 0.2 }),
     aggregateChunksToJobs(args.query, { chunkLimit: 30 }),
   ]);
   const merged = mergeJobCandidates(embHits, chunkHits).slice(0, 8);

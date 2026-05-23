@@ -15,7 +15,7 @@ export async function searchJobsByEmbedding(
   query: string,
   opts: { limit?: number; threshold?: number } = {},
 ): Promise<JobCandidate[]> {
-  const { limit = 10, threshold = 0.5 } = opts;
+  const { limit = 10, threshold = 0.2 } = opts;
   const vec = await embedQuery(query);
   const literal = `[${vec.join(',')}]`;
   const rows = await prisma.$queryRawUnsafe<JobEmbedRow[]>(

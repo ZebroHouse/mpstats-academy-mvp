@@ -22,25 +22,42 @@ interface Case {
 const casesPath = path.join(__dirname, 'cases.json');
 const cases: Case[] = JSON.parse(fs.readFileSync(casesPath, 'utf-8'));
 
-async function slugToId(slug: string): Promise<string | null> {
-  const r = await prisma.job.findUnique({ where: { slug }, select: { id: true } });
-  return r?.id ?? null;
-}
-
 async function main() {
+  // Pre-cache all needed slug→id mappings in a single query (avoids per-case DB roundtrips
+  // which trigger pooler connection drops on long runs).
+  const allSlugs = Array.from(new Set(cases.flatMap((c) => c.expect.jobSlugs ?? [])));
+  const slugRows = await prisma.job.findMany({
+    where: { slug: { in: allSlugs } },
+    select: { id: true, slug: true },
+  });
+  const slugIdMap = new Map<string, string>(slugRows.map((r) => [r.slug, r.id]));
+  const slugToId = (slug: string): string | null => slugIdMap.get(slug) ?? null;
+
   let pass = 0;
   const failures: Array<{ query: string; expected: string; got: string }> = [];
 
   for (const c of cases) {
-    const res = await resolveIntent({ query: c.query, surface: 'learn' });
+    let res;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        res = await resolveIntent({ query: c.query, surface: 'learn' });
+        break;
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        if (attempt === 2) throw e;
+        console.warn(`  retry ${attempt + 1} for "${c.query}": ${msg.slice(0, 80)}`);
+        await new Promise((r) => setTimeout(r, 500 * (attempt + 1)));
+      }
+    }
+    if (!res) continue;
 
     let ok = res.mode === c.expect.mode;
 
     // For recommend mode with expected slugs: check that the top-1 job matches one of the acceptable slugs
     if (res.mode === 'recommend' && c.expect.mode === 'recommend' && c.expect.jobSlugs && c.expect.jobSlugs.length > 0) {
-      const expectedIds = (
-        await Promise.all(c.expect.jobSlugs.map(slugToId))
-      ).filter((id): id is string => id !== null);
+      const expectedIds = c.expect.jobSlugs
+        .map(slugToId)
+        .filter((id): id is string => id !== null);
 
       const topJobId = res.jobs[0]?.jobId;
       ok = topJobId != null && expectedIds.includes(topJobId);

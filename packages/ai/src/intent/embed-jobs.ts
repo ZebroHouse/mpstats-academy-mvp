@@ -43,10 +43,10 @@ export async function run({ force }: { force: boolean }): Promise<void> {
   for (const j of jobs) {
     // embedding is not in Prisma generated types (Unsupported column),
     // fetch it separately via raw query to check idempotency
-    const rows = await prisma.$queryRawUnsafe<Array<{ embedding: unknown }>>(
-      `SELECT "embedding" FROM "Job" WHERE "id" = '${j.id}'`,
+    const rows = await prisma.$queryRawUnsafe<Array<{ has_embedding: boolean }>>(
+      `SELECT ("embedding" IS NOT NULL) AS has_embedding FROM "Job" WHERE "id" = '${j.id}'`,
     );
-    const embedding = rows[0]?.embedding ?? null;
+    const embedding = rows[0]?.has_embedding ? 'present' : null;
     await embedJob(
       {
         id: j.id,
