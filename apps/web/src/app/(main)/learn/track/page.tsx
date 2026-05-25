@@ -263,53 +263,42 @@ export default function TrackPage() {
       {(recommendedPath as any)?.addedJobs && (recommendedPath as any).addedJobs.length > 0 && (
         <section className="space-y-4">
           <h2 className="text-heading font-bold text-mp-gray-900">Мои плейбуки</h2>
-          <div className="space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             {(recommendedPath as any).addedJobs.map((pb: any) => {
               const total = pb.lessons.length;
               const completed = pb.lessons.filter((l: any) => l.status === 'COMPLETED').length;
               const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
               return (
-                <div
+                <Link
                   key={pb.id}
-                  className="bg-white border border-mp-gray-200 rounded-xl p-4 shadow-mp-card"
+                  href={`/learn/job/${pb.slug}`}
+                  className="group bg-white border border-mp-gray-200 rounded-xl p-4 shadow-mp-card hover:border-mp-blue-300 hover:shadow-md transition"
                 >
-                  <div className="flex items-center justify-between gap-3 mb-3">
-                    <div>
-                      <h3 className="text-body font-semibold text-mp-gray-900">{pb.title}</h3>
-                      <span className="text-caption text-mp-gray-400">
-                        {completed}/{total} уроков
-                      </span>
-                    </div>
-                    <Link
-                      href={`/learn/job/${pb.slug}`}
-                      className="text-body-sm text-mp-blue-500 hover:underline shrink-0"
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <h3 className="text-body font-semibold text-mp-gray-900 group-hover:text-mp-blue-600 transition">
+                      {pb.title}
+                    </h3>
+                    <svg
+                      className="w-5 h-5 text-mp-gray-300 group-hover:text-mp-blue-500 shrink-0 transition"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
                     >
-                      Открыть плейбук →
-                    </Link>
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                    </svg>
                   </div>
-                  <div className="h-1.5 bg-mp-gray-200 rounded-full overflow-hidden mb-3">
-                    <div
-                      className={pct === 100 ? 'h-full bg-mp-green-500' : 'h-full bg-mp-blue-500'}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                  <div className="space-y-1">
-                    {pb.lessons.map((l: any, idx: number) => (
-                      <LessonCard
-                        key={l.id}
-                        lesson={
-                          {
-                            ...l,
-                            title: `${idx + 1}. ${l.title}`,
-                          } as LessonWithProgress
-                        }
-                        showCourse
-                        courseName={l.courseName as string}
-                        locked={l.locked}
+                  <div className="flex items-center gap-3">
+                    <div className="flex-1 h-1.5 bg-mp-gray-200 rounded-full overflow-hidden">
+                      <div
+                        className={pct === 100 ? 'h-full bg-mp-green-500' : 'h-full bg-mp-blue-500'}
+                        style={{ width: `${pct}%` }}
                       />
-                    ))}
+                    </div>
+                    <span className="text-caption text-mp-gray-500 shrink-0">
+                      {completed}/{total} уроков
+                    </span>
                   </div>
-                </div>
+                </Link>
               );
             })}
           </div>

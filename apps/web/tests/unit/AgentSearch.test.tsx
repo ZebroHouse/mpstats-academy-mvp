@@ -4,6 +4,7 @@ import { render, fireEvent, waitFor, cleanup } from '@testing-library/react';
 const mockResolve = vi.fn();
 const mockAddJob = vi.fn();
 const mockInvalidate = vi.fn();
+let mockTrackData: { addedJobs?: Array<{ id: string }> } = { addedJobs: [] };
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('@/lib/trpc/client', () => ({
   trpc: {
@@ -15,10 +16,13 @@ vi.mock('@/lib/trpc/client', () => ({
       resolve: { useMutation: () => ({ mutateAsync: mockResolve, isPending: false }) },
     },
     learning: {
+      getRecommendedPath: { useQuery: () => ({ data: mockTrackData }) },
       addJobToTrack: {
         useMutation: (opts: { onSuccess?: (data: unknown, vars: { jobId: string }) => void; onError?: (e: Error) => void }) => ({
           mutate: (vars: { jobId: string }) => {
             mockAddJob(vars);
+            // Simulate cache update: backend adds the job → next render sees it as tracked
+            mockTrackData = { addedJobs: [...(mockTrackData.addedJobs ?? []), { id: vars.jobId }] };
             opts.onSuccess?.({ added: 1 }, vars);
           },
           isPending: false,
@@ -30,7 +34,11 @@ vi.mock('@/lib/trpc/client', () => ({
 
 import { AgentSearch } from '@/components/learning/AgentSearch';
 
-afterEach(() => { cleanup(); vi.clearAllMocks(); });
+afterEach(() => {
+  cleanup();
+  vi.clearAllMocks();
+  mockTrackData = { addedJobs: [] };
+});
 
 describe('AgentSearch', () => {
   it('renders recommended jobs with title, reason, lesson count and add-to-track button', async () => {
@@ -70,7 +78,7 @@ describe('AgentSearch', () => {
     expect(getByText('Снизить ДРР')).toBeDefined();
   });
 
-  it('calls addJobToTrack on button click and shows added state', async () => {
+  it('calls addJobToTrack on button click', async () => {
     mockResolve.mockResolvedValue({
       mode: 'recommend',
       answer: '',
@@ -89,6 +97,26 @@ describe('AgentSearch', () => {
     await waitFor(() => expect(getByText('Положить в трек')).toBeDefined());
     fireEvent.click(getByText('Положить в трек'));
     expect(mockAddJob).toHaveBeenCalledWith({ jobId: 'j1' });
+  });
+
+  it('shows В треке ✓ for jobs already in the user track (server state)', async () => {
+    mockTrackData = { addedJobs: [{ id: 'j1' }] };
+    mockResolve.mockResolvedValue({
+      mode: 'recommend',
+      answer: '',
+      jobs: [{
+        jobId: 'j1',
+        title: 'X',
+        slug: 'x-wb',
+        lessonCount: 5,
+        reason: 'r',
+        actions: [{ type: 'add_to_track', jobId: 'j1', label: 'Положить в трек' }],
+      }],
+    });
+    const { getByPlaceholderText, getByText, queryByText } = render(<AgentSearch />);
+    fireEvent.change(getByPlaceholderText(/тему/i), { target: { value: 'q' } });
+    fireEvent.submit(getByPlaceholderText(/тему/i).closest('form')!);
     await waitFor(() => expect(getByText('В треке ✓')).toBeDefined());
+    expect(queryByText('Положить в трек')).toBeNull();
   });
 });

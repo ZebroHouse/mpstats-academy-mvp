@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import type { IntentResult } from '@mpstats/ai';
 import { trpc } from '@/lib/trpc/client';
@@ -9,13 +9,18 @@ export function AgentSearch() {
   const [query, setQuery] = useState('');
   const [conversationState, setConversationState] = useState<string | undefined>();
   const [result, setResult] = useState<IntentResult | null>(null);
-  const [addedJobs, setAddedJobs] = useState<Set<string>>(new Set());
 
   const utils = trpc.useUtils();
+  // Reactive set of jobIds already in the user's track. Source of truth — backend.
+  const recommendedPath = trpc.learning.getRecommendedPath.useQuery();
+  const trackedJobIds = useMemo(() => {
+    const added = (recommendedPath.data as { addedJobs?: Array<{ id: string }> } | undefined)?.addedJobs;
+    return new Set((added ?? []).map((pb) => pb.id));
+  }, [recommendedPath.data]);
+
   const resolveMutation = trpc.intent.resolve.useMutation();
   const addJobMutation = trpc.learning.addJobToTrack.useMutation({
-    onSuccess: (_data, vars) => {
-      setAddedJobs((s) => new Set(s).add(vars.jobId));
+    onSuccess: () => {
       toast.success('Плейбук в треке');
       utils.learning.getRecommendedPath.invalidate();
       utils.job.getCatalog.invalidate();
@@ -89,7 +94,7 @@ export function AgentSearch() {
         <div className="space-y-3">
           <p className="text-mp-gray-800">{result.answer}</p>
           {result.jobs.map((j) => {
-            const isAdded = addedJobs.has(j.jobId);
+            const isAdded = trackedJobIds.has(j.jobId);
             return (
               <div key={j.jobId} className="rounded-lg border p-4 flex items-start justify-between gap-4">
                 <div className="min-w-0 flex-1">
