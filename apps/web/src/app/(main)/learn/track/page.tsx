@@ -531,7 +531,14 @@ export default function TrackPage() {
             </>
           ) : (
             /* Fallback: flat list for old-format paths */
-            <div className="space-y-3">
+            <Card className="shadow-mp-card">
+              <div className="px-6 py-4 bg-purple-50 rounded-t-lg border-b border-purple-100">
+                <h3 className="text-heading font-semibold text-purple-700">Мои уроки</h3>
+                <p className="text-body-sm text-mp-gray-500 mt-0.5">
+                  Уроки в твоём треке. Кнопка крестика убирает урок из трека.
+                </p>
+              </div>
+              <CardContent className="pt-3 pb-4 px-2 sm:px-6">
               {(() => {
                 const dedupedLessons = recommendedPath.lessons.filter(
                   (l: any) => !playbookLessonIds.has(l.id),
@@ -546,7 +553,7 @@ export default function TrackPage() {
                   : [];
 
                 return (
-                  <>
+                  <div className="grid gap-2 sm:gap-3">
                     {visibleLessons.map((lesson: any, idx: number) => (
                       <LessonCard
                         key={lesson.id}
@@ -562,6 +569,9 @@ export default function TrackPage() {
                         }
                         isRecommended
                         locked={lesson.locked}
+                        onRemoveFromTrack={() =>
+                          removeFromTrackMutation.mutate({ lessonId: lesson.id })
+                        }
                       />
                     ))}
                     {hiddenLessons.length > 0 && (
@@ -600,10 +610,11 @@ export default function TrackPage() {
                         </Card>
                       </>
                     )}
-                  </>
+                  </div>
                 );
               })()}
-            </div>
+              </CardContent>
+            </Card>
           )}
         </div>
       )}
