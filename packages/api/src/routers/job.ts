@@ -47,20 +47,47 @@ export const jobRouter = router({
             orderBy: { displayOrder: 'asc' },
           }),
           ctx.prisma.learningPath.findUnique({
-            where: { userId: ctx.user.id }, select: { lessons: true },
+            where: { userId: ctx.user.id }, select: { lessons: true, addedJobs: true },
           }),
         ]);
 
+        // Track-membership set (any lesson currently in user's path — manual + diagnostic).
         const trackLessonIds = new Set<string>(
           track?.lessons ? extractLessonIds(track.lessons) : [],
         );
+
+        // Jobs the user added manually via «+ В трек».
+        const addedJobIds = new Set<string>(
+          Array.isArray(track?.addedJobs) ? (track!.addedJobs as string[]) : [],
+        );
+
+        // Lessons that belong to manually-added playbooks — these were pulled into
+        // the path by addJobToTrack, not by diagnostic. Exclude them from the
+        // «Рекомендовано диагностикой» signal so a job tagged just because the
+        // user added another playbook that shares a lesson doesn't get the marker.
+        const addedJobLessonIds = new Set<string>();
+        if (addedJobIds.size > 0) {
+          const addedJobLessons = await ctx.prisma.jobLesson.findMany({
+            where: {
+              jobId: { in: Array.from(addedJobIds) },
+              lesson: { isHidden: false, course: { isHidden: false } },
+            },
+            select: { lessonId: true },
+          });
+          for (const jl of addedJobLessons) addedJobLessonIds.add(jl.lessonId);
+        }
 
         const summaries = jobs.map((job) => {
           const lessons = job.lessons;
           const completed = lessons.filter(
             (jl) => jl.lesson.progress.some((p) => p.status === 'COMPLETED'),
           ).length;
-          const isRecommended = lessons.some((jl) => trackLessonIds.has(jl.lessonId));
+          const isInTrack = addedJobIds.has(job.id);
+          // «Рекомендовано диагностикой» fires only when at least one lesson is in
+          // the track *and* didn't get there via a manually-added playbook.
+          const isRecommended = !isInTrack && lessons.some(
+            (jl) => trackLessonIds.has(jl.lessonId) && !addedJobLessonIds.has(jl.lessonId),
+          );
           const primaryAxis = (job.axes as string[])[0] ?? 'ANALYTICS';
           if ((job.axes as string[]).length === 0) {
             console.warn(`[job.getCatalog] job "${job.slug}" has empty axes — placed in ANALYTICS`);
@@ -73,6 +100,7 @@ export const jobRouter = router({
             totalDurationMin: lessons.reduce((s, jl) => s + (jl.lesson.duration ?? 0), 0),
             completedLessons: completed,
             isRecommended,
+            isInTrack,
             _primaryAxis: primaryAxis,
           };
         });

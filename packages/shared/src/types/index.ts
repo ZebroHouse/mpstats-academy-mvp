@@ -332,7 +332,8 @@ export interface JobSummary {
   lessonCount: number;
   totalDurationMin: number;
   completedLessons: number;     // прогресс юзера
-  isRecommended: boolean;       // джоба из трека/диагностики
+  isRecommended: boolean;       // есть уроки из диагностики (errors/deepening/...), не из вручную добавленного плейбука
+  isInTrack: boolean;           // юзер добавил весь плейбук через «+ В трек»
 }
 
 export interface JobCatalogAxis {
