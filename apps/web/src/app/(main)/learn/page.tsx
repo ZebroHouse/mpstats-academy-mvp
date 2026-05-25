@@ -109,19 +109,6 @@ function LearnPageInner() {
     return new Set(recommendedPath.sections.flatMap((s: any) => s.lessons.map((l: any) => l.id as string)));
   }, [recommendedPath]);
 
-  // O(1) lookup for job metadata used by AgentSearch
-  const jobsById = useMemo(() => {
-    const map: Record<string, { title: string; lessonCount: number; slug: string }> = {};
-    if (jobAxes) {
-      for (const axis of jobAxes) {
-        for (const job of axis.jobs) {
-          map[job.id] = { title: job.title, lessonCount: job.lessonCount, slug: job.slug };
-        }
-      }
-    }
-    return map;
-  }, [jobAxes]);
-
   // Track management mutations
   const utils = trpc.useUtils();
 
@@ -342,7 +329,7 @@ function LearnPageInner() {
 
       {/* Agent Search */}
       <div data-tour="learn-search">
-        <AgentSearch jobsById={jobsById} />
+        <AgentSearch />
       </div>
 
       {lens === 'jobs' ? (

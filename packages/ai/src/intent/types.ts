@@ -1,6 +1,7 @@
 export interface JobCandidate {
   jobId: string;
   title: string;
+  slug: string;
   description: string | null;
   lessonCount: number;
   jobEmbeddingSim: number; // 0..1
@@ -11,8 +12,17 @@ export interface JobCandidate {
 
 export type IntentAction = { type: 'add_to_track'; jobId: string; label: string };
 
+export interface IntentJobItem {
+  jobId: string;
+  title: string;
+  slug: string;
+  lessonCount: number;
+  reason: string;
+  actions: IntentAction[];
+}
+
 export type IntentResult =
   | { mode: 'clarify'; question: string; options: Array<{ label: string; intent: string }>; conversationState: string }
-  | { mode: 'recommend'; answer: string; jobs: Array<{ jobId: string; reason: string; actions: IntentAction[] }> }
+  | { mode: 'recommend'; answer: string; jobs: IntentJobItem[] }
   | { mode: 'fallback'; answer: string; lessons: Array<{ lessonId: string; reason: string }> }
   | { mode: 'empty'; message: string };

@@ -15,6 +15,7 @@ const candidates: JobCandidate[] = [
   {
     jobId: 'j1',
     title: 'Снизить ДРР',
+    slug: 'snizit-drr',
     description: null,
     lessonCount: 5,
     jobEmbeddingSim: 0.82,
@@ -65,9 +66,16 @@ describe('synthesizeIntentResponse', () => {
     expect(res.jobs.map((j) => j.jobId)).toEqual(['j1']);
   });
 
-  it('returns empty when no candidates passed in', async () => {
-    const res = await synthesizeIntentResponse({ query: 'q', candidates: [] });
+  it('returns empty when no candidates and query is not broad', async () => {
+    // Specific multi-word query with verb → empty (broad would synthesize a clarify locally)
+    const res = await synthesizeIntentResponse({ query: 'как настроить рекламу на маркетплейсе', candidates: [] });
     expect(res.mode).toBe('empty');
+    expect(mockCreate).not.toHaveBeenCalled();
+  });
+
+  it('synthesizes clarify locally for broad single-term query with no candidates', async () => {
+    const res = await synthesizeIntentResponse({ query: 'реклама', candidates: [] });
+    expect(res.mode).toBe('clarify');
     expect(mockCreate).not.toHaveBeenCalled();
   });
 

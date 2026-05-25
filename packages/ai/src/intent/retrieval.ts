@@ -6,6 +6,7 @@ import type { JobCandidate } from './types';
 interface JobEmbedRow {
   id: string;
   title: string;
+  slug: string;
   description: string | null;
   lesson_count: number;
   similarity: number;
@@ -23,7 +24,7 @@ export async function searchJobsByEmbedding(
     // (job.getCatalog / job.getJob): JobLesson rows whose target Lesson and its
     // Course are both isHidden=false. Jobs whose every lesson is hidden are
     // excluded via EXISTS guard.
-    `SELECT j.id::text AS id, j.title, j.description,
+    `SELECT j.id::text AS id, j.title, j.slug, j.description,
             (
               SELECT COUNT(*)
               FROM "JobLesson" jl
@@ -50,6 +51,7 @@ export async function searchJobsByEmbedding(
   return rows.map((r) => ({
     jobId: r.id,
     title: r.title,
+    slug: r.slug,
     description: r.description,
     lessonCount: r.lesson_count,
     jobEmbeddingSim: r.similarity,
@@ -99,6 +101,7 @@ export async function aggregateChunksToJobs(
   return Array.from(acc.entries()).map(([jobId, v]) => ({
     jobId,
     title: '',
+    slug: '',
     description: null,
     lessonCount: 0,
     jobEmbeddingSim: 0,
@@ -111,10 +114,10 @@ export async function aggregateChunksToJobs(
 const W_EMB = 0.7;
 const W_CHUNK = 0.3;
 
-export function mergeJobCandidates(
+export async function mergeJobCandidates(
   embHits: JobCandidate[],
   chunkHits: JobCandidate[],
-): JobCandidate[] {
+): Promise<JobCandidate[]> {
   const byId = new Map<string, JobCandidate>();
   for (const j of embHits) byId.set(j.jobId, { ...j });
   for (const j of chunkHits) {
@@ -124,6 +127,34 @@ export function mergeJobCandidates(
       cur.topSnippets = [...cur.topSnippets, ...j.topSnippets].slice(0, 2);
     } else {
       byId.set(j.jobId, { ...j });
+    }
+  }
+  // Chunk-only hits arrive with title/slug='' — backfill them in one query.
+  const needMeta = Array.from(byId.values()).filter((c) => !c.title || !c.slug);
+  if (needMeta.length > 0) {
+    const metas = await prisma.job.findMany({
+      where: { id: { in: needMeta.map((c) => c.jobId) } },
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        description: true,
+        _count: {
+          select: {
+            lessons: { where: { lesson: { isHidden: false, course: { isHidden: false } } } },
+          },
+        },
+      },
+    });
+    const metaById = new Map(metas.map((m) => [m.id, m]));
+    for (const c of needMeta) {
+      const m = metaById.get(c.jobId);
+      if (m) {
+        c.title = m.title;
+        c.slug = m.slug;
+        c.description = m.description;
+        c.lessonCount = m._count.lessons;
+      }
     }
   }
   for (const c of byId.values()) {

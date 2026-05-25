@@ -136,16 +136,23 @@ export async function synthesizeIntentResponse(args: SynthesizeArgs): Promise<In
     if (cleaned.length === 0) {
       return { mode: 'fallback', answer: parsed.data.answer, lessons: [] };
     }
+    const metaById = new Map(args.candidates.map((c) => [c.jobId, c]));
     return {
       mode: 'recommend',
       answer: parsed.data.answer,
-      jobs: cleaned.map((j) => ({
-        jobId: j.jobId,
-        reason: j.reason,
-        actions: [
-          { type: 'add_to_track', jobId: j.jobId, label: 'Положить в трек' } as IntentAction,
-        ],
-      })),
+      jobs: cleaned.map((j) => {
+        const meta = metaById.get(j.jobId)!;
+        return {
+          jobId: j.jobId,
+          title: meta.title,
+          slug: meta.slug,
+          lessonCount: meta.lessonCount,
+          reason: j.reason,
+          actions: [
+            { type: 'add_to_track', jobId: j.jobId, label: 'Положить в трек' } as IntentAction,
+          ],
+        };
+      }),
     };
   }
 

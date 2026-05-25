@@ -54,20 +54,20 @@ describe('aggregateChunksToJobs', () => {
 });
 
 describe('mergeJobCandidates', () => {
-  it('combines scores: 0.7 * jobEmb + 0.3 * topChunk', () => {
-    const merged = mergeJobCandidates(
-      [{ jobId: 'j1', title: 'T', description: null, lessonCount: 5, jobEmbeddingSim: 0.8, topChunkSim: 0, combinedScore: 0, topSnippets: [] }],
-      [{ jobId: 'j1', title: 'T', description: null, lessonCount: 5, jobEmbeddingSim: 0, topChunkSim: 0.6, combinedScore: 0, topSnippets: [{ content: 's', similarity: 0.6 }] }],
+  it('combines scores: 0.7 * jobEmb + 0.3 * topChunk', async () => {
+    const merged = await mergeJobCandidates(
+      [{ jobId: 'j1', title: 'T', slug: 'j1', description: null, lessonCount: 5, jobEmbeddingSim: 0.8, topChunkSim: 0, combinedScore: 0, topSnippets: [] }],
+      [{ jobId: 'j1', title: 'T', slug: 'j1', description: null, lessonCount: 5, jobEmbeddingSim: 0, topChunkSim: 0.6, combinedScore: 0, topSnippets: [{ content: 's', similarity: 0.6 }] }],
     );
     expect(merged).toHaveLength(1);
     expect(merged[0].combinedScore).toBeCloseTo(0.7 * 0.8 + 0.3 * 0.6, 2);
     expect(merged[0].topSnippets).toHaveLength(1);
   });
 
-  it('keeps jobs that appeared only in one source', () => {
-    const merged = mergeJobCandidates(
-      [{ jobId: 'j1', title: 'T', description: null, lessonCount: 5, jobEmbeddingSim: 0.8, topChunkSim: 0, combinedScore: 0, topSnippets: [] }],
-      [{ jobId: 'j2', title: 'T2', description: null, lessonCount: 5, jobEmbeddingSim: 0, topChunkSim: 0.7, combinedScore: 0, topSnippets: [] }],
+  it('keeps jobs that appeared only in one source', async () => {
+    const merged = await mergeJobCandidates(
+      [{ jobId: 'j1', title: 'T', slug: 'j1', description: null, lessonCount: 5, jobEmbeddingSim: 0.8, topChunkSim: 0, combinedScore: 0, topSnippets: [] }],
+      [{ jobId: 'j2', title: 'T2', slug: 'j2', description: null, lessonCount: 5, jobEmbeddingSim: 0, topChunkSim: 0.7, combinedScore: 0, topSnippets: [] }],
     );
     expect(merged).toHaveLength(2);
     const j1 = merged.find((j) => j.jobId === 'j1')!;
