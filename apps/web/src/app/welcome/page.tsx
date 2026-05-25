@@ -11,11 +11,9 @@ import { StepMarketplaces } from '@/components/welcome/StepMarketplaces';
 import { StepExperience } from '@/components/welcome/StepExperience';
 import { ForkScreen } from '@/components/welcome/ForkScreen';
 import { GOAL_OPTIONS } from '@/components/welcome/options';
+import { WELCOME_INTENT_RESULT_KEY } from '@/components/welcome/intent-key';
 
 type Step = 1 | 2 | 3 | 'fork';
-
-/** sessionStorage key — follow-on UI (e.g. /learn) can read the pre-computed job list. */
-export const WELCOME_INTENT_RESULT_KEY = 'welcome-intent-result';
 
 /**
  * Onboarding wizard orchestrator.
