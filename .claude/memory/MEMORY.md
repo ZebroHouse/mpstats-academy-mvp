@@ -23,6 +23,9 @@ Entries referenced by CLAUDE.md and Phase plans.
 ## Phase 49 — Lesson Materials (shipped 2026-04-27)
 - [project_lesson_materials.md](project_lesson_materials.md) — schema (Material/LessonMaterial/MaterialType), Storage bucket `lesson-materials` (private, 25 MB, MIME whitelist), 9-procedure tRPC router с XOR source validation и ACL через прикреплённые уроки, ingest скрипт залил 62 материала + 97 привязок из Google Sheet методологов, UI секция «Материалы к уроку» на `/learn/[id]` (5 type configs, locked-lesson защита через empty array), админка `/admin/content/materials` с drag-n-drop upload через signed PUT URL, daily cron на orphan-файлы. Methodologist guide — `docs/admin-guides/lesson-materials.md`.
 
+## Track B — Agentic Search (shipped 2026-05-25)
+- [project_track_b_agentic_search.md](project_track_b_agentic_search.md) — intent→jobs engine, AgentSearch on /learn + /welcome. PR #10 (`a9c8402`) + marker-split hotfix (`820c5b8`). pgvector `Job.embedding(1536)` + ivfflat. Eval 20/22 = 90.9%. Calibration knobs, UAT history, Next.js page-export / OpenRouter JSON-mode / `react-server` condition / Prisma-vector-deserialize gotchas.
+
 ## Phase 55 — Vision RAG (Sprint 2 + 2C shipped, Sprint 3 prep in progress)
 - [vision-ingest-safety.md](vision-ingest-safety.md) — 7 codified safety rules (timeout / resumable JSONL / pre-flight validation / small-batch dry-run / hidden-lesson aware / idempotent selector / cost logging). Each rule traces to a real Sprint 2/2C incident. Authoritative for all future ingest sprints. Cross-AI.
 - **Pipeline location:** `scripts/vision-ingest/` — selector(s), extract-frames-prod, dedup-frames, vlm-describe (concurrency=5, AbortController, JSONL resume), upload-frames-storage, embed-and-insert. Parametrized via `INGEST_SUFFIX` env var.

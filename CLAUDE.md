@@ -49,18 +49,19 @@ Sibling project `D:/GpT_docs/Ai_MP_manager/` запустил `prisma db push --
 | v1.6 Engagement | In Progress (Phases 51-53 + 56 shipped; 54 planned) |
 | v1.7 RAG Quality | In Progress (Phase 55 Sprints 2/2C/3 shipped — full-platform vision-RAG, 91.5% coverage) |
 | v1.8 Library Redesign | Shipped 2026-05-22 (Phase 57 — `/learn` job catalog + polish + hidden-lesson auto-sync) |
+| v1.9 Agentic Search | Shipped 2026-05-25 (Track B — intent→jobs engine, AgentSearch on `/learn` + `/welcome`) |
 
 **Remaining work:**
 1. **Phase 58 — diagnostic on jobs** (Phase 57 follow-up) — not started; needs a spec. Diagnostic recommends whole jobs instead of loose lessons.
 2. Phase 33-03: CQ Dashboard Setup (на стороне CQ команды).
 
-_Done since 2026-05-14: Phase 53A + 53B (referral) merged, Phase 55 Sprint 3 merged (vision-RAG full platform), Phase 56 (entry-flow) merged, Phase 57 (library redesign) shipped 2026-05-22. Phase 47 (hub-layout) superseded by Phase 57._
+_Done since 2026-05-14: Phase 53A + 53B (referral) merged, Phase 55 Sprint 3 merged (vision-RAG full platform), Phase 56 (entry-flow) merged, Phase 57 (library redesign) shipped 2026-05-22, Track B (agentic search) shipped 2026-05-25. Phase 47 (hub-layout) superseded by Phase 57._
 
 ## Active Branches
 
-_No long-lived branches in flight._ Worktree `worktree-phase-57-library-redesign` (PR #8 + #9 merged) preserved at `.claude/worktrees/phase-57-library-redesign/` for reference; safe to `git worktree remove` once not needed.
+_No long-lived branches in flight._ Track B worktree at `.claude/worktrees/track-b-intent-jobs-engine/` preserved post-merge for reference; safe to `git worktree remove` once not needed.
 
-Phase 53A + 53B (referral) merged to master. Phase 55 Sprint 3 (vision-RAG, 91.5% platform coverage) merged. Phase 56 (entry-flow) merged. Phase 57 (library redesign) merged via PR #8 (`bb84013`) + PR #9 hidden-lesson auto-sync (`3059ad8`).
+Track B (intent→jobs engine) merged via PR #10 (`a9c8402`) + hotfix `820c5b8` (job-catalog marker split). Phase 53A + 53B (referral) merged. Phase 55 Sprint 3 (vision-RAG, 91.5%) merged. Phase 56 (entry-flow) merged. Phase 57 (library redesign) merged via PR #8 (`bb84013`) + PR #9 (`3059ad8`).
 Referral flag i1→i2 switch still scheduled ~2026-06-01 (manual: DB INSERT + env + rebuild).
 Archive directory `D:/GpT_docs/MPSTATS ACADEMY ADAPTIVE LEARNING/MAAL-phase55/` (orphan, not a worktree) holds Sprint 2C VLM dumps (`results/vlm-runs-sprint2c.json` 1.7MB, 644 frame jpgs in `results/frames/`) — useful if a re-ingest is needed without re-running LLM. Safe to delete to free ~300MB when no longer needed.
 
@@ -97,7 +98,32 @@ Archive directory `D:/GpT_docs/MPSTATS ACADEMY ADAPTIVE LEARNING/MAAL-phase55/` 
 
 **Внимание (исторический lesson):** CP хранит `amount` на своей стороне на момент создания подписки. При смене цен отменять старые ACTIVE подписки чтобы автосписания пошли по новым тарифам.
 
-## Last Session (2026-05-22) — Phase 57 Library Redesign shipped to prod
+## Last Session (2026-05-25) — Track B (agentic search) shipped to prod
+
+**PR #10 (`a9c8402`) + hotfix `820c5b8` merged to master and deployed to prod.**
+
+Track B per `docs/superpowers/specs/2026-05-20-agentic-search-design.md`. Replaces keyword search on `/learn` with an intent box that returns `recommend` / `clarify` / `fallback` / `empty` over jobs. Same engine pre-resolves intent during `/welcome` Step 1 (fire-and-forget, result cached to sessionStorage for `/learn` pickup).
+
+- **Backend** `packages/ai/src/intent/` + `packages/api/src/routers/intent.ts`. `intent.resolve` mutation: embedQuery → parallel job-embedding + chunk-aggregation retrieval → merge (0.7 emb + 0.3 chunk) → LLM synthesize via gpt-4.1-mini with strict JSON schema, zod validation, hallucination guardrail (LLM jobIds whitelisted to retrieval candidates). Server enriches recommend response with title/slug/lessonCount inline. Broad-query detector forces clarify mode for single-token queries («Ozon», «реклама»).
+- **DB** Additive migration `20260522000000_add_job_embedding`: `Job.embedding vector(1536)` + ivfflat cosine index. All 29 jobs backfilled via `packages/ai/src/intent/embed-jobs.ts`.
+- **Frontend** `AgentSearch` (`apps/web/src/components/learning/AgentSearch.tsx`) replaces SearchBar on `/learn`. Subscribes to `learning.getRecommendedPath` for reactive «В треке ✓» state. `/welcome` `StepIntent` fires `intent.resolve(surface: 'welcome')` in background, key `WELCOME_INTENT_RESULT_KEY` stored separately in `apps/web/src/components/welcome/intent-key.ts` (Next.js page-export safety). `/learn/track` polish: «Мои плейбуки» compact card grid, lessons live on playbook detail page. Flat-list fallback for legacy unsectioned paths now has «Мои уроки» card header + remove-from-track button (pre-existing UX gap surfaced when playbooks stopped masking it).
+- **Marker hotfix `820c5b8`** (post-merge) — Phase 57's `isRecommended` flag fired for any job whose lessons sat in the user's path, including manually-added playbooks via «+ В трек», so an AgentSearch add incorrectly tagged the job amber. Split into two independent JobSummary flags: `isInTrack` (green «В треке» — `addedJobs[]` contains the job) and `isRecommended` (amber «Рекомендовано диагностикой» — at least one lesson not from any added playbook). Mutually exclusive at render time, in-track wins.
+
+**Eval** 22-case harness (`scripts/intent-eval/`) scored **20/22 = 90.9% PASS** (gate 85%) on final run. Calibration history in commit `7800370`: rewrote LLM prompt with explicit field-name examples (LLM was emitting `recommendations`/`message` instead of `jobs`/`answer`), lowered retrieval threshold 0.5 → 0.2, added isBroadQuery code-level guardrail + empty→clarify synthesis.
+
+**UAT rounds 1-4 (commits `824b461` / `e4e2e6b` / `3c6ba94`):**
+1. Raw cuid as title — fixed by enriching IntentResult.jobs server-side, dropped client `jobsById` lookup.
+2. «+ В трек» silent — added toast + button-state flip + `getRecommendedPath` invalidate.
+3. Track state local-only on repeated queries — now derives from `recommendedPath.addedJobs[]`.
+4. Compact `/learn/track` playbooks + restored «Мои уроки» header + remove button on flat-list view.
+
+**Operational notes:**
+- Test user `test@mpstats.academy` has legacy flat-format `LearningPath` (98 lessonIds, no sections, generated 2026-04-30) — clicking «Перестроить по диагностике» on legacy data 500'd. Re-passing diagnostic regenerated path in sectioned format → rebuild then succeeds. Pre-existing master issue, not Track B.
+- Track B branch first build failed on `WELCOME_INTENT_RESULT_KEY` exported from `/welcome/page.tsx` — Next.js rejects non-standard page-file exports (`343bfd8` fix).
+
+**Memory entries written**: `project_track_b_agentic_search.md`.
+
+## Previous Session (2026-05-22) — Phase 57 Library Redesign shipped to prod
 
 **PR #8 (`bb84013`) + PR #9 (`3059ad8`) merged to master and deployed to prod (https://platform.mpstats.academy).**
 
