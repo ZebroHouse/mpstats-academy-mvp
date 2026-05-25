@@ -1,0 +1,189 @@
+[
+  {
+    "query": "как снизить ДРР на Wildberries",
+    "expect": {
+      "mode": "recommend",
+      "jobSlugs": [
+        "provesti-analiz-i-optimizaciyu-reklamnyh-kampaniy-na-wildber",
+        "nastroit-i-optimizirovat-reklamnye-kampanii-s-ispolzovaniem-"
+      ]
+    }
+  },
+  {
+    "query": "хочу настроить автобиддер",
+    "expect": {
+      "mode": "recommend",
+      "jobSlugs": [
+        "nastroit-avtobidder-dlya-effektivnogo-upravleniya-reklamoy-n"
+      ]
+    }
+  },
+  {
+    "query": "как рассчитать юнит-экономику товара на WB",
+    "expect": {
+      "mode": "recommend",
+      "jobSlugs": [
+        "rasschitat-i-analizirovat-yunit-ekonomiku-tovara-na-wildberr"
+      ]
+    }
+  },
+  {
+    "query": "SEO оптимизация карточки товара",
+    "expect": {
+      "mode": "recommend",
+      "jobSlugs": [
+        "provesti-seo-optimizaciyu-kartochki-tovara-na-wildberries",
+        "provesti-audit-i-uluchshit-kartochku-fokusnogo-tovara-na-wil"
+      ]
+    }
+  },
+  {
+    "query": "как выбрать нишу для запуска товара на WB",
+    "expect": {
+      "mode": "recommend",
+      "jobSlugs": [
+        "izbezhat-oshibok-i-vybrat-tovar-dlya-zapuska-na-wildberries",
+        "provesti-detalnyy-konkurentnyy-analiz-i-opredelit-potencial-"
+      ]
+    }
+  },
+  {
+    "query": "конкурентный анализ ниши на Wildberries",
+    "expect": {
+      "mode": "recommend",
+      "jobSlugs": [
+        "provesti-detalnyy-konkurentnyy-analiz-i-opredelit-potencial-",
+        "provesti-analiz-i-segmentaciyu-tovarnyh-kategoriy-dlya-rassh"
+      ]
+    }
+  },
+  {
+    "query": "хочу научиться работать с Ozon",
+    "expect": {
+      "mode": "recommend",
+      "jobSlugs": [
+        "ponyat-i-ispolzovat-osobennosti-raboty-s-marketpleysom-ozon"
+      ]
+    }
+  },
+  {
+    "query": "как создать карточку товара на Ozon",
+    "expect": {
+      "mode": "recommend",
+      "jobSlugs": [
+        "sozdat-i-optimizirovat-kartochku-tovara-na-ozon-dlya-povyshe"
+      ]
+    }
+  },
+  {
+    "query": "аналитика продаж на маркетплейсах — с чего начать",
+    "expect": {
+      "mode": "recommend",
+      "jobSlugs": [
+        "ponyat-i-ispolzovat-analitiku-dlya-prinyatiya-biznes-resheni",
+        "ponyat-i-ispolzovat-vnutrennyuyu-analitiku-marketpleysov-wil"
+      ]
+    }
+  },
+  {
+    "query": "как использовать нейросети для работы с маркетплейсами",
+    "expect": {
+      "mode": "recommend",
+      "jobSlugs": [
+        "sozdat-i-nastroit-personalnogo-gpt-assistenta-dlya-avtomatiz",
+        "ispolzovat-neyroseti-dlya-analiza-celevoy-auditorii-i-sozdan"
+      ]
+    }
+  },
+  {
+    "query": "как поднять продажи через ABC XYZ анализ",
+    "expect": {
+      "mode": "recommend",
+      "jobSlugs": [
+        "optimizirovat-assortiment-s-pomoschyu-abc-xyz-analiza-na-wil"
+      ]
+    }
+  },
+  {
+    "query": "реклама у блогеров для Ozon",
+    "expect": {
+      "mode": "recommend",
+      "jobSlugs": [
+        "nastroit-i-ispolzovat-vneshnie-reklamnye-kampanii-s-blogeram"
+      ]
+    }
+  },
+  {
+    "query": "реклама",
+    "expect": {
+      "mode": "clarify"
+    }
+  },
+  {
+    "query": "продажи",
+    "expect": {
+      "mode": "clarify"
+    }
+  },
+  {
+    "query": "Ozon",
+    "expect": {
+      "mode": "clarify"
+    }
+  },
+  {
+    "query": "аналитика",
+    "expect": {
+      "mode": "clarify"
+    }
+  },
+  {
+    "query": "цена нефти",
+    "expect": {
+      "mode": "empty"
+    }
+  },
+  {
+    "query": "погода в Москве",
+    "expect": {
+      "mode": "empty"
+    }
+  },
+  {
+    "query": "как платить за ChatGPT из России",
+    "expect": {
+      "mode": "fallback",
+      "jobSlugs": [
+        "obespechit-bezopasnyy-dostup-i-oplatu-zarubezhnyh-ai-serviso"
+      ]
+    }
+  },
+  {
+    "query": "финансовые отчёты и выплаты на Ozon",
+    "expect": {
+      "mode": "recommend",
+      "jobSlugs": [
+        "ponyat-finansovye-processy-i-otchety-pri-rabote-s-ozon"
+      ]
+    }
+  },
+  {
+    "query": "стратегическое планирование бизнеса на маркетплейсе",
+    "expect": {
+      "mode": "recommend",
+      "jobSlugs": [
+        "provesti-strategicheskoe-planirovanie-biznesa-na-marketpleys"
+      ]
+    }
+  },
+  {
+    "query": "как создать продающий контент с помощью ИИ",
+    "expect": {
+      "mode": "recommend",
+      "jobSlugs": [
+        "sozdat-i-optimizirovat-prodayuschiy-kontent-dlya-kartochki-t",
+        "sozdat-i-optimizirovat-vizualnyy-kontent-dlya-kartochki-tova"
+      ]
+    }
+  }
+]

@@ -11,6 +11,7 @@ import { StepMarketplaces } from '@/components/welcome/StepMarketplaces';
 import { StepExperience } from '@/components/welcome/StepExperience';
 import { ForkScreen } from '@/components/welcome/ForkScreen';
 import { GOAL_OPTIONS } from '@/components/welcome/options';
+import { WELCOME_INTENT_RESULT_KEY } from '@/components/welcome/intent-key';
 
 type Step = 1 | 2 | 3 | 'fork';
 
@@ -37,9 +38,33 @@ export default function WelcomePage() {
   const { data: profile } = trpc.profile.get.useQuery();
   const userName = profile?.name?.trim().split(' ')[0] || null;
 
+  // All hooks must be declared before any conditional rendering.
   const complete = trpc.onboarding.complete.useMutation({
     onError: () => toast.error('Не удалось сохранить ответы. Попробуйте ещё раз.'),
   });
+
+  // Fire-and-forget: kicked off when user leaves step 1. Result is stored in
+  // sessionStorage so a follow-on UI (/learn AgentSearch) can consume it without
+  // waiting. Errors are silently swallowed — this is a best-effort pre-warm, not
+  // a blocking operation. The wizard step machine is not affected.
+  const resolveIntent = trpc.intent.resolve.useMutation({
+    onSuccess: (data) => {
+      try {
+        sessionStorage.setItem(WELCOME_INTENT_RESULT_KEY, JSON.stringify(data));
+      } catch {
+        // sessionStorage unavailable (private browsing quota) — ignore.
+      }
+    },
+  });
+
+  /** Advance from step 1 → 2, firing intent.resolve in parallel if there is text. */
+  const advanceFromStep1 = () => {
+    const query = goalText.trim();
+    if (query) {
+      resolveIntent.mutate({ query, surface: 'welcome' });
+    }
+    setStep(2);
+  };
 
   const finish = (dest: '/diagnostic' | '/learn') => {
     complete.mutate(
@@ -113,7 +138,9 @@ export default function WelcomePage() {
               <Button
                 variant="default"
                 onClick={() =>
-                  setStep((s) => (s === 3 ? 'fork' : ((s as number) + 1) as Step))
+                  step === 1
+                    ? advanceFromStep1()
+                    : setStep((s) => (s === 3 ? 'fork' : ((s as number) + 1) as Step))
                 }
               >
                 {step === 1 ? 'Продолжить' : 'Далее →'}
