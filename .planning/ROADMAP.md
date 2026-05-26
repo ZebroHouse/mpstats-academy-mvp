@@ -1354,7 +1354,13 @@ Plans:
 
 **Marketplace-aware диагностические вопросы (тегирование банка, selection, scoring) НЕ входят в Phase 58 — выделены в Phase 59 как content-heavy работа.**
 
-**Plans:** TBD (после discuss → spec → plan-phase).
+**Plans:** 4 plans
+
+Plans:
+- [ ] 58-01-PLAN.md — Wizard marketplace simplification (7→2 options) + z.enum tightening (D-12/D-13)
+- [ ] 58-02-PLAN.md — One-time SQL backfill of UserProfile.marketplaces[] to {WB,OZON} only (D-14) — autonomous:false, gated
+- [ ] 58-03-PLAN.md — Job matcher + marketplace filter + diagnostic.getRecommendations recommendedJobs + RecommendedJobsBlock UI (D-01/D-02/D-03/D-04/D-05/D-11/D-15)
+- [ ] 58-04-PLAN.md — Legacy LearningPath auto-rebuild (flat→sectioned) + re-diagnostic union-merge (D-06/D-07/D-08/D-09/D-10/D-16)
 
 ### Phase 59: Marketplace-aware Diagnostic Questions — банк вопросов знает про WB/Ozon
 
