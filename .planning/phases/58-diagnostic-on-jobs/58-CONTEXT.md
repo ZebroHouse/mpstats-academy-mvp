@@ -8,6 +8,8 @@
 
 Диагностика рекомендует **целые джобы (плейбуки)** на основе 5-axis weakness-профиля вместо россыпи отдельных уроков. Экран результатов отдаёт top-3 джобы в явном порядке с bulk-CTA «Добавить все в трек». `learning.getRecommendedPath` строит путь из `JobLesson[]` через `addedJobs[]`. Перепрохождение диагностики мержится с уже добавленными вручную плейбуками (union, не overwrite). Легаси юзеры на flat-формате `LearningPath` автоматически переводятся на job-aware sectioned-формат при первом визите на `/learn/track`, прогресс по урокам и кастомные ручные добавления сохраняются.
 
+**Дополнено 2026-05-26 (slim marketplace-awareness):** wizard step 2 схлопывается с 7 опций до 2 (WB + Ozon, multi-select), one-time SQL backfill приводит legacy `marketplaces[]` к {WB, OZON}-only. Рекомендация джоб в диагностике и `getRecommendedPath` фильтруется по `Job.marketplace ∈ user.marketplaces ∪ {BOTH}` — WB-юзер не видит Ozon-only джобы. **Marketplace-aware диагностические вопросы (тегирование банка, selection, scoring) вынесены в отдельную Phase 59** — это контент-heavy работа с зависимостью на методологов и не должна блокировать релиз Phase 58.
+
 </domain>
 
 <decisions>
@@ -38,6 +40,37 @@
 
 - **D-10:** Перепрохождение диагностики использует **union-merge**: `addedJobs[] = Array.from(new Set([...previous, ...newRecommended]))`. Старые ручные/AI-добавленные плейбуки сохраняются, новые рекомендации просто добавляются. Юзер сам убирает лишнее через «Убрать из трека» (`learning.removeJobFromTrack`).
 - **D-11:** На экране результатов перепрохождения карточки джоб, **уже находящиеся в треке** (`isInTrack: true`), показывают маркер «В треке ✓» (зелёный — re-use Phase 57 marker), их кнопка «+ В трек» disabled или скрыта. Bulk-CTA «Добавить все 3» добавляет только те, что ещё не в треке.
+
+### Wizard Marketplace Simplification (добавлено 2026-05-26)
+
+- **D-12:** Wizard step 2 «На каких маркетплейсах вы работаете?» схлопывается с **7 опций до 2: только WB и Ozon, multi-select** (можно выбрать одну, обе или ни одну — но требуется хотя бы одна для прохождения визарда). Причина: платформа изначально про WB+Ozon, остальные marketplace-опции (Yandex/AliExpress/Megamarket/OwnShop/Other) не имеют content-покрытия в джобах (все 29 джоб Phase 57 имеют `Job.marketplace ∈ {WB, OZON, BOTH}`). Чистка шумных опций убирает ложное обещание поддержки.
+- **D-13:** Файлы для правки:
+  - `apps/web/src/components/welcome/options.ts` — `MARKETPLACE_OPTIONS` сократить до 2 элементов (`WB`, `OZON`).
+  - `apps/web/src/components/welcome/StepMarketplaces.tsx` — grid `grid-cols-2 sm:grid-cols-3` → `grid-cols-2` (две карты).
+  - `packages/api/src/routers/onboarding.ts` — `z.enum([...])` whitelist маркетплейсов сократить до `['WB', 'OZON']`.
+  - `apps/web/src/app/(main)/profile/page.tsx` (если содержит edit-форму квалификации с marketplaces) — синхронизировать.
+- **D-14:** **Backfill миграция для ~200 существующих юзеров** (one-time SQL):
+  ```sql
+  UPDATE "UserProfile"
+  SET marketplaces = CASE
+    WHEN (ARRAY(SELECT unnest(marketplaces) INTERSECT SELECT unnest(ARRAY['WB','OZON']))) = '{}'::text[]
+      THEN ARRAY['WB','OZON']
+    ELSE ARRAY(SELECT unnest(marketplaces) INTERSECT SELECT unnest(ARRAY['WB','OZON']))
+  END;
+  ```
+  Юзеры с YANDEX/ALIEXPRESS/MEGAMARKET/OWN_SHOP/OTHER без WB/OZON получают `[WB, OZON]` (увидят все джобы — статус-кво для них). Юзеры с микс-выбором теряют non-WB/OZON значения, оставшиеся WB/OZON сохраняются. **НЕ показываем визард повторно** — backfill достаточен. Скрипт в `scripts/migrations/2026-05-26-collapse-marketplaces.sql` или inline в plan-фазе.
+
+### Job Recommendation Marketplace Filter (добавлено 2026-05-26)
+
+- **D-15:** Поверх axes-matching из D-01/D-02 накладывается **marketplace-фильтр**:
+  ```ts
+  effectiveMarketplaces = (user.marketplaces || []).filter(m => ['WB','OZON'].includes(m));
+  if (effectiveMarketplaces.length === 0) effectiveMarketplaces = ['WB','OZON'];
+  jobs.where = { marketplace: { in: [...effectiveMarketplaces, 'BOTH'] } };
+  ```
+  Юзер на WB-only видит `Job.marketplace ∈ {WB, BOTH}`. Юзер на обоих — все 29 джоб как сейчас. `BOTH` всегда включён (кросс-marketplace джобы вроде юнит-экономики применимы всем).
+- **D-16:** Тот же фильтр применяется в `learning.getRecommendedPath` при auto-rebuild флета (D-06) — джобы, которые попадают в новый sectioned-формат, тоже marketplace-aware.
+- **D-17:** **На `/learn` (Phase 57 каталог) фильтр пока НЕ накладывается** — каталог остаётся общим (юзер может «выйти на новый маркетплейс», кнопка «Все курсы» / «По задачам» оба показывают все джобы). Marketplace-aware filtering на каталоге — отдельное решение под будущую фазу, в Phase 58 трогаем только диагностику и трек.
 
 ### Claude's Discretion
 
@@ -120,7 +153,8 @@
 
 - **`Job.skillBlocks`-based matching** (32 блока, точнее канон-5) — требует перепроектирования вопросов диагностики или LLM-классификации свободных ответов в блоки. Большой скоуп, отложено. Возврат — если axes-matching на проде окажется недостаточно точным.
 - **Track B `intent.resolve` интеграция в диагностику** — синтезировать фразу «помоги с финансами и аналитикой» из weakness-профиля и скормить в существующий движок. Альтернативный путь матчинга. Преимущество: переиспользует LLM+embedding-пайплайн. Цена: $0.001/вызов + зависимость от OpenRouter. Возврат — если потребуется ranking более «человеческого» вида с обоснованием.
-- **Marketplace-aware ranking** (учёт `UserProfile.marketplaces[]` из Phase 56 онбординга при ranking джоб — WB-юзер не получает Ozon-only джобы наверх) — небольшое улучшение, добавить в next-итерации Phase 58 или future phase.
+- **Marketplace-aware diagnostic questions** (тегирование `QuestionBank` по marketplace, marketplace-aware selection и scoring) — вынесено в **Phase 59** (создаётся отдельной фазой, depends on Phase 58). См. ROADMAP.md §Phase 59.
+- **Marketplace-aware каталог `/learn`** (Phase 57 каталог фильтруется по `user.marketplaces` — WB-юзер не видит Ozon-only джобы и в общем каталоге) — НЕ в Phase 58 (D-17). Future phase, скорее всего вместе с Phase 59 или после.
 - **Diagnostic как лид-магнит (unauth flow)** — старая идея (`project_diagnostic_unauth_flow_idea.md`). Не блокирует Phase 58, но если будем делать — Phase 58 матчинг можно переиспользовать без auth.
 - **Удаление возможности «+ Урок в трек»** (только джобы) — НЕ делаем. Ручные одиночные уроки сохраняются (D-08), пользователь может продолжать их добавлять.
 - **UI-promo «Перепройди диагностику»** для юзеров после long inactivity — отдельный engagement-кейс.

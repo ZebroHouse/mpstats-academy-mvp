@@ -5,7 +5,7 @@
 
 **Date:** 2026-05-26
 **Phase:** 58-diagnostic-on-jobs
-**Areas discussed:** Matching algorithm, Recommendation count + UI, Legacy migration, Re-diagnostic merge
+**Areas discussed:** Matching algorithm, Recommendation count + UI, Legacy migration, Re-diagnostic merge, Marketplace simplification (wizard + job filter), Phase 58/59 scope split
 
 ---
 
@@ -85,6 +85,42 @@
 
 **User's choice:** Union.
 **Notes:** На экране результатов перепрохождения карточки джоб уже в треке показывают «В треке ✓» маркер (reuse Phase 57 Track B hotfix), bulk-CTA добавляет только новые.
+
+---
+
+---
+
+## Marketplace-awareness Scope Split (Phase 58 vs 59)
+
+**Контекст:** owner поднял требование marketplace-aware диагностики: wizard упрощается до WB/Ozon, диагностические вопросы тегируются по marketplace, рекомендация джоб фильтруется. Анализ показал три части пазла с разной сложностью:
+
+| Часть | Сложность | Зависимости |
+|---|---|---|
+| Wizard simplification (7→2) | Тривиально (~30 мин UI + enum) | Нет |
+| Job recommendation filter | Тривиально (1 строка, `Job.marketplace` уже есть) | Нет |
+| Diagnostic questions marketplace-aware | Дорого (тегирование банка, selection, scoring, новый контент) | Методологи |
+
+| Option | Description | Selected |
+|--------|-------------|----------|
+| Split: Phase 58 (slim) + Phase 59 (questions) | Phase 58 получает wizard + job filter (дешёво); Phase 59 — questions+content (дорого, content-bound) | ✓ |
+| Всё в Phase 58 | Все три части в одном релизе. Дольше, блокируется контент | |
+| Phase 58 без marketplace, Phase 59 всё marketplace | Phase 58 ship'ит с известным багом «WB видит Ozon-джобы» | |
+
+**User's choice:** Split.
+**Notes:** Quick win на Phase 58 (visible marketplace-aware рекомендации без блокировки контентом). Phase 59 идёт параллельно с методологами. Прописана детальная спека Phase 59 в ROADMAP.md с hard-dependency на Phase 58.
+
+---
+
+## Legacy marketplaces[] backfill при схлопывании 7→2
+
+| Option | Description | Selected |
+|--------|-------------|----------|
+| Backfill SQL: чистим non-WB/OZON; пусто → [WB, OZON] | Прозрачно, юзер ничего не видит, status quo по выдаче | ✓ |
+| Показать визард повторно тем, у кого нет WB/OZON | Чистые данные, но фрикция | |
+| Default на [WB,OZON] на лету без бэкфилла | Legacy данные остаются мусорные в БД | |
+
+**User's choice:** Backfill SQL.
+**Notes:** Зафиксировано как D-14 в CONTEXT.md (SQL-script для plan-фазы).
 
 ---
 

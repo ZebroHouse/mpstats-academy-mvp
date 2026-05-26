@@ -91,7 +91,8 @@ Full details: see Phase Details below
 
 - [x] Phase 56: Entry Flow Redesign — онбординг-визард `/welcome` + развилка диагностика/каталог + снятие жёсткого гейта диагностики
 - [x] Phase 57: Library Redesign — `/learn` job catalog (29 джоб, 5 осей, WB/Ozon switch) + «Мои плейбуки» + hidden-lesson auto-sync
-- [ ] Phase 58: Diagnostic on Jobs — диагностика рекомендует целые джобы (плейбуки) вместо россыпи уроков; «Мой трек» становится job-aware end-to-end
+- [ ] Phase 58: Diagnostic on Jobs — диагностика рекомендует целые джобы (плейбуки) вместо россыпи уроков; «Мой трек» становится job-aware end-to-end; wizard упрощается до WB/Ozon; джобы фильтруются по marketplace юзера
+- [ ] Phase 59: Marketplace-aware Diagnostic Questions — банк вопросов тегируется по marketplace (WB/OZON/BOTH); selection учитывает marketplace юзера; контент-ревью существующих вопросов + новые WB-only/Ozon-only где нужно
 
 </details>
 
@@ -1344,4 +1345,80 @@ Plans:
 
 **Зависимости:** ✅ Phase 57 (мост `axes` + `skillBlocks` + `embedding` на `Job`). Опционально потребитель Track B `intent.resolve`.
 
+**Дополнено 2026-05-26 (slim marketplace-awareness в Phase 58):**
+
+- Wizard step 2 «На каких маркетплейсах вы работаете?» схлопывается с 7 опций до 2 (WB + Ozon, multi-select, можно выбрать одну/обе).
+- One-time SQL backfill приводит legacy `UserProfile.marketplaces[]` ~200 юзеров к {WB, OZON}-only; non-WB/OZON значения чистятся, пустой массив → `[WB, OZON]`. Визард повторно не показывается.
+- Рекомендация джоб в диагностике и `learning.getRecommendedPath` фильтруется по `Job.marketplace ∈ user.marketplaces ∪ {BOTH}`. WB-юзер не видит Ozon-only джобы (но всегда видит `BOTH`-джобы вроде юнит-экономики).
+- `/learn` каталог Phase 57 пока НЕ фильтруется — отдельное решение под будущую фазу.
+
+**Marketplace-aware диагностические вопросы (тегирование банка, selection, scoring) НЕ входят в Phase 58 — выделены в Phase 59 как content-heavy работа.**
+
 **Plans:** TBD (после discuss → spec → plan-phase).
+
+### Phase 59: Marketplace-aware Diagnostic Questions — банк вопросов знает про WB/Ozon
+
+**Goal:** Диагностика задаёт вопросы и считает скор **с учётом маркетплейсов юзера**. WB-only селлер не получает вопросов про настройку Ozon-кабинета и наоборот. Юзер на обоих маркетплейсах получает миксованный пул вопросов с балансом по обоим. Сигнал маркетплейса встроен в banner of questions, в логику селекции и в scoring → диагноз точнее → джобы по диагнозу + Phase 58 marketplace-filter дают ещё более релевантную рекомендацию.
+
+**Source:** Follow-up к Phase 58, обсуждено 2026-05-26 (см. `.planning/phases/58-diagnostic-on-jobs/58-CONTEXT.md` §Deferred Ideas + `58-DISCUSSION-LOG.md`).
+
+**Status:** ⏳ Pending discuss → spec → plan. **Зависит от Phase 58** (использует тот же axes-matching engine, ту же связку `UserProfile.marketplaces[] {WB|OZON}` после backfill Phase 58).
+
+**Мотивация:**
+
+- Phase 58 даёт **marketplace-aware рекомендацию джоб**, но **сам диагноз остаётся marketplace-blind**: пул вопросов общий, WB-юзер может получить Ozon-кейс → ответит неверно по причине «не знаю площадку», а не «слаб в навыке» → ложное weakness в axe → джоба выдаётся не та.
+- 5-axis сигнал из Phase 58 теряет точность, если входные ответы зашумлены кросс-marketplace вопросами.
+- Платформа продаёт «диагностику для селлера на маркетплейсе X» — обещание должно держаться на уровне самих вопросов, не только рекомендаций.
+
+**Scope (предварительно, финализируется в discuss-phase 59):**
+
+- **DB / Schema:** добавить `marketplace` поле в DiagnosticQuestion (структура внутри `QuestionBank.questions Json` или отдельная нормализованная таблица — решить в spec). Значения `WB | OZON | BOTH`. Default-миграция всех существующих вопросов → `BOTH` (безопасный fallback).
+- **Контент-ревью существующих вопросов:** методологи проходят по банку (~150 вопросов × 5 категорий), переразмечают `marketplace` с `BOTH` на `WB` / `OZON` где явная привязка к интерфейсу/правилам конкретного маркетплейса.
+- **Новые WB-only / Ozon-only вопросы** где банк не покрывает: методологи пишут N новых вопросов на каждый marketplace в дефицитных категориях. Целевое покрытие — определить в discuss-phase (например, ≥10 WB-only + ≥10 Ozon-only в каждом из 5 axes).
+- **Question selection logic** (`diagnostic.ts` / `getOrCreateQuestionBank` / `pickQuestionsForCategory`): фильтр пула по `user.marketplaces`:
+  - WB-only юзер: `marketplace ∈ {WB, BOTH}`
+  - Ozon-only: `marketplace ∈ {OZON, BOTH}`
+  - Оба: `marketplace ∈ {WB, OZON, BOTH}` с балансировкой (например 40% WB / 40% OZON / 20% BOTH или по доле в банке).
+- **Scoring:** в существующей логике per-axis `correctRate` ничего не меняется — selection заранее фильтрует пул, scoring остаётся прежним. Опционально: per-marketplace breakdown в результате (показать «WB: 75%, Ozon: 50%»). Решить в spec — нужно ли для UI или только для аналитики.
+- **Кеш QuestionBank:** `@@unique([skillCategory])` сейчас не учитывает marketplace. Решить — расширить unique до `(skillCategory, marketplace)` (отдельные банки per-marketplace) или per-user кеш как сейчас, но с marketplace-filter на выдаче. Влияет на TTL и стоимость генерации.
+- **UI экрана диагностики:** опционально показать badge «Вопрос про WB» / «Вопрос про Ozon» на miксованных юзерах — helps признать ложно-нерелевантные вопросы как маркетплейсные, а не как «случайно непонятные». Решить в UI-spec.
+- **Аналитика:** trackEvent на `pa_diagnostic_completed` дополнить `pa_diagnostic_marketplaces` (массив) и `pa_diagnostic_pool_size` (сколько вопросов было в пуле после фильтра) — для замера эффекта.
+
+**Out of scope:**
+
+- Маркетплейс-aware каталог `/learn` (фильтрация Phase 57 каталога по `user.marketplaces`) — отдельная фаза, не Phase 59.
+- Расширение marketplace-таксономии за пределы WB/Ozon (Яндекс/AliExpress/Megamarket добавление) — explicitly не делаем, Phase 58 D-12 это закрыл.
+- Перепроектирование 5-axis-таксономии или 32 skillBlocks — остаются как есть.
+- Изменения в `Job.marketplace` (схема Phase 57 финальна) или в Job-matching алгоритме (Phase 58 D-01/D-02 финальны).
+
+**Открытые вопросы (резолвить в discuss-phase 59):**
+
+1. **Хранение marketplace-тега на вопросе:** inline в `QuestionBank.questions Json` (быстро, но не indexed) vs отдельная таблица `DiagnosticQuestion` (правильнее, миграция дороже).
+2. **Target coverage** по новым WB-only/Ozon-only вопросам: какое min покрытие на ось × marketplace методология должна обеспечить до релиза.
+3. **Balance стратегия для микс-юзеров** (WB+OZON): равные доли / по доле банка / по приоритету юзера (есть ли «основной» маркетплейс на онбординге?).
+4. **QuestionBank кеширование:** per-marketplace банки vs один общий с фильтром на выдаче.
+5. **Per-marketplace scoring breakdown в UI:** нужен ли визуально или только для аналитики.
+6. **Контент-процесс:** кто и когда тегирует существующие 150+ вопросов, как валидируется (rubric, sample-check).
+7. **Что делать с уже сгенерированными `QuestionBank` row'ами** на момент релиза Phase 59 — инвалидировать (force regenerate) или дополнить marketplace-тегами на лету.
+
+**Success Criteria** (черновые — финализируются после spec):
+
+  1. Каждый вопрос в банке имеет `marketplace ∈ {WB, OZON, BOTH}`.
+  2. WB-only юзер не получает в диагностике вопросов с `marketplace=OZON` (verified — query log пуст после релиза для контрольной когорты).
+  3. Юзеры на обоих маркетплейсах получают сбалансированный пул (распределение в пределах N%-target).
+  4. Контент-команда подтверждает: WB-only и Ozon-only вопросы покрывают целевые категории (по rubric).
+  5. После релиза: средний `pa_diagnostic_pool_size` для WB-only юзеров не падает ниже минимально-нужного количества вопросов на axis (заданного в spec).
+  6. Метрика косвенного эффекта (опционально, замер через 2-4 недели): CTR на рекомендованные джобы от диагностики увеличивается vs baseline Phase 58, или хотя бы не падает.
+
+**Зависимости:**
+
+- **Phase 58 ОБЯЗАТЕЛЬНА (hard dependency)**:
+  - Использует Phase 58 wizard simplification (`UserProfile.marketplaces[] ⊆ {WB, OZON}` после backfill) — Phase 59 предполагает, что значения уже нормализованы.
+  - Использует Phase 58 axes-matching engine для перевода диагноза в джобы — Phase 59 улучшает только вход (вопросы), не выход (matching остаётся как D-01/D-02 Phase 58).
+  - Phase 58 marketplace-фильтр джоб (D-15/D-16) комплементарен: вместе они дают полную marketplace-aware цепочку «вопросы → диагноз → джобы».
+- **Контент-команда (методологи):** реальная зависимость на людей за пределами кода. Без content-ревью + новых вопросов Phase 59 не работает. Discuss-phase должна включать оценку этого скоупа с CPO/контент-командой.
+- Phase 56 онбординг: `UserProfile.marketplaces[]` — источник правды для marketplace юзера. Уже есть.
+
+**Plans:** TBD (после discuss → spec → plan-phase).
+
+**Когда стартовать:** после ship Phase 58 + sync с контент-командой о готовности к ревью банка вопросов. Можно начать discuss/spec параллельно с execution Phase 58.
