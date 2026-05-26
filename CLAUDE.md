@@ -123,6 +123,8 @@ Track B per `docs/superpowers/specs/2026-05-20-agentic-search-design.md`. Replac
 
 **Memory entries written**: `project_track_b_agentic_search.md`.
 
+**Roadmap refresh** (`af20702`) — `/roadmap` is customer-facing, so dropped tech items (CloudPayments / Sentry) and surfaced shipped product features: plays catalog, AI search by intent, vision RAG, onboarding wizard, referral (moved from In Progress). In Progress now: Diagnostic by playbooks (Phase 58) + catalog expansion. 4 new changelog entries 25.05 / 22.05 / 19.05 / 18.05 in user voice.
+
 ## Previous Session (2026-05-22) — Phase 57 Library Redesign shipped to prod
 
 **PR #8 (`bb84013`) + PR #9 (`3059ad8`) merged to master and deployed to prod (https://platform.mpstats.academy).**
