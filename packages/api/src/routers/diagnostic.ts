@@ -5,6 +5,7 @@ import { getBalancedQuestions, getMockQuestionsForCategory } from '../mocks/ques
 import { ensureUserProfile } from '../utils/ensure-user-profile';
 import { handleDatabaseError } from '../utils/db-errors';
 import { getQuestionsFromBank } from '../utils/question-bank';
+import { getRecommendedJobsFromGaps } from '../utils/job-matcher';
 import type { PrismaClient } from '@mpstats/db';
 import {
   parseLearningPath,
@@ -832,6 +833,27 @@ export const diagnosticRouter = router({
         );
 
         const gaps = await calculateSkillGaps(ctx.prisma, skillProfile);
+
+        const [profile, learningPath] = await Promise.all([
+          ctx.prisma.userProfile.findUnique({
+            where: { id: ctx.user.id },
+            select: { marketplaces: true },
+          }),
+          ctx.prisma.learningPath.findUnique({
+            where: { userId: ctx.user.id },
+            select: { addedJobs: true },
+          }),
+        ]);
+        const addedJobIds: string[] = Array.isArray(learningPath?.addedJobs)
+          ? (learningPath!.addedJobs as string[])
+          : [];
+        const recommendedJobs = await getRecommendedJobsFromGaps(ctx.prisma, {
+          skillProfile,
+          userMarketplaces: profile?.marketplaces ?? [],
+          addedJobIds,
+          limit: 3,
+        });
+
         return {
           sessionId: input.sessionId,
           completedAt: session.completedAt || new Date(),
@@ -841,6 +863,7 @@ export const diagnosticRouter = router({
           skillProfile,
           gaps,
           recommendedPath: getRecommendedLessonsFromGaps(gaps, 5),
+          recommendedJobs,
         };
       } catch (error) {
         handleDatabaseError(error);

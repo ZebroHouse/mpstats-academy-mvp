@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { SkillRadarChart } from '@/components/charts/RadarChart';
 import { LessonCard } from '@/components/learning/LessonCard';
+import { RecommendedJobsBlock } from '@/components/diagnostic/RecommendedJobsBlock';
 import { trpc } from '@/lib/trpc/client';
 import { reachGoal } from '@/lib/analytics/metrika';
 import { METRIKA_GOALS } from '@/lib/analytics/constants';
@@ -274,6 +275,9 @@ export default function DiagnosticResultsPage() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Phase 58: top-3 recommended jobs (playbooks) */}
+      <RecommendedJobsBlock jobs={results.recommendedJobs ?? []} />
 
       {/* Track preview with gating */}
       {recommendedPath && recommendedPath.lessons.length > 0 && (() => {
