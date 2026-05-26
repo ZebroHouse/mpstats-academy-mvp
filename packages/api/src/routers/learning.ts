@@ -10,6 +10,7 @@ import { lessonsToRemoveOnJobRemove } from './learning-jobs-utils';
 import { parseLearningPath } from '@mpstats/shared';
 import type { CourseWithProgress, LessonWithProgress, LearningPathSection, SectionedLearningPath } from '@mpstats/shared';
 import { generateSectionedPath } from './diagnostic';
+import { rebuildLegacyLearningPath } from '../utils/legacy-path-rebuild';
 
 function pluralLessons(n: number): string {
   if (n % 10 === 1 && n % 100 !== 11) return `${n} урок`;
@@ -342,9 +343,29 @@ export const learningRouter = router({
         lessons: j.lessons.map((jl) => buildLessonData(jl.lesson)),
       }));
 
+      // ── Legacy flat format → attempt transparent migration to sectioned (D-06) ──
+      // Done BEFORE the sectioned branch so the rebuilt row falls through to it
+      // and returns the sectioned response shape to the client. rebuildLegacyLearningPath
+      // is a no-op for already-sectioned and missing-diagnostic paths.
+      let activeParsed = parsed;
+      let activeGeneratedAt = path.generatedAt;
+      if (Array.isArray(activeParsed)) {
+        const rebuild = await rebuildLegacyLearningPath(ctx.prisma, ctx.user.id);
+        if (rebuild.rebuilt) {
+          const refreshed = await ctx.prisma.learningPath.findUnique({
+            where: { userId: ctx.user.id },
+            select: { lessons: true, generatedAt: true },
+          });
+          if (refreshed?.lessons) {
+            activeParsed = parseLearningPath(refreshed.lessons);
+            activeGeneratedAt = refreshed.generatedAt;
+          }
+        }
+      }
+
       // ── New sectioned format (version: 2) ──
-      if (!Array.isArray(parsed) && parsed.version === 2) {
-        const allLessonIds = parsed.sections.flatMap(s => s.lessonIds);
+      if (!Array.isArray(activeParsed) && activeParsed.version === 2) {
+        const allLessonIds = activeParsed.sections.flatMap(s => s.lessonIds);
 
         if (allLessonIds.length === 0) return null;
 
@@ -363,7 +384,7 @@ export const learningRouter = router({
 
         // Filter out lessonIds that no longer resolve (hidden / deleted) and
         // drop sections that become empty as a result.
-        const sectionsWithData = parsed.sections
+        const sectionsWithData = activeParsed.sections
           .map(section => ({
             ...section,
             lessons: section.lessonIds
@@ -377,7 +398,7 @@ export const learningRouter = router({
         const completedCount = allLessonsFlat.filter(l => l.status === 'COMPLETED').length;
 
         return {
-          generatedAt: path.generatedAt,
+          generatedAt: activeGeneratedAt,
           sections: sectionsWithData,
           lessons: allLessonsFlat, // flat list for backward compat
           totalLessons: allLessonsFlat.length,
@@ -388,8 +409,8 @@ export const learningRouter = router({
         };
       }
 
-      // ── Old flat format (string[]) ──
-      const recommendedIds = parsed as string[];
+      // ── Old flat format (string[]) — fallback when no diagnostic exists (D-09) ──
+      const recommendedIds = activeParsed as string[];
       if (recommendedIds.length === 0) return null;
 
       const lessons = await ctx.prisma.lesson.findMany({
