@@ -6,12 +6,8 @@ import {
   Truck,
   Wallet,
   Rocket,
-  Store,
   ShoppingBag,
   Package,
-  Globe,
-  Boxes,
-  MoreHorizontal,
   type LucideIcon,
 } from 'lucide-react';
 
@@ -38,7 +34,7 @@ export const GOAL_OPTIONS: GoalOption[] = [
 ];
 
 export interface MarketplaceOption {
-  key: 'WB' | 'OZON' | 'YANDEX' | 'ALIEXPRESS' | 'MEGAMARKET' | 'OWN_SHOP' | 'OTHER';
+  key: 'WB' | 'OZON';
   label: string;
   icon: LucideIcon;
 }
@@ -46,11 +42,6 @@ export interface MarketplaceOption {
 export const MARKETPLACE_OPTIONS: MarketplaceOption[] = [
   { key: 'WB', label: 'Wildberries', icon: ShoppingBag },
   { key: 'OZON', label: 'Ozon', icon: Package },
-  { key: 'YANDEX', label: 'Яндекс Маркет', icon: Store },
-  { key: 'ALIEXPRESS', label: 'AliExpress', icon: Globe },
-  { key: 'MEGAMARKET', label: 'Мегамаркет', icon: Boxes },
-  { key: 'OWN_SHOP', label: 'Свой интернет-магазин', icon: Store },
-  { key: 'OTHER', label: 'Другое', icon: MoreHorizontal },
 ];
 
 export interface ExperienceOption {

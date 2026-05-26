@@ -10,7 +10,7 @@ interface StepMarketplacesProps {
 }
 
 /**
- * Wizard step 2 — 7 multi-select marketplace cards.
+ * Wizard step 2 — multi-select marketplace cards.
  */
 export function StepMarketplaces({ marketplaces, onChange }: StepMarketplacesProps) {
   const toggle = (key: string) => {
@@ -30,7 +30,7 @@ export function StepMarketplaces({ marketplaces, onChange }: StepMarketplacesPro
         <p className="text-body text-mp-gray-500">Можно выбрать несколько.</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
+      <div className="grid grid-cols-2 gap-3">
         {MARKETPLACE_OPTIONS.map((mp) => {
           const selected = marketplaces.includes(mp.key);
           const Icon = mp.icon;
