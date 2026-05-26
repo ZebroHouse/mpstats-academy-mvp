@@ -90,6 +90,8 @@ Full details: see Phase Details below
 **Milestone Goal:** Доработка платформы до боевого коммерческого запуска — направления из плана CPO (Влад Токарев, «План доработки платформы», май 2026): унификация диагностики, реферальная программа, развилка входа, админка с загрузкой видео, поиск-утилита, комьюнити-блок.
 
 - [x] Phase 56: Entry Flow Redesign — онбординг-визард `/welcome` + развилка диагностика/каталог + снятие жёсткого гейта диагностики
+- [x] Phase 57: Library Redesign — `/learn` job catalog (29 джоб, 5 осей, WB/Ozon switch) + «Мои плейбуки» + hidden-lesson auto-sync
+- [ ] Phase 58: Diagnostic on Jobs — диагностика рекомендует целые джобы (плейбуки) вместо россыпи уроков; «Мой трек» становится job-aware end-to-end
 
 </details>
 
@@ -1257,3 +1259,89 @@ Plans:
 **Wave 4** *(blocked on Wave 3 completion)*
 
 - [x] 56-04-PLAN.md — Де-гейтинг урока + DiagnosticGateBanner в хинт + редактирование квалификации в /profile
+
+### Phase 57: Library Redesign — `/learn` job catalog
+
+**Goal:** Каталог `/learn` пересобран вокруг **джоб** (jobs-to-be-done) — задач селлера. Тот же контент, новая компоновка: «бери набор и решай задачу» вместо «свалка курсов».
+
+**Source:** Design-спек `docs/superpowers/specs/2026-05-18-library-redesign-design.md`. План CPO, направление «Унификация диагностики», foundation для Phase 58.
+
+**Status:** ✅ Shipped 2026-05-22 (PR #8 `bb84013` + PR #9 `3059ad8`).
+
+**Scope (shipped):**
+
+- Новая сущность `Job` (Prisma) + join `JobLesson` — упорядоченная M2M Job ↔ Lesson, course-agnostic. Поля: `slug`, `title`, `description`, `outcomes`, `axes` (canonical-5 — мост к диагностике), `skillBlocks` (32-блочные — точный мост), `marketplace` (WB/OZON/BOTH).
+- Workstream A — Job Mapping: контент-анализ транскриптов → черновая таксономия → `JOB-PROPOSAL.json` → валидация контент-командой (byte-identical = `JOB-PROPOSAL.validated.json`).
+- Workstream B — Library UI: 29 джоб across 5 осей, лента «По задачам / Все курсы», WB/Ozon switch, `/learn/job/[slug]` (детальная страница джобы с «+ В трек»), `/learn/track` (Мой трек, секция «Мои плейбуки» + dedup), всегда-видимый банер трека на `/learn`.
+- `LearningPath.addedJobs Json` (additive-миграция `20260521000000_learning_path_added_jobs`) + tRPC `learning.addJobToTrack` / `removeJobFromTrack` + `JobDetail.isInTrack`.
+- Hidden-lesson auto-sync (PR #9): DB-level filter `where: { lesson: { isHidden: false, course: { isHidden: false } } }` на всех JobLesson includes. Admin ставит `Lesson.isHidden=true` → урок авто-уходит из джоб; `lessonCount`/`totalDurationMin`/`completedLessons` пересчитываются. `JobLesson` rows сохраняются.
+
+**Out of scope (отдано в Phase 58):**
+
+- Перевод диагностики на джобы — `diagnostic.ts` остаётся на россыпи уроков.
+- Удаление курса `06_express` (решение контент-команды).
+- Страница урока, видео-плеер, прогресс, paywall/`LockOverlay` — не трогаются.
+
+**Bridge data для Phase 58 (готово):**
+
+- `Job.axes` (canonical-5) — грубый матч по результатам диагностики работает сразу.
+- `Job.skillBlocks` (32 блока) — точный матч.
+- `Job.embedding vector(1536)` — добавлено в Track B, доступно как потребитель `intent.resolve`.
+
+**Success Criteria** (все достигнуты):
+
+  1. ✅ `/learn` показывает 29 джоб в ленте «По задачам», тоггл переключает на «Все курсы»
+  2. ✅ `/learn/job/[slug]` отображает упорядоченный список уроков + кнопка «+ В трек» (toggle isInTrack)
+  3. ✅ «Мой трек» job-aware: секция «Мои плейбуки» (карточки джоб) + flat-list уроков, dedup уроки которые попали через джобу
+  4. ✅ `Lesson.isHidden=true` → урок исчезает из джоб без ручного удаления `JobLesson`
+  5. ✅ Канон-5 + 32 блока на `Job` готовы как мост к диагностике
+
+**Plans:** все executed (Phase 57 PR #8 + PR #9). Полная история — `.claude/memory/project_phase57_library_redesign.md`.
+
+### Phase 58: Diagnostic on Jobs — диагностика рекомендует плейбуки
+
+**Goal:** Диагностика рекомендует **целые джобы (плейбуки)** на основе профиля результатов вместо россыпи отдельных уроков. «Мой трек» строится из джоб end-to-end; перепрохождение диагностики корректно мержится с уже добавленными вручную плейбуками.
+
+**Source:** Design-спек Phase 57 `docs/superpowers/specs/2026-05-18-library-redesign-design.md` §11 (Out of scope → Phase 58), Track B design `docs/superpowers/specs/2026-05-20-agentic-search-design.md` (Phase 58 — потребитель движка `intent.resolve`). Follow-up к Phase 57.
+
+**Status:** ⏳ Pending discuss → spec.
+
+**Мотивация:**
+
+- После Phase 57 платформа продаёт «возьми плейбук и реши задачу», но первая точка персонализации (диагностика) до сих пор отдаёт россыпь уроков — раскол ментальной модели юзера.
+- Bridge data на `Job` (`axes` + `skillBlocks` + `embedding`) уже готов в Phase 57 — не используется без Phase 58.
+- Phase 57 polish добавил `LearningPath.addedJobs[]` — фундамент для job-aware треков заложен, но `getRecommendedPath` всё ещё работает на `lessonIds[]`-формате.
+
+**Scope (черновой — финализируется в discuss-phase):**
+
+- `packages/api/src/routers/diagnostic.ts` — `submitResults` / `getRecommendations` возвращают `recommendedJobs[]` (не голые `recommendedLessons[]`).
+- Алгоритм матчинга диагностика → джобы (TBD: `axes` / `skillBlocks` / гибрид / `intent.resolve` от Track B).
+- `learning.getRecommendedPath` — путь строится из `Job → JobLesson[]`, `addedJobs[]` мержится с рекомендованными.
+- UI результатов диагностики — карточки джоб (как `/learn/job/[slug]`) + CTA «Добавить все в трек».
+- Миграция легаси flat `LearningPath` (~170 юзеров на 98-lessonIds формате) — force-rebuild или lazy.
+- Перепрохождение диагностики — merge-стратегия с уже добавленными вручную плейбуками.
+
+**Out of scope:**
+
+- Перепроектирование вопросов диагностики (остаются как есть).
+- Удаление возможности «+ Урок в трек» вручную (плейбуки + одиночные уроки сосуществуют).
+
+**Открытые вопросы (резолвить в discuss-phase):**
+
+1. **Алгоритм матчинга:** `Job.axes` (5 категорий, диагностика измеряет напрямую) vs `Job.skillBlocks` (32 блока, диагностика не измеряет) vs гибрид с весами vs `intent.resolve` (Track B движок, построен под свободный текст).
+2. **Сколько джоб рекомендовать:** топ-1 / топ-3 / по порогу score.
+3. **Что с легаси flat `LearningPath`** (~170 юзеров): force-rebuild при первом заходе, lazy-migration по триггеру, или поддержка обоих форматов.
+4. **Перепрохождение диагностики:** пересобирать `addedJobs[]` с нуля, мержить с уже добавленными, или предложить юзеру выбор.
+5. **Уровень детализации в UI:** показывать ли рекомендованные джобы как читаемый план («сначала плейбук A, потом B») или как массу без явного порядка.
+
+**Success Criteria** (черновые — финализируются после spec):
+
+  1. Прохождение диагностики → результат показывает N рекомендованных джоб (карточки), а не россыпь уроков
+  2. CTA «Добавить все в трек» одним кликом записывает все рекомендованные джобы в `LearningPath.addedJobs[]`
+  3. `getRecommendedPath` отдаёт путь, где `JobLesson`-уроки приходят из джоб + ручные одиночные уроки сохраняются
+  4. Перепрохождение диагностики не теряет вручную добавленные плейбуки
+  5. Легаси-юзеры (flat 98-lessonIds) переведены на job-aware формат без потери прогресса
+
+**Зависимости:** ✅ Phase 57 (мост `axes` + `skillBlocks` + `embedding` на `Job`). Опционально потребитель Track B `intent.resolve`.
+
+**Plans:** TBD (после discuss → spec → plan-phase).
