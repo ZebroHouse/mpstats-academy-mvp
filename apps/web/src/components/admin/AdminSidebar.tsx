@@ -14,6 +14,7 @@ import {
   BarChart3,
   Ticket,
   Gift,
+  Tag,
   Settings,
   ArrowLeft,
   Menu,
@@ -71,6 +72,12 @@ const navItems = [
     superadminOnly: false,
   },
   {
+    title: 'Коды амбассадоров',
+    href: '/admin/referrals/codes',
+    icon: Tag,
+    superadminOnly: false,
+  },
+  {
     title: 'Settings',
     href: '/admin/settings',
     icon: Settings,
@@ -91,9 +98,13 @@ function NavLinks({ userRole, pathname, onNavigate }: { userRole: string; pathna
       {navItems
         .filter((item) => !item.superadminOnly || userRole === 'SUPERADMIN')
         .map((item) => {
+          // Exact match for /admin/referrals (so /admin/referrals/codes doesn't
+          // also highlight the parent Referrals entry).
           const isActive =
-            pathname === item.href ||
-            (item.href !== '/admin' && pathname.startsWith(item.href + '/'));
+            item.href === '/admin/referrals'
+              ? pathname === '/admin/referrals'
+              : pathname === item.href ||
+                (item.href !== '/admin' && pathname.startsWith(item.href + '/'));
 
           const badgeCount =
             item.href === '/admin/comments'
