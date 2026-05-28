@@ -194,7 +194,9 @@ export default function AnalyticsPage() {
                     <thead>
                       <tr className="border-b border-mp-gray-200">
                         <th className="text-left py-2 pr-4 text-mp-gray-500 font-medium">Пользователь</th>
-                        <th className="text-right py-2 px-4 text-mp-gray-500 font-medium">Уроков просмотрено</th>
+                        <th className="text-left py-2 px-4 text-mp-gray-500 font-medium">Email</th>
+                        <th className="text-right py-2 px-4 text-mp-gray-500 font-medium">Открыто уроков</th>
+                        <th className="text-right py-2 px-4 text-mp-gray-500 font-medium">Завершено</th>
                         <th className="text-right py-2 pl-4 text-mp-gray-500 font-medium">Средний %</th>
                       </tr>
                     </thead>
@@ -202,7 +204,9 @@ export default function AnalyticsPage() {
                       {watchStats.data.topActiveUsers.map((u) => (
                         <tr key={u.userId} className="border-b border-mp-gray-100 last:border-0">
                           <td className="py-2 pr-4 text-mp-gray-900">{u.name}</td>
+                          <td className="py-2 px-4 text-mp-gray-600">{u.email || '—'}</td>
                           <td className="py-2 px-4 text-right text-mp-gray-700">{u.lessonsWatched}</td>
+                          <td className="py-2 px-4 text-right text-mp-gray-700">{u.lessonsCompleted}</td>
                           <td className="py-2 pl-4 text-right text-mp-gray-700">{u.avgPercent}%</td>
                         </tr>
                       ))}
