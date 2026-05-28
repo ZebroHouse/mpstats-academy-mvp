@@ -9,6 +9,173 @@ import {
   PackageActivationError,
 } from '../services/referral/activation';
 import { isValidRefCodeShape } from '../services/referral/attribution';
+import { generateAmbassadorCode } from '../services/referral/code-generator';
+
+const AMB_CODE_SHAPE = /^[A-Z][A-Z0-9_]{0,15}-[A-Z0-9]{2,12}$/;
+
+/**
+ * Phase 60 — admin CRUD for AMBASSADOR referral codes.
+ * Nested under `referral.admin.*` to keep top-level router intact.
+ */
+const adminCodesRouter = router({
+  listAmbassadorCodes: adminProcedure
+    .input(
+      z.object({
+        take: z.number().int().min(1).max(100).default(50),
+        cursor: z.string().optional(),
+        search: z.string().trim().max(100).optional(),
+      }),
+    )
+    .query(async ({ input }) => {
+      const where: Prisma.ReferralCodeWhereInput = { codeType: 'AMBASSADOR' };
+      if (input.search) {
+        const q = input.search;
+        where.OR = [
+          { code: { contains: q, mode: 'insensitive' } },
+          { label: { contains: q, mode: 'insensitive' } },
+        ];
+      }
+      const rows = await prisma.referralCode.findMany({
+        where,
+        orderBy: { createdAt: 'desc' },
+        take: input.take + 1,
+        ...(input.cursor ? { cursor: { id: input.cursor }, skip: 1 } : {}),
+      });
+      const hasMore = rows.length > input.take;
+      const pageRows = hasMore ? rows.slice(0, -1) : rows;
+
+      // Compute per-code stats in parallel. N+1 is acceptable for v1 (<=100 per page).
+      const items = await Promise.all(
+        pageRows.map(async (code) => {
+          const [activations, paidConvRows] = await Promise.all([
+            prisma.referral.count({
+              where: {
+                codeId: code.id,
+                status: { in: ['CONVERTED', 'PENDING_REVIEW'] },
+              },
+            }),
+            prisma.$queryRaw<Array<{ count: bigint }>>`
+              SELECT COUNT(DISTINCT s."userId")::bigint AS count
+              FROM "Subscription" s
+              INNER JOIN "Referral" r ON r."referredUserId" = s."userId"
+              WHERE r."codeId" = ${code.id}
+                AND s."cpSubscriptionId" IS NOT NULL
+                AND s."status" = 'ACTIVE'
+            `,
+          ]);
+          const paid_conversions = Number(paidConvRows[0]?.count ?? 0);
+          return { ...code, activations, paid_conversions };
+        }),
+      );
+
+      return {
+        items,
+        nextCursor: hasMore ? pageRows[pageRows.length - 1]?.id ?? null : null,
+      };
+    }),
+
+  createAmbassadorCode: adminProcedure
+    .input(
+      z
+        .object({
+          label: z.string().trim().min(1).max(80),
+          refereeTrialDays: z.number().int().min(1).max(365),
+          maxUses: z.number().int().min(1).nullable().optional(),
+          expiresAt: z
+            .date()
+            .nullable()
+            .optional()
+            .refine(
+              (d) => d === null || d === undefined || d > new Date(),
+              'expiresAt must be in the future',
+            ),
+          code: z.string().regex(AMB_CODE_SHAPE).optional(),
+        })
+        .strict(),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const candidateCode = (input.code ?? generateAmbassadorCode()).toUpperCase();
+
+      // Cross-table uniqueness: ReferralCode.code + UserProfile.referralCode.
+      const [existsInCodes, existsInUsers] = await Promise.all([
+        prisma.referralCode.findUnique({
+          where: { code: candidateCode },
+          select: { id: true },
+        }),
+        prisma.userProfile.findFirst({
+          where: { referralCode: candidateCode },
+          select: { id: true },
+        }),
+      ]);
+      if (existsInCodes || existsInUsers) {
+        throw new TRPCError({ code: 'CONFLICT', message: 'Code already exists' });
+      }
+
+      return prisma.referralCode.create({
+        data: {
+          code: candidateCode,
+          codeType: 'AMBASSADOR',
+          label: input.label,
+          refereeTrialDays: input.refereeTrialDays,
+          maxUses: input.maxUses ?? null,
+          expiresAt: input.expiresAt ?? null,
+          isActive: true,
+          createdByUserId: ctx.user.id,
+        },
+      });
+    }),
+
+  updateAmbassadorCode: adminProcedure
+    .input(
+      z
+        .object({
+          id: z.string().cuid(),
+          label: z.string().trim().min(1).max(80).optional(),
+          maxUses: z.number().int().min(1).nullable().optional(),
+          expiresAt: z.date().nullable().optional(),
+          isActive: z.boolean().optional(),
+        })
+        .strict(),
+    )
+    .mutation(async ({ input }) => {
+      const data: Prisma.ReferralCodeUpdateInput = {};
+      if (input.label !== undefined) data.label = input.label;
+      if (input.maxUses !== undefined) data.maxUses = input.maxUses;
+      if (input.expiresAt !== undefined) data.expiresAt = input.expiresAt;
+      if (input.isActive !== undefined) data.isActive = input.isActive;
+
+      try {
+        return await prisma.referralCode.update({ where: { id: input.id }, data });
+      } catch (err) {
+        if (
+          err instanceof Prisma.PrismaClientKnownRequestError &&
+          err.code === 'P2025'
+        ) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Code not found' });
+        }
+        throw err;
+      }
+    }),
+
+  toggleAmbassadorCode: adminProcedure
+    .input(z.object({ id: z.string().cuid(), isActive: z.boolean() }))
+    .mutation(async ({ input }) => {
+      try {
+        return await prisma.referralCode.update({
+          where: { id: input.id },
+          data: { isActive: input.isActive },
+        });
+      } catch (err) {
+        if (
+          err instanceof Prisma.PrismaClientKnownRequestError &&
+          err.code === 'P2025'
+        ) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Code not found' });
+        }
+        throw err;
+      }
+    }),
+});
 
 export const referralRouter = router({
   getMyState: protectedProcedure.query(async ({ ctx }) => {
@@ -144,4 +311,6 @@ export const referralRouter = router({
         throw err;
       }
     }),
+
+  admin: adminCodesRouter,
 });

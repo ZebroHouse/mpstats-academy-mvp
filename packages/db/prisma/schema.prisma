@@ -24,38 +24,39 @@ enum Role {
 }
 
 model UserProfile {
-  id        String   @id // Matches Supabase auth.users.id
-  name      String?
-  avatarUrl String?
-  role      Role     @default(USER)
-  isActive  Boolean  @default(true)
-  yandexId  String?  @unique // For Phase 17 Yandex ID OAuth binding
-  phone     String?
-  toursCompleted String[] @default([]) // Onboarding tour state (per-user, not per-device): ['dashboard', 'learn', 'lesson']
-  onboardingCompletedAt DateTime?               // Phase 56: null = show wizard; now() when fork passed
-  marketplaces          String[]  @default([])  // Phase 56: WB|OZON|YANDEX|ALIEXPRESS|MEGAMARKET|OWN_SHOP|OTHER
-  experienceLevel       String?                 // Phase 56: PROSPECTING|BEGINNER|STABLE|ADVANCED
-  goals                 String[]  @default([])  // Phase 56: SALES|ADS|CONTENT|ANALYTICS|OPERATIONS|FINANCE|NEW_MARKETPLACE
-  goalText              String?                 // Phase 56: free text from step 1
-  referralCode   String?  @unique // Phase 53A: user's own shareable referral code
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
-  lastActiveAt DateTime?
+  id                      String    @id // Matches Supabase auth.users.id
+  name                    String?
+  avatarUrl               String?
+  role                    Role      @default(USER)
+  isActive                Boolean   @default(true)
+  yandexId                String?   @unique // For Phase 17 Yandex ID OAuth binding
+  phone                   String?
+  toursCompleted          String[]  @default([]) // Onboarding tour state (per-user, not per-device): ['dashboard', 'learn', 'lesson']
+  onboardingCompletedAt   DateTime? // Phase 56: null = show wizard; now() when fork passed
+  marketplaces            String[]  @default([]) // Phase 56: WB|OZON|YANDEX|ALIEXPRESS|MEGAMARKET|OWN_SHOP|OTHER
+  experienceLevel         String? // Phase 56: PROSPECTING|BEGINNER|STABLE|ADVANCED
+  goals                   String[]  @default([]) // Phase 56: SALES|ADS|CONTENT|ANALYTICS|OPERATIONS|FINANCE|NEW_MARKETPLACE
+  goalText                String? // Phase 56: free text from step 1
+  referralCode            String?   @unique // Phase 53A: user's own shareable referral code
+  createdAt               DateTime  @default(now())
+  updatedAt               DateTime  @updatedAt
+  lastActiveAt            DateTime?
   lastNotificationsSeenAt DateTime? // Phase 51: badge counter clears at this timestamp (D-07)
 
-  diagnosticSessions DiagnosticSession[]
-  skillProfile       SkillProfile?
-  learningPath       LearningPath?
-  chatMessages       ChatMessage[]
-  lessonComments     LessonComment[]
-  subscriptions      Subscription[]
-  promoActivations   PromoActivation[]
-  notifications      Notification[]
-  notificationPrefs  NotificationPreference[]
-  referralsMade      Referral[]             @relation("ReferralsAsReferrer")
-  referralAsFriend   Referral?              @relation("ReferralsAsReferred")
-  referralPackages   ReferralBonusPackage[] @relation("ReferralPackagesOwned")
-  referralsReviewed  Referral[]             @relation("ReferralsReviewedByAdmin")
+  diagnosticSessions     DiagnosticSession[]
+  skillProfile           SkillProfile?
+  learningPath           LearningPath?
+  chatMessages           ChatMessage[]
+  lessonComments         LessonComment[]
+  subscriptions          Subscription[]
+  promoActivations       PromoActivation[]
+  notifications          Notification[]
+  notificationPrefs      NotificationPreference[]
+  referralsMade          Referral[]               @relation("ReferralsAsReferrer")
+  referralAsFriend       Referral?                @relation("ReferralsAsReferred")
+  referralPackages       ReferralBonusPackage[]   @relation("ReferralPackagesOwned")
+  referralsReviewed      Referral[]               @relation("ReferralsReviewedByAdmin")
+  ambassadorCodesCreated ReferralCode[]           @relation("AmbassadorCodesCreatedBy")
 }
 
 // ============== DIAGNOSTIC ==============
@@ -87,7 +88,7 @@ model DiagnosticSession {
   startedAt       DateTime         @default(now())
   completedAt     DateTime?
   currentQuestion Int              @default(0)
-  questions       Json?            // Persisted question set (array of DiagnosticQuestion objects)
+  questions       Json? // Persisted question set (array of DiagnosticQuestion objects)
 
   user    UserProfile        @relation(fields: [userId], references: [id], onDelete: Cascade)
   answers DiagnosticAnswer[]
@@ -102,7 +103,7 @@ model DiagnosticAnswer {
   difficulty    Difficulty
   skillCategory SkillCategory
   answeredAt    DateTime      @default(now())
-  sourceData    Json?         // { chunkIds: string[], lessonIds: string[], timecodes: [{lessonId, start, end}] }
+  sourceData    Json? // { chunkIds: string[], lessonIds: string[], timecodes: [{lessonId, start, end}] }
 
   session DiagnosticSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
 }
@@ -123,16 +124,16 @@ model SkillProfile {
 // ============== LEARNING ==============
 
 model Course {
-  id          String   @id // course id from manifest: "01_analytics"
+  id          String    @id // course id from manifest: "01_analytics"
   title       String
   description String?
-  slug        String   @unique
+  slug        String    @unique
   imageUrl    String?
-  duration    Int      @default(0) // minutes, calculated from lessons
-  order       Int      @default(0)
-  createdAt   DateTime @default(now())
-  price       Int      @default(0) // rubles, 0 = free
-  isFree      Boolean  @default(true) // explicit flag for queries
+  duration    Int       @default(0) // minutes, calculated from lessons
+  order       Int       @default(0)
+  createdAt   DateTime  @default(now())
+  price       Int       @default(0) // rubles, 0 = free
+  isFree      Boolean   @default(true) // explicit flag for queries
   isHidden    Boolean   @default(false) // soft-hide: hides course and all its lessons from users
   hiddenBy    String?
   hiddenAt    DateTime?
@@ -145,20 +146,20 @@ model Course {
 }
 
 model Lesson {
-  id            String        @id // lesson id from manifest: "01_analytics_m01_start_001"
-  courseId      String
-  title         String
-  description   String?
-  videoUrl      String? // Kinescope embed URL (optional until configured)
-  videoId       String? // Kinescope video ID (for API)
-  duration      Int? // minutes (optional, from manifest)
-  order         Int           @default(0)
-  skillCategory  SkillCategory
-  skillCategories Json?          // ["ANALYTICS", "FINANCE"] — multi-category (1-3)
-  topics          Json?          // ["Юнит-экономика", "Маржинальность"] — free-form tags (2-5)
+  id              String        @id // lesson id from manifest: "01_analytics_m01_start_001"
+  courseId        String
+  title           String
+  description     String?
+  videoUrl        String? // Kinescope embed URL (optional until configured)
+  videoId         String? // Kinescope video ID (for API)
+  duration        Int? // minutes (optional, from manifest)
+  order           Int           @default(0)
+  skillCategory   SkillCategory
+  skillCategories Json? // ["ANALYTICS", "FINANCE"] — multi-category (1-3)
+  topics          Json? // ["Юнит-экономика", "Маржинальность"] — free-form tags (2-5)
   skillLevel      Difficulty    @default(MEDIUM)
-  skillBlocks     Json?          // ["ANALYTICS/competitor_analysis", "FINANCE/pricing"] — skill-block mapping for playbooks
-  isHidden        Boolean        @default(false) // soft-hide: excludes lesson from user-facing queries and RAG retrieval
+  skillBlocks     Json? // ["ANALYTICS/competitor_analysis", "FINANCE/pricing"] — skill-block mapping for playbooks
+  isHidden        Boolean       @default(false) // soft-hide: excludes lesson from user-facing queries and RAG retrieval
   hiddenBy        String?
   hiddenAt        DateTime?
 
@@ -166,18 +167,18 @@ model Lesson {
   //   videoSource: { filename, module, localPath?, source: 'manual'|'positional'|'llm-judge' }
   //     — Phase 55 Sprint 3+: persistent local-video↔lesson mapping for vision-RAG ingest.
   // Add new keys carefully; this column is JSONB so structure is application-enforced.
-  metadata        Json?
+  metadata Json?
 
   // Persistent cache for AI-generated lesson summary. In-memory cache resets
   // on deploy and gets blown out by browsing many lessons; persisting means
   // most lesson visits are DB hits and never reach OpenRouter / rate limits.
-  summaryContent     String?    @db.Text
+  summaryContent     String?   @db.Text
   summarySources     Json?
   summaryGeneratedAt DateTime?
 
-  course   Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
-  progress LessonProgress[]
-  materials LessonMaterial[]
+  course     Course           @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  progress   LessonProgress[]
+  materials  LessonMaterial[]
   jobLessons JobLesson[]
   // ContentChunk связь через lessonId (lesson_id) без FK
 
@@ -212,7 +213,7 @@ model LearningPath {
   id          String   @id @default(cuid())
   userId      String   @unique
   generatedAt DateTime @default(now())
-  lessons     Json     // ordered array of lessonIds with metadata
+  lessons     Json // ordered array of lessonIds with metadata
   addedJobs   Json     @default("[]") // string[] — slugs/IDs of jobs the user manually added to track via "+ В трек"
 
   user     UserProfile      @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -262,7 +263,7 @@ model Subscription {
   id                 String             @id @default(cuid())
   userId             String
   planId             String
-  courseId            String? // null for PLATFORM, course ID for COURSE
+  courseId           String? // null for PLATFORM, course ID for COURSE
   status             SubscriptionStatus @default(ACTIVE)
   currentPeriodStart DateTime
   currentPeriodEnd   DateTime
@@ -272,12 +273,12 @@ model Subscription {
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
-  user     UserProfile      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  plan     SubscriptionPlan @relation(fields: [planId], references: [id])
-  course   Course?          @relation(fields: [courseId], references: [id])
-  promoCode PromoCode?      @relation(fields: [promoCodeId], references: [id])
+  user            UserProfile      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan            SubscriptionPlan @relation(fields: [planId], references: [id])
+  course          Course?          @relation(fields: [courseId], references: [id])
+  promoCode       PromoCode?       @relation(fields: [promoCodeId], references: [id])
   promoActivation PromoActivation?
-  payments Payment[]
+  payments        Payment[]
 
   @@index([userId])
   @@index([userId, status])
@@ -285,13 +286,13 @@ model Subscription {
 }
 
 model Payment {
-  id                 String        @id @default(cuid())
-  subscriptionId     String
-  amount             Int // rubles
-  status             PaymentStatus @default(PENDING)
-  cloudPaymentsTxId  String?       @unique // for Phase 18 idempotency, nullable now
-  paidAt             DateTime?
-  createdAt          DateTime      @default(now())
+  id                String        @id @default(cuid())
+  subscriptionId    String
+  amount            Int // rubles
+  status            PaymentStatus @default(PENDING)
+  cloudPaymentsTxId String?       @unique // for Phase 18 idempotency, nullable now
+  paidAt            DateTime?
+  createdAt         DateTime      @default(now())
 
   subscription Subscription   @relation(fields: [subscriptionId], references: [id])
   events       PaymentEvent[]
@@ -322,33 +323,33 @@ model FeatureFlag {
 // ============== PROMO CODES ==============
 
 model PromoCode {
-  id            String    @id @default(cuid())
-  code          String    @unique
-  planType      SubscriptionType              // PLATFORM or COURSE (reuses existing enum)
-  courseId       String?
-  durationDays  Int
-  maxUses       Int       @default(1)
-  currentUses   Int       @default(0)
-  expiresAt     DateTime?
-  isActive      Boolean   @default(true)
-  createdBy     String
-  createdAt     DateTime  @default(now())
+  id           String           @id @default(cuid())
+  code         String           @unique
+  planType     SubscriptionType // PLATFORM or COURSE (reuses existing enum)
+  courseId     String?
+  durationDays Int
+  maxUses      Int              @default(1)
+  currentUses  Int              @default(0)
+  expiresAt    DateTime?
+  isActive     Boolean          @default(true)
+  createdBy    String
+  createdAt    DateTime         @default(now())
 
-  course        Course?          @relation(fields: [courseId], references: [id])
+  course        Course?           @relation(fields: [courseId], references: [id])
   activations   PromoActivation[]
   subscriptions Subscription[]
 }
 
 model PromoActivation {
-  id              String       @id @default(cuid())
-  promoCodeId     String
-  userId          String
-  subscriptionId  String       @unique
-  activatedAt     DateTime     @default(now())
+  id             String   @id @default(cuid())
+  promoCodeId    String
+  userId         String
+  subscriptionId String   @unique
+  activatedAt    DateTime @default(now())
 
-  promoCode       PromoCode    @relation(fields: [promoCodeId], references: [id])
-  user            UserProfile  @relation(fields: [userId], references: [id])
-  subscription    Subscription @relation(fields: [subscriptionId], references: [id])
+  promoCode    PromoCode    @relation(fields: [promoCodeId], references: [id])
+  user         UserProfile  @relation(fields: [userId], references: [id])
+  subscription Subscription @relation(fields: [subscriptionId], references: [id])
 
   @@unique([promoCodeId, userId])
 }
@@ -371,11 +372,11 @@ model ContentChunk {
   trustTier     Int                          @default(1) @map("trust_tier") @db.SmallInt
   createdAt     DateTime                     @default(now()) @map("created_at")
 
-  @@map("content_chunk")
   @@index([lessonId])
   @@index([skillCategory])
   @@index([sourceType])
   @@index([trustTier])
+  @@map("content_chunk")
 }
 
 // ============== CHAT ==============
@@ -401,19 +402,19 @@ model ChatMessage {
 // ============== LESSON COMMENTS ==============
 
 model LessonComment {
-  id        String   @id @default(cuid())
+  id        String    @id @default(cuid())
   lessonId  String
   userId    String
-  content   String   @db.Text
+  content   String    @db.Text
   parentId  String?
   createdAt DateTime  @default(now())
   isHidden  Boolean   @default(false)
   hiddenBy  String?
   hiddenAt  DateTime?
 
-  user     UserProfile    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  parent   LessonComment? @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
-  replies  LessonComment[] @relation("CommentReplies")
+  user    UserProfile     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  parent  LessonComment?  @relation("CommentReplies", fields: [parentId], references: [id], onDelete: Cascade)
+  replies LessonComment[] @relation("CommentReplies")
 
   @@index([lessonId, createdAt(sort: Desc)])
   @@index([parentId])
@@ -430,36 +431,36 @@ enum MaterialType {
 }
 
 model Material {
-  id            String       @id @default(cuid())
-  type          MaterialType
-  title         String
-  description   String?      @db.Text
-  ctaText       String       // Текст кнопки: "Скачать", "Открыть таблицу", "Перейти" и т.п.
-  externalUrl   String?      // Google Drive / Sheets / external service URL
-  storagePath   String?      // Supabase Storage path: "{type}/{id}/{filename}"
-  fileSize      Int?         // bytes (только для storagePath)
-  fileMimeType  String?      // только для storagePath
-  isStandalone  Boolean      @default(false) // D-04: задел под Library, в этой фазе не используется
-  isHidden      Boolean      @default(false) // D-05: soft-delete
-  createdBy     String       // userId автора (методолог/админ)
-  createdAt     DateTime     @default(now())
-  updatedAt     DateTime     @updatedAt
+  id           String       @id @default(cuid())
+  type         MaterialType
+  title        String
+  description  String?      @db.Text
+  ctaText      String // Текст кнопки: "Скачать", "Открыть таблицу", "Перейти" и т.п.
+  externalUrl  String? // Google Drive / Sheets / external service URL
+  storagePath  String? // Supabase Storage path: "{type}/{id}/{filename}"
+  fileSize     Int? // bytes (только для storagePath)
+  fileMimeType String? // только для storagePath
+  isStandalone Boolean      @default(false) // D-04: задел под Library, в этой фазе не используется
+  isHidden     Boolean      @default(false) // D-05: soft-delete
+  createdBy    String // userId автора (методолог/админ)
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
 
-  lessons       LessonMaterial[]
+  lessons LessonMaterial[]
 
   @@index([type, isHidden])
   @@index([isHidden])
 }
 
 model LessonMaterial {
-  id          String    @id @default(cuid())
-  lessonId    String
-  materialId  String
-  order       Int       @default(0) // D-06: order на join, не на Material
-  attachedAt  DateTime  @default(now())
+  id         String   @id @default(cuid())
+  lessonId   String
+  materialId String
+  order      Int      @default(0) // D-06: order на join, не на Material
+  attachedAt DateTime @default(now())
 
-  lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
-  material    Material  @relation(fields: [materialId], references: [id], onDelete: Cascade)
+  lesson   Lesson   @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+  material Material @relation(fields: [materialId], references: [id], onDelete: Cascade)
 
   @@unique([lessonId, materialId])
   @@index([lessonId])
@@ -479,9 +480,9 @@ model SummaryCache {
 model QuestionBank {
   id            String        @id @default(cuid())
   skillCategory SkillCategory
-  questions     Json          // Array of DiagnosticQuestion objects (~30 per category)
+  questions     Json // Array of DiagnosticQuestion objects (~30 per category)
   generatedAt   DateTime      @default(now())
-  expiresAt     DateTime      // TTL: generatedAt + 7 days
+  expiresAt     DateTime // TTL: generatedAt + 7 days
 
   @@unique([skillCategory])
 }
@@ -516,8 +517,8 @@ model Notification {
 model NotificationPreference {
   userId String
   type   NotificationType
-  inApp  Boolean @default(true)
-  email  Boolean @default(false)
+  inApp  Boolean          @default(true)
+  email  Boolean          @default(false)
 
   user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -528,6 +529,7 @@ model NotificationPreference {
 
 enum ReferralCodeType {
   EXTERNAL_USER
+  AMBASSADOR
   INTERNAL_CARE
   INTERNAL_SALES_SERVICE
   INTERNAL_CONSULTING
@@ -563,9 +565,13 @@ model Referral {
   convertedAt       DateTime?
 
   // Phase 53B audit trail (admin moderation of PENDING_REVIEW)
-  rejectReason       String?
-  reviewedAt         DateTime?
-  reviewedByUserId   String?
+  rejectReason     String?
+  reviewedAt       DateTime?
+  reviewedByUserId String?
+
+  // Phase 60: link to ReferralCode (ambassador codes). Nullable — legacy 53A rows have NULL.
+  codeId       String?
+  referralCode ReferralCode? @relation("ReferralsByCode", fields: [codeId], references: [id], onDelete: SetNull)
 
   referrer     UserProfile?          @relation("ReferralsAsReferrer", fields: [referrerUserId], references: [id], onDelete: SetNull)
   referred     UserProfile           @relation("ReferralsAsReferred", fields: [referredUserId], references: [id], onDelete: Cascade)
@@ -574,6 +580,7 @@ model Referral {
 
   @@index([referrerUserId, createdAt(sort: Desc)])
   @@index([status])
+  @@index([codeId])
 }
 
 model ReferralBonusPackage {
@@ -591,6 +598,26 @@ model ReferralBonusPackage {
   @@index([ownerUserId, status])
 }
 
+// Phase 60: Admin-managed ambassador codes (external bloggers without accounts).
+model ReferralCode {
+  id               String           @id @default(cuid())
+  code             String           @unique
+  codeType         ReferralCodeType
+  label            String
+  refereeTrialDays Int
+  maxUses          Int?
+  currentUses      Int              @default(0)
+  expiresAt        DateTime?
+  isActive         Boolean          @default(true)
+  createdByUserId  String
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  createdBy        UserProfile      @relation("AmbassadorCodesCreatedBy", fields: [createdByUserId], references: [id], onDelete: Restrict)
+  referrals        Referral[]       @relation("ReferralsByCode")
+
+  @@index([isActive, expiresAt])
+}
+
 // ============== JOBS (Phase 57 — Library Redesign) ==============
 
 enum JobMarketplace {
@@ -603,18 +630,18 @@ enum JobMarketplace {
 /// Course-agnostic: уроки могут быть из разных курсов. Выводится из контента
 /// (scripts/job-mapping), валидируется контент-командой, наполняется seed-jobs.ts.
 model Job {
-  id           String         @id @default(cuid())
-  slug         String         @unique // URL: /learn/job/<slug>
+  id           String                       @id @default(cuid())
+  slug         String                       @unique // URL: /learn/job/<slug>
   title        String // глагол + результат: "Посчитать юнит-экономику товара"
   description  String
-  outcomes     Json           @default("[]") // string[] — "что ты сможешь после"
-  axes         Json           @default("[]") // canonical 5 категорий — мост к диагностике
-  skillBlocks  Json           @default("[]") // 32-блочные теги — точный мост к диагностике
-  marketplace  JobMarketplace @default(WB)
-  displayOrder Int            @default(0) // порядок внутри оси в каталоге
-  isPublished  Boolean        @default(false)
-  createdAt    DateTime       @default(now())
-  updatedAt    DateTime       @updatedAt
+  outcomes     Json                         @default("[]") // string[] — "что ты сможешь после"
+  axes         Json                         @default("[]") // canonical 5 категорий — мост к диагностике
+  skillBlocks  Json                         @default("[]") // 32-блочные теги — точный мост к диагностике
+  marketplace  JobMarketplace               @default(WB)
+  displayOrder Int                          @default(0) // порядок внутри оси в каталоге
+  isPublished  Boolean                      @default(false)
+  createdAt    DateTime                     @default(now())
+  updatedAt    DateTime                     @updatedAt
   embedding    Unsupported("vector(1536)")? // intent retrieval via pgvector cosine
   lessons      JobLesson[]
 

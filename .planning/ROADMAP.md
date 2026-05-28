@@ -1439,3 +1439,45 @@ Plans:
 **Plans:** TBD (после discuss → spec → plan-phase).
 
 **Когда стартовать:** после ship Phase 58 + sync с контент-командой о готовности к ревью банка вопросов. Можно начать discuss/spec параллельно с execution Phase 58.
+
+### Phase 60: Ambassador Referral Codes — админ-управляемые реф-ссылки для блогеров
+
+**Goal:** Расширить рефералку (Phase 53A) поддержкой админ-управляемых кодов для внешних амбассадоров (блогеров без аккаунта). Каждый код = кастомная trial-длительность для приведённого юзера, лимиты использований, статистика конверсий per code.
+
+**Source:** SPEC в `.planning/phases/60-ambassador-codes/60-SPEC.md` (decisions locked by owner 2026-05-28).
+
+**Status:** ⏳ Spec ready, planning next.
+
+**Мотивация:** Сейчас рефералка работает только user-to-user через `UserProfile.referralCode` с захардкоженными 14 днями. Для блогеров нужны: (1) ссылки без привязки к юзеру, (2) кастомный срок trial per контракт, (3) статистика per амбассадор для ручных выплат.
+
+**Scope:**
+
+- Новая модель `ReferralCode` (template) + nullable FK `Referral.codeId`. Enum `ReferralCodeType += AMBASSADOR`. Migration строго additive.
+- `packages/api/src/services/referral/code-resolver.ts` — резолвер кода с fallback к легаси `UserProfile.referralCode`.
+- Расширение orchestrator `issueReferralOnSignup` — ambassador-ветка: проверка лимитов, anti-fraud (reuse 53A), TRIAL без `ReferralBonusPackage`.
+- `/admin/referrals/codes` — CRUD кодов + дашборд активаций и конверсий.
+- E2E + UAT.
+
+**Out of scope:**
+
+- Revenue share / автоматические выплаты амбассадорам.
+- Личный кабинет амбассадора.
+- Замена 53A user-to-user — `EXTERNAL_USER` flow остаётся.
+- Marketplace-фильтр на каталоге (Phase 58 D-17).
+
+**Locked decisions (D-01..D-04):**
+
+- **D-01:** `refereeTrialDays` задаётся админом, **immutable** после создания. План фиксирован PLATFORM.
+- **D-02:** Награда амбассадору отсутствует — только статистика в админке.
+- **D-03:** Уже зарегистрированный юзер по ambassador-ссылке игнорируется (no bonus, no `Referral` row).
+- **D-04:** Per code лимиты: `maxUses`, `expiresAt`, `isActive` toggle, anti-fraud (reuse `checkFraudSignals` из 53A).
+
+**Зависимости:**
+
+- Phase 53A (referral infrastructure) — hard dep. Уже на проде.
+- Phase 53B (admin moderation) — soft dep. Пересекаемся только UI-вкладкой `/admin/referrals/*`.
+- Никаких content/people deps вне команды dev.
+
+**Estimate:** ~2.5 рабочих дня соло, ~2 дня с parallel waves (Sprint 60-01 schema/resolver, 60-02 orchestrator, 60-03 admin UI, 60-04 tests).
+
+**Plans:** TBD (SPEC готова → plan-phase next).
