@@ -311,6 +311,7 @@ function toDiagnosticQuestion(
     explanation: q.explanation,
     difficulty: q.difficulty,
     skillCategory: category,
+    marketplace: q.marketplace,
     // Source tracing (Phase 23)
     // Use LLM-provided sourceIndices to map only relevant chunks per question
     ...(sourceChunks ? (() => {
