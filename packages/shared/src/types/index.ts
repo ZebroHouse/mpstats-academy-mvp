@@ -62,6 +62,7 @@ export interface DiagnosticQuestion {
   explanation: string;
   difficulty: Difficulty;
   skillCategory: SkillCategory;
+  marketplace: 'WB' | 'OZON' | 'BOTH';
   // Source tracing (Phase 23)
   sourceChunkIds?: string[];
   sourceLessonIds?: string[];
