@@ -8,8 +8,8 @@ import {
   activatePackage,
   PackageActivationError,
 } from '../services/referral/activation';
-import { isValidRefCodeShape } from '../services/referral/attribution';
 import { generateAmbassadorCode } from '../services/referral/code-generator';
+import { resolveReferralCode } from '../services/referral/code-resolver';
 
 const AMB_CODE_SHAPE = /^[A-Z][A-Z0-9_]{0,15}-[A-Z0-9]{2,12}$/;
 
@@ -214,20 +214,34 @@ export const referralRouter = router({
   }),
 
   // PUBLIC — used by /register page where user is not yet authenticated.
+  // Phase 60: returns code source + trialDays so the register banner can show
+  // the correct day count for AMBASSADOR codes (which carry custom durations
+  // per code) without leaking ambassador metadata beyond the public label.
   validateCode: publicProcedure
     .input(z.object({ code: z.string() }))
     .query(async ({ input }) => {
-      if (!isValidRefCodeShape(input.code)) {
-        return { valid: false, referrerName: null };
+      const resolved = await resolveReferralCode(input.code);
+      if (!resolved) {
+        return { valid: false, referrerName: null, trialDays: null, type: null };
       }
-      const referrer = await prisma.userProfile.findUnique({
-        where: { referralCode: input.code },
-        select: { id: true, name: true },
-      });
-      if (!referrer) {
-        return { valid: false, referrerName: null };
+      if (resolved.type === 'ambassador') {
+        return {
+          valid: true,
+          referrerName: resolved.code.label,
+          trialDays: resolved.code.refereeTrialDays,
+          type: 'ambassador' as const,
+        };
       }
-      return { valid: true, referrerName: referrer.name };
+      // type === 'user' — Phase 53A peer-to-peer code. trialDays for friend
+      // is decided by the issuance orchestrator (i1=14, i2=7 via feature flag);
+      // we expose null here and let the client fall back to its i1/i2 constant
+      // so this endpoint stays read-only with no flag-eval cost.
+      return {
+        valid: true,
+        referrerName: resolved.userProfile.name,
+        trialDays: null,
+        type: 'user' as const,
+      };
     }),
 
   /**

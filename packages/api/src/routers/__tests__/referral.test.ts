@@ -111,26 +111,100 @@ describe('referral.getMyState', () => {
 });
 
 describe('referral.validateCode', () => {
-  it('returns valid + referrerName for known code', async () => {
-    mockUserFindUnique.mockResolvedValue({
-      id: 'u-ref',
-      name: 'Anna',
-    });
+  it('returns valid + referrerName + null trialDays for known user code (53A)', async () => {
+    mockReferralCodeFindUnique.mockResolvedValue(null);
+    mockUserFindUnique.mockResolvedValue({ id: 'u-ref', name: 'Anna' });
     const result = await caller().validateCode({ code: 'REF-AAA111' });
     expect(result.valid).toBe(true);
     expect(result.referrerName).toBe('Anna');
+    expect(result.trialDays).toBeNull();
+    expect(result.type).toBe('user');
   });
 
   it('returns invalid for unknown code', async () => {
+    mockReferralCodeFindUnique.mockResolvedValue(null);
     mockUserFindUnique.mockResolvedValue(null);
     const result = await caller().validateCode({ code: 'REF-XXXXXX' });
     expect(result.valid).toBe(false);
+    expect(result.trialDays).toBeNull();
+    expect(result.type).toBeNull();
   });
 
   it('returns invalid for malformed code', async () => {
     const result = await caller().validateCode({ code: 'garbage' });
     expect(result.valid).toBe(false);
     expect(mockUserFindUnique).not.toHaveBeenCalled();
+    expect(mockReferralCodeFindUnique).not.toHaveBeenCalled();
+  });
+
+  // Phase 60: ambassador code paths
+  it('returns valid + label + refereeTrialDays for active AMBASSADOR code', async () => {
+    mockReferralCodeFindUnique.mockResolvedValue({
+      id: 'rc-1',
+      code: 'AMB-BLOGER1',
+      codeType: 'AMBASSADOR',
+      label: 'Блогер Анна',
+      refereeTrialDays: 7,
+      maxUses: null,
+      currentUses: 3,
+      expiresAt: null,
+      isActive: true,
+    });
+    const result = await caller().validateCode({ code: 'AMB-BLOGER1' });
+    expect(result.valid).toBe(true);
+    expect(result.referrerName).toBe('Блогер Анна');
+    expect(result.trialDays).toBe(7);
+    expect(result.type).toBe('ambassador');
+    expect(mockUserFindUnique).not.toHaveBeenCalled();
+  });
+
+  it('returns invalid for expired AMBASSADOR code', async () => {
+    mockReferralCodeFindUnique.mockResolvedValue({
+      id: 'rc-2',
+      code: 'AMB-OLDONE',
+      codeType: 'AMBASSADOR',
+      label: 'Old promo',
+      refereeTrialDays: 14,
+      maxUses: null,
+      currentUses: 0,
+      expiresAt: new Date('2026-01-01'),
+      isActive: true,
+    });
+    const result = await caller().validateCode({ code: 'AMB-OLDONE' });
+    expect(result.valid).toBe(false);
+    expect(result.trialDays).toBeNull();
+  });
+
+  it('returns invalid for disabled AMBASSADOR code', async () => {
+    mockReferralCodeFindUnique.mockResolvedValue({
+      id: 'rc-3',
+      code: 'AMB-DEADON',
+      codeType: 'AMBASSADOR',
+      label: 'Killed',
+      refereeTrialDays: 30,
+      maxUses: null,
+      currentUses: 0,
+      expiresAt: null,
+      isActive: false,
+    });
+    const result = await caller().validateCode({ code: 'AMB-DEADON' });
+    expect(result.valid).toBe(false);
+  });
+
+  it('returns invalid for max-uses-reached AMBASSADOR code', async () => {
+    mockReferralCodeFindUnique.mockResolvedValue({
+      id: 'rc-4',
+      code: 'AMB-FULL01',
+      codeType: 'AMBASSADOR',
+      label: 'Sold out',
+      refereeTrialDays: 7,
+      maxUses: 10,
+      currentUses: 10,
+      expiresAt: null,
+      isActive: true,
+    });
+    const result = await caller().validateCode({ code: 'AMB-FULL01' });
+    expect(result.valid).toBe(false);
   });
 });
 
