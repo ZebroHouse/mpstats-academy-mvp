@@ -151,7 +151,7 @@ describe('diagnostic.submitAnswer — CQ event on completion', () => {
     const ctx = makeCtx(profileMarketplaces);
     // Session with exactly 1 question so the very first submit completes it.
     const sessionQuestions = [mkQuestion('q1', 'WB')];
-    ctx.prisma.diagnosticSession.findUnique.mockImplementation((args: any) => {
+    ctx.prisma.diagnosticSession.findUnique.mockImplementation(() => {
       // Used in submitAnswer (with select: questions, currentQuestion, userId)
       // and later in completion path (with select: questions).
       return Promise.resolve({
@@ -161,7 +161,7 @@ describe('diagnostic.submitAnswer — CQ event on completion', () => {
         currentQuestion: 0,
       });
     });
-    ctx.prisma.diagnosticSession.update.mockImplementation((args: any) => {
+    ctx.prisma.diagnosticSession.update.mockImplementation(() => {
       // First call increments currentQuestion to 1 (== questions.length → complete).
       return Promise.resolve({ id: 'sess-1', currentQuestion: 1 });
     });

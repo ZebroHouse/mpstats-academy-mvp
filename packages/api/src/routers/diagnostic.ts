@@ -552,6 +552,14 @@ export const diagnosticRouter = router({
           include: { answers: true },
         });
 
+        // Phase 59 — cheap single-field read to surface user marketplaces
+        // alongside session state so Question.tsx can render WB/OZON badge.
+        const profileForBadge = await ctx.prisma.userProfile.findUnique({
+          where: { id: ctx.user.id },
+          select: { marketplaces: true },
+        });
+        const userMarketplaces = profileForBadge?.marketplaces ?? [];
+
         if (!session) {
           return {
             sessionId: input.sessionId,
@@ -560,6 +568,7 @@ export const diagnosticRouter = router({
             answeredQuestions: [],
             currentQuestion: null,
             isComplete: true,
+            userMarketplaces,
           };
         }
 
@@ -578,6 +587,7 @@ export const diagnosticRouter = router({
             })),
             currentQuestion: null,
             isComplete: true,
+            userMarketplaces,
           };
         }
 
@@ -596,6 +606,7 @@ export const diagnosticRouter = router({
             answeredQuestions: [],
             currentQuestion: null,
             isComplete: true,
+            userMarketplaces,
           };
         }
 
@@ -626,6 +637,7 @@ export const diagnosticRouter = router({
           })),
           currentQuestion: safeQuestion,
           isComplete,
+          userMarketplaces,
         };
       } catch (error) {
         handleDatabaseError(error);

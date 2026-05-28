@@ -181,7 +181,7 @@ describe('getQuestionsFromBank — marketplace filter', () => {
     // Mock supplements: return a mix of WB/OZON/BOTH so we can verify the filter
     // is also applied to mockFallback (OZON mocks must be dropped).
     getMockQuestionsForCategoryMock.mockImplementation(
-      (cat: SkillCategory, count: number) => [
+      (cat: SkillCategory, _count: number) => [
         q(`mock-${cat}-wb`, cat, 'WB'),
         q(`mock-${cat}-oz`, cat, 'OZON'),
         q(`mock-${cat}-bo`, cat, 'BOTH'),

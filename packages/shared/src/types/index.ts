@@ -183,6 +183,9 @@ export interface DiagnosticSessionState {
   answeredQuestions: DiagnosticAnswer[];
   currentQuestion: DiagnosticQuestion | null;
   isComplete: boolean;
+  // Phase 59 — the user's marketplaces, surfaced so the Question card can
+  // render the WB/OZON badge for mix-users on non-BOTH questions (D-09).
+  userMarketplaces?: string[];
 }
 
 // ============== DASHBOARD ==============
