@@ -15,6 +15,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Доля рынка показывает какой процент от общих продаж категории занимает ваш товар.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'ANALYTICS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-analytics-2',
@@ -29,6 +30,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'ABC-анализ делит товары на группы A (20% товаров = 80% выручки), B и C по их вкладу.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'ANALYTICS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-analytics-3',
@@ -43,6 +45,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Оборачиваемость = Выручка за период / Средний остаток товара на складе.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'ANALYTICS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-analytics-4',
@@ -57,6 +60,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Когортный анализ группирует клиентов по дате первой покупки для отслеживания LTV.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'ANALYTICS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-analytics-5',
@@ -71,6 +75,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Трекинг товаров позволяет отслеживать продажи, остатки и цены конкурентов.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'ANALYTICS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-analytics-6',
@@ -85,6 +90,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Sell-through rate = Проданные единицы / Поставленные единицы × 100%. Показывает скорость продаж.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'ANALYTICS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-analytics-7',
@@ -99,6 +105,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Динамика поисковых запросов показывает когда спрос растёт и падает — ключевой индикатор сезонности.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'ANALYTICS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-analytics-8',
@@ -113,6 +120,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Когда продавцов много, а объём продаж не растёт — ниша перенасыщена, доля каждого падает.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'ANALYTICS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-analytics-9',
@@ -127,6 +135,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Упущенная выручка — это продажи, которые не состоялись из-за отсутствия товара на складе.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'ANALYTICS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-analytics-10',
@@ -141,6 +150,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Столбчатая диаграмма лучше всего визуализирует сравнение дискретных категорий по объёму.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'ANALYTICS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-analytics-11',
@@ -155,6 +165,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'RFM (Recency, Frequency, Monetary) — метод сегментации клиентов по поведению покупок.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'ANALYTICS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-analytics-12',
@@ -169,6 +180,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Конверсия карточки = Заказы / Посетители (клики) × 100%. Показывает эффективность карточки.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'ANALYTICS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-analytics-13',
@@ -183,6 +195,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Минимум 3 месяца дают достаточно данных для выявления трендов, исключая краткосрочные флуктуации.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'ANALYTICS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-analytics-14',
@@ -197,6 +210,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Индекс видимости учитывает и позицию в выдаче, и частоту показа по разным запросам.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'ANALYTICS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-analytics-15',
@@ -211,6 +225,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Позиция по целевым запросам — прямой показатель эффективности SEO-оптимизации карточки.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'ANALYTICS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-analytics-16',
@@ -225,6 +240,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Кластерный анализ группирует конкурентов по схожим характеристикам (цена, ассортимент, стратегия).',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'ANALYTICS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-analytics-17',
@@ -239,6 +255,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Средняя позиция = сумма позиций по всем отслеживаемым запросам / количество запросов.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'ANALYTICS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-analytics-18',
@@ -253,6 +270,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Каннибализация — когда ваши товары забирают продажи друг у друга вместо привлечения новых покупателей.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'ANALYTICS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-analytics-19',
@@ -267,6 +285,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Соотношение позитивных/негативных отзывов показывает общую удовлетворённость и эффективность работы с негативом.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'ANALYTICS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-analytics-20',
@@ -281,6 +300,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Эластичность спроса показывает на сколько % изменится спрос при изменении цены на 1%.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'ANALYTICS' as SkillCategory,
+    marketplace: 'BOTH',
   },
 
   // ============== MARKETING (20) ==============
@@ -297,6 +317,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'CTR (Click-Through Rate) = Клики / Показы × 100%. Показывает привлекательность объявления.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'MARKETING' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-marketing-2',
@@ -311,6 +332,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Автоматическая кампания охватывает все плейсменты: поиск, каталог, карточки, рекомендации.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'MARKETING' as SkillCategory,
+    marketplace: 'WB',
   },
   {
     id: 'q-marketing-3',
@@ -325,6 +347,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'ДРР = Расходы на рекламу / Выручка от рекламы × 100%. Ключевая метрика эффективности.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'MARKETING' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-marketing-4',
@@ -339,6 +362,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Рост продаж во время акции улучшает позиции, но эффект временный без поддержки.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'MARKETING' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-marketing-5',
@@ -348,6 +372,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Минимальный бюджет для запуска рекламной кампании на WB — 500 рублей.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'MARKETING' as SkillCategory,
+    marketplace: 'WB',
   },
   {
     id: 'q-marketing-6',
@@ -362,6 +387,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'ACOS (Advertising Cost of Sales) = Рекламный расход / Выручка от рекламы × 100%.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'MARKETING' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-marketing-7',
@@ -376,6 +402,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Алгоритм WB приоритизирует товары с высокими продажами и хорошей конверсией.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'MARKETING' as SkillCategory,
+    marketplace: 'WB',
   },
   {
     id: 'q-marketing-8',
@@ -390,6 +417,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Ставка — это CPM (цена за 1000 показов), которую продавец устанавливает в аукционе.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'MARKETING' as SkillCategory,
+    marketplace: 'WB',
   },
   {
     id: 'q-marketing-9',
@@ -404,6 +432,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Реклама без отзывов неэффективна — покупатели не доверяют товарам без социального доказательства.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'MARKETING' as SkillCategory,
+    marketplace: 'WB',
   },
   {
     id: 'q-marketing-10',
@@ -418,6 +447,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Низкая выкупаемость увеличивает реальную стоимость привлечения клиента, снижая ROI рекламы.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'MARKETING' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-marketing-11',
@@ -432,6 +462,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'WB даёт новым товарам временное преимущество, но для его сохранения нужны хорошие продажи и конверсия.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'MARKETING' as SkillCategory,
+    marketplace: 'WB',
   },
   {
     id: 'q-marketing-12',
@@ -446,6 +477,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Трафареты показывают товар прямо в поисковой выдаче — максимально горячая аудитория.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'MARKETING' as SkillCategory,
+    marketplace: 'OZON',
   },
   {
     id: 'q-marketing-13',
@@ -460,6 +492,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Каскадная стратегия: сначала поиск (горячий спрос), потом каталог (тёплый), потом ретаргетинг.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'MARKETING' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-marketing-14',
@@ -474,6 +507,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Хорошо оптимизированная карточка имеет лучший Quality Score, что снижает CPM в аукционе.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'MARKETING' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-marketing-15',
@@ -488,6 +522,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Бренд-зона — рекламный формат, показывающий несколько товаров бренда в одном блоке.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'MARKETING' as SkillCategory,
+    marketplace: 'WB',
   },
   {
     id: 'q-marketing-16',
@@ -502,6 +537,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Оптимальная CPM ставка = Целевой ДРР × Средний чек / 1000. Так вы контролируете рентабельность.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'MARKETING' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-marketing-17',
@@ -516,6 +552,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Самовыкупы нарушают правила маркетплейсов и могут привести к блокировке кабинета.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'MARKETING' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-marketing-18',
@@ -530,6 +567,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Если цель — осведомлённость и трафик, важен CTR. Если цель — продажи, важна конверсия.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'MARKETING' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-marketing-19',
@@ -544,6 +582,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Ретаргетинг показывает рекламу тем, кто уже смотрел товар — у них выше вероятность покупки.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'MARKETING' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-marketing-20',
@@ -558,6 +597,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Быстрая доставка увеличивает конверсию, что снижает стоимость привлечения одного покупателя.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'MARKETING' as SkillCategory,
+    marketplace: 'BOTH',
   },
 
   // ============== CONTENT (20) ==============
@@ -569,6 +609,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Рекомендуемый размер 900x1200 (соотношение 3:4) для оптимального отображения.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'CONTENT' as SkillCategory,
+    marketplace: 'WB',
   },
   {
     id: 'q-content-2',
@@ -578,6 +619,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Чем больше заполнено характеристик, тем лучше индексация и попадание в фильтры.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'CONTENT' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-content-3',
@@ -592,6 +634,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Rich-контент — это расширенное описание с изображениями, таблицами, инфографикой.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'CONTENT' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-content-4',
@@ -606,6 +649,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'По статистике, видео в карточке повышает конверсию на 10-30% за счёт доверия.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'CONTENT' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-content-5',
@@ -615,6 +659,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Главное фото — первое, что видит покупатель. Оно определяет 80% решения о клике.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'CONTENT' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-content-6',
@@ -629,6 +674,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Рекомендуется использовать максимум площадки (10-15) для полного раскрытия товара.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'CONTENT' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-content-7',
@@ -643,6 +689,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Инфографика на 2-м слайде показывает ключевые преимущества товара в визуальном формате.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'CONTENT' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-content-8',
@@ -657,6 +704,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Ключевые слова должны естественно вписываться в текст — спам снижает ранжирование.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'CONTENT' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-content-9',
@@ -671,6 +719,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'A+ контент (Enhanced Brand Content) — расширенный блок описания с визуальными элементами.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'CONTENT' as SkillCategory,
+    marketplace: 'OZON',
   },
   {
     id: 'q-content-10',
@@ -685,6 +734,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Фото с масштабным объектом помогает покупателю понять реальный размер и снижает возвраты.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'CONTENT' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-content-11',
@@ -699,6 +749,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Формула: Бренд + Тип товара + Ключевые характеристики. Баланс SEO и читаемости.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'CONTENT' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-content-12',
@@ -713,6 +764,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Короткие ролики 15-30 сек удерживают внимание и показывают главное — идеальный формат для МП.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'CONTENT' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-content-13',
@@ -727,6 +779,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Стратегия: начать с базового контента, постепенно улучшать по мере роста продаж и ROI.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'CONTENT' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-content-14',
@@ -741,6 +794,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Обновляйте контент при падении конверсии, перед сезоном или при изменении конкурентной среды.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'CONTENT' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-content-15',
@@ -755,6 +809,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'UGC — контент от покупателей (отзывы с фото/видео). Повышает доверие и конверсию.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'CONTENT' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-content-16',
@@ -769,6 +824,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Для сложных товаров работают сравнительные таблицы и конкретные цифры — они помогают принять решение.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'CONTENT' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-content-17',
@@ -783,6 +839,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Структурированный текст с подзаголовками и списками сканируется быстрее и лучше воспринимается.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'CONTENT' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-content-18',
@@ -797,6 +854,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Сторителлинг — показать товар в контексте жизни покупателя: проблема → решение → результат.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'CONTENT' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-content-19',
@@ -811,6 +869,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Выбор фона зависит от категории и того, что используют лидеры ниши — нужен A/B тест.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'CONTENT' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-content-20',
@@ -825,6 +884,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'A/B сравнение CTR и конверсии до/после изменений — единственный объективный метод оценки.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'CONTENT' as SkillCategory,
+    marketplace: 'BOTH',
   },
 
   // ============== OPERATIONS (20) ==============
@@ -841,6 +901,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'FBO (Fulfillment by Operator) — товар хранится на складе МП, доставка силами МП.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'OPERATIONS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-operations-2',
@@ -855,6 +916,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Страховой запас покрывает колебания спроса: (Пик - Среднее) × Время поставки.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'OPERATIONS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-operations-3',
@@ -869,6 +931,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'При отсутствии на складе позиции падают, восстановление занимает время.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'OPERATIONS' as SkillCategory,
+    marketplace: 'WB',
   },
   {
     id: 'q-operations-4',
@@ -878,6 +941,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Бесплатное хранение — 60 дней, далее начисляется плата за хранение.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'OPERATIONS' as SkillCategory,
+    marketplace: 'WB',
   },
   {
     id: 'q-operations-5',
@@ -892,6 +956,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Коэффициент приёмки может увеличивать или уменьшать стоимость логистики.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'OPERATIONS' as SkillCategory,
+    marketplace: 'WB',
   },
   {
     id: 'q-operations-6',
@@ -906,6 +971,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'FBO: товар на складе маркетплейса. FBS: товар на вашем складе, отправляете сами при заказе.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'OPERATIONS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-operations-7',
@@ -920,6 +986,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Первая поставка = ожидаемые продажи × (срок следующей поставки + буфер). Так вы не уйдёте в out-of-stock.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'OPERATIONS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-operations-8',
@@ -934,6 +1001,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Кросс-докинг: товар поступает на сортировочный центр и сразу отправляется получателю без хранения.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'OPERATIONS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-operations-9',
@@ -948,6 +1016,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Распределение по складам снижает стоимость последней мили и ускоряет доставку.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'OPERATIONS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-operations-10',
@@ -962,6 +1031,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'WMS (Warehouse Management System) — система учёта и управления складскими операциями.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'OPERATIONS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-operations-11',
@@ -976,6 +1046,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Точное описание и качественные фото снижают разницу между ожиданиями и реальностью.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'OPERATIONS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-operations-12',
@@ -990,6 +1061,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Дефектура — ситуация, когда товар отсутствует на складе, но спрос есть. Ведёт к упущенной выручке.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'OPERATIONS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-operations-13',
@@ -1004,6 +1076,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'WB требует баркод на каждой единице — без него товар не примут на склад.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'OPERATIONS' as SkillCategory,
+    marketplace: 'WB',
   },
   {
     id: 'q-operations-14',
@@ -1018,6 +1091,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Высокая оборачиваемость = товар быстро продаётся, низкие затраты на хранение, свободные деньги.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'OPERATIONS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-operations-15',
@@ -1032,6 +1106,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Перед сезоном нужно заранее увеличить запас — поставки на склад занимают время.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'OPERATIONS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-operations-16',
@@ -1046,6 +1121,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: '"Честный знак" — система обязательной маркировки товаров (обувь, одежда, парфюм и др.).',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'OPERATIONS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-operations-17',
@@ -1060,6 +1136,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Точка перезаказа = Ср. продажи/день × Дней поставки + Страховой запас.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'OPERATIONS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-operations-18',
@@ -1074,6 +1151,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Товар на нескольких складах = быстрая доставка по всей стране + приоритет в выдаче.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'OPERATIONS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-operations-19',
@@ -1088,6 +1166,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'При потере товара нужно оформить заявку на компенсацию — маркетплейс возмещает стоимость.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'OPERATIONS' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-operations-20',
@@ -1102,6 +1181,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Тариф логистики зависит от габаритов — компактная упаковка снижает стоимость доставки.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'OPERATIONS' as SkillCategory,
+    marketplace: 'BOTH',
   },
 
   // ============== FINANCE (20) ==============
@@ -1118,6 +1198,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Маржинальность = (Цена продажи - Себестоимость) / Цена продажи × 100%.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'FINANCE' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-finance-2',
@@ -1132,6 +1213,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Unit-экономика включает: себестоимость, логистику, комиссию, рекламу, возвраты.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'FINANCE' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-finance-3',
@@ -1141,6 +1223,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Комиссия WB для одежды составляет 15-20% в зависимости от подкатегории.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'FINANCE' as SkillCategory,
+    marketplace: 'WB',
   },
   {
     id: 'q-finance-4',
@@ -1155,6 +1238,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'ROI = (Прибыль - Инвестиции) / Инвестиции × 100%. Показывает окупаемость вложений.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'FINANCE' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-finance-5',
@@ -1169,6 +1253,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Нужно закладывать средний % возвратов (5-15% для одежды) в unit-экономику.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'FINANCE' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-finance-6',
@@ -1183,6 +1268,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Точка безубыточности — объём, при котором вы не зарабатываете и не теряете. Выше — прибыль.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'FINANCE' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-finance-7',
@@ -1197,6 +1283,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Чистая прибыль = Цена - ВСЕ затраты (себестоимость, комиссия, логистика, хранение, реклама).',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'FINANCE' as SkillCategory,
+    marketplace: 'WB',
   },
   {
     id: 'q-finance-8',
@@ -1211,6 +1298,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Cash flow показывает реальное движение денег — можно быть прибыльным, но без денег на закупку.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'FINANCE' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-finance-9',
@@ -1225,6 +1313,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Рекомендуемая наценка 200-300% (x3-x4 от себестоимости) — покрывает все затраты МП и оставляет прибыль.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'FINANCE' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-finance-10',
@@ -1239,6 +1328,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'SKU-экономика анализирует каждый артикул отдельно — какие прибыльны, какие убыточны.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'FINANCE' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-finance-11',
@@ -1253,6 +1343,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'WB рассчитывает комиссию от фактической цены продажи — после всех скидок и акций.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'FINANCE' as SkillCategory,
+    marketplace: 'WB',
   },
   {
     id: 'q-finance-12',
@@ -1267,6 +1358,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Товар на складе = замороженные деньги. Чем быстрее оборачиваемость, тем меньше заморозка.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'FINANCE' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-finance-13',
@@ -1281,6 +1373,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'УСН 6% — самый простой режим для старта: нет учёта расходов, понятный расчёт налога.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'FINANCE' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-finance-14',
@@ -1295,6 +1388,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Срок окупаемости = Все инвестиции / Чистая прибыль в месяц. Показывает когда вы выйдете в плюс.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'FINANCE' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-finance-15',
@@ -1309,6 +1403,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Финансовая подушка 2-3 месяца расходов защищает от кассовых разрывов и непредвиденных ситуаций.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'FINANCE' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-finance-16',
@@ -1323,6 +1418,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Акция снижает маржу на единицу, но рост продаж может компенсировать это и дать больше общей прибыли.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'FINANCE' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-finance-17',
@@ -1337,6 +1433,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'LTV (Lifetime Value) — совокупная прибыль от клиента за весь период. На МП сложно считать, но важно.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'FINANCE' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-finance-18',
@@ -1351,6 +1448,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'УСН 15% выгоднее когда подтверждённые расходы > 60% выручки. Иначе УСН 6% проще и дешевле.',
     difficulty: 'HARD' as Difficulty,
     skillCategory: 'FINANCE' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-finance-19',
@@ -1365,6 +1463,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Полная себестоимость = закупка + международная доставка + таможня + упаковка + маркировка + доставка до склада.',
     difficulty: 'EASY' as Difficulty,
     skillCategory: 'FINANCE' as SkillCategory,
+    marketplace: 'BOTH',
   },
   {
     id: 'q-finance-20',
@@ -1379,6 +1478,7 @@ export const MOCK_QUESTIONS: DiagnosticQuestion[] = [
     explanation: 'Кассовый разрыв: деньги "заморожены" в товаре/на пути от МП. Избежать: планировать cash flow и держать подушку.',
     difficulty: 'MEDIUM' as Difficulty,
     skillCategory: 'FINANCE' as SkillCategory,
+    marketplace: 'BOTH',
   },
 ];
 
