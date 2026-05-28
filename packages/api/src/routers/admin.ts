@@ -810,11 +810,12 @@ export const adminRouter = router({
       }));
 
       // Top 5 active users
-      const userMap = new Map<string, { userId: string; lessonsWatched: number; totalPercent: number }>();
+      const userMap = new Map<string, { userId: string; lessonsWatched: number; lessonsCompleted: number; totalPercent: number }>();
       for (const p of allProgress) {
         const userId = p.path.userId;
-        const existing = userMap.get(userId) || { userId, lessonsWatched: 0, totalPercent: 0 };
+        const existing = userMap.get(userId) || { userId, lessonsWatched: 0, lessonsCompleted: 0, totalPercent: 0 };
         existing.lessonsWatched += 1;
+        if (p.status === 'COMPLETED') existing.lessonsCompleted += 1;
         existing.totalPercent += p.watchedPercent;
         userMap.set(userId, existing);
       }
@@ -833,10 +834,28 @@ export const adminRouter = router({
 
       const nameMap = new Map(userProfiles.map((u) => [u.id, u.name]));
 
+      // Fetch emails from auth.users for the top 5
+      const emailMap = new Map<string, string>();
+      if (topUserIds.length > 0) {
+        try {
+          const rows = await ctx.prisma.$queryRawUnsafe<Array<{ id: string; email: string | null }>>(
+            `SELECT id::text AS id, email FROM auth.users WHERE id IN (${topUserIds.map((_, i) => `$${i + 1}::uuid`).join(',')})`,
+            ...topUserIds.map((u) => u.userId),
+          );
+          rows.forEach((r) => {
+            if (r.email) emailMap.set(r.id, r.email);
+          });
+        } catch {
+          // emails won't be shown if query fails
+        }
+      }
+
       const topActiveUsers = topUserIds.map((u) => ({
         userId: u.userId,
         name: nameMap.get(u.userId) || 'Unknown',
+        email: emailMap.get(u.userId) || null,
         lessonsWatched: u.lessonsWatched,
+        lessonsCompleted: u.lessonsCompleted,
         avgPercent: Math.round(u.totalPercent / u.lessonsWatched),
       }));
 
