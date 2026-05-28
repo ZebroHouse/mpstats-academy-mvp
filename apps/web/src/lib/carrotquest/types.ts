@@ -36,6 +36,8 @@ export type CQEventName =
   | 'pa_referral_trial_started'
   | 'pa_referral_friend_registered'
   | 'pa_referral_friend_paid'
+  // Referral — Ambassador codes (Phase 60, D-09)
+  | 'pa_ambassador_signup'
   // Onboarding (Phase 56)
   | 'pa_onboarding_completed';
 
