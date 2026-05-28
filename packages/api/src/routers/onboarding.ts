@@ -6,7 +6,7 @@ import { cqSetUserProps, cqTrackEvent } from '../utils/carrotquest';
 
 // Locked qualification keys (CONTEXT.md Data Model). z.enum whitelists reject
 // tampered keys before they reach the DB (Security V5 / threat T-56-04).
-const MARKETPLACES = ['WB', 'OZON', 'YANDEX', 'ALIEXPRESS', 'MEGAMARKET', 'OWN_SHOP', 'OTHER'] as const;
+const MARKETPLACES = ['WB', 'OZON'] as const;
 const GOALS = ['SALES', 'ADS', 'CONTENT', 'ANALYTICS', 'OPERATIONS', 'FINANCE', 'NEW_MARKETPLACE'] as const;
 const EXPERIENCE = ['PROSPECTING', 'BEGINNER', 'STABLE', 'ADVANCED'] as const;
 

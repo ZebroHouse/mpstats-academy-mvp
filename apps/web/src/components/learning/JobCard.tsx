@@ -10,7 +10,15 @@ function fmtDuration(min: number): string {
   return m > 0 ? `${h} ч ${m} мин` : `${h} ч`;
 }
 
-export function JobCard({ job }: { job: JobSummary }) {
+export function JobCard({
+  job,
+  onAddToTrack,
+  isAddPending,
+}: {
+  job: JobSummary;
+  onAddToTrack?: (jobId: string) => void;
+  isAddPending?: boolean;
+}) {
   const pct = job.lessonCount > 0
     ? Math.round((job.completedLessons / job.lessonCount) * 100)
     : 0;
@@ -43,6 +51,20 @@ export function JobCard({ job }: { job: JobSummary }) {
           style={{ width: `${pct}%` }}
         />
       </div>
+      {onAddToTrack && !job.isInTrack && (
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onAddToTrack(job.id);
+          }}
+          disabled={isAddPending}
+          className="mt-3 h-9 rounded-lg bg-mp-blue-500 text-white text-body-sm font-medium hover:bg-mp-blue-600 transition-colors disabled:opacity-50"
+        >
+          {isAddPending ? 'Добавляем…' : '+ В трек'}
+        </button>
+      )}
     </Link>
   );
 }

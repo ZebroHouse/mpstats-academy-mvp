@@ -5,6 +5,7 @@ import { getBalancedQuestions, getMockQuestionsForCategory } from '../mocks/ques
 import { ensureUserProfile } from '../utils/ensure-user-profile';
 import { handleDatabaseError } from '../utils/db-errors';
 import { getQuestionsFromBank } from '../utils/question-bank';
+import { getRecommendedJobsFromGaps } from '../utils/job-matcher';
 import type { PrismaClient } from '@mpstats/db';
 import {
   parseLearningPath,
@@ -784,10 +785,44 @@ export const diagnosticRouter = router({
             }
           }
 
-          await ctx.prisma.learningPath.upsert({
-            where: { userId: ctx.user.id },
-            update: { lessons: pathData as any, generatedAt: new Date() },
-            create: { userId: ctx.user.id, lessons: pathData as any },
+          // Phase 58 D-10: union-merge addedJobs with new diagnostic recommendations.
+          // Marketplace filter (D-16) is applied inside getRecommendedJobsFromGaps.
+          const profileForJobs = await ctx.prisma.userProfile.findUnique({
+            where: { id: ctx.user.id },
+            select: { marketplaces: true },
+          });
+          const newRecommendedJobs = await getRecommendedJobsFromGaps(ctx.prisma, {
+            skillProfile,
+            userMarketplaces: profileForJobs?.marketplaces ?? [],
+            limit: 3,
+          });
+          const newRecommendedJobIds = newRecommendedJobs.map(j => j.id);
+
+          // Co-locate lessons + addedJobs writes inside a single $transaction so a
+          // partial failure can never leave LearningPath half-updated (Wave 4 Case C).
+          await ctx.prisma.$transaction(async (tx) => {
+            const existing = await tx.learningPath.findUnique({
+              where: { userId: ctx.user.id },
+              select: { addedJobs: true },
+            });
+            const existingIds = Array.isArray(existing?.addedJobs)
+              ? (existing!.addedJobs as string[])
+              : [];
+            const mergedAddedJobs = Array.from(new Set([...existingIds, ...newRecommendedJobIds]));
+
+            await tx.learningPath.upsert({
+              where: { userId: ctx.user.id },
+              update: {
+                lessons: pathData as any,
+                addedJobs: mergedAddedJobs as any,
+                generatedAt: new Date(),
+              },
+              create: {
+                userId: ctx.user.id,
+                lessons: pathData as any,
+                addedJobs: mergedAddedJobs as any,
+              },
+            });
           });
 
         }
@@ -832,6 +867,27 @@ export const diagnosticRouter = router({
         );
 
         const gaps = await calculateSkillGaps(ctx.prisma, skillProfile);
+
+        const [profile, learningPath] = await Promise.all([
+          ctx.prisma.userProfile.findUnique({
+            where: { id: ctx.user.id },
+            select: { marketplaces: true },
+          }),
+          ctx.prisma.learningPath.findUnique({
+            where: { userId: ctx.user.id },
+            select: { addedJobs: true },
+          }),
+        ]);
+        const addedJobIds: string[] = Array.isArray(learningPath?.addedJobs)
+          ? (learningPath!.addedJobs as string[])
+          : [];
+        const recommendedJobs = await getRecommendedJobsFromGaps(ctx.prisma, {
+          skillProfile,
+          userMarketplaces: profile?.marketplaces ?? [],
+          addedJobIds,
+          limit: 3,
+        });
+
         return {
           sessionId: input.sessionId,
           completedAt: session.completedAt || new Date(),
@@ -841,6 +897,7 @@ export const diagnosticRouter = router({
           skillProfile,
           gaps,
           recommendedPath: getRecommendedLessonsFromGaps(gaps, 5),
+          recommendedJobs,
         };
       } catch (error) {
         handleDatabaseError(error);

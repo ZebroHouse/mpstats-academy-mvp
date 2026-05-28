@@ -146,6 +146,23 @@ export interface SkillGap {
   recommendedLessons: string[];
 }
 
+export interface RecommendedJob {
+  id: string;
+  slug: string;
+  title: string;
+  description: string;
+  marketplace: JobMarketplace;
+  axes: string[];
+  lessonCount: number;
+  totalDurationMin: number;
+  completedLessons: number;
+  isRecommended: boolean;
+  isInTrack: boolean;
+  rank: 1 | 2 | 3;
+  score: number;
+  matchedAxes: string[];
+}
+
 export interface DiagnosticResult {
   sessionId: string;
   completedAt: Date;
@@ -155,6 +172,7 @@ export interface DiagnosticResult {
   skillProfile: SkillProfile;
   gaps: SkillGap[];
   recommendedPath: string[];
+  recommendedJobs: RecommendedJob[];
 }
 
 export interface DiagnosticSessionState {
