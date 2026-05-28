@@ -55,4 +55,13 @@ describe('checkFraudSignals', () => {
     const result = await checkFraudSignals({ referrerId: 'u1', friendId: 'u2' });
     expect(result).toEqual({ verdict: 'OK' });
   });
+
+  it('short-circuits to OK when referrerId is null (ambassador case)', async () => {
+    // Ambassador codes have no referrer user. Self-ref + cap-per-week checks
+    // are meaningless without one — must skip without any external calls.
+    const result = await checkFraudSignals({ referrerId: null, friendId: 'u1' });
+    expect(result).toEqual({ verdict: 'OK' });
+    expect(mockReferralCount).not.toHaveBeenCalled();
+    expect(mockSupabaseAdminGetUser).not.toHaveBeenCalled();
+  });
 });

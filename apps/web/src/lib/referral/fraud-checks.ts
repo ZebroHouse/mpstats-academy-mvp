@@ -1,10 +1,14 @@
 /**
- * Anti-fraud checks for referral package issuance (Phase 53A, D7).
+ * Anti-fraud checks for referral package issuance (Phase 53A, D7; Phase 60, D-08).
  *
  * Returns:
  *  - 'BLOCKED_SELF_REF' if referrer === friend (by userId or email)
  *  - 'PENDING_REVIEW' if referrer has ≥5 referrals in last 7 days
  *  - 'OK' otherwise
+ *
+ * Phase 60 (D-08): `referrerId` may be `null` for AMBASSADOR codes (no peer
+ * referrer). Self-ref + cap-per-week checks are meaningless without a referrer
+ * — short-circuit to `OK` without touching prisma/supabase.
  */
 
 import { prisma } from '@mpstats/db/client';
@@ -19,11 +23,16 @@ export type FraudVerdict =
   | { verdict: 'PENDING_REVIEW' };
 
 export interface CheckArgs {
-  referrerId: string;
+  referrerId: string | null;
   friendId: string;
 }
 
 export async function checkFraudSignals(args: CheckArgs): Promise<FraudVerdict> {
+  // 0. Ambassador branch (Phase 60, D-08): no referrer user → skip all checks.
+  if (args.referrerId === null) {
+    return { verdict: 'OK' };
+  }
+
   // 1. Self-ref by userId — short-circuit, не трогать Supabase
   if (args.referrerId === args.friendId) {
     return { verdict: 'BLOCKED_SELF_REF' };
