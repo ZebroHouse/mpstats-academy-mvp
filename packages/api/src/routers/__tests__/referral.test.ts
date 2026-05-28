@@ -2,16 +2,52 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { TRPCError } from '@trpc/server';
 
 const mockUserFindUnique = vi.hoisted(() => vi.fn());
+const mockUserFindFirst = vi.hoisted(() => vi.fn());
 const mockPkgFindMany = vi.hoisted(() => vi.fn());
 const mockReferralCount = vi.hoisted(() => vi.fn());
 const mockActivatePackage = vi.hoisted(() => vi.fn());
+const mockReferralCodeFindUnique = vi.hoisted(() => vi.fn());
+const mockReferralCodeFindMany = vi.hoisted(() => vi.fn());
+const mockReferralCodeCreate = vi.hoisted(() => vi.fn());
+const mockReferralCodeUpdate = vi.hoisted(() => vi.fn());
+const mockQueryRaw = vi.hoisted(() => vi.fn());
 
 vi.mock('@mpstats/db/client', () => ({
   prisma: {
-    userProfile: { findUnique: mockUserFindUnique },
+    userProfile: { findUnique: mockUserFindUnique, findFirst: mockUserFindFirst },
     referralBonusPackage: { findMany: mockPkgFindMany },
     referral: { count: mockReferralCount },
+    referralCode: {
+      findUnique: mockReferralCodeFindUnique,
+      findMany: mockReferralCodeFindMany,
+      create: mockReferralCodeCreate,
+      update: mockReferralCodeUpdate,
+    },
+    $queryRaw: mockQueryRaw,
   },
+}));
+
+// Mock @mpstats/db for the Prisma namespace import (PrismaClientKnownRequestError).
+vi.mock('@mpstats/db', async () => {
+  const actual = await vi.importActual<Record<string, unknown>>('@mpstats/db');
+  class PrismaClientKnownRequestError extends Error {
+    code: string;
+    constructor(msg: string, opts: { code: string }) {
+      super(msg);
+      this.code = opts.code;
+    }
+  }
+  return {
+    ...actual,
+    Prisma: {
+      PrismaClientKnownRequestError,
+    },
+  };
+});
+
+// Force-deterministic ambassador code generation for create tests.
+vi.mock('../../services/referral/code-generator', () => ({
+  generateAmbassadorCode: () => 'AMB-TESTCD',
 }));
 
 vi.mock('../../services/referral/activation', () => ({
@@ -113,5 +149,200 @@ describe('referral.activatePackage', () => {
     await expect(caller().activatePackage({ packageId: 'pkg-x' })).rejects.toBeInstanceOf(
       TRPCError,
     );
+  });
+});
+
+// ====== Phase 60 — referral.admin.* ambassador codes ======
+
+// Admin ctx — adminProcedure middleware calls ctx.prisma.userProfile.findUnique to load role.
+const adminCtxPrismaStub = {
+  userProfile: {
+    findUnique: vi.fn().mockResolvedValue({ role: 'ADMIN' }),
+    update: vi.fn().mockResolvedValue({}),
+  },
+};
+const adminCtx = {
+  user: { id: 'admin-1' },
+  prisma: adminCtxPrismaStub as any,
+};
+function adminCaller() {
+  return referralRouter.createCaller(adminCtx as any);
+}
+
+// Non-admin (regular user) — role=USER → FORBIDDEN.
+const userCtxPrismaStub = {
+  userProfile: {
+    findUnique: vi.fn().mockResolvedValue({ role: 'USER' }),
+    update: vi.fn().mockResolvedValue({}),
+  },
+};
+const userCtx = {
+  user: { id: 'user-2' },
+  prisma: userCtxPrismaStub as any,
+};
+function userCaller() {
+  return referralRouter.createCaller(userCtx as any);
+}
+
+describe('referral.admin.createAmbassadorCode', () => {
+  it('happy path returns AMBASSADOR row with auto-generated code', async () => {
+    mockReferralCodeFindUnique.mockResolvedValue(null);
+    mockUserFindFirst.mockResolvedValue(null);
+    mockReferralCodeCreate.mockResolvedValue({
+      id: 'rc1',
+      code: 'AMB-TESTCD',
+      codeType: 'AMBASSADOR',
+      label: 'Анна',
+      refereeTrialDays: 14,
+      maxUses: 100,
+      currentUses: 0,
+      expiresAt: null,
+      isActive: true,
+      createdByUserId: 'admin-1',
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+
+    const result = await adminCaller().admin.createAmbassadorCode({
+      label: 'Анна',
+      refereeTrialDays: 14,
+      maxUses: 100,
+    });
+
+    expect(result.codeType).toBe('AMBASSADOR');
+    expect(result.code).toBe('AMB-TESTCD');
+    expect(mockReferralCodeCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({
+          code: 'AMB-TESTCD',
+          codeType: 'AMBASSADOR',
+          refereeTrialDays: 14,
+          createdByUserId: 'admin-1',
+        }),
+      }),
+    );
+  });
+
+  it('rejects refereeTrialDays=0 with zod error', async () => {
+    await expect(
+      adminCaller().admin.createAmbassadorCode({
+        label: 'X',
+        refereeTrialDays: 0,
+      }),
+    ).rejects.toThrow();
+  });
+
+  it('rejects refereeTrialDays=366 with zod error', async () => {
+    await expect(
+      adminCaller().admin.createAmbassadorCode({
+        label: 'X',
+        refereeTrialDays: 366,
+      }),
+    ).rejects.toThrow();
+  });
+
+  it('rejects collision with existing ReferralCode.code (CONFLICT)', async () => {
+    mockReferralCodeFindUnique.mockResolvedValue({ id: 'existing' });
+    mockUserFindFirst.mockResolvedValue(null);
+
+    await expect(
+      adminCaller().admin.createAmbassadorCode({
+        label: 'Анна',
+        refereeTrialDays: 14,
+        code: 'AMB-DUP123',
+      }),
+    ).rejects.toMatchObject({ code: 'CONFLICT' });
+  });
+
+  it('rejects collision with existing UserProfile.referralCode (CONFLICT)', async () => {
+    mockReferralCodeFindUnique.mockResolvedValue(null);
+    mockUserFindFirst.mockResolvedValue({ id: 'u-owner' });
+
+    await expect(
+      adminCaller().admin.createAmbassadorCode({
+        label: 'Анна',
+        refereeTrialDays: 14,
+        code: 'REF-USR123',
+      }),
+    ).rejects.toMatchObject({ code: 'CONFLICT' });
+  });
+});
+
+describe('referral.admin.updateAmbassadorCode', () => {
+  it('rejects unknown key refereeTrialDays via .strict() (zod unrecognized_keys)', async () => {
+    await expect(
+      adminCaller().admin.updateAmbassadorCode({
+        id: 'clxxxxxxxxxxxxxxxxxxxxxxx',
+        // @ts-expect-error — strict() rejects unknown keys
+        refereeTrialDays: 30,
+      }),
+    ).rejects.toThrow();
+  });
+
+  it('rejects unknown key code via .strict()', async () => {
+    await expect(
+      adminCaller().admin.updateAmbassadorCode({
+        id: 'clxxxxxxxxxxxxxxxxxxxxxxx',
+        // @ts-expect-error
+        code: 'AMB-NEW123',
+      }),
+    ).rejects.toThrow();
+  });
+});
+
+describe('referral.admin.toggleAmbassadorCode', () => {
+  it('flips isActive via update', async () => {
+    mockReferralCodeUpdate.mockResolvedValue({ id: 'rc1', isActive: false });
+
+    await adminCaller().admin.toggleAmbassadorCode({
+      id: 'clxxxxxxxxxxxxxxxxxxxxxxx',
+      isActive: false,
+    });
+
+    expect(mockReferralCodeUpdate).toHaveBeenCalledWith({
+      where: { id: 'clxxxxxxxxxxxxxxxxxxxxxxx' },
+      data: { isActive: false },
+    });
+  });
+});
+
+describe('referral.admin.listAmbassadorCodes', () => {
+  it('returns items with activations + paid_conversions stats', async () => {
+    mockReferralCodeFindMany.mockResolvedValue([
+      {
+        id: 'rc1',
+        code: 'AMB-ABC123',
+        codeType: 'AMBASSADOR',
+        label: 'Blogger A',
+        refereeTrialDays: 14,
+        maxUses: null,
+        currentUses: 3,
+        expiresAt: null,
+        isActive: true,
+        createdByUserId: 'admin-1',
+        createdAt: new Date(),
+        updatedAt: new Date(),
+      },
+    ]);
+    mockReferralCount.mockResolvedValue(3);
+    mockQueryRaw.mockResolvedValue([{ count: BigInt(2) }]);
+
+    const result = await adminCaller().admin.listAmbassadorCodes({ take: 50 });
+
+    expect(result.items).toHaveLength(1);
+    expect(result.items[0]).toMatchObject({
+      id: 'rc1',
+      activations: 3,
+      paid_conversions: 2,
+    });
+    expect(result.nextCursor).toBeNull();
+  });
+});
+
+describe('referral.admin.* — adminProcedure gating', () => {
+  it('non-admin (role=USER) gets FORBIDDEN on listAmbassadorCodes', async () => {
+    await expect(
+      userCaller().admin.listAmbassadorCodes({ take: 10 }),
+    ).rejects.toMatchObject({ code: 'FORBIDDEN' });
   });
 });
