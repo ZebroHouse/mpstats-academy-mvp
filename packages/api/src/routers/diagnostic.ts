@@ -6,6 +6,7 @@ import { ensureUserProfile } from '../utils/ensure-user-profile';
 import { handleDatabaseError } from '../utils/db-errors';
 import { getQuestionsFromBank } from '../utils/question-bank';
 import { getRecommendedJobsFromGaps } from '../utils/job-matcher';
+import { cqSetUserProps, cqTrackEvent } from '../utils/carrotquest';
 import type { PrismaClient } from '@mpstats/db';
 import {
   parseLearningPath,
@@ -477,11 +478,23 @@ export const diagnosticRouter = router({
         });
       }
 
+      // Phase 59 — fetch user marketplaces so the bank filter can exclude
+      // WB-only or OZON-only questions the user does not need.
+      const profileForBank = await ctx.prisma.userProfile.findUnique({
+        where: { id: ctx.user.id },
+        select: { marketplaces: true },
+      });
+      const userMarketplaces = profileForBank?.marketplaces ?? [];
+
       // Get questions: prefer AI-generated (with source tracing), fallback to mock
       let questions: DiagnosticQuestion[];
       try {
         // Try cached bank first
-        questions = await getQuestionsFromBank(ctx.prisma, QUESTIONS_PER_SESSION);
+        questions = await getQuestionsFromBank(
+          ctx.prisma,
+          QUESTIONS_PER_SESSION,
+          userMarketplaces,
+        );
 
         // If all questions are mock (no sourceChunkIds), generate fresh AI questions synchronously
         const hasAI = questions.some(q => q.sourceChunkIds && q.sourceChunkIds.length > 0);
@@ -825,6 +838,19 @@ export const diagnosticRouter = router({
             });
           });
 
+          // Phase 59 — mirror diagnostic completion to CarrotQuest. Fire-and-
+          // forget after the LearningPath $transaction commits (mirrors the
+          // onboarding.ts pattern). pa_* props go on the LEAD via
+          // setUserProps; the event itself carries no params (CQ Pitfall #5).
+          try {
+            await cqSetUserProps(ctx.user.id, {
+              pa_diagnostic_marketplaces: (profileForJobs?.marketplaces ?? []).join(', '),
+              pa_diagnostic_pool_size: String(questions.length),
+            });
+            await cqTrackEvent(ctx.user.id, 'pa_diagnostic_completed');
+          } catch (err) {
+            console.error('[diagnostic] CQ tracking failed (non-blocking):', err);
+          }
         }
 
         return {
