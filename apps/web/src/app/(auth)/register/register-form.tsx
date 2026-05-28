@@ -35,7 +35,11 @@ export function RegisterForm({ initialRefCode }: { initialRefCode: string | null
     { enabled: !!refCode },
   );
   const i2Mode = process.env.NEXT_PUBLIC_REFERRAL_PAY_GATED === 'true';
-  const trialDays = i2Mode ? 7 : 14;
+  // Phase 60: ambassador codes carry their own duration in validation response.
+  // Fall back to the 53A i1/i2 constants when the endpoint returns null trialDays
+  // (legacy user-to-user codes).
+  const trialDays = refValidation.data?.trialDays ?? (i2Mode ? 7 : 14);
+  const isAmbassador = refValidation.data?.type === 'ambassador';
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
@@ -92,7 +96,15 @@ export function RegisterForm({ initialRefCode }: { initialRefCode: string | null
             </div>
             {refValidation.data.referrerName && (
               <div className="text-mp-gray-600 mt-1">
-                От пользователя: <strong>{refValidation.data.referrerName}</strong>
+                {isAmbassador ? (
+                  <>
+                    По приглашению <strong>{refValidation.data.referrerName}</strong>
+                  </>
+                ) : (
+                  <>
+                    От пользователя: <strong>{refValidation.data.referrerName}</strong>
+                  </>
+                )}
               </div>
             )}
           </div>
