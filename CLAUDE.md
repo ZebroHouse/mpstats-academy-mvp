@@ -1,6 +1,6 @@
 # CLAUDE.md — MPSTATS Academy MVP
 
-**Last updated:** 2026-05-22
+**Last updated:** 2026-05-28
 
 > Детали по сессиям, спринтам, Supabase, деплою, CQ, staging — в `.claude/memory/`.
 > Индекс: `.claude/memory/MEMORY.md`. История сессий: `.claude/memory/session-history.md`.
@@ -50,18 +50,22 @@ Sibling project `D:/GpT_docs/Ai_MP_manager/` запустил `prisma db push --
 | v1.7 RAG Quality | In Progress (Phase 55 Sprints 2/2C/3 shipped — full-platform vision-RAG, 91.5% coverage) |
 | v1.8 Library Redesign | Shipped 2026-05-22 (Phase 57 — `/learn` job catalog + polish + hidden-lesson auto-sync) |
 | v1.9 Agentic Search | Shipped 2026-05-25 (Track B — intent→jobs engine, AgentSearch on `/learn` + `/welcome`) |
+| v1.10 Diagnostic on Jobs | Shipped 2026-05-28 (Phase 58 — диагностика рекомендует top-3 джобы, slim marketplace-aware онбординг, legacy LearningPath auto-rebuild) |
+| v1.11 Ambassador Codes | Shipped 2026-05-28 (Phase 60 — админ-управляемые AMBASSADOR реф-коды для блогеров с кастомным trial-сроком + admin UI + статистика) |
 
 **Remaining work:**
-1. **Phase 58 — diagnostic on jobs** (Phase 57 follow-up) — not started; needs a spec. Diagnostic recommends whole jobs instead of loose lessons.
+1. **Phase 59 — marketplace-aware diagnostic questions** — in progress on parallel branch `phase-59-marketplace-aware-diagnostic`. Builds on shipped Phase 58. Когда агент вернётся — rebase на новый master (4 PR накопилось: #11, #12, #13, #14). Handoff-note для агента: `.planning/phases/59-marketplace-aware-diagnostic-questions-wb-ozon/HANDOFF-2026-05-28.md` (uncommitted in main tree).
 2. Phase 33-03: CQ Dashboard Setup (на стороне CQ команды).
 
-_Done since 2026-05-14: Phase 53A + 53B (referral) merged, Phase 55 Sprint 3 merged (vision-RAG full platform), Phase 56 (entry-flow) merged, Phase 57 (library redesign) shipped 2026-05-22, Track B (agentic search) shipped 2026-05-25. Phase 47 (hub-layout) superseded by Phase 57._
+_Done since 2026-05-22: Phase 57 polish (PR #9 hidden-lesson auto-sync) + Track B (PR #10) + admin-analytics fix (PR #11, 2026-05-28) + Phase 58 (PR #12, 2026-05-28) + Phase 60 base (PR #13, 2026-05-28) + Phase 60 register-banner hotfix (PR #14, 2026-05-28)._
 
 ## Active Branches
 
-_No long-lived branches in flight._ Track B worktree at `.claude/worktrees/track-b-intent-jobs-engine/` preserved post-merge for reference; safe to `git worktree remove` once not needed.
+**`phase-59-marketplace-aware-diagnostic`** — параллельный агент. Отстаёт от master на 4 PR (admin-analytics #11, Phase 58 #12, Phase 60 #13, Phase 60 hotfix #14). При возврате нужен `git fetch && git rebase origin/master`. Конфликтов не ожидается — Phase 59 трогает `diagnostic.ts` question-bank/scoring, master-изменения трогают другие зоны. Handoff с подробностями: `.planning/phases/59-marketplace-aware-diagnostic-questions-wb-ozon/HANDOFF-2026-05-28.md` (uncommitted в main tree — агент увидит при `git status`).
 
-Track B (intent→jobs engine) merged via PR #10 (`a9c8402`) + hotfix `820c5b8` (job-catalog marker split). Phase 53A + 53B (referral) merged. Phase 55 Sprint 3 (vision-RAG, 91.5%) merged. Phase 56 (entry-flow) merged. Phase 57 (library redesign) merged via PR #8 (`bb84013`) + PR #9 (`3059ad8`).
+Worktrees `.claude/worktrees/track-b-intent-jobs-engine/`, `.claude/worktrees/phase-60-ambassador-codes/`, `.claude/worktrees/phase-60-banner-fix/` остались post-merge — безопасно удалять. Cleanup на Windows иногда падает с «filename too long», тогда через `cmd //c rd /s /q <path>` + `git worktree prune`.
+
+Track B (intent→jobs engine) merged via PR #10 (`a9c8402`) + hotfix `820c5b8` (job-catalog marker split). Phase 53A + 53B (referral) merged. Phase 55 Sprint 3 (vision-RAG, 91.5%) merged. Phase 56 (entry-flow) merged. Phase 57 (library redesign) merged via PR #8 (`bb84013`) + PR #9 (`3059ad8`). Phase 58 (diagnostic on jobs) merged via PR #12 (`3ca8fb6`). Phase 60 (ambassador codes) merged via PR #13 (`6927f21`) + hotfix PR #14 (`eb1946c`).
 Referral flag i1→i2 switch still scheduled ~2026-06-01 (manual: DB INSERT + env + rebuild).
 Archive directory `D:/GpT_docs/MPSTATS ACADEMY ADAPTIVE LEARNING/MAAL-phase55/` (orphan, not a worktree) holds Sprint 2C VLM dumps (`results/vlm-runs-sprint2c.json` 1.7MB, 644 frame jpgs in `results/frames/`) — useful if a re-ingest is needed without re-running LLM. Safe to delete to free ~300MB when no longer needed.
 
@@ -98,7 +102,29 @@ Archive directory `D:/GpT_docs/MPSTATS ACADEMY ADAPTIVE LEARNING/MAAL-phase55/` 
 
 **Внимание (исторический lesson):** CP хранит `amount` на своей стороне на момент создания подписки. При смене цен отменять старые ACTIVE подписки чтобы автосписания пошли по новым тарифам.
 
-## Last Session (2026-05-25) — Track B (agentic search) shipped to prod
+## Last Session (2026-05-28) — Phase 58 + Phase 60 + admin-analytics + register-banner hotfix shipped to prod
+
+**Огромная сессия: 4 PR через master + миграция на prod БД, всё работает.**
+
+**PR #11 (`eccb348`) — admin analytics fix.** Топ-5 активных юзеров в `/admin/analytics` теперь показывает Email + Завершено (раньше только «Уроков просмотрено» = `LessonProgress` row count, обманчиво — у топа avg 21-29% досмотра, реально row-creators не зрители). Колонка «Уроков просмотрено» → «Открыто уроков». Backend `getWatchStats.topActiveUsers` через `auth.users` raw query.
+
+**PR #12 (`3ca8fb6`) — Phase 58 Diagnostic on Jobs.** 4 плана, 255 тестов, GSD acceptance gates ✓. Внутри (a) wizard step 2 онбординга 7→2 опции (только WB + Ozon), (b) **backfill `UserProfile.marketplaces` уже применён** к prod БД 26.05 для ~200 юзеров (commit `5c48ad4` — факт-запись), (c) диагностика теперь рекомендует **top-3 джобы** с bulk-CTA «Добавить все 3 в трек», (d) legacy `LearningPath` flat-format → sectioned auto-rebuild для ~170 юзеров (D-07 hard rule: `LessonProgress` не трогаем). До деплоя VPS был «оставлен» на ветке phase-58 предыдущим агентом — починили (`git checkout master` обязателен).
+
+**PR #13 (`6927f21`) — Phase 60 Ambassador Codes.** GSD-флоу полный цикл за сессию: discuss → spec → context → plan-phase (gsd-planner 4 PLAN.md + plan-checker PASS) → execute-phase (3 waves, 2 параллельных executor в Wave 2). 4 sprint:
+- 60-01: schema migration (additive) + `resolveReferralCode` resolver + `generateAmbassadorCode`
+- 60-02: `issueReferralOnSignup` AMBASSADOR-ветка (race protection on maxUses через in-tx recheck, 5-min stale-user window D-03, null-safe `checkFraudSignals`, CQ event `pa_ambassador_signup`)
+- 60-03: `/admin/referrals/codes` page + 4 tRPC `referral.admin.*` (zod `.strict()` для D-01 immutable, cross-table uniqueness vs `UserProfile.referralCode`)
+- 60-04: Playwright E2E + 9-сценарийный `60-HUMAN-UAT.md` + `60-DEPLOY-RUNBOOK.md` + deploy gates
+
+Migration `20260528000000_add_referral_code_table` применена к shared prod БД через **Supabase Management API** (VPS не имеет pnpm/prisma — паттерн в `~/.claude/projects/D--GpT-docs-MPSTATS-ACADEMY-ADAPTIVE-LEARNING-MAAL/memory/reference_supabase_migration_via_mgmt_api.md`). Owner создал тестовый код в админке, отдал маркетингу — UAT прошёл.
+
+**PR #14 (`eb1946c`) — Phase 60 register-banner hotfix.** Поверх PR #13 owner заметил: при переходе по `/register?ref=AMB-XXX` баннер «🎁 N дней» не показывался — `referral.validateCode` (public endpoint) лукапил только `UserProfile.referralCode`, не знал про AMBASSADOR. Фикс: routing через `resolveReferralCode`, возврат `trialDays` + `type` discriminator, register-form динамический trial days, баннер «По приглашению **<label>**» для ambassador (vs «От пользователя:» 53A). 4 новых теста (active/expired/disabled/max-reached). Постмортем планера — заметка `feedback_planner_missed_public_endpoint.md` (плановик мыслил в терминах модели, забыл про public read consumers).
+
+**Параллельный агент на Phase 59** — handoff-нота лежит в main MAAL tree на phase-59 ветке: `.planning/phases/59-marketplace-aware-diagnostic-questions-wb-ozon/HANDOFF-2026-05-28.md`. Описывает что улетело в master, какие файлы могут пересечься, recommended rebase procedure. Конфликтов не ждём — другая зона кода.
+
+**Cleanup TODO:** worktrees `phase-60-ambassador-codes/` и `phase-60-banner-fix/` остались на диске (cleanup упал с «filename too long» на Windows). Не блокирует.
+
+## Previous Session (2026-05-25) — Track B (agentic search) shipped to prod
 
 **PR #10 (`a9c8402`) + hotfix `820c5b8` merged to master and deployed to prod.**
 
