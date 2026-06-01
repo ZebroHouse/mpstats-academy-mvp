@@ -1,6 +1,6 @@
 # CLAUDE.md — MPSTATS Academy MVP
 
-**Last updated:** 2026-05-28
+**Last updated:** 2026-06-01
 
 > Детали по сессиям, спринтам, Supabase, деплою, CQ, staging — в `.claude/memory/`.
 > Индекс: `.claude/memory/MEMORY.md`. История сессий: `.claude/memory/session-history.md`.
@@ -52,16 +52,16 @@ Sibling project `D:/GpT_docs/Ai_MP_manager/` запустил `prisma db push --
 | v1.9 Agentic Search | Shipped 2026-05-25 (Track B — intent→jobs engine, AgentSearch on `/learn` + `/welcome`) |
 | v1.10 Diagnostic on Jobs | Shipped 2026-05-28 (Phase 58 — диагностика рекомендует top-3 джобы, slim marketplace-aware онбординг, legacy LearningPath auto-rebuild) |
 | v1.11 Ambassador Codes | Shipped 2026-05-28 (Phase 60 — админ-управляемые AMBASSADOR реф-коды для блогеров с кастомным trial-сроком + admin UI + статистика) |
+| v1.12 Marketplace-aware Diagnostic | Shipped 2026-06-01 (Phase 59 v2 — pivot к hand-curated static deck: 30 вопросов 15WB+15Ozon, 5×3 axis/level matrix, seeded option shuffle, balanced 7-8 mix for BOTH users) |
 
 **Remaining work:**
-1. **Phase 59 — marketplace-aware diagnostic questions** — in progress on parallel branch `phase-59-marketplace-aware-diagnostic`. Builds on shipped Phase 58. Когда агент вернётся — rebase на новый master (4 PR накопилось: #11, #12, #13, #14). Handoff-note для агента: `.planning/phases/59-marketplace-aware-diagnostic-questions-wb-ozon/HANDOFF-2026-05-28.md` (uncommitted in main tree).
-2. Phase 33-03: CQ Dashboard Setup (на стороне CQ команды).
+1. Phase 33-03: CQ Dashboard Setup (на стороне CQ команды).
 
-_Done since 2026-05-22: Phase 57 polish (PR #9 hidden-lesson auto-sync) + Track B (PR #10) + admin-analytics fix (PR #11, 2026-05-28) + Phase 58 (PR #12, 2026-05-28) + Phase 60 base (PR #13, 2026-05-28) + Phase 60 register-banner hotfix (PR #14, 2026-05-28)._
+_Done since 2026-05-22: Phase 57 polish (PR #9 hidden-lesson auto-sync) + Track B (PR #10) + admin-analytics fix (PR #11) + Phase 58 (PR #12, 2026-05-28) + Phase 60 base (PR #13, 2026-05-28) + Phase 60 register-banner hotfix (PR #14, 2026-05-28) + Phase 59 v2 static-deck diagnostic (PR #16, 2026-06-01)._
 
 ## Active Branches
 
-**`phase-59-marketplace-aware-diagnostic`** — параллельный агент. Отстаёт от master на 4 PR (admin-analytics #11, Phase 58 #12, Phase 60 #13, Phase 60 hotfix #14). При возврате нужен `git fetch && git rebase origin/master`. Конфликтов не ожидается — Phase 59 трогает `diagnostic.ts` question-bank/scoring, master-изменения трогают другие зоны. Handoff с подробностями: `.planning/phases/59-marketplace-aware-diagnostic-questions-wb-ozon/HANDOFF-2026-05-28.md` (uncommitted в main tree — агент увидит при `git status`).
+_No long-lived branches in flight._
 
 Worktrees `.claude/worktrees/track-b-intent-jobs-engine/`, `.claude/worktrees/phase-60-ambassador-codes/`, `.claude/worktrees/phase-60-banner-fix/` остались post-merge — безопасно удалять. Cleanup на Windows иногда падает с «filename too long», тогда через `cmd //c rd /s /q <path>` + `git worktree prune`.
 
@@ -102,7 +102,26 @@ Archive directory `D:/GpT_docs/MPSTATS ACADEMY ADAPTIVE LEARNING/MAAL-phase55/` 
 
 **Внимание (исторический lesson):** CP хранит `amount` на своей стороне на момент создания подписки. При смене цен отменять старые ACTIVE подписки чтобы автосписания пошли по новым тарифам.
 
-## Last Session (2026-05-28) — Phase 58 + Phase 60 + admin-analytics + register-banner hotfix shipped to prod
+## Last Session (2026-06-01) — Phase 59 v2 (static-deck diagnostic) shipped to prod
+
+**PR #16 `b89a54e` merged to master + prod deploy `maal-web-1`.** Pivot away from LLM-generated marketplace-tagged question banks to a hand-curated static deck of 30 questions (15 WB Q1-Q15 + 15 Ozon Q16-Q30), 5 competencies × 3 difficulty levels per deck. Methodology source: 2 Google Docs prepared by content team, snapshotted as raw JSON + parsed markdown under `.planning/phases/59-.../methodology-decks/`.
+
+**Что живёт на проде сейчас:**
+- `diagnostic.startSession` собирает 15 вопросов через `pickDeckForUser(userMarketplaces, session.id)` + `shuffleOptions(q, session.id)` для каждого. WB-only → все 15 WB; Ozon-only → все 15 Ozon; BOTH → детерминированный микс 7-8 по матрице 5×3 (`packages/api/src/diagnostic/static-deck.ts` + `deck-picker.ts` + `option-shuffler.ts`).
+- Канонический «правильный = A» из источника шафлится server-side через seeded Fisher-Yates (`mulberry32` от hash(`sessionId + '::' + questionId`)) → юзер не угадывает по позиции, F5 стабилен, два запуска одного юзера → разные раскладки.
+- Бейдж «Про Wildberries» / «Про Ozon» на карточке вопроса — только для BOTH-юзера (`userMarketplaces.length === 2`). Single-MP юзер бейдж не видит.
+- `submitAnswer`/scoring/`getResults` untouched — `correctIndex` в persisted `session.questions` уже post-shuffle.
+- LLM-bank в `packages/api/src/utils/question-bank.ts` помечен `@deprecated` и не вызывается из runtime. `QuestionBank` Prisma model + строки в prod БД остаются как dormant — cleanup не срочный.
+- Phase 58 рекомендация джоб (`getRecommendedJobsFromGaps` через `errors[]`/`deepening[]` axis-сигнал) получает теперь более чистый вход — 3 вопроса на ось вместо неровного LLM-pool.
+- CarrotQuest `pa_diagnostic_completed` event + `pa_diagnostic_pool_size = '15'` (теперь константа) + `pa_diagnostic_marketplaces` lead-props.
+
+**Tests на момент merge:** api 123/123, web 205/205, 6 пакетов typecheck зелёные. CI на PR — все 4 проверки SUCCESS.
+
+**Эволюция фазы за сессию:** Phase 59 изначально планировалась как LLM-генерируемый банк с Google-Sheet-tagger и prod DELETE/prewarm rollout (старые планы 59-03/04). В сессии прилетели готовые 30 вопросов от методологов → выкинули оба старых плана, написали новые 59-03 (pure utilities, TDD) и 59-04 (wiring). Полная история решений: `.planning/phases/59-.../59-CONTEXT-v2.md` (D-V2-01..D-V2-10).
+
+**Memory entries:** `project_phase58_diagnostic_on_jobs.md`, `project_phase59_static_deck_diagnostic.md` (в `~/.claude/projects/.../memory/`).
+
+## Previous Session (2026-05-28) — Phase 58 + Phase 60 + admin-analytics + register-banner hotfix shipped to prod
 
 **Огромная сессия: 4 PR через master + миграция на prod БД, всё работает.**
 

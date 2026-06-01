@@ -1,16 +1,16 @@
 ---
 gsd_state_version: 1.0
-milestone: v1.6
-milestone_name: Engagement
-status: Phase 56 complete (Entry Flow Redesign)
-stopped_at: Phase 58 context gathered
-last_updated: "2026-05-26T14:17:51.279Z"
+milestone: v1.12
+milestone_name: Marketplace-aware Diagnostic
+status: idle — Phase 58 + 59 + 60 shipped to prod
+stopped_at: ready for next milestone planning
+last_updated: "2026-06-01T10:00:00.000Z"
 progress:
-  total_phases: 4
-  completed_phases: 1
-  total_plans: 7
-  completed_plans: 7
-  percent: 25
+  total_phases: 0
+  completed_phases: 0
+  total_plans: 0
+  completed_plans: 0
+  percent: 0
 ---
 
 # Project State
@@ -20,12 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Core value:** Пользователь проходит AI-диагностику, получает точную карту навыков и персонализированный трек обучения из реальных данных
-**Current focus:** Phase 56 — entry-flow-redesign
+**Current focus:** idle — Phase 59 v2 (static deck diagnostic) shipped 2026-06-01, awaiting next milestone
 
 ## Current Position
 
-Phase: 56 (entry-flow-redesign) — COMPLETE
-Plan: 4 of 4 (56-01, 56-02, 56-03, 56-04 complete)
+No active phase. Last shipped:
+- Phase 60 (Ambassador Referral Codes) — PR #13 + #14 hotfix, 2026-05-28
+- Phase 58 (Diagnostic on Jobs) — PR #12 `3ca8fb6`, 2026-05-28
+- Phase 59 v2 (Static-deck Diagnostic) — PR #16 `b89a54e`, 2026-06-01
 
 ## Performance Metrics
 

@@ -91,8 +91,8 @@ Full details: see Phase Details below
 
 - [x] Phase 56: Entry Flow Redesign — онбординг-визард `/welcome` + развилка диагностика/каталог + снятие жёсткого гейта диагностики
 - [x] Phase 57: Library Redesign — `/learn` job catalog (29 джоб, 5 осей, WB/Ozon switch) + «Мои плейбуки» + hidden-lesson auto-sync
-- [ ] Phase 58: Diagnostic on Jobs — диагностика рекомендует целые джобы (плейбуки) вместо россыпи уроков; «Мой трек» становится job-aware end-to-end; wizard упрощается до WB/Ozon; джобы фильтруются по marketplace юзера
-- [x] Phase 59: Marketplace-aware Diagnostic Questions — банк вопросов тегируется по marketplace (WB/OZON/BOTH); selection учитывает marketplace юзера; контент-ревью существующих вопросов + новые WB-only/Ozon-only где нужно (completed 2026-06-01)
+- [x] Phase 58: Diagnostic on Jobs — диагностика рекомендует целые джобы (плейбуки); wizard упрощён до WB/Ozon; джобы фильтруются по marketplace юзера (completed 2026-05-28, PR #12 `3ca8fb6`)
+- [x] Phase 59: Marketplace-aware Diagnostic Questions — pivot к hand-curated static deck (30 вопросов, 5×3 матрица WB+Ozon, seeded option shuffle, balanced 7-8 mix для BOTH) (completed 2026-06-01, PR #16 `b89a54e`)
 
 </details>
 
@@ -1305,7 +1305,7 @@ Plans:
 
 **Source:** Design-спек Phase 57 `docs/superpowers/specs/2026-05-18-library-redesign-design.md` §11 (Out of scope → Phase 58), Track B design `docs/superpowers/specs/2026-05-20-agentic-search-design.md` (Phase 58 — потребитель движка `intent.resolve`). Follow-up к Phase 57.
 
-**Status:** ⏳ Pending discuss → spec.
+**Status:** ✅ Shipped 2026-05-28 (PR #12 `3ca8fb6`). Diagnostic recommends top-3 jobs (not loose lessons), bulk «+ Все 3 в трек» CTA. Wizard onboarding step collapsed to WB+Ozon multi-select. UserProfile.marketplaces backfilled to {WB,OZON}-only for ~200 prod users. Legacy flat LearningPath auto-rebuilds into sectioned format. Marketplace job filter live.
 
 **Мотивация:**
 
@@ -1379,7 +1379,7 @@ Plans:
 
 **Source:** Follow-up к Phase 58, обсуждено 2026-05-26 (см. `.planning/phases/58-diagnostic-on-jobs/58-CONTEXT.md` §Deferred Ideas + `58-DISCUSSION-LOG.md`).
 
-**Status:** ⏳ Pending discuss → spec → plan. **Зависит от Phase 58** (использует тот же axes-matching engine, ту же связку `UserProfile.marketplaces[] {WB|OZON}` после backfill Phase 58).
+**Status:** ✅ Shipped 2026-06-01 (PR #16 `b89a54e`). **Pivot from LLM-generated banks to hand-curated static deck** — методологи дали 30 готовых вопросов (15 WB + 15 Ozon, 5 компетенций × 3 уровня). 15-вопросная сессия для всех типов юзеров: WB-only → все 15 WB, Ozon-only → все 15 Ozon, BOTH → детерминированный микс с балансом 7-8 через seeded RNG. Опции шафлятся server-side per (sessionId, questionId) — канонический «правильный = A» не угадывается по позиции. Phase 58 marketplace-filter на джобы получает более чистый axis-сигнал. LLM-bank (`packages/api/src/utils/question-bank.ts`) помечен `@deprecated`/dormant. См. `.planning/phases/59-.../59-CONTEXT-v2.md` для полного D-V2-* лога решений.
 
 **Мотивация:**
 
