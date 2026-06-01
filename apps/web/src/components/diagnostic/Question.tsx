@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import type { DiagnosticQuestion } from '@mpstats/shared';
 
 interface QuestionProps {
@@ -15,7 +16,16 @@ interface QuestionProps {
     correctIndex: number;
     explanation: string;
   } | null;
+  // Phase 59 D-09 — mix-users see a marketplace badge on non-BOTH questions.
+  // Undefined or single-element arrays render no badge.
+  userMarketplaces?: string[];
 }
+
+// Russian labels for the per-question marketplace badge (D-09).
+const MP_LABEL: Record<string, string> = {
+  WB: 'Про Wildberries',
+  OZON: 'Про Ozon',
+};
 
 const CATEGORY_COLORS: Record<string, string> = {
   ANALYTICS: 'bg-blue-100 text-blue-700',
@@ -39,7 +49,7 @@ const DIFFICULTY_LABELS: Record<string, string> = {
   HARD: 'Продвинутый',
 };
 
-export function Question({ question, onAnswer, isSubmitting, feedback }: QuestionProps) {
+export function Question({ question, onAnswer, isSubmitting, feedback, userMarketplaces }: QuestionProps) {
   const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   const handleSelect = (index: number) => {
@@ -80,6 +90,16 @@ export function Question({ question, onAnswer, isSubmitting, feedback }: Questio
         <span className="px-3 py-1 rounded-full text-sm bg-gray-100 text-gray-600">
           {DIFFICULTY_LABELS[question.difficulty]}
         </span>
+        {/* Phase 59 D-09 — marketplace badge for mix-users on non-BOTH questions */}
+        {userMarketplaces &&
+          userMarketplaces.length === 2 &&
+          question.marketplace &&
+          question.marketplace !== 'BOTH' &&
+          MP_LABEL[question.marketplace] && (
+            <Badge variant="outline-default" className="text-xs">
+              {MP_LABEL[question.marketplace]}
+            </Badge>
+          )}
       </div>
 
       {/* Question */}

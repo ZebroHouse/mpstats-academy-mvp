@@ -197,6 +197,7 @@ export default function DiagnosticSessionPage() {
             onAnswer={handleAnswer}
             isSubmitting={submitAnswer.isPending}
             feedback={feedback}
+            userMarketplaces={sessionState.userMarketplaces}
           />
         </CardContent>
       </Card>

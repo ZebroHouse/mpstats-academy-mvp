@@ -39,7 +39,9 @@ export type CQEventName =
   // Referral — Ambassador codes (Phase 60, D-09)
   | 'pa_ambassador_signup'
   // Onboarding (Phase 56)
-  | 'pa_onboarding_completed';
+  | 'pa_onboarding_completed'
+  // Diagnostic (Phase 59)
+  | 'pa_diagnostic_completed';
 
 /**
  * Event data payload — flat key-value map sent alongside the event.

@@ -1,14 +1,26 @@
 /**
- * Question Bank Utilities
+ * Question Bank Utilities — DORMANT after Phase 59 v2 (2026-06-01).
  *
- * Manages cached AI-generated diagnostic questions in DB with TTL-based refresh.
- * Provides instant question retrieval for diagnostic sessions and admin refresh.
+ * Originally managed cached AI-generated diagnostic questions in DB with TTL-based
+ * refresh. As of Phase 59 v2 the diagnostic runtime sources its 15 questions from
+ * a hand-curated static deck (`../diagnostic/static-deck.ts`) selected and shuffled
+ * deterministically per-session (`../diagnostic/deck-picker.ts`, `../diagnostic/option-shuffler.ts`).
+ *
+ * The functions below are NOT called from any router. They remain in the codebase
+ * (along with the `QuestionBank` Prisma model and `generateDiagnosticQuestions`
+ * pipeline in `@mpstats/ai`) so a future admin-driven generation flow can reuse
+ * them without resurrecting deleted code. Do NOT wire them back into `diagnostic.startSession`
+ * — that path is owned by the static deck per `.planning/phases/59-.../59-CONTEXT-v2.md`.
+ *
+ * @deprecated since 2026-06-01 (Phase 59 v2) — runtime moved to static deck.
+ *   See 59-CONTEXT-v2.md D-V2-01.
  */
 
 import type { PrismaClient } from '@mpstats/db';
 import type { DiagnosticQuestion, SkillCategory } from '@mpstats/shared';
 import { generateDiagnosticQuestions } from '@mpstats/ai';
 import { getMockQuestionsForCategory } from '../mocks/questions';
+import { computeEffectiveMarketplaces } from './job-matcher';
 
 // ============== CONSTANTS ==============
 
@@ -85,17 +97,32 @@ export async function refreshBankForCategory(
  * Get questions from the cached bank, falling back to mock.
  * If bank is stale or missing, triggers async non-blocking refresh.
  *
+ * Phase 59: filters bank + mock-supplement output by `userMarketplaces`
+ * (reusing computeEffectiveMarketplaces from job-matcher) so a WB-only
+ * user never sees OZON-tagged questions. Items missing a `marketplace`
+ * field default to 'BOTH' (defensive — covers DELETE-not-yet-run window
+ * and any legacy bank rows during deploy transition).
+ *
  * @param prisma - Prisma client
  * @param count - Total number of questions needed (distributed across categories)
+ * @param userMarketplaces - User's marketplaces from UserProfile (Phase 56);
+ *   empty/missing → fallback to ['WB','OZON'] (see computeEffectiveMarketplaces)
  * @returns Shuffled array of DiagnosticQuestion
  */
 export async function getQuestionsFromBank(
   prisma: PrismaClient,
   count: number,
+  userMarketplaces: string[] = [],
 ): Promise<DiagnosticQuestion[]> {
   const perCategory = Math.ceil(count / ALL_CATEGORIES.length);
   const allQuestions: DiagnosticQuestion[] = [];
   const staleCategories: SkillCategory[] = [];
+
+  // Compute the allowed marketplace set once for this call.
+  const effective = computeEffectiveMarketplaces(userMarketplaces);
+  const allowed = new Set<string>([...effective, 'BOTH']);
+  const passesFilter = (q: DiagnosticQuestion): boolean =>
+    allowed.has(((q as any).marketplace ?? 'BOTH') as string);
 
   for (const category of ALL_CATEGORIES) {
     const bank = await prisma.questionBank.findUnique({
@@ -105,15 +132,18 @@ export async function getQuestionsFromBank(
     let categoryQuestions: DiagnosticQuestion[] = [];
 
     if (bank && new Date(bank.expiresAt) > new Date()) {
-      // Bank is fresh — sample random questions from it
+      // Bank is fresh — sample random questions from it (filtered by marketplace)
       const bankQuestions = bank.questions as unknown as DiagnosticQuestion[];
-      categoryQuestions = shuffleArray(bankQuestions).slice(0, perCategory);
+      const filtered = bankQuestions.filter(passesFilter);
+      categoryQuestions = shuffleArray(filtered).slice(0, perCategory);
     }
 
-    // If not enough questions from bank, supplement with fallback mock pool
+    // If not enough questions from bank, supplement with fallback mock pool.
+    // Apply the same filter to mocks (Plan 59-01 Task 3 tagged them, but
+    // defense-in-depth — and a partially-tagged future state stays safe).
     if (categoryQuestions.length < perCategory) {
       const needed = perCategory - categoryQuestions.length;
-      const mockFallback = getMockQuestionsForCategory(category, needed);
+      const mockFallback = getMockQuestionsForCategory(category, needed).filter(passesFilter);
       categoryQuestions.push(...mockFallback);
     }
 

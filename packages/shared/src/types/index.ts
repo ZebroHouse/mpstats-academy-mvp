@@ -62,6 +62,7 @@ export interface DiagnosticQuestion {
   explanation: string;
   difficulty: Difficulty;
   skillCategory: SkillCategory;
+  marketplace: 'WB' | 'OZON' | 'BOTH';
   // Source tracing (Phase 23)
   sourceChunkIds?: string[];
   sourceLessonIds?: string[];
@@ -182,6 +183,9 @@ export interface DiagnosticSessionState {
   answeredQuestions: DiagnosticAnswer[];
   currentQuestion: DiagnosticQuestion | null;
   isComplete: boolean;
+  // Phase 59 — the user's marketplaces, surfaced so the Question card can
+  // render the WB/OZON badge for mix-users on non-BOTH questions (D-09).
+  userMarketplaces?: string[];
 }
 
 // ============== DASHBOARD ==============
