@@ -1,10 +1,14 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { router, protectedProcedure } from '../trpc';
-import { getBalancedQuestions, getMockQuestionsForCategory } from '../mocks/questions';
+import { getBalancedQuestions } from '../mocks/questions';
 import { ensureUserProfile } from '../utils/ensure-user-profile';
 import { handleDatabaseError } from '../utils/db-errors';
-import { getQuestionsFromBank } from '../utils/question-bank';
+// Phase 59 v2 (2026-06-01): runtime questions now come from a hand-curated static
+// deck (see ../diagnostic/static-deck.ts). The legacy LLM bank in ../utils/question-bank.ts
+// is kept dormant for potential future admin-driven generation but is not called here.
+import { pickDeckForUser } from '../diagnostic/deck-picker';
+import { shuffleOptions } from '../diagnostic/option-shuffler';
 import { getRecommendedJobsFromGaps } from '../utils/job-matcher';
 import { cqSetUserProps, cqTrackEvent } from '../utils/carrotquest';
 import type { PrismaClient } from '@mpstats/db';
@@ -478,57 +482,56 @@ export const diagnosticRouter = router({
         });
       }
 
-      // Phase 59 — fetch user marketplaces so the bank filter can exclude
-      // WB-only or OZON-only questions the user does not need.
+      // Phase 59 v2 — user marketplaces drive deck selection (WB-only / Ozon-only / BOTH).
       const profileForBank = await ctx.prisma.userProfile.findUnique({
         where: { id: ctx.user.id },
         select: { marketplaces: true },
       });
       const userMarketplaces = profileForBank?.marketplaces ?? [];
 
-      // Get questions: prefer AI-generated (with source tracing), fallback to mock
-      let questions: DiagnosticQuestion[];
-      try {
-        // Try cached bank first
-        questions = await getQuestionsFromBank(
-          ctx.prisma,
-          QUESTIONS_PER_SESSION,
-          userMarketplaces,
-        );
-
-        // If all questions are mock (no sourceChunkIds), generate fresh AI questions synchronously
-        const hasAI = questions.some(q => q.sourceChunkIds && q.sourceChunkIds.length > 0);
-        if (!hasAI) {
-          console.log('[diagnostic] Bank returned mock-only, generating AI questions synchronously...');
-          const { generateDiagnosticQuestions } = await import('@mpstats/ai');
-          const aiQuestions = await generateDiagnosticQuestions(
-            (cat, count) => getMockQuestionsForCategory(cat, count),
-            { questionsPerCategory: Math.ceil(QUESTIONS_PER_SESSION / 5) },
-          );
-          // Use AI questions if any have source tracing, otherwise keep mock
-          const aiWithSource = aiQuestions.filter(q => q.sourceChunkIds && q.sourceChunkIds.length > 0);
-          if (aiWithSource.length >= QUESTIONS_PER_SESSION * 0.5) {
-            questions = aiQuestions.slice(0, QUESTIONS_PER_SESSION);
-            console.log(`[diagnostic] Using ${aiWithSource.length}/${aiQuestions.length} AI questions with source tracing`);
-          } else {
-            console.warn(`[diagnostic] AI generated only ${aiWithSource.length} questions with source, keeping mix`);
-            questions = aiQuestions.slice(0, QUESTIONS_PER_SESSION);
-          }
-        }
-      } catch (error) {
-        // Complete fallback: if everything fails, use mock
-        console.error('[diagnostic] Question generation failed, using mock:', error instanceof Error ? error.message : error);
-        questions = getBalancedQuestions(QUESTIONS_PER_SESSION);
-      }
-
-      // Create session in DB with persisted questions
+      // Create session first so its id can seed the deterministic deck pick and
+      // per-question option shuffles. Persist a placeholder, then update with the
+      // assembled (already-shuffled) questions — submitAnswer reads correctIndex
+      // directly from session.questions and so needs no scoring change.
       const session = await ctx.prisma.diagnosticSession.create({
         data: {
           userId: ctx.user.id,
           status: 'IN_PROGRESS',
           currentQuestion: 0,
-          questions: questions as any, // Prisma Json type
+          questions: [] as any,
         },
+      });
+
+      const levelToDifficulty = (lvl: 1 | 2 | 3): 'EASY' | 'MEDIUM' | 'HARD' =>
+        lvl === 1 ? 'EASY' : lvl === 2 ? 'MEDIUM' : 'HARD';
+
+      let questions: DiagnosticQuestion[];
+      try {
+        const picked = pickDeckForUser(userMarketplaces, session.id);
+        questions = picked.map((q) => {
+          const { options, correctIndex } = shuffleOptions(q, session.id);
+          return {
+            id: q.id,
+            question: q.prompt,
+            options,
+            correctIndex,
+            explanation: q.explanation,
+            difficulty: levelToDifficulty(q.level),
+            skillCategory: q.axis,
+            marketplace: q.marketplace,
+          } as DiagnosticQuestion;
+        });
+      } catch (error) {
+        // Defensive fallback: should never fire (pure functions over a static
+        // const), but keep a mock pool so a single bad question can't 500 the
+        // whole diagnostic. Log loudly so we notice.
+        console.error('[diagnostic] Static deck assembly failed, using mock:', error instanceof Error ? error.message : error);
+        questions = getBalancedQuestions(QUESTIONS_PER_SESSION);
+      }
+
+      await ctx.prisma.diagnosticSession.update({
+        where: { id: session.id },
+        data: { questions: questions as any },
       });
 
       return {

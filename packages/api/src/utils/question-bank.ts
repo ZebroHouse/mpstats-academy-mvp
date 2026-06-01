@@ -1,8 +1,19 @@
 /**
- * Question Bank Utilities
+ * Question Bank Utilities — DORMANT after Phase 59 v2 (2026-06-01).
  *
- * Manages cached AI-generated diagnostic questions in DB with TTL-based refresh.
- * Provides instant question retrieval for diagnostic sessions and admin refresh.
+ * Originally managed cached AI-generated diagnostic questions in DB with TTL-based
+ * refresh. As of Phase 59 v2 the diagnostic runtime sources its 15 questions from
+ * a hand-curated static deck (`../diagnostic/static-deck.ts`) selected and shuffled
+ * deterministically per-session (`../diagnostic/deck-picker.ts`, `../diagnostic/option-shuffler.ts`).
+ *
+ * The functions below are NOT called from any router. They remain in the codebase
+ * (along with the `QuestionBank` Prisma model and `generateDiagnosticQuestions`
+ * pipeline in `@mpstats/ai`) so a future admin-driven generation flow can reuse
+ * them without resurrecting deleted code. Do NOT wire them back into `diagnostic.startSession`
+ * — that path is owned by the static deck per `.planning/phases/59-.../59-CONTEXT-v2.md`.
+ *
+ * @deprecated since 2026-06-01 (Phase 59 v2) — runtime moved to static deck.
+ *   See 59-CONTEXT-v2.md D-V2-01.
  */
 
 import type { PrismaClient } from '@mpstats/db';

@@ -7,10 +7,15 @@ vi.mock('../../utils/carrotquest', () => ({
   cqTrackEvent: vi.fn().mockResolvedValue(undefined),
 }));
 
-// Mock the question bank helper so startSession does not hit getQuestionsFromBank's
-// real bank logic (which we tested separately).
-vi.mock('../../utils/question-bank', () => ({
-  getQuestionsFromBank: vi.fn(),
+// Mock the static-deck utilities so startSession does not depend on the
+// 30-question deck content during routing tests (deck shape is covered
+// separately in src/diagnostic/*.test.ts).
+vi.mock('../../diagnostic/deck-picker', () => ({
+  pickDeckForUser: vi.fn(),
+}));
+vi.mock('../../diagnostic/option-shuffler', () => ({
+  // Default: identity shuffle so options stay as-is; tests can override per-case.
+  shuffleOptions: vi.fn((q: any) => ({ options: q.options, correctIndex: 0 })),
 }));
 
 // Mock ensureUserProfile so it does not run a real upsert path.
@@ -33,7 +38,7 @@ vi.mock('@mpstats/ai', () => ({
 // db-errors is a simple re-throw helper.
 import { diagnosticRouter } from '../diagnostic';
 import { cqSetUserProps, cqTrackEvent } from '../../utils/carrotquest';
-import { getQuestionsFromBank } from '../../utils/question-bank';
+import { pickDeckForUser } from '../../diagnostic/deck-picker';
 
 function mkQuestion(id: string, mp: 'WB' | 'OZON' | 'BOTH' = 'BOTH'): DiagnosticQuestion {
   return {
@@ -122,27 +127,80 @@ function caller(ctx: any) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.mocked(getQuestionsFromBank).mockResolvedValue([
-    mkQuestion('q1'),
-    mkQuestion('q2'),
-  ]);
+  // Default static-deck pick used by startSession: shape matches StaticQuestion
+  // (axis/level/marketplace) so the router can map it to DiagnosticQuestion.
+  vi.mocked(pickDeckForUser).mockReturnValue([
+    {
+      id: 'q-wb-01',
+      axis: 'ANALYTICS',
+      level: 1,
+      prompt: 'Q1',
+      options: ['a', 'b', 'c', 'd'],
+      explanation: 'e',
+      marketplace: 'WB',
+    },
+    {
+      id: 'q-wb-02',
+      axis: 'MARKETING',
+      level: 2,
+      prompt: 'Q2',
+      options: ['a', 'b', 'c', 'd'],
+      explanation: 'e',
+      marketplace: 'WB',
+    },
+  ] as any);
 });
 
-describe('diagnostic.startSession — marketplace wiring', () => {
-  it('Test 1: passes UserProfile.marketplaces as 3rd arg to getQuestionsFromBank', async () => {
+describe('diagnostic.startSession — static-deck wiring (Phase 59 v2)', () => {
+  it('Test 1: passes UserProfile.marketplaces as 1st arg to pickDeckForUser', async () => {
     const ctx = makeCtx(['WB']);
     await caller(ctx).startSession();
-    expect(getQuestionsFromBank).toHaveBeenCalled();
-    const args = vi.mocked(getQuestionsFromBank).mock.calls[0];
-    // args: [prisma, count, userMarketplaces]
-    expect(args[2]).toEqual(['WB']);
+    expect(pickDeckForUser).toHaveBeenCalled();
+    const args = vi.mocked(pickDeckForUser).mock.calls[0];
+    // args: [userMarketplaces, sessionSeed]
+    expect(args[0]).toEqual(['WB']);
   });
 
   it('Test 2: passes [] when UserProfile has no marketplaces row', async () => {
     const ctx = makeCtx(null);
     await caller(ctx).startSession();
-    const args = vi.mocked(getQuestionsFromBank).mock.calls[0];
-    expect(args[2]).toEqual([]);
+    const args = vi.mocked(pickDeckForUser).mock.calls[0];
+    expect(args[0]).toEqual([]);
+  });
+
+  it('Test 3: uses created session.id as sessionSeed (2nd arg)', async () => {
+    const ctx = makeCtx(['WB', 'OZON']);
+    // makeCtx default: diagnosticSession.create resolves with { id: 'sess-1' }
+    await caller(ctx).startSession();
+    const args = vi.mocked(pickDeckForUser).mock.calls[0];
+    expect(args[1]).toBe('sess-1');
+  });
+
+  it('Test 4: persists assembled DiagnosticQuestion[] via session.update', async () => {
+    const ctx = makeCtx(['WB']);
+    await caller(ctx).startSession();
+    expect(ctx.prisma.diagnosticSession.update).toHaveBeenCalled();
+    const updateArgs = ctx.prisma.diagnosticSession.update.mock.calls[0][0];
+    expect(updateArgs.where.id).toBe('sess-1');
+    const persisted = updateArgs.data.questions;
+    expect(persisted).toHaveLength(2);
+    // Shape must be DiagnosticQuestion (question/options/correctIndex/etc.),
+    // not StaticQuestion (prompt/axis/level).
+    expect(persisted[0]).toMatchObject({
+      id: 'q-wb-01',
+      question: 'Q1',
+      options: ['a', 'b', 'c', 'd'],
+      correctIndex: 0,
+      explanation: 'e',
+      difficulty: 'EASY',
+      skillCategory: 'ANALYTICS',
+      marketplace: 'WB',
+    });
+    expect(persisted[1]).toMatchObject({
+      id: 'q-wb-02',
+      difficulty: 'MEDIUM',
+      skillCategory: 'MARKETING',
+    });
   });
 });
 
