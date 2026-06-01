@@ -92,7 +92,7 @@ Full details: see Phase Details below
 - [x] Phase 56: Entry Flow Redesign — онбординг-визард `/welcome` + развилка диагностика/каталог + снятие жёсткого гейта диагностики
 - [x] Phase 57: Library Redesign — `/learn` job catalog (29 джоб, 5 осей, WB/Ozon switch) + «Мои плейбуки» + hidden-lesson auto-sync
 - [ ] Phase 58: Diagnostic on Jobs — диагностика рекомендует целые джобы (плейбуки) вместо россыпи уроков; «Мой трек» становится job-aware end-to-end; wizard упрощается до WB/Ozon; джобы фильтруются по marketplace юзера
-- [ ] Phase 59: Marketplace-aware Diagnostic Questions — банк вопросов тегируется по marketplace (WB/OZON/BOTH); selection учитывает marketplace юзера; контент-ревью существующих вопросов + новые WB-only/Ozon-only где нужно
+- [x] Phase 59: Marketplace-aware Diagnostic Questions — банк вопросов тегируется по marketplace (WB/OZON/BOTH); selection учитывает marketplace юзера; контент-ревью существующих вопросов + новые WB-only/Ozon-only где нужно (completed 2026-06-01)
 
 </details>
 
@@ -1436,7 +1436,7 @@ Plans:
 - **Контент-команда (методологи):** реальная зависимость на людей за пределами кода. Без content-ревью + новых вопросов Phase 59 не работает. Discuss-phase должна включать оценку этого скоупа с CPO/контент-командой.
 - Phase 56 онбординг: `UserProfile.marketplaces[]` — источник правды для marketplace юзера. Уже есть.
 
-**Plans:** TBD (после discuss → spec → plan-phase).
+**Plans:** 4/2 plans complete
 
 **Когда стартовать:** после ship Phase 58 + sync с контент-командой о готовности к ревью банка вопросов. Можно начать discuss/spec параллельно с execution Phase 58.
 
