@@ -193,6 +193,7 @@ Full v1.1 decision history: `milestones/v1.1-ROADMAP.md`
 - Phase 34 added: User Profile Enhancement — аватар upload, display name, завершённость профиля
 - Phase 35 added: Lesson Comments — комментарии к урокам с ответами (1 уровень вложенности)
 - Phase 36 added: Product Tour / Onboarding — 3 tooltip-тура для новых пользователей
+- Phase 61 added: Обучение 2.0 — редизайн раздела на 4 сущности + контекстный поиск + дашборд 3 входа (waves A-E, spec 2026-06-03)
 
 ### Pending Todos
 
