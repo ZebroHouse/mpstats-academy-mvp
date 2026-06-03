@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: Marketplace-aware Diagnostic
-status: executing — Phase 61 Wave 0 (61-00 test scaffolds) complete
-stopped_at: Completed 61-00-PLAN.md (Wave 0 RED test scaffolds)
-last_updated: "2026-06-03T09:16:49.987Z"
+status: executing — Phase 61 Wave 2 (61-01 nav chassis) complete
+stopped_at: Completed 61-01-PLAN.md (navigation chassis — submenu + /learn/track redirect)
+last_updated: "2026-06-03T09:30:00.000Z"
 progress:
   total_phases: 41
   completed_phases: 30
   total_plans: 91
-  completed_plans: 82
-  percent: 73
+  completed_plans: 83
+  percent: 74
 ---
 
 # Project State
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 ## Current Position
 
 Phase: 61 (learning-2-0) — EXECUTING
-Plan: 2 of 8
+Plan: 3 of 8
 No active phase. Last shipped:
 
 - Phase 60 (Ambassador Referral Codes) — PR #13 + #14 hotfix, 2026-05-28
@@ -173,6 +173,9 @@ Full v1.1 decision history: `milestones/v1.1-ROADMAP.md`
 - [56-04]: QualificationSection вынесена в отдельный компонент (паттерн SecurityCard) — profile/page.tsx уже 838 строк; переиспользует welcome-options без хардкода списков
 - [61-00]: Wave 0 RED scaffolds — it.skip/test.fixme bodies, БЕЗ top-level import не-существующих favoriteRouter/migrate-script (иначе collection error); GREEN-рецепт в комментариях. FavoriteItemType не импортируется из @mpstats/db (enum в 61-06) — строковые литералы
 - [61-00]: api vitest include расширен `../../scripts/__tests__/**/*.test.ts` — root migration-тест бежит под node-харнессом api (у scripts/ нет своего пакета)
+- [61-01]: Expandable «Обучение» nav group — hand-rolled useState + chevron rotate-180, БЕЗ radix Collapsible; рендерится inline после «Диагностика» в navItems.map (сохраняет порядок), exported learnSubItems для downstream waves
+- [61-01]: Mobile bottom-bar «Обучение» (href /learn/plan) — active state special-cased на pathname.startsWith('/learn'), иначе не подсвечивается на /learn/library; LearningTabs pill-strip (md:hidden) для монтажа в 61-02
+- [61-01]: /learn/track → /learn/plan через Server Component redirect() (не client router.push — router-cache loop guard); только /learn/track e2e-кейс un-skipped, /learn default-redirect остаётся test.fixme до 61-02
 
 ### Blockers/Concerns
 
@@ -258,6 +261,7 @@ None.
 | 56    | 03   | 9min     | 3     | 11    |
 | 56    | 04   | 6min     | 2     | 4     |
 | 61    | 00   | 7min     | 2     | 6     |
+| 61    | 01   | 12min    | 2     | 5     |
 
 ## Session Continuity
 
