@@ -18,18 +18,25 @@ import { test, expect, type Page } from '@playwright/test';
  * final URL, never the navigation mechanism.
  */
 
-const TESTER_EMAIL = 'tester@mpstats.academy';
-const TESTER_PASSWORD = 'TestUser2024';
+// Credentials come from the environment — never hardcode the real password in a
+// committed spec (CLAUDE.md ZERO TOLERANCE). Canonical values live in the
+// gitignored `.secrets/e2e-credentials.md`; export them (or inject via CI secrets)
+// before running: TEST_USER_EMAIL / TEST_USER_PASSWORD.
+const TESTER_EMAIL = process.env.TEST_USER_EMAIL ?? 'tester@mpstats.academy';
+const TESTER_PASSWORD = process.env.TEST_USER_PASSWORD;
 
 async function login(page: Page) {
   await page.goto('/login');
   await page.fill('input[type="email"]', TESTER_EMAIL);
-  await page.fill('input[type="password"]', TESTER_PASSWORD);
+  await page.fill('input[type="password"]', TESTER_PASSWORD as string);
   await page.click('button[type="submit"]');
   await page.waitForURL(/\/(learn|dashboard|diagnostic)/, { timeout: 15000 });
 }
 
 test.describe('learn redirects', () => {
+  // Skip (not fail) when credentials aren't injected — e.g. CI without secrets.
+  test.skip(!TESTER_PASSWORD, 'TEST_USER_PASSWORD not set — see .secrets/e2e-credentials.md');
+
   test('/learn/track lands on /learn/plan (server redirect)', async ({ page }) => {
     await login(page);
     await page.goto('/learn/track');
