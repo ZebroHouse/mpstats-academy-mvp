@@ -1142,14 +1142,24 @@ Plans:
 **Spec:** `docs/superpowers/specs/2026-06-03-learning-2.0-redesign-design.md`
 **Requirements**: TBD
 **Depends on:** Phase 60
-**Plans:** 0 plans
+**Plans:** 8 plans
+
+Plans:
+- [ ] 61-00-PLAN.md — Wave 0: тест-заглушки (Nyquist) для favorite/migration/AgentSearch/redirect/material
+- [ ] 61-01-PLAN.md — Wave A: сабменю «Обучение» (sidebar+mobile+LearningTabs), /learn/track→/learn/plan редирект
+- [ ] 61-02-PLAN.md — Wave A: расщепление lens на 4 страницы, /learn серверный редирект, ренейм строк, data-tour
+- [ ] 61-03-PLAN.md — Wave C (backend): material.listForUser + опциональный lessonId в MaterialCard
+- [ ] 61-04-PLAN.md — Wave B: AgentSearch scope (solutions/library) + каталог материалов в Базе знаний
+- [ ] 61-05-PLAN.md — Wave E: дашборд 3 входа + hero-поиск (LearningHero)
+- [ ] 61-06-PLAN.md — Wave D: модель Favorite + [BLOCKING] миграция через Mgmt API + favorite router
+- [ ] 61-07-PLAN.md — Wave D: data-миграция трек→избранное + FavoriteButton + План→диагностический
 
 Waves (порядок разработки, единый деплой через staging):
-- [ ] A — Каркас + ренейминг: сабменю «Обучение», routes /learn/{plan,solutions,library,favorites}, расщепление lens, ренейм UI-строк
-- [ ] B — Контекстный поиск: AgentSearch с scope (решения→intent.resolve, база знаний→ai.searchLessons)
-- [ ] C — Материалы в Базе знаний: material.listForUser + isStandalone + каталог/фильтр/поиск
-- [ ] D — Избранное: модель Favorite + миграция трек→избранное + сердечко, План→чисто диагностический
-- [ ] E — UI: дашборд 3 входа (слайд 17) + hero-поиск (слайд 6)
+- [ ] A — Каркас + ренейминг (61-01, 61-02): сабменю «Обучение», routes /learn/{plan,solutions,library,favorites}, расщепление lens, ренейм UI-строк
+- [ ] B — Контекстный поиск (61-04): AgentSearch с scope (решения→intent.resolve, база знаний→ai.searchLessons)
+- [ ] C — Материалы в Базе знаний (61-03, 61-04): material.listForUser + isStandalone + каталог/фильтр/поиск
+- [ ] D — Избранное (61-06, 61-07): модель Favorite + миграция трек→избранное + сердечко, План→чисто диагностический
+- [ ] E — UI (61-05): дашборд 3 входа (слайд 17) + hero-поиск (слайд 6)
 
 ---
 
