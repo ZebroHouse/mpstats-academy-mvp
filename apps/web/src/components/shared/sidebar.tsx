@@ -1,6 +1,7 @@
 'use client';
 
 
+import { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -12,6 +13,25 @@ interface NavItem {
   href: string;
   icon: React.ReactNode;
 }
+
+interface NavSubItem {
+  title: string;
+  href: string;
+}
+
+// «Обучение 2.0» sub-routes (D-01) — canon labels, no «трек»/«плейбук»/«джоба»
+export const learnSubItems: NavSubItem[] = [
+  { title: 'Персональный план', href: '/learn/plan' },
+  { title: 'Решения под задачу', href: '/learn/solutions' },
+  { title: 'База знаний', href: '/learn/library' },
+  { title: 'Избранное', href: '/learn/favorites' },
+];
+
+const learnGroupIcon = (
+  <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+  </svg>
+);
 
 const navItems: NavItem[] = [
   {
@@ -29,15 +49,6 @@ const navItems: NavItem[] = [
     icon: (
       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-      </svg>
-    ),
-  },
-  {
-    title: 'Обучение',
-    href: '/learn',
-    icon: (
-      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
       </svg>
     ),
   },
@@ -85,6 +96,8 @@ const billingNavItem: NavItem = {
 
 export function Sidebar() {
   const pathname = usePathname();
+  const isLearnActive = pathname.startsWith('/learn');
+  const [learnOpen, setLearnOpen] = useState(isLearnActive);
   const { data: billingEnabled } = trpc.billing.isEnabled.useQuery(undefined, {
     retry: false,
     refetchOnWindowFocus: false,
@@ -117,7 +130,7 @@ export function Sidebar() {
         {items.map((item) => {
           const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
 
-          return (
+          const link = (
             <Link
               key={item.href}
               href={item.href}
@@ -137,6 +150,71 @@ export function Sidebar() {
               {item.title}
             </Link>
           );
+
+          // Inject the expandable «Обучение» group right after «Диагностика»
+          if (item.href === '/diagnostic') {
+            return (
+              <div key="learn-group-wrap">
+                {link}
+                {/* Expandable «Обучение» group (D-01) — hand-rolled toggle, no radix Collapsible */}
+                <button
+                  type="button"
+                  data-tour="learn-submenu"
+                  onClick={() => setLearnOpen((o) => !o)}
+                  className={cn(
+                    'w-full flex items-center gap-3 px-3 py-2.5 rounded-lg text-body-sm font-medium transition-all duration-200',
+                    isLearnActive
+                      ? 'bg-mp-blue-50 text-mp-blue-600 shadow-mp-sm'
+                      : 'text-mp-gray-600 hover:bg-mp-gray-100 hover:text-mp-gray-900'
+                  )}
+                  aria-expanded={learnOpen}
+                >
+                  <span className={cn(
+                    'transition-colors',
+                    isLearnActive ? 'text-mp-blue-500' : 'text-mp-gray-400'
+                  )}>
+                    {learnGroupIcon}
+                  </span>
+                  <span className="flex-1 text-left">Обучение</span>
+                  <svg
+                    className={cn(
+                      'w-4 h-4 text-mp-gray-400 transition-transform',
+                      learnOpen && 'rotate-180'
+                    )}
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                {learnOpen && (
+                  <div className="mt-1 space-y-1">
+                    {learnSubItems.map((sub) => {
+                      const subActive =
+                        pathname === sub.href || pathname.startsWith(sub.href + '/');
+                      return (
+                        <Link
+                          key={sub.href}
+                          href={sub.href}
+                          className={cn(
+                            'flex items-center pl-10 pr-3 py-2 rounded-lg text-body-sm font-medium transition-all duration-200',
+                            subActive
+                              ? 'bg-mp-blue-50 text-mp-blue-600 shadow-mp-sm'
+                              : 'text-mp-gray-600 hover:bg-mp-gray-100 hover:text-mp-gray-900'
+                          )}
+                        >
+                          {sub.title}
+                        </Link>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            );
+          }
+
+          return link;
         })}
       </nav>
 
