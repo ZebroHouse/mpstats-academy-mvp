@@ -1151,8 +1151,8 @@ Plans:
 - [x] 61-03-PLAN.md — Wave C (backend): material.listForUser + опциональный lessonId в MaterialCard
 - [x] 61-04-PLAN.md — Wave B: AgentSearch scope (solutions/library) + каталог материалов в Базе знаний
 - [x] 61-05-PLAN.md — Wave E: дашборд 3 входа + hero-поиск (LearningHero)
-- [~] 61-06-PLAN.md — Wave D: модель Favorite + favorite router ГОТОВЫ (commits 4ca4be6, 9c7b764); [BLOCKING] миграция через Mgmt API — PENDING owner approval
-- [ ] 61-07-PLAN.md — Wave D: data-миграция трек→избранное + FavoriteButton + План→диагностический
+- [x] 61-06-PLAN.md — Wave D: модель Favorite + favorite router (commits 4ca4be6, 9c7b764); schema-миграция применена на prod 2026-06-03 (Favorite table live)
+- [~] 61-07-PLAN.md — Wave D: код ГОТОВ (commits 00e8a32, 280e555) — migrate-script + FavoriteButton + Избранное + План диагностический; [BLOCKING] прод data-миграция трек→избранное — PENDING owner approval
 
 Waves (порядок разработки, единый деплой через staging):
 - [ ] A — Каркас + ренейминг (61-01, 61-02): сабменю «Обучение», routes /learn/{plan,solutions,library,favorites}, расщепление lens, ренейм UI-строк

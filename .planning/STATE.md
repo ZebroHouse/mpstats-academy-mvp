@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: Marketplace-aware Diagnostic
-status: executing — Phase 61 Wave 7 (61-06 Favorite backend) PARTIAL — prod migration pending owner approval
-stopped_at: 61-06 schema+migration+router committed; Task 2 (apply migration to prod) HALTED at blocking human-action checkpoint
-last_updated: "2026-06-03T14:05:00.000Z"
+status: executing — Phase 61 Wave 8 (61-07 favorites split) PARTIAL — code shipped, prod DATA-migration pending owner approval
+stopped_at: 61-07 code committed (00e8a32 migrate-script+tests, 280e555 FavoriteButton+Избранное); Task 4 (run track→favorites DATA migration on prod) HALTED at blocking human-action checkpoint
+last_updated: "2026-06-03T14:40:00.000Z"
 progress:
   total_phases: 41
   completed_phases: 30
@@ -189,11 +189,15 @@ Full v1.1 decision history: `milestones/v1.1-ROADMAP.md`
 - [Phase ?]: [61-05]: hero search via LearningHero (bg-mp-hero-gradient + text-display-sm + data-tour=learn-search) wrapping scoped AgentSearch; AgentSearch grows via opt-in size='hero' prop (h-14 rounded-xl + solid-pill submit), NO fork — default callers untouched
 - [Phase ?]: [61-05]: dashboard leads with 3 accent entry cards (plan→soft-blue/library→soft-green/solutions→gradient, Card interactive + lucide); 4 stat tiles condensed to a flex label:value strip with all-zero new-user hint instead of dead zeros
 - [61-06]: Favorite polymorphic model (itemType/itemId, NO FK on itemId — app-level integrity in favorite.list); add upsert idempotent on @@unique; userId ALWAYS ctx.user.id (IDOR T-61-06-01), zod input only {itemType,itemId}; list filters Lesson/Material isHidden:false (+course.isHidden:false), Job isPublished:true, drops dangling/hidden refs (D-10); isFavorited batch keyed itemType:itemId, no N+1
-- [61-06]: additive migration 20260603000000_add_favorite written (sha256 2e08b0ad...d865) but NOT applied to prod — blocking human-action checkpoint (shared live DB 158 paying users); owner applies via Supabase Management API per reference_supabase_migration_via_mgmt_api.md
+- [61-06]: additive migration 20260603000000_add_favorite — APPLIED to prod 2026-06-03 (Favorite table live, _prisma_migrations row recorded). Code unblocked.
+- [61-07]: migrate-track-to-favorites.ts — pure collectFavoriteRows() + migrate(prisma,{apply}); custom-section lessonIds→Favorite(LESSON), addedJobs[] string array→Favorite(JOB); createMany({skipDuplicates}); LessonProgress count-only (never written, D-03/D-07). PrismaClient lazy-required (test imports migrate() under api vitest harness без @prisma/client в module graph). 6 unit tests green.
+- [61-07]: FavoriteButton — shared optimistic heart ('LESSON'|'JOB'|'MATERIAL' string-literal props, НЕ @mpstats/db enum → Prisma не тянется в client bundle); add/remove с onMutate flip + onError rollback + toast + onSettled invalidate(isFavorited/list); mp-pink-500 filled = saved; min-h-11 tap target; aria-pressed; preventDefault/stopPropagation внутри Link-карточек. Все useMutation/useUtils выше любого early return (нет early returns вообще).
+- [61-07]: FavoriteButton смонтирован на JobCard(JOB)/MaterialCard(MATERIAL)/LessonResultCard(LESSON); JobCatalog batch-сидит initialFavorited через favorite.isFavorited (без N+1). Избранное page — favorite.list + chip-фильтр (Все/Уроки/Решения/Материалы); FavItem тип через inferRouterOutputs<AppRouter> (useQuery data-union ширился до {} из-за void-catch). Карточки favorites purpose-built под resolved-shape ({id,title,slug/type}), MaterialCard не переиспользуется (list-entity не несёт externalUrl/ctaText).
+- [61-07]: 3 getRecommendedPath consumers согласованы — План (61-02 уже diagnostic-only allowlist, 0 addedJobs/custom), AgentSearch trackedJobIds (green «В плане» из addedJobs) и pink heart (favorite) НЕЗАВИСИМЫ, former track page = чистый server redirect. D-10: НЕТ pa_*/reachGoal событий на track/plan add/remove flow (только MATERIAL_OPEN/MATERIAL_SECTION_VIEW, нетронуты) → no silent regression, ничего не дропнуто.
 
 ### Blockers/Concerns
 
-- [61-06 PENDING]: Favorite migration NOT applied to prod Supabase `saecuecevicwjkpmaoot`. Owner must POST DDL via Management API + INSERT _prisma_migrations row (checksum 2e08b0ad4f28bbb9c9aa70c3fb8c6e1c3f496a24f7db724d9bbaaafdbc09d865). 61-07 (heart UI + track→favorites migration) BLOCKED until applied. Resume signal: "applied".
+- [61-07 PENDING]: track→favorites DATA migration NOT run on prod Supabase `saecuecevicwjkpmaoot` (~170 users с ручными добавлениями). Owner runs `npx tsx scripts/migrate-track-to-favorites.ts --dry-run` then `--apply` against prod DATABASE_URL behind blocking checkpoint. Idempotent (createMany skipDuplicates), LessonProgress untouched (count-only). Re-run must leave Favorite count unchanged. Resume signal: "migrated".
 
 - Supabase Admin API session creation for custom OAuth needs sandbox validation (Phase 17)
 - CloudPayments webhook payload format needs sandbox testing (Phase 18)
