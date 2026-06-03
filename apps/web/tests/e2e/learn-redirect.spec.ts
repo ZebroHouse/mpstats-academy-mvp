@@ -30,7 +30,7 @@ async function login(page: Page) {
 }
 
 test.describe('learn redirects', () => {
-  test.fixme('/learn/track lands on /learn/plan (server redirect)', async ({ page }) => {
+  test('/learn/track lands on /learn/plan (server redirect)', async ({ page }) => {
     await login(page);
     await page.goto('/learn/track');
     // Final URL only — server redirect, no router.push.
