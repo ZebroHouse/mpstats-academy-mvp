@@ -4,11 +4,27 @@ import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import type { IntentResult } from '@mpstats/ai';
 import { trpc } from '@/lib/trpc/client';
+import { LessonResultCard, type LessonResultCardData } from './LessonResultCard';
+import { MaterialCard, type MaterialCardProps } from './MaterialCard';
 
-export function AgentSearch() {
+type Scope = 'solutions' | 'library';
+
+const PLACEHOLDER: Record<Scope, string> = {
+  solutions: 'Опишите задачу — подберём решение',
+  library: 'Найдите урок или материал по теме',
+};
+
+type LibraryResult = {
+  lessons: LessonResultCardData[];
+  materials: MaterialCardProps[];
+};
+
+export function AgentSearch({ scope }: { scope: Scope }) {
   const [query, setQuery] = useState('');
   const [conversationState, setConversationState] = useState<string | undefined>();
   const [result, setResult] = useState<IntentResult | null>(null);
+  const [libResult, setLibResult] = useState<LibraryResult | null>(null);
+  const [pending, setPending] = useState(false);
 
   const utils = trpc.useUtils();
   // Reactive set of jobIds already in the user's track. Source of truth — backend.
@@ -21,7 +37,7 @@ export function AgentSearch() {
   const resolveMutation = trpc.intent.resolve.useMutation();
   const addJobMutation = trpc.learning.addJobToTrack.useMutation({
     onSuccess: () => {
-      toast.success('Плейбук в треке');
+      toast.success('Решение в плане');
       utils.learning.getRecommendedPath.invalidate();
       utils.job.getCatalog.invalidate();
     },
@@ -30,11 +46,56 @@ export function AgentSearch() {
     },
   });
 
-  async function submit(q: string) {
-    if (!q.trim()) return;
-    const res = await resolveMutation.mutateAsync({ query: q.trim(), surface: 'learn', conversationState });
+  async function submitSolutions(q: string) {
+    const res = await resolveMutation.mutateAsync({ query: q, surface: 'learn', conversationState });
     setResult(res);
     setConversationState(res.mode === 'clarify' ? res.conversationState : undefined);
+  }
+
+  async function submitLibrary(q: string) {
+    // Two parallel queries against the isHidden-filtered read endpoints.
+    const [lessonsRes, materialsRes] = await Promise.all([
+      utils.ai.searchLessons.fetch({ query: q }),
+      utils.material.listForUser.fetch({ search: q }),
+    ]);
+
+    const lessons: LessonResultCardData[] = (lessonsRes?.results ?? []).map((r) => ({
+      id: r.lesson.id,
+      title: r.lesson.title,
+      courseTitle: r.course.title,
+      snippet: r.snippets[0]?.content ?? null,
+      watchedPercent: r.watchedPercent,
+      locked: r.locked,
+    }));
+
+    const materials: MaterialCardProps[] = (materialsRes?.items ?? []).map((m) => ({
+      id: m.id,
+      type: m.type as MaterialCardProps['type'],
+      title: m.title,
+      description: m.description,
+      ctaText: m.ctaText,
+      externalUrl: m.externalUrl,
+      hasFile: m.hasFile,
+    }));
+
+    setLibResult({ lessons, materials });
+  }
+
+  async function submit(raw: string) {
+    const q = raw.trim();
+    if (!q) return;
+    setPending(true);
+    try {
+      if (scope === 'solutions') {
+        await submitSolutions(q);
+      } else {
+        await submitLibrary(q);
+      }
+    } catch {
+      toast.error('Не удалось выполнить поиск. Попробуйте ещё раз.');
+    } finally {
+      setPending(false);
+    }
   }
 
   async function pickOption(intent: string) {
@@ -42,7 +103,7 @@ export function AgentSearch() {
     await submit(intent);
   }
 
-  const isPending = resolveMutation.isPending;
+  const isPending = pending || (scope === 'solutions' && resolveMutation.isPending);
 
   return (
     <div className="space-y-3">
@@ -52,7 +113,7 @@ export function AgentSearch() {
       >
         <input
           className="flex-1 h-full bg-transparent px-4 placeholder:text-mp-gray-400 focus:outline-none"
-          placeholder="Напишите тему, которая вас интересует"
+          placeholder={PLACEHOLDER[scope]}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           disabled={isPending}
@@ -69,11 +130,12 @@ export function AgentSearch() {
       {isPending && (
         <div className="rounded-lg border p-4 bg-mp-gray-50 text-mp-gray-600 text-sm flex items-center gap-2">
           <span className="inline-block w-2 h-2 rounded-full bg-mp-blue-500 animate-pulse" />
-          Ищем лучший ответ среди плейбуков…
+          {scope === 'solutions' ? 'Ищем лучший ответ среди решений…' : 'Ищем по урокам и материалам…'}
         </div>
       )}
 
-      {!isPending && result?.mode === 'clarify' && (
+      {/* ── Solutions scope render (intent.resolve) ─────────────────────── */}
+      {scope === 'solutions' && !isPending && result?.mode === 'clarify' && (
         <div className="rounded-lg border p-4 space-y-3">
           <p className="font-medium">{result.question}</p>
           <div className="flex flex-wrap gap-2">
@@ -90,7 +152,7 @@ export function AgentSearch() {
         </div>
       )}
 
-      {!isPending && result?.mode === 'recommend' && (
+      {scope === 'solutions' && !isPending && result?.mode === 'recommend' && (
         <div className="space-y-3">
           <p className="text-mp-gray-800">{result.answer}</p>
           {result.jobs.map((j) => {
@@ -109,7 +171,7 @@ export function AgentSearch() {
                   disabled={isAdded || addJobMutation.isPending}
                   className="px-3 py-2 rounded-md bg-mp-blue-500 text-white text-sm disabled:bg-mp-gray-300 whitespace-nowrap"
                 >
-                  {isAdded ? 'В треке ✓' : (j.actions[0]?.label ?? 'В трек')}
+                  {isAdded ? 'В плане ✓' : (j.actions[0]?.label ?? 'В план')}
                 </button>
               </div>
             );
@@ -117,7 +179,7 @@ export function AgentSearch() {
         </div>
       )}
 
-      {!isPending && result?.mode === 'fallback' && (
+      {scope === 'solutions' && !isPending && result?.mode === 'fallback' && (
         <div className="rounded-lg border p-4 space-y-2">
           <p>{result.answer}</p>
           {result.lessons.length > 0 && (
@@ -128,13 +190,43 @@ export function AgentSearch() {
             </ul>
           )}
           <p className="text-xs text-mp-gray-500">
-            Точного плейбука не нашли. Попробуй переформулировать запрос или открой каталог ниже.
+            Попробуйте переформулировать запрос или откройте каталог ниже.
           </p>
         </div>
       )}
 
-      {!isPending && result?.mode === 'empty' && (
-        <p className="text-mp-gray-600 text-sm">{result.message}</p>
+      {scope === 'solutions' && !isPending && result?.mode === 'empty' && (
+        <p className="text-mp-gray-600 text-sm">Ничего не нашли</p>
+      )}
+
+      {/* ── Library scope render (ai.searchLessons + material.listForUser) ── */}
+      {scope === 'library' && !isPending && libResult && (
+        libResult.lessons.length === 0 && libResult.materials.length === 0 ? (
+          <p className="text-mp-gray-600 text-sm">Ничего не нашли</p>
+        ) : (
+          <div className="space-y-6">
+            {libResult.lessons.length > 0 && (
+              <section className="space-y-3">
+                <h3 className="text-body-sm font-semibold text-mp-gray-700">Уроки</h3>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {libResult.lessons.map((l) => (
+                    <LessonResultCard key={l.id} lesson={l} />
+                  ))}
+                </div>
+              </section>
+            )}
+            {libResult.materials.length > 0 && (
+              <section className="space-y-3">
+                <h3 className="text-body-sm font-semibold text-mp-gray-700">Материалы</h3>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {libResult.materials.map((m) => (
+                    <MaterialCard key={m.id} {...m} />
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+        )
       )}
     </div>
   );

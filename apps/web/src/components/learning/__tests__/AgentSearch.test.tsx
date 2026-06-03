@@ -1,23 +1,19 @@
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { cleanup } from '@testing-library/react';
+import { render, fireEvent, waitFor, cleanup } from '@testing-library/react';
 
 /**
- * Wave 0 RED stub — Phase 61 (Обучение 2.0).
+ * Phase 61 (Обучение 2.0) — AgentSearch scope routing (61-04 GREEN).
  *
- * The `scope: 'solutions' | 'library'` prop on <AgentSearch> does NOT exist yet;
- * it lands in 61-03. Today AgentSearch hardcodes `surface: 'learn'` and always
- * calls `intent.resolve`. These assertions are AUTHORED now so 61-03 has a
- * concrete `<automated>` target (Nyquist Dim 8).
- *
- * Target behavior (61-03):
+ * The `scope: 'solutions' | 'library'` prop routes search:
  *   scope='solutions' → submitting a query calls `intent.resolve` (job recommendations)
- *   scope='library'   → calls `ai.searchLessons` + `material.listForUser`,
- *                       rendering grouped «Уроки» / «Материалы»
+ *   scope='library'   → calls `ai.searchLessons` + `material.listForUser` via
+ *                       `useUtils().*.fetch`, rendering grouped «Уроки» / «Материалы».
  *
- * Behavioral bodies are `it.skip(... 'pending 61-03')` so the suite COLLECTS
- * green. The trpc-mock harness mirrors apps/web/tests/unit/AgentSearch.test.tsx;
- * 61-03 wires the `library`-scope mocks (ai.searchLessons / material.listForUser)
- * and flips skip → it.
+ * Note: library-scope endpoints are `.query` procedures, so the component fetches
+ * them imperatively on submit via `trpc.useUtils().<proc>.fetch(...)` (the correct
+ * runtime pattern for on-submit reads). The 61-00 RED stub drafted `useMutation`
+ * mocks; this GREEN fill switches them to the real `fetch` shape (Rule 1 — the
+ * stub body was an `it.skip` scaffold, not a frozen contract).
  */
 
 const mockResolve = vi.fn();
@@ -31,16 +27,11 @@ vi.mock('@/lib/trpc/client', () => ({
     useUtils: () => ({
       learning: { getRecommendedPath: { invalidate: mockInvalidate } },
       job: { getCatalog: { invalidate: mockInvalidate } },
+      ai: { searchLessons: { fetch: mockSearchLessons } },
+      material: { listForUser: { fetch: mockListForUser } },
     }),
     intent: {
       resolve: { useMutation: () => ({ mutateAsync: mockResolve, isPending: false }) },
-    },
-    // library-scope dependencies (consumed once scope='library' lands in 61-03):
-    ai: {
-      searchLessons: { useMutation: () => ({ mutateAsync: mockSearchLessons, isPending: false }) },
-    },
-    material: {
-      listForUser: { useMutation: () => ({ mutateAsync: mockListForUser, isPending: false }) },
     },
     learning: {
       getRecommendedPath: { useQuery: () => ({ data: { addedJobs: [] } }) },
@@ -49,6 +40,8 @@ vi.mock('@/lib/trpc/client', () => ({
   },
 }));
 
+import { AgentSearch } from '@/components/learning/AgentSearch';
+
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
@@ -56,37 +49,46 @@ afterEach(() => {
 
 describe('AgentSearch scope', () => {
   it('declares the two routing scopes (solutions vs library)', () => {
-    // The prop union the component will accept in 61-03.
     const scopes = ['solutions', 'library'] as const;
     expect(scopes).toContain('solutions');
     expect(scopes).toContain('library');
   });
 
-  it.skip("scope='solutions' routes a query to intent.resolve — pending 61-03", async () => {
-    // GREEN (61-03):
-    //   const { AgentSearch } = await import('@/components/learning/AgentSearch');
-    //   mockResolve.mockResolvedValue({ mode: 'recommend', answer: '', jobs: [] });
-    //   const { getByPlaceholderText } = render(<AgentSearch scope="solutions" />);
-    //   fireEvent.change(getByPlaceholderText(/тему/i), { target: { value: 'снизить ДРР' } });
-    //   fireEvent.submit(getByPlaceholderText(/тему/i).closest('form')!);
-    //   await waitFor(() => expect(mockResolve).toHaveBeenCalled());
-    //   expect(mockSearchLessons).not.toHaveBeenCalled();
-    expect(mockResolve).toBeDefined();
+  it("scope='solutions' routes a query to intent.resolve", async () => {
+    mockResolve.mockResolvedValue({ mode: 'recommend', answer: '', jobs: [] });
+    const { getByPlaceholderText } = render(<AgentSearch scope="solutions" />);
+    fireEvent.change(getByPlaceholderText(/задачу/i), { target: { value: 'снизить ДРР' } });
+    fireEvent.submit(getByPlaceholderText(/задачу/i).closest('form')!);
+    await waitFor(() => expect(mockResolve).toHaveBeenCalled());
+    expect(mockSearchLessons).not.toHaveBeenCalled();
+    expect(mockListForUser).not.toHaveBeenCalled();
   });
 
-  it.skip("scope='library' routes a query to ai.searchLessons + material.listForUser and groups «Уроки»/«Материалы» — pending 61-03", async () => {
-    // GREEN (61-03):
-    //   mockSearchLessons.mockResolvedValue([{ id: 'l1', title: 'Урок 1' }]);
-    //   mockListForUser.mockResolvedValue({ items: [{ id: 'm1', title: 'Шаблон' }] });
-    //   const { getByPlaceholderText, getByText } = render(<AgentSearch scope="library" />);
-    //   fireEvent.change(getByPlaceholderText(/тему/i), { target: { value: 'юнит-экономика' } });
-    //   fireEvent.submit(getByPlaceholderText(/тему/i).closest('form')!);
-    //   await waitFor(() => expect(mockSearchLessons).toHaveBeenCalled());
-    //   expect(mockListForUser).toHaveBeenCalled();
-    //   expect(mockResolve).not.toHaveBeenCalled();
-    //   expect(getByText('Уроки')).toBeDefined();
-    //   expect(getByText('Материалы')).toBeDefined();
-    expect(mockSearchLessons).toBeDefined();
-    expect(mockListForUser).toBeDefined();
+  it("scope='library' routes a query to ai.searchLessons + material.listForUser and groups «Уроки»/«Материалы»", async () => {
+    mockSearchLessons.mockResolvedValue({
+      results: [{
+        lesson: { id: 'l1', title: 'Урок 1' },
+        course: { title: 'Курс A' },
+        snippets: [{ content: 'фрагмент' }],
+        watchedPercent: 0,
+        locked: false,
+      }],
+    });
+    mockListForUser.mockResolvedValue({
+      items: [{
+        id: 'm1', type: 'CHECKLIST', title: 'Шаблон', description: null,
+        ctaText: 'Открыть', externalUrl: 'https://x', hasFile: false,
+      }],
+    });
+    const { getByPlaceholderText, getByText } = render(<AgentSearch scope="library" />);
+    fireEvent.change(getByPlaceholderText(/материал/i), { target: { value: 'юнит-экономика' } });
+    fireEvent.submit(getByPlaceholderText(/материал/i).closest('form')!);
+    await waitFor(() => expect(mockSearchLessons).toHaveBeenCalled());
+    expect(mockListForUser).toHaveBeenCalled();
+    expect(mockResolve).not.toHaveBeenCalled();
+    await waitFor(() => expect(getByText('Уроки')).toBeDefined());
+    expect(getByText('Материалы')).toBeDefined();
+    expect(getByText('Урок 1')).toBeDefined();
+    expect(getByText('Шаблон')).toBeDefined();
   });
 });

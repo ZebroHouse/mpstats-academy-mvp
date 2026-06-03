@@ -4,6 +4,8 @@ import { render, fireEvent, waitFor, cleanup } from '@testing-library/react';
 const mockResolve = vi.fn();
 const mockAddJob = vi.fn();
 const mockInvalidate = vi.fn();
+const mockSearchLessons = vi.fn();
+const mockListForUser = vi.fn();
 let mockTrackData: { addedJobs?: Array<{ id: string }> } = { addedJobs: [] };
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('@/lib/trpc/client', () => ({
@@ -11,6 +13,8 @@ vi.mock('@/lib/trpc/client', () => ({
     useUtils: () => ({
       learning: { getRecommendedPath: { invalidate: mockInvalidate } },
       job: { getCatalog: { invalidate: mockInvalidate } },
+      ai: { searchLessons: { fetch: mockSearchLessons } },
+      material: { listForUser: { fetch: mockListForUser } },
     }),
     intent: {
       resolve: { useMutation: () => ({ mutateAsync: mockResolve, isPending: false }) },
@@ -40,7 +44,7 @@ afterEach(() => {
   mockTrackData = { addedJobs: [] };
 });
 
-describe('AgentSearch', () => {
+describe('AgentSearch (solutions)', () => {
   it('renders recommended jobs with title, reason, lesson count and add-to-track button', async () => {
     mockResolve.mockResolvedValue({
       mode: 'recommend',
@@ -54,9 +58,9 @@ describe('AgentSearch', () => {
         actions: [{ type: 'add_to_track', jobId: 'j1', label: 'Положить в трек' }],
       }],
     });
-    const { getByPlaceholderText, getByText } = render(<AgentSearch />);
-    fireEvent.change(getByPlaceholderText(/тему/i), { target: { value: 'снизить ДРР' } });
-    fireEvent.submit(getByPlaceholderText(/тему/i).closest('form')!);
+    const { getByPlaceholderText, getByText } = render(<AgentSearch scope="solutions" />);
+    fireEvent.change(getByPlaceholderText(/задачу/i), { target: { value: 'снизить ДРР' } });
+    fireEvent.submit(getByPlaceholderText(/задачу/i).closest('form')!);
     await waitFor(() => expect(getByText('Снизить ДРР')).toBeDefined());
     expect(getByText('покрывает рекламу WB')).toBeDefined();
     expect(getByText('5 уроков')).toBeDefined();
@@ -70,9 +74,9 @@ describe('AgentSearch', () => {
       options: [{ label: 'Запустить', intent: 'запустить рекламу' }, { label: 'Снизить ДРР', intent: 'снизить ДРР' }],
       conversationState: 'cs1',
     });
-    const { getByPlaceholderText, getByText } = render(<AgentSearch />);
-    fireEvent.change(getByPlaceholderText(/тему/i), { target: { value: 'реклама' } });
-    fireEvent.submit(getByPlaceholderText(/тему/i).closest('form')!);
+    const { getByPlaceholderText, getByText } = render(<AgentSearch scope="solutions" />);
+    fireEvent.change(getByPlaceholderText(/задачу/i), { target: { value: 'реклама' } });
+    fireEvent.submit(getByPlaceholderText(/задачу/i).closest('form')!);
     await waitFor(() => expect(getByText('Что именно?')).toBeDefined());
     expect(getByText('Запустить')).toBeDefined();
     expect(getByText('Снизить ДРР')).toBeDefined();
@@ -91,15 +95,15 @@ describe('AgentSearch', () => {
         actions: [{ type: 'add_to_track', jobId: 'j1', label: 'Положить в трек' }],
       }],
     });
-    const { getByPlaceholderText, getByText } = render(<AgentSearch />);
-    fireEvent.change(getByPlaceholderText(/тему/i), { target: { value: 'q' } });
-    fireEvent.submit(getByPlaceholderText(/тему/i).closest('form')!);
+    const { getByPlaceholderText, getByText } = render(<AgentSearch scope="solutions" />);
+    fireEvent.change(getByPlaceholderText(/задачу/i), { target: { value: 'q' } });
+    fireEvent.submit(getByPlaceholderText(/задачу/i).closest('form')!);
     await waitFor(() => expect(getByText('Положить в трек')).toBeDefined());
     fireEvent.click(getByText('Положить в трек'));
     expect(mockAddJob).toHaveBeenCalledWith({ jobId: 'j1' });
   });
 
-  it('shows В треке ✓ for jobs already in the user track (server state)', async () => {
+  it('shows В плане ✓ for jobs already in the user plan (server state)', async () => {
     mockTrackData = { addedJobs: [{ id: 'j1' }] };
     mockResolve.mockResolvedValue({
       mode: 'recommend',
@@ -113,10 +117,10 @@ describe('AgentSearch', () => {
         actions: [{ type: 'add_to_track', jobId: 'j1', label: 'Положить в трек' }],
       }],
     });
-    const { getByPlaceholderText, getByText, queryByText } = render(<AgentSearch />);
-    fireEvent.change(getByPlaceholderText(/тему/i), { target: { value: 'q' } });
-    fireEvent.submit(getByPlaceholderText(/тему/i).closest('form')!);
-    await waitFor(() => expect(getByText('В треке ✓')).toBeDefined());
+    const { getByPlaceholderText, getByText, queryByText } = render(<AgentSearch scope="solutions" />);
+    fireEvent.change(getByPlaceholderText(/задачу/i), { target: { value: 'q' } });
+    fireEvent.submit(getByPlaceholderText(/задачу/i).closest('form')!);
+    await waitFor(() => expect(getByText('В плане ✓')).toBeDefined());
     expect(queryByText('Положить в трек')).toBeNull();
   });
 });
