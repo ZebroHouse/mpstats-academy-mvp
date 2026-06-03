@@ -37,7 +37,7 @@ test.describe('learn redirects', () => {
     await expect(page).toHaveURL(/\/learn\/plan$/);
   });
 
-  test.fixme('/learn lands on a default sub-route (/learn/plan or /learn/library)', async ({ page }) => {
+  test('/learn lands on a default sub-route (/learn/plan or /learn/library)', async ({ page }) => {
     await login(page);
     await page.goto('/learn');
     // Default-by-plan: a user with a plan → /learn/plan, otherwise /learn/library.

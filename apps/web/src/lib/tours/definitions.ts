@@ -7,8 +7,14 @@ const TOUR_PAGES: Record<string, TourPage> = {
   '/learn': 'learn',
 };
 
+// Learn sub-section routes (D-01). `/learn` server-redirects to one of these, so
+// the learn tour fires here rather than on the (now content-less) `/learn` entry.
+const LEARN_SUB_ROUTES = ['/learn/plan', '/learn/solutions', '/learn/library', '/learn/favorites'];
+
 export function getTourForPage(pathname: string): TourPage | null {
   if (TOUR_PAGES[pathname]) return TOUR_PAGES[pathname];
+  if (LEARN_SUB_ROUTES.includes(pathname)) return 'learn';
+  // Individual lesson pages (/learn/<lessonId>) keep the lesson tour.
   if (pathname.startsWith('/learn/')) return 'lesson';
   return null;
 }
@@ -50,68 +56,50 @@ export const dashboardSteps: DriveStep[] = [
   },
 ];
 
-// --- Learn Tour: "Все курсы" variant (no diagnostic) ---
+// --- Learn Tour: "База знаний" variant (no diagnostic plan) ---
+// Fires on /learn/library and /learn/solutions, where the search box and the
+// courses block live. Anchors re-homed for the 4-route split (D-10, 61-02).
 
 const learnCoursesSteps: DriveStep[] = [
+  {
+    element: '[data-tour="learn-submenu"]',
+    popover: {
+      title: 'Разделы обучения',
+      description: 'Персональный план, решения под задачу, База знаний и Избранное — переключайтесь между ними здесь.',
+    },
+  },
   {
     element: '[data-tour="learn-search"]',
     popover: {
       title: 'Поиск по урокам',
       description: 'Ищите уроки по ключевым словам. AI найдёт релевантные фрагменты.',
-    },
-  },
-  {
-    element: '[data-tour="learn-filters"]',
-    popover: {
-      title: 'Фильтры',
-      description: 'Фильтруйте по курсу, категории навыка и уровню сложности.',
     },
   },
   {
     element: '[data-tour="learn-add-to-track"]',
     popover: {
-      title: 'Каталог курсов',
+      title: 'База знаний',
       description: 'Здесь собраны все курсы платформы. Откройте любой курс, чтобы начать обучение.',
     },
   },
 ];
 
-// --- Learn Tour: "Мой трек" variant (diagnostic completed) ---
+// --- Learn Tour: "Персональный план" variant (diagnostic completed) ---
+// Fires on /learn/plan, where the diagnostic sections live.
 
 const learnTrackSteps: DriveStep[] = [
   {
-    element: '[data-tour="learn-search"]',
+    element: '[data-tour="learn-submenu"]',
     popover: {
-      title: 'Поиск по урокам',
-      description: 'Ищите уроки по ключевым словам. AI найдёт релевантные фрагменты.',
-    },
-  },
-  {
-    element: '[data-tour="learn-filters"]',
-    popover: {
-      title: 'Фильтры',
-      description: 'Фильтруйте по курсу, категории навыка и уровню сложности.',
-    },
-  },
-  {
-    element: '[data-tour="learn-view-toggle"]',
-    popover: {
-      title: 'Мой трек / Все курсы',
-      description: 'Переключайтесь между персональным треком обучения и полным каталогом.',
+      title: 'Разделы обучения',
+      description: 'Персональный план, решения под задачу, База знаний и Избранное — переключайтесь между ними здесь.',
     },
   },
   {
     element: '[data-tour="learn-sections"]',
     popover: {
-      title: 'Секции трека',
-      description: 'Ваш трек разделён по приоритету: «Ошибки» — темы, где диагностика выявила пробелы; «Углубление» — закрепление базовых навыков; «Развитие» — новые компетенции; «Продвинутый» — темы для опытных.',
-    },
-  },
-  {
-    element: '[data-tour="learn-view-toggle"]',
-    popover: {
-      title: 'Добавьте уроки в трек',
-      description: 'Переключитесь на «Все курсы» и нажмите + на любом уроке, чтобы добавить его в свой персональный трек.',
+      title: 'Секции плана',
+      description: 'Ваш план разделён по приоритету: «Ошибки» — темы, где диагностика выявила пробелы; «Углубление» — закрепление базовых навыков; «Развитие» — новые компетенции; «Продвинутый» — темы для опытных.',
     },
   },
 ];
@@ -172,13 +160,12 @@ export function getSteps(page: TourPage, isMobile: boolean): DriveStep[] {
   let steps: DriveStep[];
 
   if (page === 'learn') {
-    // Choose learn tour variant based on DOM state:
-    // If "Мой трек" sections exist → user has diagnostic, show full track tour
-    // If only courses view → show catalog tour
-    const hasTrackSections = !!document.querySelector('[data-tour="learn-sections"]');
-    const hasToggle = !!document.querySelector('[data-tour="learn-view-toggle"]');
+    // Choose learn tour variant based on which sub-route is mounted:
+    // /learn/plan renders the diagnostic sections (`learn-sections`) → plan tour.
+    // /learn/library and /learn/solutions render the search + catalog → catalog tour.
+    const hasPlanSections = !!document.querySelector('[data-tour="learn-sections"]');
 
-    if (hasTrackSections && hasToggle) {
+    if (hasPlanSections) {
       steps = learnTrackSteps.map((s) => ({ ...s }));
     } else {
       steps = learnCoursesSteps.map((s) => ({ ...s }));
