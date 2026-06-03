@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: Marketplace-aware Diagnostic
-status: executing — Phase 61 Wave 4 (61-03 material.listForUser) complete
-stopped_at: Completed 61-03-PLAN.md (material.listForUser protected read + optional MaterialCard.lessonId)
-last_updated: "2026-06-03T12:45:00.000Z"
+status: executing — Phase 61 Wave 5 (61-04 scoped search + material catalog) complete
+stopped_at: Completed 61-04-PLAN.md (scope-aware AgentSearch + Library material catalog)
+last_updated: "2026-06-03T12:50:00.000Z"
 progress:
   total_phases: 41
   completed_phases: 30
   total_plans: 91
-  completed_plans: 85
-  percent: 76
+  completed_plans: 86
+  percent: 77
 ---
 
 # Project State
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 ## Current Position
 
 Phase: 61 (learning-2-0) — EXECUTING
-Plan: 5 of 8
+Plan: 6 of 8
 No active phase. Last shipped:
 
 - Phase 60 (Ambassador Referral Codes) — PR #13 + #14 hotfix, 2026-05-28
@@ -183,6 +183,9 @@ Full v1.1 decision history: `milestones/v1.1-ROADMAP.md`
 - [61-03]: material.listForUser — protectedProcedure, ВСЕГДА where.isHidden=false (нет includeHidden escape, T-61-03-01); storagePath читается в select, но маппится в hasFile boolean ДО возврата — клиенту НИКОГДА не уходит (payload-level guarantee, State 49-02); standalone+attached оба включены (нет lessons:{some} констрейнта)
 - [61-03]: getSignedUrl download ACL frozen (A8) — diff к material.ts чисто additive (+65 строк), FORBIDDEN-ветка :437 нетронута; standalone = externalUrl-only этот pass, ACL-gap не триггерится
 - [61-03]: MaterialCard.lessonId required→optional — расширение безопасно (единственный caller LessonMaterials передаёт lessonId); file download-путь (getSignedUrl) gated на Boolean(lessonId), standalone-карточка externalUrl-only; FavoriteButton-слот задокументирован под 61-07 (сердце не добавлено)
+- [61-04]: AgentSearch scope: 'solutions' | 'library' (D-04). solutions→intent.resolve (job-карточки, без изменений); library→параллельно ai.searchLessons + material.listForUser через useUtils().fetch (НЕ useMutation — это .query процедуры), рендер сгруппирован «Уроки»/«Материалы». Новый LessonResultCard (title→/learn/[id], course, snippet, прогресс, lock)
+- [61-04]: 61-00 scope-стаб мокал useMutation, но рантайм-паттерн для on-submit .query — useUtils().fetch; GREEN-fill переключил моки на .fetch shape (стаб-тело было it.skip scaffold, не frozen contract — прецедент 61-03)
+- [61-04]: Library material catalog — single-select chip-row (5 MaterialType + «Уроки» toggle на courses accordion); material.listForUser.useQuery({type},{enabled}) — «Уроки» view не делает material-fetch; empty «Материалов этого типа пока нет». isHidden не байпасится (оба эндпоинта уже фильтруют)
 
 ### Blockers/Concerns
 
@@ -271,11 +274,12 @@ None.
 | 61    | 01   | 12min    | 2     | 5     |
 | 61    | 02   | 18min    | 2     | 7     |
 | 61    | 03   | 9min     | 2     | 3     |
+| 61    | 04   | 10min    | 2     | 6     |
 
 ## Session Continuity
 
-Last session: 2026-06-03T12:45:00.000Z
-Stopped at: Completed 61-03-PLAN.md (material.listForUser protected read + optional MaterialCard.lessonId)
+Last session: 2026-06-03T12:50:00.000Z
+Stopped at: Completed 61-04-PLAN.md (scope-aware AgentSearch + Library material catalog)
 
 ### Session 2026-03-12 — Billing Payment Flow Testing & Fixes
 
