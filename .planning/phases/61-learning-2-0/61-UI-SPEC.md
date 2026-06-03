@@ -1,7 +1,8 @@
 ---
 phase: 61
 slug: learning-2-0
-status: draft
+status: approved
+reviewed_at: 2026-06-03
 shadcn_initialized: true
 preset: "default style / baseColor slate / radix + MPSTATS mp-* brand tokens"
 created: 2026-06-03
