@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: Marketplace-aware Diagnostic
-status: executing — Phase 61 Wave 2 (61-01 nav chassis) complete
-stopped_at: Completed 61-01-PLAN.md (navigation chassis — submenu + /learn/track redirect)
-last_updated: "2026-06-03T09:30:00.000Z"
+status: executing — Phase 61 Wave 3 (61-02 sub-page split) complete
+stopped_at: Completed 61-02-PLAN.md (4 routed learn sub-pages + /learn server redirect + tour anchors)
+last_updated: "2026-06-03T10:05:00.000Z"
 progress:
   total_phases: 41
   completed_phases: 30
   total_plans: 91
-  completed_plans: 83
-  percent: 74
+  completed_plans: 84
+  percent: 75
 ---
 
 # Project State
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 ## Current Position
 
 Phase: 61 (learning-2-0) — EXECUTING
-Plan: 3 of 8
+Plan: 4 of 8
 No active phase. Last shipped:
 
 - Phase 60 (Ambassador Referral Codes) — PR #13 + #14 hotfix, 2026-05-28
@@ -176,6 +176,10 @@ Full v1.1 decision history: `milestones/v1.1-ROADMAP.md`
 - [61-01]: Expandable «Обучение» nav group — hand-rolled useState + chevron rotate-180, БЕЗ radix Collapsible; рендерится inline после «Диагностика» в navItems.map (сохраняет порядок), exported learnSubItems для downstream waves
 - [61-01]: Mobile bottom-bar «Обучение» (href /learn/plan) — active state special-cased на pathname.startsWith('/learn'), иначе не подсвечивается на /learn/library; LearningTabs pill-strip (md:hidden) для монтажа в 61-02
 - [61-01]: /learn/track → /learn/plan через Server Component redirect() (не client router.push — router-cache loop guard); только /learn/track e2e-кейс un-skipped, /learn default-redirect остаётся test.fixme до 61-02
+- [61-02]: /learn split на 4 routed sub-pages (plan/solutions/library/favorites); /learn — Server Component, читает prisma.learningPath напрямую (как layout.tsx), redirect() на /learn/plan при non-empty lessons[] иначе /learn/library — никакого router.push
+- [61-02]: /learn/plan показывает ТОЛЬКО диагностические секции (allowlist errors/deepening/growth/advanced); custom-секция отброшена — ручные добавления уходят в «Избранное» в Wave D / 61-07, выводить их как «план» сейчас = ввести в заблуждение
+- [61-02]: D-02 канон применён ко всем видимым строкам (трек→план, +В трек→В план, Все курсы→База знаний, плейбук/джоба→решение/задача); 0 запрещённых строк по grep
+- [61-02]: tour-якоря перенесены (D-10) — удалены мёртвые learn-view-toggle/learn-filters; getSteps DOM-probe теперь на learn-sections (plan view) vs catalog; catalog-вариант получил шаг learn-submenu (lens-тоггла больше нет)
 
 ### Blockers/Concerns
 
@@ -262,11 +266,12 @@ None.
 | 56    | 04   | 6min     | 2     | 4     |
 | 61    | 00   | 7min     | 2     | 6     |
 | 61    | 01   | 12min    | 2     | 5     |
+| 61    | 02   | 18min    | 2     | 7     |
 
 ## Session Continuity
 
-Last session: 2026-06-03T09:16:49.973Z
-Stopped at: Phase 61 planned (8 plans) + plan-checker warnings resolved
+Last session: 2026-06-03T10:05:00.000Z
+Stopped at: Completed 61-02-PLAN.md (4 routed learn sub-pages + /learn server redirect + tour anchors)
 
 ### Session 2026-03-12 — Billing Payment Flow Testing & Fixes
 

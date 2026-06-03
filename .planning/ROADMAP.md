@@ -1147,7 +1147,7 @@ Plans:
 Plans:
 - [x] 61-00-PLAN.md — Wave 0: тест-заглушки (Nyquist) для favorite/migration/AgentSearch/redirect/material
 - [x] 61-01-PLAN.md — Wave A: сабменю «Обучение» (sidebar+mobile+LearningTabs), /learn/track→/learn/plan редирект
-- [ ] 61-02-PLAN.md — Wave A: расщепление lens на 4 страницы, /learn серверный редирект, ренейм строк, data-tour
+- [x] 61-02-PLAN.md — Wave A: расщепление lens на 4 страницы, /learn серверный редирект, ренейм строк, data-tour
 - [ ] 61-03-PLAN.md — Wave C (backend): material.listForUser + опциональный lessonId в MaterialCard
 - [ ] 61-04-PLAN.md — Wave B: AgentSearch scope (solutions/library) + каталог материалов в Базе знаний
 - [ ] 61-05-PLAN.md — Wave E: дашборд 3 входа + hero-поиск (LearningHero)
