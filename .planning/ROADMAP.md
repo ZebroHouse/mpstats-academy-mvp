@@ -1142,7 +1142,7 @@ Plans:
 **Spec:** `docs/superpowers/specs/2026-06-03-learning-2.0-redesign-design.md`
 **Requirements**: TBD
 **Depends on:** Phase 60
-**Plans:** 6/8 plans executed
+**Plans:** 7/8 plans executed
 
 Plans:
 - [x] 61-00-PLAN.md — Wave 0: тест-заглушки (Nyquist) для favorite/migration/AgentSearch/redirect/material
@@ -1151,7 +1151,7 @@ Plans:
 - [x] 61-03-PLAN.md — Wave C (backend): material.listForUser + опциональный lessonId в MaterialCard
 - [x] 61-04-PLAN.md — Wave B: AgentSearch scope (solutions/library) + каталог материалов в Базе знаний
 - [x] 61-05-PLAN.md — Wave E: дашборд 3 входа + hero-поиск (LearningHero)
-- [ ] 61-06-PLAN.md — Wave D: модель Favorite + [BLOCKING] миграция через Mgmt API + favorite router
+- [~] 61-06-PLAN.md — Wave D: модель Favorite + favorite router ГОТОВЫ (commits 4ca4be6, 9c7b764); [BLOCKING] миграция через Mgmt API — PENDING owner approval
 - [ ] 61-07-PLAN.md — Wave D: data-миграция трек→избранное + FavoriteButton + План→диагностический
 
 Waves (порядок разработки, единый деплой через staging):

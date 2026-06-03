@@ -2,9 +2,9 @@
 gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: Marketplace-aware Diagnostic
-status: executing — Phase 61 Wave 5 (61-04 scoped search + material catalog) complete
-stopped_at: Completed 61-04-PLAN.md (scope-aware AgentSearch + Library material catalog)
-last_updated: "2026-06-03T09:56:13.164Z"
+status: executing — Phase 61 Wave 7 (61-06 Favorite backend) PARTIAL — prod migration pending owner approval
+stopped_at: 61-06 schema+migration+router committed; Task 2 (apply migration to prod) HALTED at blocking human-action checkpoint
+last_updated: "2026-06-03T14:05:00.000Z"
 progress:
   total_phases: 41
   completed_phases: 30
@@ -188,8 +188,12 @@ Full v1.1 decision history: `milestones/v1.1-ROADMAP.md`
 - [61-04]: Library material catalog — single-select chip-row (5 MaterialType + «Уроки» toggle на courses accordion); material.listForUser.useQuery({type},{enabled}) — «Уроки» view не делает material-fetch; empty «Материалов этого типа пока нет». isHidden не байпасится (оба эндпоинта уже фильтруют)
 - [Phase ?]: [61-05]: hero search via LearningHero (bg-mp-hero-gradient + text-display-sm + data-tour=learn-search) wrapping scoped AgentSearch; AgentSearch grows via opt-in size='hero' prop (h-14 rounded-xl + solid-pill submit), NO fork — default callers untouched
 - [Phase ?]: [61-05]: dashboard leads with 3 accent entry cards (plan→soft-blue/library→soft-green/solutions→gradient, Card interactive + lucide); 4 stat tiles condensed to a flex label:value strip with all-zero new-user hint instead of dead zeros
+- [61-06]: Favorite polymorphic model (itemType/itemId, NO FK on itemId — app-level integrity in favorite.list); add upsert idempotent on @@unique; userId ALWAYS ctx.user.id (IDOR T-61-06-01), zod input only {itemType,itemId}; list filters Lesson/Material isHidden:false (+course.isHidden:false), Job isPublished:true, drops dangling/hidden refs (D-10); isFavorited batch keyed itemType:itemId, no N+1
+- [61-06]: additive migration 20260603000000_add_favorite written (sha256 2e08b0ad...d865) but NOT applied to prod — blocking human-action checkpoint (shared live DB 158 paying users); owner applies via Supabase Management API per reference_supabase_migration_via_mgmt_api.md
 
 ### Blockers/Concerns
+
+- [61-06 PENDING]: Favorite migration NOT applied to prod Supabase `saecuecevicwjkpmaoot`. Owner must POST DDL via Management API + INSERT _prisma_migrations row (checksum 2e08b0ad4f28bbb9c9aa70c3fb8c6e1c3f496a24f7db724d9bbaaafdbc09d865). 61-07 (heart UI + track→favorites migration) BLOCKED until applied. Resume signal: "applied".
 
 - Supabase Admin API session creation for custom OAuth needs sandbox validation (Phase 17)
 - CloudPayments webhook payload format needs sandbox testing (Phase 18)
