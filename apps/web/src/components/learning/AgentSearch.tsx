@@ -4,6 +4,7 @@ import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import type { IntentResult } from '@mpstats/ai';
 import { trpc } from '@/lib/trpc/client';
+import { cn } from '@/lib/utils';
 import { LessonResultCard, type LessonResultCardData } from './LessonResultCard';
 import { MaterialCard, type MaterialCardProps } from './MaterialCard';
 
@@ -19,7 +20,8 @@ type LibraryResult = {
   materials: MaterialCardProps[];
 };
 
-export function AgentSearch({ scope }: { scope: Scope }) {
+export function AgentSearch({ scope, size = 'default' }: { scope: Scope; size?: 'default' | 'hero' }) {
+  const isHero = size === 'hero';
   const [query, setQuery] = useState('');
   const [conversationState, setConversationState] = useState<string | undefined>();
   const [result, setResult] = useState<IntentResult | null>(null);
@@ -109,10 +111,18 @@ export function AgentSearch({ scope }: { scope: Scope }) {
     <div className="space-y-3">
       <form
         onSubmit={(e) => { e.preventDefault(); submit(query); }}
-        className="flex items-center h-12 border border-mp-gray-200 rounded-lg bg-white"
+        className={cn(
+          'flex items-center bg-white',
+          isHero
+            ? 'h-14 rounded-xl border border-mp-gray-200 shadow-mp-card pr-1.5 focus-within:ring-2 focus-within:ring-mp-blue-500'
+            : 'h-12 rounded-lg border border-mp-gray-200',
+        )}
       >
         <input
-          className="flex-1 h-full bg-transparent px-4 placeholder:text-mp-gray-400 focus:outline-none"
+          className={cn(
+            'flex-1 h-full bg-transparent px-4 placeholder:text-mp-gray-400 focus:outline-none',
+            isHero && 'text-body',
+          )}
           placeholder={PLACEHOLDER[scope]}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -120,7 +130,12 @@ export function AgentSearch({ scope }: { scope: Scope }) {
         />
         <button
           type="submit"
-          className="px-4 text-mp-blue-500 disabled:opacity-50"
+          className={cn(
+            'disabled:opacity-50',
+            isHero
+              ? 'h-11 px-5 rounded-lg bg-mp-blue-500 text-white text-body-sm font-semibold disabled:bg-mp-gray-300'
+              : 'px-4 text-mp-blue-500',
+          )}
           disabled={isPending || !query.trim()}
         >
           {isPending ? 'Ищем…' : 'Найти'}

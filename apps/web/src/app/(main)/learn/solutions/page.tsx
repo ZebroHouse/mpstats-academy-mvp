@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { AgentSearch } from '@/components/learning/AgentSearch';
+import { LearningHero } from '@/components/learning/LearningHero';
 import { MarketplaceSwitch } from '@/components/learning/MarketplaceSwitch';
 import { JobCatalog, type ProgressFilter } from '@/components/learning/JobCatalog';
 import { LearningTabs } from '@/components/learning/LearningTabs';
@@ -59,44 +60,37 @@ export default function SolutionsPage() {
     <div className="space-y-6 animate-fade-in">
       <LearningTabs />
 
-      {/* Hero slot — LearningHero lands here in 61-05 (D-09). */}
-
-      {/* Header */}
-      <div className="animate-slide-up">
-        <h1 className="text-display-sm text-mp-gray-900">Решения под задачу</h1>
-        <p className="text-body text-mp-gray-500 mt-1">
-          Готовые инструкции под конкретную задачу маркетплейса
-        </p>
-      </div>
-
-      {/* Marketplace switch */}
-      <div>
-        <MarketplaceSwitch value={marketplace} onChange={setMarketplace} />
-      </div>
-
-      {/* Agent Search */}
-      <div data-tour="learn-search">
-        <AgentSearch scope="solutions" />
-      </div>
-
-      {/* Progress filter */}
-      <div className="space-y-4">
-        <div className="flex gap-2 flex-wrap">
-          {(['ALL', 'NOT_STARTED', 'IN_PROGRESS', 'COMPLETED'] as ProgressFilter[]).map((f) => (
-            <button
-              key={f}
-              onClick={() => setProgressFilter(f)}
-              className={cn(
-                'px-3 py-1.5 rounded-lg text-body-sm font-medium transition-colors',
-                progressFilter === f
-                  ? 'bg-mp-blue-500 text-white'
-                  : 'bg-white border border-mp-gray-200 text-mp-gray-600 hover:bg-mp-gray-50',
-              )}
-            >
-              {PROGRESS_FILTER_LABELS[f]}
-            </button>
-          ))}
+      {/* Hero search block (D-09) — gradient bg, display headline, large search + chips */}
+      <LearningHero
+        scope="solutions"
+        headline="Решите задачу за минуту"
+        subline="Готовые инструкции под конкретную задачу маркетплейса"
+      >
+        <AgentSearch scope="solutions" size="hero" />
+        {/* Filter chips: marketplace switch + progress filter */}
+        <div className="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <MarketplaceSwitch value={marketplace} onChange={setMarketplace} />
+          <div className="flex gap-2 flex-wrap">
+            {(['ALL', 'NOT_STARTED', 'IN_PROGRESS', 'COMPLETED'] as ProgressFilter[]).map((f) => (
+              <button
+                key={f}
+                onClick={() => setProgressFilter(f)}
+                className={cn(
+                  'px-3 py-1.5 rounded-lg text-body-sm font-medium transition-colors',
+                  progressFilter === f
+                    ? 'bg-mp-blue-500 text-white'
+                    : 'bg-white/70 border border-mp-gray-200 text-mp-gray-700 hover:bg-white',
+                )}
+              >
+                {PROGRESS_FILTER_LABELS[f]}
+              </button>
+            ))}
+          </div>
         </div>
+      </LearningHero>
+
+      {/* Job catalog */}
+      <div className="space-y-4">
         {jobsLoading && <div className="h-32 bg-mp-gray-200 rounded-xl animate-pulse" />}
         {jobsError && !isDatabaseUnavailable(jobsError.message) && (
           <p className="text-body-sm text-red-500 py-6 text-center">Не удалось загрузить решения.</p>

@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { LessonCard } from '@/components/learning/LessonCard';
 import { AgentSearch } from '@/components/learning/AgentSearch';
+import { LearningHero } from '@/components/learning/LearningHero';
 import { MaterialCard, type MaterialCardProps } from '@/components/learning/MaterialCard';
 import { CourseLockBanner } from '@/components/learning/PaywallBanner';
 import { LearningTabs } from '@/components/learning/LearningTabs';
@@ -247,38 +248,31 @@ function LibraryPageInner() {
     <div className="space-y-6 animate-fade-in">
       <LearningTabs />
 
-      {/* Hero slot — LearningHero lands here in 61-05 (D-09). */}
-
-      {/* Header */}
-      <div className="animate-slide-up">
-        <h1 className="text-display-sm text-mp-gray-900">База знаний</h1>
-        <p className="text-body text-mp-gray-500 mt-1">
-          Все курсы и уроки платформы
-        </p>
-      </div>
-
-      {/* Agent Search */}
-      <div data-tour="learn-search">
-        <AgentSearch scope="library" />
-      </div>
-
-      {/* Material-type filter chips (+ «Уроки» toggle back to courses accordion) */}
-      <div className="flex gap-2 flex-wrap">
-        {CATALOG_CHIPS.map((chip) => (
-          <button
-            key={chip.value}
-            onClick={() => setCatalogFilter(chip.value)}
-            className={cn(
-              'px-3 py-1.5 rounded-lg text-body-sm font-medium transition-colors',
-              catalogFilter === chip.value
-                ? 'bg-mp-blue-500 text-white'
-                : 'bg-white border border-mp-gray-200 text-mp-gray-600 hover:bg-mp-gray-50',
-            )}
-          >
-            {chip.label}
-          </button>
-        ))}
-      </div>
+      {/* Hero search block (D-09) — gradient bg, display headline, large search + chips */}
+      <LearningHero
+        scope="library"
+        headline="База знаний"
+        subline="Все курсы, уроки и материалы платформы"
+      >
+        <AgentSearch scope="library" size="hero" />
+        {/* Material-type filter chips (+ «Уроки» toggle back to courses accordion) */}
+        <div className="mt-4 flex gap-2 flex-wrap">
+          {CATALOG_CHIPS.map((chip) => (
+            <button
+              key={chip.value}
+              onClick={() => setCatalogFilter(chip.value)}
+              className={cn(
+                'px-3 py-1.5 rounded-lg text-body-sm font-medium transition-colors',
+                catalogFilter === chip.value
+                  ? 'bg-mp-blue-500 text-white'
+                  : 'bg-white/70 border border-mp-gray-200 text-mp-gray-700 hover:bg-white',
+              )}
+            >
+              {chip.label}
+            </button>
+          ))}
+        </div>
+      </LearningHero>
 
       {/* Material catalog (when a material type is selected) */}
       {showMaterials && (
