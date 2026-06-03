@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter, usePathname } from 'next/navigation';
-import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LessonCard } from '@/components/learning/LessonCard';
@@ -32,12 +31,6 @@ const CATALOG_CHIPS: Array<{ value: CatalogFilter; label: string }> = [
   { value: 'CHECKLIST', label: 'Чек-лист' },
   { value: 'MEMO', label: 'Памятка' },
 ];
-
-function pluralLessons(n: number): string {
-  if (n % 10 === 1 && n % 100 !== 11) return `${n} урок`;
-  if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return `${n} урока`;
-  return `${n} уроков`;
-}
 
 function isDatabaseUnavailable(errorMessage: string): boolean {
   return errorMessage === 'DATABASE_UNAVAILABLE' || errorMessage.includes('DATABASE_UNAVAILABLE');
@@ -110,55 +103,18 @@ function LibraryPageInner() {
     }
   }, [courses]);
 
-  // O(1) lookup for recommended lesson IDs
+  // O(1) lookup for recommended lesson IDs (diagnostic «Рекомендовано» badge)
   const recommendedLessonIds = new Set(
     recommendedPath?.lessons.map((l) => l.id) ?? []
   );
 
-  // O(1) lookup for lessons already in user's plan (all sections)
-  const trackLessonIds = useMemo(() => {
-    if (!recommendedPath?.sections) return new Set<string>();
-    return new Set(recommendedPath.sections.flatMap((s: any) => s.lessons.map((l: any) => l.id as string)));
-  }, [recommendedPath]);
-
-  const utils = trpc.useUtils();
-
-  const addToTrackMutation = trpc.learning.addToTrack.useMutation({
-    onMutate: async ({ lessonId }) => {
-      await utils.learning.getRecommendedPath.cancel();
-      const prev = utils.learning.getRecommendedPath.getData();
-      utils.learning.getRecommendedPath.setData(undefined, (old: typeof prev) => {
-        if (!old) return old;
-        const sections: any[] = old.sections ? [...old.sections.map((s: any) => ({ ...s, lessons: [...s.lessons] }))] : [];
-        let customIdx = sections.findIndex((s: any) => s.id === 'custom');
-        if (customIdx < 0) {
-          sections.unshift({ id: 'custom', title: 'Мои уроки', description: '0', lessons: [], lessonIds: [] });
-          customIdx = 0;
-        }
-        const lessonData = courses?.flatMap(c => c.lessons).find(l => l.id === lessonId);
-        const alreadyExists = sections[customIdx].lessons.some((l: any) => l.id === lessonId);
-        if (!alreadyExists && lessonData) {
-          sections[customIdx] = { ...sections[customIdx], lessons: [...sections[customIdx].lessons, lessonData] };
-        }
-        return { ...old, sections, isSectioned: true } as any;
-      });
-      return { prev };
-    },
-    onError: (_err: unknown, _vars: unknown, ctx: any) => {
-      if (ctx?.prev) utils.learning.getRecommendedPath.setData(undefined, ctx.prev);
-      toast.error('Не удалось добавить урок');
-    },
-    onSuccess: () => toast.success('Добавлено в план'),
-    onSettled: () => utils.learning.getRecommendedPath.invalidate(),
-  });
-
-  const addLessonsToTrackMutation = trpc.learning.addLessonsToTrack.useMutation({
-    onSuccess: ({ added }) => {
-      toast.success(`Добавлено в план: ${pluralLessons(added)}`);
-      utils.learning.getRecommendedPath.invalidate();
-    },
-    onError: () => toast.error('Не удалось добавить курс в план'),
-  });
+  // Favorited lessons → seed the «сердечко» filled state (Избранное, D-06).
+  // Manual adds in База знаний go to Избранное via FavoriteButton, NOT to the План.
+  const { data: favLessons } = trpc.favorite.list.useQuery({ itemType: 'LESSON' });
+  const favoritedLessonIds = useMemo(
+    () => new Set((favLessons?.items ?? []).map((i) => i.itemId)),
+    [favLessons],
+  );
 
   // Unified filter function for courses view
   const filterLesson = (lesson: LessonWithProgress) => {
@@ -365,31 +321,6 @@ function LibraryPageInner() {
                       ) : (
                         <span className="text-caption text-mp-gray-500">{course.progressPercent}% завершено</span>
                       )}
-                      {(() => {
-                        const addable = course.lessons.filter(
-                          (l) => !l.locked && !trackLessonIds.has(l.id),
-                        );
-                        if (addable.length === 0) return null;
-                        return (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-caption text-mp-blue-600 hover:text-mp-blue-700 h-auto py-0.5 px-2"
-                            disabled={addLessonsToTrackMutation.isPending}
-                            onClick={() =>
-                              addLessonsToTrackMutation.mutate({
-                                lessonIds: addable.map((l) => l.id),
-                              })
-                            }
-                            title={`Добавить ${pluralLessons(addable.length)} этого курса в ваш персональный план`}
-                          >
-                            <svg className="w-3.5 h-3.5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                            </svg>
-                            В план ({addable.length})
-                          </Button>
-                        );
-                      })()}
                       {continueLesson && course.progressPercent < 100 && (
                         <Link href={`/learn/${continueLesson.id}`}>
                           <Button variant="ghost" size="sm" className="text-caption text-mp-blue-600 hover:text-mp-blue-700 h-auto py-0.5 px-2">
@@ -422,8 +353,7 @@ function LibraryPageInner() {
                       showCourse={false}
                       isRecommended={recommendedLessonIds.has(lesson.id)}
                       locked={lesson.locked}
-                      inTrack={trackLessonIds.has(lesson.id)}
-                      onToggleTrack={trackLessonIds.has(lesson.id) ? () => {} : () => addToTrackMutation.mutate({ lessonId: lesson.id })}
+                      favorite={{ itemId: lesson.id, initialFavorited: favoritedLessonIds.has(lesson.id) }}
                     />
                   ))}
                 </div>

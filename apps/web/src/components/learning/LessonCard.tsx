@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import type { LessonWithProgress } from '@mpstats/shared';
+import { FavoriteButton } from './FavoriteButton';
 
 interface LessonCardProps {
   lesson: LessonWithProgress;
@@ -14,6 +15,11 @@ interface LessonCardProps {
   inTrack?: boolean;
   onToggleTrack?: () => void;
   onRemoveFromTrack?: () => void;
+  /**
+   * When provided, renders the «сердечко» (Избранное, D-06) in the action slot.
+   * Used in the База знаний catalog so manual adds go to Избранное, not the План.
+   */
+  favorite?: { itemId: string; initialFavorited?: boolean };
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -70,7 +76,7 @@ const LOCK_ICON = (
   </svg>
 );
 
-export function LessonCard({ lesson, showCourse, courseName, isRecommended, locked, inTrack, onToggleTrack, onRemoveFromTrack }: LessonCardProps) {
+export function LessonCard({ lesson, showCourse, courseName, isRecommended, locked, inTrack, onToggleTrack, onRemoveFromTrack, favorite }: LessonCardProps) {
   const isLocked = locked ?? lesson.locked;
   const status = STATUS_CONFIG[lesson.status];
 
@@ -155,6 +161,16 @@ export function LessonCard({ lesson, showCourse, courseName, isRecommended, lock
                 </div>
               )}
             </div>
+
+            {/* Избранное «сердечко» (D-06) — manual add lands in Избранное, not the План */}
+            {favorite && (
+              <FavoriteButton
+                itemType="LESSON"
+                itemId={favorite.itemId}
+                initialFavorited={favorite.initialFavorited}
+                className="flex-shrink-0 -mr-1"
+              />
+            )}
 
             {/* Track toggle button — labeled so users actually find it */}
             {onToggleTrack && (
