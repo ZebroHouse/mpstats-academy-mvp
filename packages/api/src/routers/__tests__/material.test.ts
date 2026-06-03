@@ -194,34 +194,77 @@ describe('material.create XOR validation', () => {
 describe('material.listForUser', () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it.skip('forces where.isHidden = false with no includeHidden escape — pending 61-04', async () => {
-    // GREEN (61-04):
-    //   const ctx = makeCtx();
-    //   const caller = materialRouter.createCaller(ctx);
-    //   await caller.listForUser({});
-    //   const arg = ctx.prisma.material.findMany.mock.calls[0][0];
-    //   expect(arg.where.isHidden).toBe(false);
-    //   // even if a caller smuggles includeHidden, it must be ignored:
-    //   await caller.listForUser({ includeHidden: true } as any);
-    //   expect(ctx.prisma.material.findMany.mock.calls[1][0].where.isHidden).toBe(false);
+  // Note: makeCtx() defaults userProfile.role='ADMIN', но listForUser —
+  // protectedProcedure: достаточно ctx.user. Любой залогиненный юзер проходит.
+
+  it('forces where.isHidden = false with no includeHidden escape', async () => {
     const ctx = makeCtx();
-    expect(ctx.prisma.material.findMany).toBeDefined();
+    const caller = materialRouter.createCaller(ctx);
+    await caller.listForUser({});
+    const arg = ctx.prisma.material.findMany.mock.calls[0][0];
+    expect(arg.where.isHidden).toBe(false);
+    // even if a caller smuggles includeHidden, it must be ignored:
+    await caller.listForUser({ includeHidden: true } as any);
+    expect(
+      ctx.prisma.material.findMany.mock.calls[1][0].where.isHidden,
+    ).toBe(false);
   });
 
-  it.skip('honors optional type filter and title contains search (insensitive) — pending 61-04', async () => {
-    // GREEN (61-04): where.type === input.type; where.title === { contains, mode:'insensitive' }.
-    expect(true).toBe(true);
+  it('honors optional type filter and title contains search (insensitive)', async () => {
+    const ctx = makeCtx();
+    const caller = materialRouter.createCaller(ctx);
+    await caller.listForUser({ type: 'CHECKLIST', search: 'Ozon' });
+    const arg = ctx.prisma.material.findMany.mock.calls[0][0];
+    expect(arg.where.type).toBe('CHECKLIST');
+    expect(arg.where.title).toEqual({ contains: 'Ozon', mode: 'insensitive' });
   });
 
-  it.skip('includes standalone (isStandalone:true) materials, not only lesson-attached — pending 61-04', async () => {
-    // GREEN (61-04): no `lessons: { some: {} }` constraint that would hide standalone rows.
-    expect(true).toBe(true);
+  it('includes standalone (isStandalone:true) materials, not only lesson-attached', async () => {
+    const ctx = makeCtx();
+    const caller = materialRouter.createCaller(ctx);
+    await caller.listForUser({});
+    const arg = ctx.prisma.material.findMany.mock.calls[0][0];
+    // no `lessons: { some: {} }` constraint that would hide standalone rows
+    expect(arg.where.lessons).toBeUndefined();
   });
 
-  it.skip('does NOT reference or weaken getSignedUrl ACL (download ACL frozen, D-05) — pending 61-04', async () => {
-    // GREEN (61-04): listForUser is a pure read; it never returns storagePath
-    // and never bypasses checkLessonAccess. Asserted by source-grep + behavior.
-    expect(true).toBe(true);
+  it('never returns storagePath to the client — exposes hasFile boolean only', async () => {
+    const ctx = makeCtx();
+    ctx.prisma.material.findMany.mockResolvedValue([
+      {
+        id: 'm-1',
+        type: 'CHECKLIST',
+        title: 'Чек-лист',
+        description: null,
+        ctaText: 'Скачать',
+        externalUrl: null,
+        storagePath: 'checklist/m-1/file.pdf',
+        isStandalone: true,
+        isHidden: false,
+      },
+    ]);
+    const caller = materialRouter.createCaller(ctx);
+    const res = await caller.listForUser({});
+    const item = res.items[0] as any;
+    // storagePath НИКОГДА не уходит клиенту — payload экспонирует hasFile boolean.
+    expect(item.storagePath).toBeUndefined();
+    expect(item.hasFile).toBe(true);
+  });
+
+  it('does NOT reference or weaken getSignedUrl ACL (download ACL frozen, D-05)', async () => {
+    // getSignedUrl остаётся FORBIDDEN для standalone (no attached lesson) —
+    // listForUser его не трогает. Регресс-проверка ACL.
+    const ctx = makeCtx();
+    ctx.prisma.material.findUnique.mockResolvedValue({
+      id: 'm-1',
+      isHidden: false,
+      storagePath: 'pdf/m-1/file.pdf',
+      lessons: [], // standalone — нет видимых уроков
+    });
+    const caller = materialRouter.createCaller(ctx);
+    await expect(
+      caller.getSignedUrl({ materialId: 'm-1' }),
+    ).rejects.toMatchObject({ code: 'FORBIDDEN' });
   });
 });
 
