@@ -25,6 +25,7 @@ export function LearningTabs() {
     <nav
       className="md:hidden -mx-4 px-4 overflow-x-auto"
       aria-label="Разделы обучения"
+      data-tour="learn-submenu"
     >
       <div className="flex gap-2 min-w-max pb-1">
         {tabs.map((tab) => {
