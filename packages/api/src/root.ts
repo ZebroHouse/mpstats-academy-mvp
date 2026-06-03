@@ -13,6 +13,7 @@ import { referralRouter } from './routers/referral';
 import { jobRouter } from './routers/job';
 import { onboardingRouter } from './routers/onboarding';
 import { intentRouter } from './routers/intent';
+import { favoriteRouter } from './routers/favorite';
 
 export const appRouter = router({
   profile: profileRouter,
@@ -29,6 +30,7 @@ export const appRouter = router({
   job: jobRouter,
   onboarding: onboardingRouter,
   intent: intentRouter,
+  favorite: favoriteRouter,
 });
 
 export type AppRouter = typeof appRouter;

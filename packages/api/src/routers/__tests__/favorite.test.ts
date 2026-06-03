@@ -1,29 +1,19 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { FavoriteItemType } from '@mpstats/db';
+import { favoriteRouter } from '../favorite';
 
 /**
- * Wave 0 RED stub — Phase 61 (Обучение 2.0).
+ * GREEN (Phase 61, 61-06) — favorite router behavioral suite.
  *
- * `favoriteRouter` does NOT exist yet; it lands in 61-06 together with the
- * `FavoriteItemType` enum (`@mpstats/db`) and the `Favorite` table migration.
- * These assertions are AUTHORED now so the downstream implementation task has a
- * concrete `<automated>` target (Nyquist Dim 8). Behavioral bodies are
- * `it.skip('… pending 61-06')` so the suite COLLECTS green; flipping them to
- * `it` (and importing the real router) is the GREEN step in 61-06.
- *
- * SECURITY CONTRACT (T-IDOR-fav): every write/read is scoped by `ctx.user.id`,
- * NEVER by a userId taken from `input`. The skipped bodies below encode that.
- *
- * NOTE: we deliberately do NOT `import { favoriteRouter } from '../favorite'`
- * nor `import { FavoriteItemType } from '@mpstats/db'` at module top-level —
- * neither exists yet, and a top-level import would turn this RED stub into a
- * hard COLLECTION error. 61-06 adds the import inside the un-skipped bodies.
+ * SECURITY CONTRACT (T-IDOR-fav / T-61-06-01): every write/read is scoped by
+ * `ctx.user.id`, NEVER by a userId taken from `input`. The assertions below
+ * encode that — an attacker-supplied userId in input is ignored.
  */
 
-// Item types are string literals here; once the enum lands they become
-// `FavoriteItemType.LESSON` etc. The migration declares exactly these three.
 const ITEM_TYPES = ['LESSON', 'JOB', 'MATERIAL'] as const;
 
 function makeCtx(overrides: any = {}) {
+  const { prisma: prismaOverride, ...rest } = overrides;
   return {
     user: { id: 'user-1' },
     prisma: {
@@ -36,9 +26,15 @@ function makeCtx(overrides: any = {}) {
       lesson: { findMany: vi.fn().mockResolvedValue([]) },
       material: { findMany: vi.fn().mockResolvedValue([]) },
       job: { findMany: vi.fn().mockResolvedValue([]) },
-      ...overrides.prisma,
+      ...prismaOverride,
+      // protectedProcedure middleware fire-and-forgets lastActiveAt via userProfile —
+      // placed AFTER override spread so a test's `prisma` override can never wipe it.
+      userProfile: {
+        findUnique: vi.fn().mockResolvedValue({ lastActiveAt: new Date() }),
+        update: vi.fn().mockResolvedValue({}),
+      },
     },
-    ...overrides,
+    ...rest,
   } as any;
 }
 
@@ -47,52 +43,147 @@ beforeEach(() => vi.clearAllMocks());
 describe('favorite router', () => {
   it('exposes the three favoritable item types', () => {
     expect(ITEM_TYPES).toEqual(['LESSON', 'JOB', 'MATERIAL']);
+    expect(Object.values(FavoriteItemType).sort()).toEqual(
+      [...ITEM_TYPES].sort(),
+    );
   });
 
   describe('add', () => {
-    it.skip('writes a row scoped to ctx.user.id, never from input (IDOR guard) — pending 61-06', async () => {
-      // GREEN (61-06):
-      //   const { favoriteRouter } = await import('../favorite');
-      //   const ctx = makeCtx();
-      //   const caller = favoriteRouter.createCaller(ctx);
-      //   await caller.add({ itemType: 'LESSON', itemId: 'l-1' });
-      //   const arg = ctx.prisma.favorite.create.mock.calls[0][0]
-      //            ?? ctx.prisma.favorite.upsert.mock.calls[0][0];
-      //   // userId MUST come from ctx.user.id — never echoed back from input.
-      //   expect(arg.data?.userId ?? arg.create?.userId).toBe(ctx.user.id);
+    it('writes a row scoped to ctx.user.id, never from input (IDOR guard)', async () => {
       const ctx = makeCtx();
-      expect(ctx.user.id).toBe('user-1');
+      const caller = favoriteRouter.createCaller(ctx);
+      // attacker tries to inject a userId — it must be ignored.
+      await caller.add({
+        itemType: FavoriteItemType.LESSON,
+        itemId: 'l-1',
+        userId: 'attacker-id',
+      } as any);
+
+      const arg = ctx.prisma.favorite.upsert.mock.calls[0][0];
+      // userId MUST come from ctx.user.id in both where and create.
+      expect(arg.where.userId_itemType_itemId.userId).toBe(ctx.user.id);
+      expect(arg.create.userId).toBe(ctx.user.id);
+      expect(arg.create.userId).not.toBe('attacker-id');
     });
 
-    it.skip('is idempotent via @@unique([userId,itemType,itemId]) (upsert / skipDuplicates) — pending 61-06', async () => {
-      // Adding the same (itemType,itemId) twice must not create a second row.
-      expect(true).toBe(true);
+    it('is idempotent via @@unique([userId,itemType,itemId]) (upsert no-op on update)', async () => {
+      const ctx = makeCtx();
+      const caller = favoriteRouter.createCaller(ctx);
+      await caller.add({ itemType: FavoriteItemType.JOB, itemId: 'j-1' });
+
+      const arg = ctx.prisma.favorite.upsert.mock.calls[0][0];
+      // upsert keyed on the composite unique; update is a no-op (idempotent).
+      expect(arg.where.userId_itemType_itemId).toMatchObject({
+        userId: ctx.user.id,
+        itemType: FavoriteItemType.JOB,
+        itemId: 'j-1',
+      });
+      expect(arg.update).toEqual({});
     });
   });
 
   describe('remove', () => {
-    it.skip('deleteMany by { userId: ctx.user.id, itemType, itemId } — pending 61-06', async () => {
-      // GREEN (61-06): assert deleteMany.where.userId === ctx.user.id and that
-      // an attacker-supplied userId in input is ignored.
+    it('deleteMany by { userId: ctx.user.id, itemType, itemId }, ignoring input userId', async () => {
       const ctx = makeCtx();
-      expect(ctx.prisma.favorite.deleteMany).toBeDefined();
+      const caller = favoriteRouter.createCaller(ctx);
+      await caller.remove({
+        itemType: FavoriteItemType.MATERIAL,
+        itemId: 'm-1',
+        userId: 'attacker-id',
+      } as any);
+
+      const arg = ctx.prisma.favorite.deleteMany.mock.calls[0][0];
+      expect(arg.where.userId).toBe(ctx.user.id);
+      expect(arg.where.userId).not.toBe('attacker-id');
+      expect(arg.where).toMatchObject({
+        itemType: FavoriteItemType.MATERIAL,
+        itemId: 'm-1',
+      });
     });
   });
 
   describe('list', () => {
-    it.skip('filters by ctx.user.id and resolves itemId entities with isHidden:false, skipping dangling refs — pending 61-06', async () => {
-      // D-10: hidden lessons/materials (or course.isHidden) are excluded; a
-      // Favorite whose itemId no longer resolves is silently dropped, not 500.
+    it('filters by ctx.user.id and resolves itemId entities with isHidden:false, skipping dangling refs', async () => {
+      const ctx = makeCtx({
+        prisma: {
+          favorite: {
+            findMany: vi.fn().mockResolvedValue([
+              { itemType: 'LESSON', itemId: 'l-visible', createdAt: new Date('2026-06-03') },
+              { itemType: 'LESSON', itemId: 'l-hidden', createdAt: new Date('2026-06-02') },
+              { itemType: 'JOB', itemId: 'j-dangling', createdAt: new Date('2026-06-01') },
+            ]),
+          },
+          // resolution: only the visible lesson comes back; hidden + dangling are absent.
+          lesson: {
+            findMany: vi.fn().mockResolvedValue([
+              { id: 'l-visible', title: 'Visible', courseId: 'c-1', duration: 10 },
+            ]),
+          },
+          job: { findMany: vi.fn().mockResolvedValue([]) },
+          material: { findMany: vi.fn().mockResolvedValue([]) },
+        },
+      });
+      const caller = favoriteRouter.createCaller(ctx);
+      const res = await caller.list();
+
+      // favorite.findMany scoped to user.
+      expect(ctx.prisma.favorite.findMany.mock.calls[0][0].where.userId).toBe(
+        ctx.user.id,
+      );
+      // lesson resolution forces isHidden:false + course.isHidden:false (D-10).
+      const lessonWhere = ctx.prisma.lesson.findMany.mock.calls[0][0].where;
+      expect(lessonWhere.isHidden).toBe(false);
+      expect(lessonWhere.course).toEqual({ isHidden: false });
+      // only the resolvable visible lesson survives; hidden + dangling dropped.
+      expect(res!.items).toHaveLength(1);
+      expect(res!.items[0]).toMatchObject({
+        itemType: 'LESSON',
+        itemId: 'l-visible',
+      });
+    });
+
+    it('honors optional itemType filter scoped to ctx.user.id', async () => {
       const ctx = makeCtx();
-      expect(ctx.prisma.favorite.findMany).toBeDefined();
+      const caller = favoriteRouter.createCaller(ctx);
+      await caller.list({ itemType: FavoriteItemType.JOB });
+      const where = ctx.prisma.favorite.findMany.mock.calls[0][0].where;
+      expect(where.userId).toBe(ctx.user.id);
+      expect(where.itemType).toBe(FavoriteItemType.JOB);
     });
   });
 
   describe('isFavorited', () => {
-    it.skip('batch: { items:{itemType,itemId}[] } → map/Set keyed by item, scoped to ctx.user.id — pending 61-06', async () => {
-      // Seeds heart state in catalogs without N+1 per card.
+    it('batch: { items:{itemType,itemId}[] } → keys of favorited items, scoped to ctx.user.id', async () => {
+      const ctx = makeCtx({
+        prisma: {
+          favorite: {
+            findMany: vi.fn().mockResolvedValue([
+              { itemType: 'LESSON', itemId: 'l-1' },
+            ]),
+          },
+        },
+      });
+      const caller = favoriteRouter.createCaller(ctx);
+      const res = await caller.isFavorited({
+        items: [
+          { itemType: FavoriteItemType.LESSON, itemId: 'l-1' },
+          { itemType: FavoriteItemType.JOB, itemId: 'j-1' },
+        ],
+      });
+
+      // scoped to user; uses a single OR query (no N+1).
+      expect(ctx.prisma.favorite.findMany.mock.calls[0][0].where.userId).toBe(
+        ctx.user.id,
+      );
+      expect(res!.favorited).toEqual(['LESSON:l-1']);
+    });
+
+    it('returns empty for empty input without querying favorites', async () => {
       const ctx = makeCtx();
-      expect(ctx.user.id).toBe('user-1');
+      const caller = favoriteRouter.createCaller(ctx);
+      const res = await caller.isFavorited({ items: [] });
+      expect(res!.favorited).toEqual([]);
+      expect(ctx.prisma.favorite.findMany).not.toHaveBeenCalled();
     });
   });
 });
