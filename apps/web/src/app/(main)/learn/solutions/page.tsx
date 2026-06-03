@@ -76,7 +76,7 @@ export default function SolutionsPage() {
 
       {/* Agent Search */}
       <div data-tour="learn-search">
-        <AgentSearch />
+        <AgentSearch scope="solutions" />
       </div>
 
       {/* Progress filter */}

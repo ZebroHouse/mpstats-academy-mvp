@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { LessonCard } from '@/components/learning/LessonCard';
 import { AgentSearch } from '@/components/learning/AgentSearch';
+import { MaterialCard, type MaterialCardProps } from '@/components/learning/MaterialCard';
 import { CourseLockBanner } from '@/components/learning/PaywallBanner';
 import { LearningTabs } from '@/components/learning/LearningTabs';
 import type { FilterState } from '@/components/learning/FilterPanel';
@@ -16,6 +17,20 @@ import { cn } from '@/lib/utils';
 import type { LessonWithProgress } from '@mpstats/shared';
 
 const INITIAL_LESSONS_SHOWN = 5;
+
+// Material-type filter chips (5 MaterialType values) + «Уроки» toggle back to the
+// courses accordion (the default view).
+type MaterialTypeValue = MaterialCardProps['type'];
+type CatalogFilter = MaterialTypeValue | 'LESSONS';
+
+const CATALOG_CHIPS: Array<{ value: CatalogFilter; label: string }> = [
+  { value: 'LESSONS', label: 'Уроки' },
+  { value: 'PRESENTATION', label: 'Презентация' },
+  { value: 'CALCULATION_TABLE', label: 'Таблица расчётов' },
+  { value: 'EXTERNAL_SERVICE', label: 'Внешний сервис' },
+  { value: 'CHECKLIST', label: 'Чек-лист' },
+  { value: 'MEMO', label: 'Памятка' },
+];
 
 function pluralLessons(n: number): string {
   if (n % 10 === 1 && n % 100 !== 11) return `${n} урок`;
@@ -61,6 +76,13 @@ export default function LibraryPage() {
 
 function LibraryPageInner() {
   const [expandedCourses, setExpandedCourses] = useState<Set<string>>(new Set());
+  const [catalogFilter, setCatalogFilter] = useState<CatalogFilter>('LESSONS');
+
+  const showMaterials = catalogFilter !== 'LESSONS';
+  const { data: materialsData, isLoading: materialsLoading } = trpc.material.listForUser.useQuery(
+    { type: showMaterials ? (catalogFilter as MaterialTypeValue) : undefined },
+    { enabled: showMaterials },
+  );
 
   const searchParams = useSearchParams();
   const router = useRouter();
@@ -237,10 +259,69 @@ function LibraryPageInner() {
 
       {/* Agent Search */}
       <div data-tour="learn-search">
-        <AgentSearch />
+        <AgentSearch scope="library" />
       </div>
 
-      {/* Courses accordion */}
+      {/* Material-type filter chips (+ «Уроки» toggle back to courses accordion) */}
+      <div className="flex gap-2 flex-wrap">
+        {CATALOG_CHIPS.map((chip) => (
+          <button
+            key={chip.value}
+            onClick={() => setCatalogFilter(chip.value)}
+            className={cn(
+              'px-3 py-1.5 rounded-lg text-body-sm font-medium transition-colors',
+              catalogFilter === chip.value
+                ? 'bg-mp-blue-500 text-white'
+                : 'bg-white border border-mp-gray-200 text-mp-gray-600 hover:bg-mp-gray-50',
+            )}
+          >
+            {chip.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Material catalog (when a material type is selected) */}
+      {showMaterials && (
+        <div className="space-y-4">
+          {materialsLoading && (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-32 bg-mp-gray-200 rounded-xl animate-pulse" />
+              ))}
+            </div>
+          )}
+          {!materialsLoading && (materialsData?.items.length ?? 0) === 0 && (
+            <Card className="shadow-mp-card">
+              <CardContent className="py-12 text-center">
+                <h2 className="text-heading-lg text-mp-gray-900 mb-2">Материалов этого типа пока нет</h2>
+                <p className="text-body text-mp-gray-600">Снимите фильтр, чтобы увидеть все материалы.</p>
+                <Button variant="outline" className="mt-4" onClick={() => setCatalogFilter('LESSONS')}>
+                  Показать уроки
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+          {!materialsLoading && (materialsData?.items.length ?? 0) > 0 && (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {materialsData!.items.map((m) => (
+                <MaterialCard
+                  key={m.id}
+                  id={m.id}
+                  type={m.type as MaterialTypeValue}
+                  title={m.title}
+                  description={m.description}
+                  ctaText={m.ctaText}
+                  externalUrl={m.externalUrl}
+                  hasFile={m.hasFile}
+                />
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Courses accordion (default «Уроки» view) */}
+      {!showMaterials && (
       <div data-tour="learn-add-to-track" className="space-y-6">
         {courses?.map((course) => {
           const filteredCourseLessons = course.lessons.filter(lesson => filterLesson(lesson));
@@ -371,6 +452,7 @@ function LibraryPageInner() {
           );
         })}
       </div>
+      )}
     </div>
   );
 }
