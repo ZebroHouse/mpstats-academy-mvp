@@ -2,12 +2,12 @@
 phase: 61
 plan: "06"
 subsystem: favorites
-tags: [wave-7, favorite, polymorphic, idor, migration, checkpoint-pending]
+tags: [wave-7, favorite, polymorphic, idor, migration, migration-applied]
 requires:
   - "favorite.test.ts RED stub (61-00)"
 provides:
   - "Favorite polymorphic model + FavoriteItemType enum (D-06)"
-  - "additive migration 20260603000000_add_favorite (NOT YET applied to prod)"
+  - "additive migration 20260603000000_add_favorite (APPLIED to prod 2026-06-03 via Mgmt API by orchestrator; Favorite table live, idx_count=3, _prisma_migrations row recorded, checksum 2e08b0ad…)"
   - "favorite.{add,remove,list,isFavorited} IDOR-safe router mounted in root.ts"
 affects:
   - packages/db/prisma/schema.prisma
@@ -32,11 +32,11 @@ decisions:
   - "add uses upsert on @@unique([userId,itemType,itemId]) with empty update — idempotent no-op on duplicate"
   - "Job filtered by isPublished:true (Job has no isHidden field); Lesson/Material by isHidden:false"
   - "isFavorited returns string[] of `itemType:itemId` keys (serializable, vs Set) — frontend builds its own membership lookup"
-  - "PROD migration NOT applied by executor — blocking human-action checkpoint (shared live DB, 158 paying users)"
+  - "PROD migration applied 2026-06-03 by orchestrator via Supabase Mgmt API after owner approval (additive: CREATE TYPE + CREATE TABLE + 2 idx + FK Cascade; Favorite live, _prisma_migrations row recorded, checksum 2e08b0ad…)"
 metrics:
   duration: ~10min
   completed: 2026-06-03
-status: PARTIAL — prod migration pending owner approval (Task 2 checkpoint)
+status: COMPLETE — code shipped + prod migration applied (owner-approved 2026-06-03)
 ---
 
 # Phase 61 Plan 06: Favorite Model + IDOR-safe Router Summary
