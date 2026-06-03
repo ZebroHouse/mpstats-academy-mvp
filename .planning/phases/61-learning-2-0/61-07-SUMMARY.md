@@ -2,7 +2,7 @@
 phase: 61
 plan: "07"
 subsystem: favorites-split
-tags: [wave-8, learning-2.0, favorites, data-migration, idempotent, D-03, D-06, D-07, checkpoint-pending]
+tags: [wave-8, learning-2.0, favorites, data-migration, idempotent, D-03, D-06, D-07, migration-applied]
 requires:
   - "61-06 (Favorite model + favorite.{add,remove,list,isFavorited} router; schema migration applied to prod)"
   - "61-02 (/learn/plan diagnostic-only, /learn/favorites placeholder)"
@@ -54,7 +54,7 @@ decisions:
 metrics:
   duration: ~22min
   completed: 2026-06-03
-status: PARTIAL — code shipped + tested; prod track→favorites DATA migration HALTED at blocking human-action checkpoint (Task 4)
+status: COMPLETE — code shipped + tested; prod track→favorites DATA migration APPLIED 2026-06-03 (owner-approved, via Mgmt API mirroring the script: 718 rows = 677 LESSON + 41 JOB across 24 users; LessonProgress 1703→1703 unchanged ✓; idempotent re-run = 0 new)
 ---
 
 # Phase 61 Plan 07: План/Избранное Split + Track→Favorites Migration Summary
@@ -84,7 +84,7 @@ Completed the План/Избранное split (D-03): built the idempotent `mi
   - **#3 former /learn/track** is a pure server-side `redirect('/learn/plan')` — reads no path shape.
 - In-track (green «В треке/плане», from `addedJobs`) and in-favorites (pink heart, from `Favorite`) are **independent signals** — different data source, different mutation, neither suppresses the other at render time (A4/A5).
 
-**Task 4 — [BLOCKING] run data migration on PROD: NOT EXECUTED.** Halted at checkpoint (see below).
+**Task 4 — run data migration on PROD: APPLIED 2026-06-03 (owner-approved).** Orchestrator ran the idempotent backfill via Supabase Mgmt API (SQL mirroring the tested script: DISTINCT custom-section lessons → LESSON, addedJobs → JOB, ON CONFLICT DO NOTHING). Result: 718 Favorite rows (677 LESSON + 41 JOB) across 24 users; LessonProgress 1703→1703 (unchanged ✓); idempotency re-run inserted 0.
 
 ## CarrotQuest pa_* disposition (D-10)
 
@@ -156,4 +156,4 @@ None. Search-result lesson/material cards default their heart to `initialFavorit
 - FOUND (modified): apps/web/src/components/learning/{JobCard,JobCatalog,MaterialCard,LessonResultCard}.tsx (heart mounted)
 - FOUND commit: 00e8a32 (Task 1 — migration script + tests)
 - FOUND commit: 280e555 (Task 2 — FavoriteButton + Избранное)
-- NOT RUN (by design): prod track→favorites DATA migration — pending owner checkpoint (Task 4)
+- APPLIED 2026-06-03 (owner-approved): prod track→favorites DATA migration — 718 rows, LessonProgress unchanged, idempotent (Task 4)
