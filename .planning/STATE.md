@@ -4,13 +4,13 @@ milestone: v1.12
 milestone_name: Marketplace-aware Diagnostic
 status: executing — Phase 61 Wave 5 (61-04 scoped search + material catalog) complete
 stopped_at: Completed 61-04-PLAN.md (scope-aware AgentSearch + Library material catalog)
-last_updated: "2026-06-03T12:50:00.000Z"
+last_updated: "2026-06-03T09:56:13.164Z"
 progress:
   total_phases: 41
   completed_phases: 30
   total_plans: 91
-  completed_plans: 86
-  percent: 77
+  completed_plans: 87
+  percent: 73
 ---
 
 # Project State
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 ## Current Position
 
 Phase: 61 (learning-2-0) — EXECUTING
-Plan: 6 of 8
+Plan: 7 of 8
 No active phase. Last shipped:
 
 - Phase 60 (Ambassador Referral Codes) — PR #13 + #14 hotfix, 2026-05-28
@@ -186,6 +186,8 @@ Full v1.1 decision history: `milestones/v1.1-ROADMAP.md`
 - [61-04]: AgentSearch scope: 'solutions' | 'library' (D-04). solutions→intent.resolve (job-карточки, без изменений); library→параллельно ai.searchLessons + material.listForUser через useUtils().fetch (НЕ useMutation — это .query процедуры), рендер сгруппирован «Уроки»/«Материалы». Новый LessonResultCard (title→/learn/[id], course, snippet, прогресс, lock)
 - [61-04]: 61-00 scope-стаб мокал useMutation, но рантайм-паттерн для on-submit .query — useUtils().fetch; GREEN-fill переключил моки на .fetch shape (стаб-тело было it.skip scaffold, не frozen contract — прецедент 61-03)
 - [61-04]: Library material catalog — single-select chip-row (5 MaterialType + «Уроки» toggle на courses accordion); material.listForUser.useQuery({type},{enabled}) — «Уроки» view не делает material-fetch; empty «Материалов этого типа пока нет». isHidden не байпасится (оба эндпоинта уже фильтруют)
+- [Phase ?]: [61-05]: hero search via LearningHero (bg-mp-hero-gradient + text-display-sm + data-tour=learn-search) wrapping scoped AgentSearch; AgentSearch grows via opt-in size='hero' prop (h-14 rounded-xl + solid-pill submit), NO fork — default callers untouched
+- [Phase ?]: [61-05]: dashboard leads with 3 accent entry cards (plan→soft-blue/library→soft-green/solutions→gradient, Card interactive + lucide); 4 stat tiles condensed to a flex label:value strip with all-zero new-user hint instead of dead zeros
 
 ### Blockers/Concerns
 
@@ -275,10 +277,11 @@ None.
 | 61    | 02   | 18min    | 2     | 7     |
 | 61    | 03   | 9min     | 2     | 3     |
 | 61    | 04   | 10min    | 2     | 6     |
+| Phase 61 P05 | ~12min | 2 tasks | 5 files |
 
 ## Session Continuity
 
-Last session: 2026-06-03T12:50:00.000Z
+Last session: 2026-06-03T09:55:47.751Z
 Stopped at: Completed 61-04-PLAN.md (scope-aware AgentSearch + Library material catalog)
 
 ### Session 2026-03-12 — Billing Payment Flow Testing & Fixes
