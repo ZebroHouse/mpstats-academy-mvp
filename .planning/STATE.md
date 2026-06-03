@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: Marketplace-aware Diagnostic
-status: executing — Phase 61 Wave 3 (61-02 sub-page split) complete
-stopped_at: Completed 61-02-PLAN.md (4 routed learn sub-pages + /learn server redirect + tour anchors)
-last_updated: "2026-06-03T10:05:00.000Z"
+status: executing — Phase 61 Wave 4 (61-03 material.listForUser) complete
+stopped_at: Completed 61-03-PLAN.md (material.listForUser protected read + optional MaterialCard.lessonId)
+last_updated: "2026-06-03T12:45:00.000Z"
 progress:
   total_phases: 41
   completed_phases: 30
   total_plans: 91
-  completed_plans: 84
-  percent: 75
+  completed_plans: 85
+  percent: 76
 ---
 
 # Project State
@@ -25,7 +25,7 @@ See: .planning/PROJECT.md (updated 2026-03-06)
 ## Current Position
 
 Phase: 61 (learning-2-0) — EXECUTING
-Plan: 4 of 8
+Plan: 5 of 8
 No active phase. Last shipped:
 
 - Phase 60 (Ambassador Referral Codes) — PR #13 + #14 hotfix, 2026-05-28
@@ -180,6 +180,9 @@ Full v1.1 decision history: `milestones/v1.1-ROADMAP.md`
 - [61-02]: /learn/plan показывает ТОЛЬКО диагностические секции (allowlist errors/deepening/growth/advanced); custom-секция отброшена — ручные добавления уходят в «Избранное» в Wave D / 61-07, выводить их как «план» сейчас = ввести в заблуждение
 - [61-02]: D-02 канон применён ко всем видимым строкам (трек→план, +В трек→В план, Все курсы→База знаний, плейбук/джоба→решение/задача); 0 запрещённых строк по grep
 - [61-02]: tour-якоря перенесены (D-10) — удалены мёртвые learn-view-toggle/learn-filters; getSteps DOM-probe теперь на learn-sections (plan view) vs catalog; catalog-вариант получил шаг learn-submenu (lens-тоггла больше нет)
+- [61-03]: material.listForUser — protectedProcedure, ВСЕГДА where.isHidden=false (нет includeHidden escape, T-61-03-01); storagePath читается в select, но маппится в hasFile boolean ДО возврата — клиенту НИКОГДА не уходит (payload-level guarantee, State 49-02); standalone+attached оба включены (нет lessons:{some} констрейнта)
+- [61-03]: getSignedUrl download ACL frozen (A8) — diff к material.ts чисто additive (+65 строк), FORBIDDEN-ветка :437 нетронута; standalone = externalUrl-only этот pass, ACL-gap не триггерится
+- [61-03]: MaterialCard.lessonId required→optional — расширение безопасно (единственный caller LessonMaterials передаёт lessonId); file download-путь (getSignedUrl) gated на Boolean(lessonId), standalone-карточка externalUrl-only; FavoriteButton-слот задокументирован под 61-07 (сердце не добавлено)
 
 ### Blockers/Concerns
 
@@ -267,11 +270,12 @@ None.
 | 61    | 00   | 7min     | 2     | 6     |
 | 61    | 01   | 12min    | 2     | 5     |
 | 61    | 02   | 18min    | 2     | 7     |
+| 61    | 03   | 9min     | 2     | 3     |
 
 ## Session Continuity
 
-Last session: 2026-06-03T10:05:00.000Z
-Stopped at: Completed 61-02-PLAN.md (4 routed learn sub-pages + /learn server redirect + tour anchors)
+Last session: 2026-06-03T12:45:00.000Z
+Stopped at: Completed 61-03-PLAN.md (material.listForUser protected read + optional MaterialCard.lessonId)
 
 ### Session 2026-03-12 — Billing Payment Flow Testing & Fixes
 
