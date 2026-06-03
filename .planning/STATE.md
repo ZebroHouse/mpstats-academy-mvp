@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: Marketplace-aware Diagnostic
-status: idle — Phase 58 + 59 + 60 shipped to prod
-stopped_at: ready for next milestone planning
-last_updated: "2026-06-01T10:00:00.000Z"
+status: executing — Phase 61 Wave 0 (61-00 test scaffolds) complete
+stopped_at: Completed 61-00-PLAN.md (Wave 0 RED test scaffolds)
+last_updated: "2026-06-03T09:16:49.987Z"
 progress:
-  total_phases: 0
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 41
+  completed_phases: 30
+  total_plans: 91
+  completed_plans: 82
+  percent: 73
 ---
 
 # Project State
@@ -20,11 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Core value:** Пользователь проходит AI-диагностику, получает точную карту навыков и персонализированный трек обучения из реальных данных
-**Current focus:** idle — Phase 59 v2 (static deck diagnostic) shipped 2026-06-01, awaiting next milestone
+**Current focus:** Phase 61 — learning-2-0
 
 ## Current Position
 
+Phase: 61 (learning-2-0) — EXECUTING
+Plan: 2 of 8
 No active phase. Last shipped:
+
 - Phase 60 (Ambassador Referral Codes) — PR #13 + #14 hotfix, 2026-05-28
 - Phase 58 (Diagnostic on Jobs) — PR #12 `3ca8fb6`, 2026-05-28
 - Phase 59 v2 (Static-deck Diagnostic) — PR #16 `b89a54e`, 2026-06-01
@@ -168,6 +171,8 @@ Full v1.1 decision history: `milestones/v1.1-ROADMAP.md`
 - [56-04]: Жёсткий гейт диагностики на уроке снят — урок доступен на подписке без теста; удалена ТОЛЬКО ветка hasDiagnostic === false, подписочный LockOverlay нетронут
 - [56-04]: DiagnosticGateBanner — закрываемый хинт; dismissed инициализируется true (не false), чтобы карточка не мелькала у юзеров с установленным localStorage-флагом до useEffect-проверки
 - [56-04]: QualificationSection вынесена в отдельный компонент (паттерн SecurityCard) — profile/page.tsx уже 838 строк; переиспользует welcome-options без хардкода списков
+- [61-00]: Wave 0 RED scaffolds — it.skip/test.fixme bodies, БЕЗ top-level import не-существующих favoriteRouter/migrate-script (иначе collection error); GREEN-рецепт в комментариях. FavoriteItemType не импортируется из @mpstats/db (enum в 61-06) — строковые литералы
+- [61-00]: api vitest include расширен `../../scripts/__tests__/**/*.test.ts` — root migration-тест бежит под node-харнессом api (у scripts/ нет своего пакета)
 
 ### Blockers/Concerns
 
@@ -252,11 +257,12 @@ None.
 | 56    | 02   | 6min     | 2     | 3     |
 | 56    | 03   | 9min     | 3     | 11    |
 | 56    | 04   | 6min     | 2     | 4     |
+| 61    | 00   | 7min     | 2     | 6     |
 
 ## Session Continuity
 
-Last session: 2026-05-26T13:01:41.804Z
-Stopped at: Phase 58 context gathered
+Last session: 2026-06-03T09:16:49.973Z
+Stopped at: Phase 61 planned (8 plans) + plan-checker warnings resolved
 
 ### Session 2026-03-12 — Billing Payment Flow Testing & Fixes
 

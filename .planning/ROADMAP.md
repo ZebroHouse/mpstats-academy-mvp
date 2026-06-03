@@ -1142,10 +1142,10 @@ Plans:
 **Spec:** `docs/superpowers/specs/2026-06-03-learning-2.0-redesign-design.md`
 **Requirements**: TBD
 **Depends on:** Phase 60
-**Plans:** 8 plans
+**Plans:** 1/8 plans executed
 
 Plans:
-- [ ] 61-00-PLAN.md — Wave 0: тест-заглушки (Nyquist) для favorite/migration/AgentSearch/redirect/material
+- [x] 61-00-PLAN.md — Wave 0: тест-заглушки (Nyquist) для favorite/migration/AgentSearch/redirect/material
 - [ ] 61-01-PLAN.md — Wave A: сабменю «Обучение» (sidebar+mobile+LearningTabs), /learn/track→/learn/plan редирект
 - [ ] 61-02-PLAN.md — Wave A: расщепление lens на 4 страницы, /learn серверный редирект, ренейм строк, data-tour
 - [ ] 61-03-PLAN.md — Wave C (backend): material.listForUser + опциональный lessonId в MaterialCard
