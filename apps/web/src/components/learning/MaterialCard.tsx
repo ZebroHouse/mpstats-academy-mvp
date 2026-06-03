@@ -18,7 +18,13 @@ export type MaterialCardProps = {
   ctaText: string;
   externalUrl: string | null;
   hasFile: boolean;
-  lessonId: string;
+  /**
+   * Урок, к которому прикреплён материал. Опционально (61-03 / A8):
+   * standalone-материалы из «Базы знаний» рендерятся без lessonId и являются
+   * externalUrl-only — для них getSignedUrl НЕ вызывается (download ACL frozen).
+   */
+  lessonId?: string;
+  // Слот под FavoriteButton (монтируется в 61-07) — сердце пока не добавляем.
 };
 
 const TYPE_CONFIG = {
@@ -43,14 +49,21 @@ export function MaterialCard({
   const utils = trpc.useUtils();
 
   const handleClick = async () => {
-    reachGoal(METRIKA_GOALS.MATERIAL_OPEN, { materialId: id, materialType: type, lessonId });
+    reachGoal(METRIKA_GOALS.MATERIAL_OPEN, {
+      materialId: id,
+      materialType: type,
+      // lessonId опционален у standalone-карточек — передаём только если есть.
+      ...(lessonId ? { lessonId } : {}),
+    });
 
     if (externalUrl) {
       window.open(externalUrl, '_blank', 'noopener,noreferrer');
       return;
     }
 
-    if (hasFile) {
+    // A8: standalone-материал (без lessonId) — externalUrl-only. Файловый
+    // download-путь через getSignedUrl доступен только для урок-привязанных карточек.
+    if (hasFile && lessonId) {
       setLoading(true);
       try {
         // Lazy fetch — only on click. Signed URL has TTL 3600s.
@@ -73,7 +86,10 @@ export function MaterialCard({
 
   const cfg = TYPE_CONFIG[type];
   const Icon = cfg.Icon;
-  const disabled = loading || (!externalUrl && !hasFile);
+  // Файловый download доступен только при наличии lessonId (A8 — standalone
+  // externalUrl-only). Кнопка активна, если есть externalUrl ИЛИ (файл + урок).
+  const canDownloadFile = hasFile && Boolean(lessonId);
+  const disabled = loading || (!externalUrl && !canDownloadFile);
 
   return (
     <Card className="h-full flex flex-col shadow-mp-card">
