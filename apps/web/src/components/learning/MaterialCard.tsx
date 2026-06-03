@@ -9,6 +9,7 @@ import { reachGoal } from '@/lib/analytics/metrika';
 import { METRIKA_GOALS } from '@/lib/analytics/constants';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { FavoriteButton } from './FavoriteButton';
 
 export type MaterialCardProps = {
   id: string;
@@ -24,7 +25,8 @@ export type MaterialCardProps = {
    * externalUrl-only — для них getSignedUrl НЕ вызывается (download ACL frozen).
    */
   lessonId?: string;
-  // Слот под FavoriteButton (монтируется в 61-07) — сердце пока не добавляем.
+  /** Начальное состояние «сердечка» (seed из favorite.isFavorited на уровне списка). */
+  initialFavorited?: boolean;
 };
 
 const TYPE_CONFIG = {
@@ -44,6 +46,7 @@ export function MaterialCard({
   externalUrl,
   hasFile,
   lessonId,
+  initialFavorited,
 }: MaterialCardProps) {
   const [loading, setLoading] = useState(false);
   const utils = trpc.useUtils();
@@ -104,6 +107,12 @@ export function MaterialCard({
               {title}
             </div>
           </div>
+          <FavoriteButton
+            itemType="MATERIAL"
+            itemId={id}
+            initialFavorited={initialFavorited}
+            className="-mt-2 -mr-2 shrink-0"
+          />
         </div>
         {description && (
           <p className="text-body-sm text-mp-gray-600 line-clamp-2">{description}</p>

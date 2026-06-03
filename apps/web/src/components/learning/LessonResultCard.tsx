@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { FavoriteButton } from './FavoriteButton';
 
 export type LessonResultCardData = {
   id: string;
@@ -11,6 +12,7 @@ export type LessonResultCardData = {
   snippet?: string | null;
   watchedPercent: number;
   locked: boolean;
+  initialFavorited?: boolean;
 };
 
 /**
@@ -30,12 +32,17 @@ export function LessonResultCard({ lesson }: { lesson: LessonResultCardData }) {
       href={`/learn/${lesson.id}`}
       className="flex flex-col bg-white border border-mp-gray-200 rounded-xl p-4 shadow-mp-card hover:shadow-mp-card-hover transition-shadow"
     >
-      {/* FavoriteButton (LESSON) slot — added in 61-07 */}
-      <div className="flex items-start gap-2">
+      <div className="flex items-start gap-1">
         <h3 className="text-body font-semibold text-mp-gray-900 leading-snug flex-1">
           {lesson.title}
         </h3>
         {lesson.locked && <Lock className="w-4 h-4 text-mp-gray-400 shrink-0 mt-0.5" />}
+        <FavoriteButton
+          itemType="LESSON"
+          itemId={lesson.id}
+          initialFavorited={lesson.initialFavorited}
+          className="-mt-2 -mr-2 shrink-0"
+        />
       </div>
       <p className="text-caption text-mp-gray-500 mt-1">{lesson.courseTitle}</p>
       {lesson.snippet && (

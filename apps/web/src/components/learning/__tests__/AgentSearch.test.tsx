@@ -29,6 +29,10 @@ vi.mock('@/lib/trpc/client', () => ({
       job: { getCatalog: { invalidate: mockInvalidate } },
       ai: { searchLessons: { fetch: mockSearchLessons } },
       material: { listForUser: { fetch: mockListForUser } },
+      favorite: {
+        isFavorited: { invalidate: mockInvalidate },
+        list: { invalidate: mockInvalidate },
+      },
     }),
     intent: {
       resolve: { useMutation: () => ({ mutateAsync: mockResolve, isPending: false }) },
@@ -36,6 +40,12 @@ vi.mock('@/lib/trpc/client', () => ({
     learning: {
       getRecommendedPath: { useQuery: () => ({ data: { addedJobs: [] } }) },
       addJobToTrack: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) },
+    },
+    // FavoriteButton (mounted inside LessonResultCard / MaterialCard) needs these.
+    favorite: {
+      add: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) },
+      remove: { useMutation: () => ({ mutate: vi.fn(), isPending: false }) },
+      isFavorited: { useQuery: () => ({ data: { favorited: [] } }) },
     },
   },
 }));
