@@ -177,5 +177,53 @@ describe('material.create XOR validation', () => {
     expect((r as any).id).toBe('m-new');
   });
 });
+/**
+ * Wave 0 RED stub — Phase 61 (Обучение 2.0).
+ *
+ * `material.listForUser` (protectedProcedure) does NOT exist yet; it lands in
+ * 61-04. It mirrors the admin `list` read shape but:
+ *   - is `protectedProcedure` (any signed-in user), NOT `adminProcedure`;
+ *   - FORCES `where.isHidden = false` with NO `includeHidden` escape (T-info-hidden);
+ *   - honors optional `type` filter and `title contains` search (insensitive);
+ *   - includes standalone (`isStandalone:true`) rows alongside lesson-attached ones;
+ *   - DOES NOT touch / weaken the `getSignedUrl` download ACL (frozen, D-05).
+ *
+ * Behavioral bodies are `it.skip(... 'pending 61-04')`; flipping them to `it`
+ * (and calling `caller.listForUser(...)`) is the GREEN step in 61-04.
+ */
+describe('material.listForUser', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it.skip('forces where.isHidden = false with no includeHidden escape — pending 61-04', async () => {
+    // GREEN (61-04):
+    //   const ctx = makeCtx();
+    //   const caller = materialRouter.createCaller(ctx);
+    //   await caller.listForUser({});
+    //   const arg = ctx.prisma.material.findMany.mock.calls[0][0];
+    //   expect(arg.where.isHidden).toBe(false);
+    //   // even if a caller smuggles includeHidden, it must be ignored:
+    //   await caller.listForUser({ includeHidden: true } as any);
+    //   expect(ctx.prisma.material.findMany.mock.calls[1][0].where.isHidden).toBe(false);
+    const ctx = makeCtx();
+    expect(ctx.prisma.material.findMany).toBeDefined();
+  });
+
+  it.skip('honors optional type filter and title contains search (insensitive) — pending 61-04', async () => {
+    // GREEN (61-04): where.type === input.type; where.title === { contains, mode:'insensitive' }.
+    expect(true).toBe(true);
+  });
+
+  it.skip('includes standalone (isStandalone:true) materials, not only lesson-attached — pending 61-04', async () => {
+    // GREEN (61-04): no `lessons: { some: {} }` constraint that would hide standalone rows.
+    expect(true).toBe(true);
+  });
+
+  it.skip('does NOT reference or weaken getSignedUrl ACL (download ACL frozen, D-05) — pending 61-04', async () => {
+    // GREEN (61-04): listForUser is a pure read; it never returns storagePath
+    // and never bypasses checkLessonAccess. Asserted by source-grep + behavior.
+    expect(true).toBe(true);
+  });
+});
+
 // Reference unused import to avoid TS noUnusedLocals if strict
 void TRPCError;
