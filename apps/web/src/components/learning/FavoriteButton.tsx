@@ -49,6 +49,7 @@ export function FavoriteButton({
       setFavorited(true);
       return { prev };
     },
+    onSuccess: () => toast.success('Добавлено в избранное'),
     onError: (_err, _vars, ctx) => {
       if (ctx) setFavorited(ctx.prev);
       toast.error('Не удалось обновить избранное. Попробуйте ещё раз.');
@@ -62,6 +63,7 @@ export function FavoriteButton({
       setFavorited(false);
       return { prev };
     },
+    onSuccess: () => toast.success('Убрано из избранного'),
     onError: (_err, _vars, ctx) => {
       if (ctx) setFavorited(ctx.prev);
       toast.error('Не удалось обновить избранное. Попробуйте ещё раз.');
