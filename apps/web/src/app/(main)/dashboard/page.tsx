@@ -56,7 +56,8 @@ const ENTRY_CARDS = [
     icon: CalendarCheck,
     iconBg: 'bg-mp-blue-200 text-mp-blue-600',
     title: 'Продолжить мой план',
-    sub: 'К месту, где вы остановились',
+    sub: 'Персональный план на основе диагностики',
+    dataTour: 'dashboard-learn-cta',
   },
   {
     href: '/learn/library',
@@ -65,6 +66,7 @@ const ENTRY_CARDS = [
     iconBg: 'bg-mp-green-200 text-mp-green-600',
     title: 'Найти быстрый ответ',
     sub: 'Поиск по урокам и материалам',
+    dataTour: undefined,
   },
   {
     href: '/learn/solutions',
@@ -73,6 +75,7 @@ const ENTRY_CARDS = [
     iconBg: 'bg-white/70 text-mp-blue-600',
     title: 'Решить задачу',
     sub: 'Инструкции под конкретную задачу',
+    dataTour: undefined,
   },
 ];
 
@@ -166,9 +169,9 @@ export default function DashboardPage() {
 
       {/* 3 accent entry cards (D-08) — lead the dashboard above condensed stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 animate-slide-up" style={{ animationDelay: '50ms' }}>
-        {ENTRY_CARDS.map(({ href, variant, icon: Icon, iconBg, title, sub }) => (
+        {ENTRY_CARDS.map(({ href, variant, icon: Icon, iconBg, title, sub, dataTour }) => (
           <Link key={href} href={href}>
-            <Card variant={variant} interactive className="h-full p-6">
+            <Card variant={variant} interactive className="h-full p-6" data-tour={dataTour}>
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${iconBg}`}>
                 <Icon className="w-6 h-6" />
               </div>
@@ -216,46 +219,23 @@ export default function DashboardPage() {
       <div className="grid lg:grid-cols-3 gap-6 animate-slide-up" style={{ animationDelay: '100ms' }}>
         {/* Left column */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Quick actions */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <Card data-tour="dashboard-diagnostic-cta" variant="soft-blue" className="hover:shadow-mp-card-hover transition-all duration-300 hover:-translate-y-1">
-              <CardHeader>
-                <div className="w-12 h-12 rounded-xl bg-mp-blue-200 flex items-center justify-center mb-3">
-                  <svg className="w-6 h-6 text-mp-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {/* Diagnostic entry — container-as-button, consistent with the top D-08 cards.
+              «Продолжить обучение» removed — it duplicated the «Продолжить мой план» entry card above. */}
+          <Link href="/diagnostic">
+            <Card data-tour="dashboard-diagnostic-cta" variant="soft-blue" interactive className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-mp-blue-200 text-mp-blue-600 flex items-center justify-center shrink-0">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
-                <CardTitle className="text-heading">Пройти диагностику</CardTitle>
-                <CardDescription className="text-body-sm">
-                  Узнайте свой уровень по 5 ключевым навыкам
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Link href="/diagnostic">
-                  <Button className="w-full">Начать тест</Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            <Card data-tour="dashboard-learn-cta" variant="soft-green" className="hover:shadow-mp-card-hover transition-all duration-300 hover:-translate-y-1">
-              <CardHeader>
-                <div className="w-12 h-12 rounded-xl bg-mp-green-200 flex items-center justify-center mb-3">
-                  <svg className="w-6 h-6 text-mp-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
+                <div>
+                  <h2 className="text-heading-lg text-mp-gray-900">Пройти диагностику</h2>
+                  <p className="text-body-sm text-mp-gray-600 mt-1">Узнайте свой уровень по 5 ключевым навыкам</p>
                 </div>
-                <CardTitle className="text-heading">Продолжить обучение</CardTitle>
-                <CardDescription className="text-body-sm">
-                  Персональный план на основе диагностики
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Link href="/learn">
-                  <Button variant="outline" className="w-full">К урокам</Button>
-                </Link>
-              </CardContent>
+              </div>
             </Card>
-          </div>
+          </Link>
 
           {/* Next lesson */}
           {dashboard?.nextLesson && (
