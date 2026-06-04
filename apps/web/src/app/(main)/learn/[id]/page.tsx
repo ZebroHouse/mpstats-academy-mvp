@@ -291,6 +291,16 @@ export default function LessonPage() {
     : NaN;
   const hasSearchTimecode = !isNaN(searchTimecode) && searchTimecode > 0;
 
+  // Контекст задачи: ?from=job:<slug> — урок открыт из детальной страницы задачи.
+  const fromParam = typeof window !== 'undefined'
+    ? new URLSearchParams(window.location.search).get('from')
+    : null;
+  const fromJobSlug = fromParam?.startsWith('job:') ? fromParam.slice(4) : null;
+  const { data: fromJobTitle } = trpc.job.getTitleBySlug.useQuery(
+    { slug: fromJobSlug! },
+    { enabled: !!fromJobSlug },
+  );
+
   // Watch progress: position tracking refs (no re-renders)
   const lastPositionRef = useRef<number>(0);
   const lastDurationRef = useRef<number>(0);
@@ -609,18 +619,32 @@ export default function LessonPage() {
 
   return (
     <div className="space-y-6">
-      {/* Breadcrumb */}
-      <div className="flex items-center gap-2 text-body-sm min-w-0 overflow-hidden">
-        <Link href="/learn" className="text-mp-gray-500 hover:text-mp-blue-600 transition-colors shrink-0">
-          Обучение
-        </Link>
-        <span className="text-mp-gray-400 shrink-0">/</span>
-        <Link href={`/learn#${course?.id}`} className="text-mp-gray-500 hover:text-mp-blue-600 transition-colors truncate">
-          {course?.title}
-        </Link>
-        <span className="text-mp-gray-400 shrink-0">/</span>
-        <span className="text-mp-gray-900 font-medium shrink-0">Урок {currentLessonNumber}</span>
-      </div>
+      {/* Breadcrumb — контекст-зависимый: из задачи vs стандартный */}
+      {fromJobSlug && fromJobTitle?.title ? (
+        <div className="flex items-center gap-2 text-body-sm min-w-0 overflow-hidden">
+          <Link href="/learn/solutions" className="text-mp-gray-500 hover:text-mp-blue-600 transition-colors shrink-0">
+            Решения под задачу
+          </Link>
+          <span className="text-mp-gray-400 shrink-0">/</span>
+          <Link href={`/learn/job/${fromJobSlug}`} className="text-mp-gray-500 hover:text-mp-blue-600 transition-colors truncate">
+            {fromJobTitle.title}
+          </Link>
+          <span className="text-mp-gray-400 shrink-0">/</span>
+          <span className="text-mp-gray-900 font-medium shrink-0">Урок {currentLessonNumber}</span>
+        </div>
+      ) : (
+        <div className="flex items-center gap-2 text-body-sm min-w-0 overflow-hidden">
+          <Link href="/learn" className="text-mp-gray-500 hover:text-mp-blue-600 transition-colors shrink-0">
+            Обучение
+          </Link>
+          <span className="text-mp-gray-400 shrink-0">/</span>
+          <Link href={`/learn#${course?.id}`} className="text-mp-gray-500 hover:text-mp-blue-600 transition-colors truncate">
+            {course?.title}
+          </Link>
+          <span className="text-mp-gray-400 shrink-0">/</span>
+          <span className="text-mp-gray-900 font-medium shrink-0">Урок {currentLessonNumber}</span>
+        </div>
+      )}
 
       {/* Header */}
       <div>
