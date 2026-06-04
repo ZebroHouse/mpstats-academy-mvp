@@ -314,19 +314,13 @@ await prisma.favorite.createMany({ data: rows, skipDuplicates: true }); // re-ru
 
 **Эти 4 пункта — для discuss-phase / планера подтвердить.** Остальные claims верифицированы по коду.
 
-## Open Questions
+## Open Questions (RESOLVED)
 
-1. **Standalone material download ACL (A1)**
-   - Что знаем: `getSignedUrl` требует привязанный доступный урок; standalone его не имеет.
-   - Что неясно: разрешит ли owner расширить ACL или ограничиться externalUrl-standalone.
-   - Рекомендация: externalUrl-only на этом заходе, зафиксировать в acceptance.
+1. **Standalone material download ACL (A1)** — RESOLVED: externalUrl-only на этом заходе (Phase 61 CONTEXT D-05 «ACL скачивания без изменений»); standalone-файлы отложены до отдельной задачи с ACL-доработкой.
 
-2. **MobileNav UX для 4 под-разделов (A3)**
-   - Что знаем: bottom-bar уже несёт до 7 иконок; 4 под-пункта не влезут.
-   - Рекомендация: «Уроки» в mobile → `/learn/plan` дефолт, под-разделы табами внутри страниц.
+2. **MobileNav UX для 4 под-разделов (A3)** — RESOLVED: «Уроки» в mobile ведёт на /learn/plan дефолт; под-разделы реализованы табами внутри страниц раздела (Phase 61 CONTEXT D-01 + Claude’s Discretion по вёрстке).
 
-3. **Судьба `addedJobs`/`custom` после миграции (A2)**
-   - Рекомендация: оставить dormant, убрать ТОЛЬКО чтение из фронта Плана; колонку не дропать (additive-safety).
+3. **Судьба `addedJobs`/`custom` после миграции (A2)** — RESOLVED: модель A (Phase 61.1 CONTEXT): ручные уроки (custom) и ручные задачи (addedJobs) переезжают в Favorite; чтение из фронта Плана убрано; колонки dormant, не дропаются (additive-safety). Cleanup-скрипт в 61.1-03.
 
 ## Environment Availability
 
