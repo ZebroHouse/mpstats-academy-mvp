@@ -23,13 +23,13 @@ const INITIAL_LESSONS_SHOWN = 5;
 type MaterialTypeValue = MaterialCardProps['type'];
 type CatalogFilter = MaterialTypeValue | 'LESSONS';
 
+// Внешний сервис (EXTERNAL_SERVICE) намеренно скрыт из каталога (UAT 03.06).
 const CATALOG_CHIPS: Array<{ value: CatalogFilter; label: string }> = [
   { value: 'LESSONS', label: 'Уроки' },
-  { value: 'PRESENTATION', label: 'Презентация' },
-  { value: 'CALCULATION_TABLE', label: 'Таблица расчётов' },
-  { value: 'EXTERNAL_SERVICE', label: 'Внешний сервис' },
-  { value: 'CHECKLIST', label: 'Чек-лист' },
-  { value: 'MEMO', label: 'Памятка' },
+  { value: 'PRESENTATION', label: 'Презентации' },
+  { value: 'CALCULATION_TABLE', label: 'Таблицы расчётов' },
+  { value: 'CHECKLIST', label: 'Чек-листы' },
+  { value: 'MEMO', label: 'Памятки' },
 ];
 
 function isDatabaseUnavailable(errorMessage: string): boolean {
