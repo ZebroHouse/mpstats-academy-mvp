@@ -3,8 +3,8 @@ gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: Marketplace-aware Diagnostic
 status: executing — Phase 61 Wave 8 (61-07 favorites split) PARTIAL — code shipped, prod DATA-migration pending owner approval
-stopped_at: 61-07 code committed (00e8a32 migrate-script+tests, 280e555 FavoriteButton+Избранное); Task 4 (run track→favorites DATA migration on prod) HALTED at blocking human-action checkpoint
-last_updated: "2026-06-03T14:40:00.000Z"
+stopped_at: Completed 61-04-PLAN.md (scope-aware AgentSearch + Library material catalog)
+last_updated: "2026-06-04T12:58:37.140Z"
 progress:
   total_phases: 41
   completed_phases: 30
