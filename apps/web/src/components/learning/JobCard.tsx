@@ -36,9 +36,6 @@ export function JobCard({
         {job.marketplace === 'BOTH' && (
           <span className="text-caption font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-700">WB + Ozon</span>
         )}
-        {job.isInTrack && (
-          <span className="text-caption font-bold px-2 py-0.5 rounded bg-mp-green-100 text-mp-green-700">В треке</span>
-        )}
         {job.isRecommended && !job.isInTrack && (
           <span className="text-caption font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-700">Рекомендовано диагностикой</span>
         )}

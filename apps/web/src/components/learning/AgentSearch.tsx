@@ -7,6 +7,7 @@ import { trpc } from '@/lib/trpc/client';
 import { cn } from '@/lib/utils';
 import { LessonResultCard, type LessonResultCardData } from './LessonResultCard';
 import { MaterialCard, type MaterialCardProps } from './MaterialCard';
+import { FavoriteButton } from './FavoriteButton';
 
 type Scope = 'solutions' | 'library';
 
@@ -29,24 +30,21 @@ export function AgentSearch({ scope, size = 'default' }: { scope: Scope; size?: 
   const [pending, setPending] = useState(false);
 
   const utils = trpc.useUtils();
-  // Reactive set of jobIds already in the user's track. Source of truth — backend.
-  const recommendedPath = trpc.learning.getRecommendedPath.useQuery();
-  const trackedJobIds = useMemo(() => {
-    const added = (recommendedPath.data as { addedJobs?: Array<{ id: string }> } | undefined)?.addedJobs;
-    return new Set((added ?? []).map((pb) => pb.id));
-  }, [recommendedPath.data]);
-
   const resolveMutation = trpc.intent.resolve.useMutation();
-  const addJobMutation = trpc.learning.addJobToTrack.useMutation({
-    onSuccess: () => {
-      toast.success('Решение в плане');
-      utils.learning.getRecommendedPath.invalidate();
-      utils.job.getCatalog.invalidate();
-    },
-    onError: (e) => {
-      toast.error(e.message || 'Не удалось добавить');
-    },
-  });
+
+  // Seed «сердечка» для recommend-задач: один batch-запрос по jobId результата.
+  const recommendJobIds = useMemo(
+    () => (result?.mode === 'recommend' ? result.jobs.map((j) => j.jobId) : []),
+    [result],
+  );
+  const { data: favData } = trpc.favorite.isFavorited.useQuery(
+    { items: recommendJobIds.map((itemId) => ({ itemType: 'JOB' as const, itemId })) },
+    { enabled: recommendJobIds.length > 0 },
+  );
+  const favoritedSet = useMemo(
+    () => new Set(favData?.favorited ?? []),
+    [favData],
+  );
 
   async function submitSolutions(q: string) {
     const res = await resolveMutation.mutateAsync({ query: q, surface: 'learn', conversationState });
@@ -170,27 +168,23 @@ export function AgentSearch({ scope, size = 'default' }: { scope: Scope; size?: 
       {scope === 'solutions' && !isPending && result?.mode === 'recommend' && (
         <div className="space-y-3">
           <p className="text-mp-gray-800">{result.answer}</p>
-          {result.jobs.map((j) => {
-            const isAdded = trackedJobIds.has(j.jobId);
-            return (
-              <div key={j.jobId} className="rounded-lg border p-4 flex items-start justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <a href={`/learn/job/${j.slug}`} className="font-medium hover:underline">
-                    {j.title}
-                  </a>
-                  <p className="text-sm text-mp-gray-600 mt-1">{j.reason}</p>
-                  <p className="text-xs text-mp-gray-500 mt-1">{j.lessonCount} уроков</p>
-                </div>
-                <button
-                  onClick={() => addJobMutation.mutate({ jobId: j.jobId })}
-                  disabled={isAdded || addJobMutation.isPending}
-                  className="px-3 py-2 rounded-md bg-mp-blue-500 text-white text-sm disabled:bg-mp-gray-300 whitespace-nowrap"
-                >
-                  {isAdded ? 'В плане ✓' : (j.actions[0]?.label ?? 'В план')}
-                </button>
+          {result.jobs.map((j) => (
+            <div key={j.jobId} className="rounded-lg border p-4 flex items-start justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <a href={`/learn/job/${j.slug}`} className="font-medium hover:underline">
+                  {j.title}
+                </a>
+                <p className="text-sm text-mp-gray-600 mt-1">{j.reason}</p>
+                <p className="text-xs text-mp-gray-500 mt-1">{j.lessonCount} уроков</p>
               </div>
-            );
-          })}
+              <FavoriteButton
+                itemType="JOB"
+                itemId={j.jobId}
+                initialFavorited={favoritedSet.has(`JOB:${j.jobId}`)}
+                className="-mt-2 -mr-2 shrink-0"
+              />
+            </div>
+          ))}
         </div>
       )}
 

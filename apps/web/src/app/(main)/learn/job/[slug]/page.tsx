@@ -4,31 +4,20 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { useParams } from 'next/navigation';
 import { ChevronRight } from 'lucide-react';
-import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc/client';
 import { Button } from '@/components/ui/button';
+import { FavoriteButton } from '@/components/learning/FavoriteButton';
 
 export default function JobPage() {
   const { slug } = useParams<{ slug: string }>();
   const { data: job, isLoading } = trpc.job.getJob.useQuery({ slug });
 
-  const utils = trpc.useUtils();
-  const addToTrack = trpc.learning.addJobToTrack.useMutation({
-    onSuccess: () => {
-      utils.job.getJob.invalidate({ slug });
-      utils.learning.getRecommendedPath.invalidate();
-      toast.success('Джоба добавлена в трек');
-    },
-    onError: () => toast.error('Не удалось добавить в трек'),
-  });
-  const removeFromTrack = trpc.learning.removeJobFromTrack.useMutation({
-    onSuccess: () => {
-      utils.job.getJob.invalidate({ slug });
-      utils.learning.getRecommendedPath.invalidate();
-      toast.success('Джоба убрана из трека');
-    },
-    onError: () => toast.error('Не удалось убрать из трека'),
-  });
+  // Rules of Hooks: все useQuery выше любого early return.
+  const { data: favData } = trpc.favorite.isFavorited.useQuery(
+    { items: job ? [{ itemType: 'JOB', itemId: job.id }] : [] },
+    { enabled: !!job },
+  );
+  const favorited = !!job && (favData?.favorited ?? []).includes(`JOB:${job.id}`);
 
   if (isLoading) return <div className="p-8 text-center text-mp-gray-500">Загрузка...</div>;
   if (!job) notFound();
@@ -59,25 +48,12 @@ export default function JobPage() {
               <Button className="w-full">Продолжить джобу →</Button>
             </Link>
           )}
-          {job.isInTrack ? (
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={() => removeFromTrack.mutate({ jobId: job.id })}
-              disabled={removeFromTrack.isPending}
-            >
-              В треке ✓ · убрать
-            </Button>
-          ) : (
-            <Button
-              variant="secondary"
-              className="w-full"
-              onClick={() => addToTrack.mutate({ jobId: job.id })}
-              disabled={addToTrack.isPending}
-            >
-              + В трек
-            </Button>
-          )}
+          <FavoriteButton
+            itemType="JOB"
+            itemId={job.id}
+            initialFavorited={favorited}
+            className="self-start"
+          />
         </div>
       </div>
 
