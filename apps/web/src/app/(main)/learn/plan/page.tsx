@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useMemo } from 'react';
 import Link from 'next/link';
+import { Wrench } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,63 +24,28 @@ import type { LessonWithProgress } from '@mpstats/shared';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-function pluralLessons(n: number): string {
-  if (n % 10 === 1 && n % 100 !== 11) return `${n} урок`;
-  if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return `${n} урока`;
-  return `${n} уроков`;
-}
-
-// Diagnostic-section descriptions (the `custom` section is intentionally excluded
-// here — manual additions become «Избранное» in Wave D / 61-07).
-const SECTION_DESCRIPTIONS: Record<string, (count: number) => string> = {
-  errors: (n) => `${pluralLessons(n)} по темам, где были ошибки`,
-  deepening: (n) => `${pluralLessons(n)} для слабых навыков`,
-  growth: (n) => `${pluralLessons(n)} для средних навыков`,
-  advanced: (n) => `${pluralLessons(n)} повышенной сложности`,
+// Priority badge per diagnostic section. Colors reuse SECTION_STYLES.badgeColor.
+const SECTION_BADGES: Record<string, string> = {
+  errors: 'Ошибка',
+  deepening: 'Углубление',
+  growth: 'Рост',
+  advanced: 'Продвинутый',
 };
 
-const SECTION_STYLES: Record<
-  string,
-  { icon: string; bgColor: string; borderColor: string; textColor: string; badgeColor: string }
-> = {
-  errors: {
-    icon: '!',
-    bgColor: 'bg-red-50',
-    borderColor: 'border-red-200',
-    textColor: 'text-red-700',
-    badgeColor: 'bg-red-100 text-red-700',
-  },
-  deepening: {
-    icon: '↓',
-    bgColor: 'bg-mp-blue-50',
-    borderColor: 'border-mp-blue-200',
-    textColor: 'text-mp-blue-700',
-    badgeColor: 'bg-mp-blue-100 text-mp-blue-700',
-  },
-  growth: {
-    icon: '↑',
-    bgColor: 'bg-mp-green-50',
-    borderColor: 'border-mp-green-200',
-    textColor: 'text-mp-green-700',
-    badgeColor: 'bg-mp-green-100 text-mp-green-700',
-  },
-  advanced: {
-    icon: '★',
-    bgColor: 'bg-yellow-50',
-    borderColor: 'border-yellow-200',
-    textColor: 'text-yellow-700',
-    badgeColor: 'bg-yellow-100 text-yellow-700',
-  },
+const SECTION_STYLES: Record<string, { badgeColor: string }> = {
+  errors: { badgeColor: 'bg-red-100 text-red-700' },
+  deepening: { badgeColor: 'bg-mp-blue-100 text-mp-blue-700' },
+  growth: { badgeColor: 'bg-mp-green-100 text-mp-green-700' },
+  advanced: { badgeColor: 'bg-yellow-100 text-yellow-700' },
 };
 
-// Diagnostic-only section order (custom intentionally absent — see file note).
+// Diagnostic-only section order (custom intentionally absent — manual additions
+// live in «Избранное», Wave D / 61-07). Order = lesson priority: errors first.
 const DIAGNOSTIC_SECTION_IDS = ['errors', 'deepening', 'growth', 'advanced'];
 
 // ── page ─────────────────────────────────────────────────────────────────────
 
 export default function PlanPage() {
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['errors']));
-
   const { data: recommendedPath, isLoading } = trpc.learning.getRecommendedPath.useQuery();
 
   const utils = trpc.useUtils();
@@ -128,6 +94,13 @@ export default function PlanPage() {
 
   const hasDiagnosticLessons = diagnosticSections.some((s: any) => s.lessons.length > 0);
 
+  // Recommended jobs (Phase 58). Backend returns addedJobs as { id, slug, title,
+  // marketplace, lessons[] }. План shows them as link-cards (no сердечко).
+  const addedJobs = useMemo(
+    () => (recommendedPath?.addedJobs as any[] | undefined) ?? [],
+    [recommendedPath],
+  );
+
   // Header progress must count ONLY the visible diagnostic sections — NOT
   // recommendedPath.totalLessons (which still includes the custom/manual section
   // that now lives in «Избранное»). Otherwise the header (0/33) contradicts the
@@ -145,23 +118,25 @@ export default function PlanPage() {
     [diagnosticSections],
   );
 
+  // Flatten all diagnostic-section lessons into one prioritized list
+  // (errors → deepening → growth → advanced). Each lesson carries its section id
+  // so we can render a priority badge above the card.
+  const flatLessons = useMemo(() => {
+    return DIAGNOSTIC_SECTION_IDS.flatMap((sectionId) => {
+      const section = diagnosticSections.find((s: any) => s.id === sectionId);
+      if (!section) return [];
+      return (section.lessons as any[]).map((lesson: any) => ({ lesson, sectionId }));
+    });
+  }, [diagnosticSections]);
+
   const firstUnfinishedLesson = useMemo(() => {
-    const flat = diagnosticSections.flatMap((s: any) => s.lessons as any[]);
+    const flat = flatLessons.map((e) => e.lesson);
     return (
       flat.find((l: any) => l.status === 'IN_PROGRESS') ??
       flat.find((l: any) => l.status === 'NOT_STARTED') ??
       null
     );
-  }, [diagnosticSections]);
-
-  const toggleSection = (sectionId: string) => {
-    setExpandedSections((prev) => {
-      const next = new Set(prev);
-      if (next.has(sectionId)) next.delete(sectionId);
-      else next.add(sectionId);
-      return next;
-    });
-  };
+  }, [flatLessons]);
 
   // ── loading ────────────────────────────────────────────────────────────────
 
@@ -179,8 +154,10 @@ export default function PlanPage() {
     );
   }
 
-  // План is "empty" when there is no diagnostic-built section content to show.
-  const planIsEmpty = !recommendedPath || !isSectioned || !hasDiagnosticLessons;
+  // План is "empty" when there is neither diagnostic-built lessons NOR recommended
+  // jobs to show. addedJobs alone keeps the План non-empty (a jobs-only plan).
+  const planIsEmpty =
+    !recommendedPath || !isSectioned || (!hasDiagnosticLessons && addedJobs.length === 0);
 
   // ── render ─────────────────────────────────────────────────────────────────
 
@@ -278,83 +255,79 @@ export default function PlanPage() {
             </div>
           )}
 
-          {/* ── Diagnostic sections accordion ─────────────────────────── */}
-          {diagnosticSections
-            .filter((section: any) => section.lessons.length > 0)
-            .map((section: any) => {
-              const style = SECTION_STYLES[section.id] ?? SECTION_STYLES.growth;
-              const isOpen = expandedSections.has(section.id);
-              const completedInSection = (section.lessons as any[]).filter(
-                (l: { status: string }) => l.status === 'COMPLETED',
-              ).length;
+          {/* ── Рекомендованные задачи — карточки-ссылки из addedJobs ──────── */}
+          {addedJobs.length > 0 && (
+            <div className="space-y-3">
+              <h2 className="text-heading font-semibold text-mp-gray-900">
+                Рекомендованные задачи
+              </h2>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {addedJobs.map((job: any) => {
+                  const lessons = (job.lessons as any[]) ?? [];
+                  const total = lessons.length;
+                  const completed = lessons.filter(
+                    (l: any) => l.status === 'COMPLETED',
+                  ).length;
+                  return (
+                    <Link
+                      key={job.id}
+                      href={`/learn/job/${job.slug}`}
+                      className="flex items-start gap-3 bg-white border border-mp-gray-200 rounded-xl p-4 shadow-mp-card hover:shadow-mp-card-hover transition-shadow"
+                    >
+                      <div className="p-2 rounded-md bg-mp-gray-50 text-mp-gray-500 shrink-0">
+                        <Wrench className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs text-mp-gray-500 mb-0.5">Задача</div>
+                        <div className="text-body font-semibold text-mp-gray-900 leading-snug line-clamp-2">
+                          {job.title}
+                        </div>
+                        <div className="text-body-sm text-mp-gray-500 mt-1">
+                          {total} уроков · прогресс {completed}/{total}
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
-              return (
-                <Card key={section.id} className={`shadow-mp-card ${style.borderColor}`}>
-                  <button
-                    onClick={() => toggleSection(section.id)}
-                    className={`w-full text-left px-6 py-4 flex items-center justify-between ${style.bgColor} rounded-t-lg`}
-                  >
-                    <div className="flex items-center gap-3">
+          {/* ── Рекомендованные уроки — плоский список с бейджем приоритета ── */}
+          {flatLessons.length > 0 && (
+            <div className="space-y-3">
+              <h2 className="text-heading font-semibold text-mp-gray-900">
+                Рекомендованные уроки
+              </h2>
+              <div className="grid gap-3">
+                {flatLessons.map(({ lesson, sectionId }) => {
+                  const badgeColor =
+                    SECTION_STYLES[sectionId]?.badgeColor ?? SECTION_STYLES.growth.badgeColor;
+                  const badgeLabel = SECTION_BADGES[sectionId] ?? SECTION_BADGES.growth;
+                  return (
+                    <div key={lesson.id} className="space-y-1">
                       <span
-                        className={`inline-flex items-center justify-center w-8 h-8 rounded-full text-sm font-bold ${style.badgeColor}`}
+                        className={`inline-flex items-center px-2 py-0.5 rounded-md text-caption font-medium ${badgeColor}`}
                       >
-                        {style.icon}
+                        {badgeLabel}
                       </span>
-                      <div>
-                        <h3 className={`text-heading font-semibold ${style.textColor}`}>
-                          {section.title}
-                        </h3>
-                        <p className="text-body-sm text-mp-gray-500">
-                          {(SECTION_DESCRIPTIONS[section.id] ?? SECTION_DESCRIPTIONS.growth)(
-                            section.lessons.length,
-                          )}
-                        </p>
-                      </div>
+                      <LessonCard
+                        lesson={lesson as LessonWithProgress}
+                        showCourse
+                        courseName={
+                          ((lesson as unknown) as Record<string, unknown>).courseName as string
+                        }
+                        locked={lesson.locked}
+                        onRemoveFromTrack={() =>
+                          removeFromTrackMutation.mutate({ lessonId: lesson.id })
+                        }
+                      />
                     </div>
-                    <div className="flex items-center gap-3">
-                      <span className="text-body-sm text-mp-gray-500">
-                        {completedInSection}/{section.lessons.length}
-                      </span>
-                      <svg
-                        className={`w-5 h-5 text-mp-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </div>
-                  </button>
-
-                  {isOpen && (
-                    <CardContent className="pt-3 pb-4 px-2 sm:px-6 overflow-hidden">
-                      <div className="grid gap-2 sm:gap-3">
-                        {(section.lessons as any[]).map((lesson: any, idx: number) => (
-                          <LessonCard
-                            key={lesson.id}
-                            lesson={
-                              {
-                                ...lesson,
-                                title: `${idx + 1}. ${lesson.title}`,
-                              } as LessonWithProgress
-                            }
-                            showCourse
-                            courseName={
-                              ((lesson as unknown) as Record<string, unknown>).courseName as string
-                            }
-                            isRecommended={section.id === 'errors'}
-                            locked={lesson.locked}
-                            onRemoveFromTrack={() =>
-                              removeFromTrackMutation.mutate({ lessonId: lesson.id })
-                            }
-                          />
-                        ))}
-                      </div>
-                    </CardContent>
-                  )}
-                </Card>
-              );
-            })}
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {/* Re-diagnostic CTA when errors section is fully completed */}
           {diagnosticSections
