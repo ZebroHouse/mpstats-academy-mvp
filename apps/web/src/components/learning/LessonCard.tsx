@@ -186,21 +186,21 @@ export function LessonCard({ lesson, showCourse, courseName, isRecommended, lock
                     ? 'bg-mp-green-100 text-mp-green-700 hover:bg-mp-green-200 cursor-default'
                     : 'bg-mp-blue-50 text-mp-blue-700 border border-mp-blue-200 hover:bg-mp-blue-100'
                 )}
-                title={inTrack ? 'Уже в твоём треке' : 'Добавить в твой трек обучения'}
+                title={inTrack ? 'Уже в твоём плане' : 'Добавить в твой план обучения'}
               >
                 {inTrack ? (
                   <>
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="hidden sm:inline">В треке</span>
+                    <span className="hidden sm:inline">В плане</span>
                   </>
                 ) : (
                   <>
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
                     </svg>
-                    <span className="hidden sm:inline">В трек</span>
+                    <span className="hidden sm:inline">В план</span>
                   </>
                 )}
               </button>
@@ -215,7 +215,7 @@ export function LessonCard({ lesson, showCourse, courseName, isRecommended, lock
                   onRemoveFromTrack();
                 }}
                 className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 transition-all"
-                title="Убрать из трека"
+                title="Убрать из плана"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

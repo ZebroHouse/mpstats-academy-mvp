@@ -38,7 +38,7 @@ export function RecommendedJobsBlock({ jobs }: { jobs: RecommendedJob[] }) {
       await addJobMutation.mutateAsync({ jobId });
       await utils.learning.getRecommendedPath.invalidate();
       await utils.job.getCatalog.invalidate();
-      toast.success('Плейбук в треке');
+      toast.success('Решение в плане');
     } catch (e: any) {
       toast.error(e?.message || 'Не удалось добавить');
     } finally {
@@ -57,8 +57,8 @@ export function RecommendedJobsBlock({ jobs }: { jobs: RecommendedJob[] }) {
       }
       await utils.learning.getRecommendedPath.invalidate();
       await utils.job.getCatalog.invalidate();
-      toast.success(`Добавлено в трек: ${added}`);
-      router.push('/learn/track');
+      toast.success(`Добавлено в план: ${added}`);
+      router.push('/learn/plan');
     } catch (e: any) {
       toast.error(e?.message || 'Не удалось добавить все');
     } finally {
@@ -70,9 +70,9 @@ export function RecommendedJobsBlock({ jobs }: { jobs: RecommendedJob[] }) {
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
-          <h2 className="text-heading text-mp-gray-900">Рекомендованные плейбуки</h2>
+          <h2 className="text-heading text-mp-gray-900">Рекомендованные задачи</h2>
           <p className="text-body-sm text-mp-gray-500 mt-1">
-            Начни с плейбука №1 — он закрывает самые слабые зоны
+            Начни с задачи №1 — она закрывает самые слабые зоны
           </p>
         </div>
         {!allInTrack && (
@@ -82,7 +82,7 @@ export function RecommendedJobsBlock({ jobs }: { jobs: RecommendedJob[] }) {
             disabled={bulkPending}
             className="h-11 px-5 rounded-lg bg-mp-blue-500 text-white text-body font-semibold hover:bg-mp-blue-600 transition-colors disabled:opacity-50"
           >
-            {bulkPending ? 'Добавляем…' : `Добавить все ${notInTrack.length} в трек`}
+            {bulkPending ? 'Добавляем…' : `Добавить все ${notInTrack.length} в план`}
           </button>
         )}
       </div>

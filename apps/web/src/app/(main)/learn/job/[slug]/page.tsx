@@ -45,7 +45,7 @@ export default function JobPage() {
         <div className="flex flex-col gap-2 shrink-0">
           {nextLesson && (
             <Link href={`/learn/${nextLesson.id}`}>
-              <Button className="w-full">Продолжить джобу →</Button>
+              <Button className="w-full">Продолжить задачу →</Button>
             </Link>
           )}
           <FavoriteButton
@@ -71,7 +71,7 @@ export default function JobPage() {
       )}
 
       <div>
-        <h2 className="text-heading font-bold text-mp-gray-900 mb-2">Уроки джобы — по порядку</h2>
+        <h2 className="text-heading font-bold text-mp-gray-900 mb-2">Уроки задачи — по порядку</h2>
         <div className="bg-white border border-mp-gray-200 rounded-xl overflow-hidden">
           {job.lessons.map((l, i) => (
             <Link

@@ -35,7 +35,7 @@ export function DiagnosticGateBanner() {
         <Sparkles className="mt-0.5 size-5 shrink-0 text-mp-blue-600" />
         <div className="flex-1 space-y-1">
           <h3 className="text-heading-sm text-mp-gray-900">
-            Пройди диагностику — соберём персональный трек
+            Пройди диагностику — соберём персональный план
           </h3>
           <p className="text-body-sm text-mp-gray-600">
             Точная карта навыков и уроки под ваши слабые места.
