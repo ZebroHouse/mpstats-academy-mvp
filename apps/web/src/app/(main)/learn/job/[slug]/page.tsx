@@ -76,7 +76,7 @@ export default function JobPage() {
           {job.lessons.map((l, i) => (
             <Link
               key={l.id}
-              href={l.locked ? '#' : `/learn/${l.id}`}
+              href={l.locked ? '#' : `/learn/${l.id}?from=job:${slug}`}
               className={`flex items-center gap-3 px-4 py-2.5 border-t border-mp-gray-100 first:border-t-0 ${l.locked ? 'opacity-50 pointer-events-none' : 'hover:bg-mp-gray-50 group'}`}
             >
               <span className="text-caption text-mp-gray-400 w-5 font-semibold">{i + 1}</span>
