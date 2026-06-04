@@ -128,6 +128,23 @@ export default function PlanPage() {
 
   const hasDiagnosticLessons = diagnosticSections.some((s: any) => s.lessons.length > 0);
 
+  // Header progress must count ONLY the visible diagnostic sections — NOT
+  // recommendedPath.totalLessons (which still includes the custom/manual section
+  // that now lives in «Избранное»). Otherwise the header (0/33) contradicts the
+  // rendered sections (e.g. 15). UAT 03.06 (tokarev1195).
+  const visibleTotal = useMemo(
+    () => diagnosticSections.reduce((sum: number, s: any) => sum + s.lessons.length, 0),
+    [diagnosticSections],
+  );
+  const visibleCompleted = useMemo(
+    () =>
+      diagnosticSections.reduce(
+        (sum: number, s: any) => sum + s.lessons.filter((l: any) => l.status === 'COMPLETED').length,
+        0,
+      ),
+    [diagnosticSections],
+  );
+
   const firstUnfinishedLesson = useMemo(() => {
     const flat = diagnosticSections.flatMap((s: any) => s.lessons as any[]);
     return (
@@ -242,21 +259,19 @@ export default function PlanPage() {
       ) : (
         <div data-tour="learn-sections" className="space-y-4">
           {/* ── Progress bar ──────────────────────────────────────────── */}
-          {recommendedPath && recommendedPath.totalLessons > 0 && (
+          {visibleTotal > 0 && (
             <div className="animate-slide-up" style={{ animationDelay: '25ms' }}>
               <div className="flex justify-between text-body-sm text-mp-gray-600 mb-2">
                 <span>Прогресс плана</span>
                 <span className="font-medium">
-                  {recommendedPath.completedLessons}/{recommendedPath.totalLessons} уроков завершено
+                  {visibleCompleted}/{visibleTotal} уроков завершено
                 </span>
               </div>
               <div className="h-2 bg-mp-gray-200 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-mp-green-500 rounded-full transition-all duration-500"
                   style={{
-                    width: `${Math.round(
-                      (recommendedPath.completedLessons / recommendedPath.totalLessons) * 100,
-                    )}%`,
+                    width: `${Math.round((visibleCompleted / visibleTotal) * 100)}%`,
                   }}
                 />
               </div>
