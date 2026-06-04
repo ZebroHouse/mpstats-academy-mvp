@@ -120,7 +120,9 @@ export async function cleanup(
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
-  const apply = args.includes('--apply');
+  // Safety: --dry-run ALWAYS wins. If both flags are passed, never write — this
+  // script targets prod, so contradictory input must fail safe (CR-01).
+  const apply = args.includes('--apply') && !dryRun;
 
   if (!dryRun && !apply) {
     console.error('Usage: --dry-run or --apply');
