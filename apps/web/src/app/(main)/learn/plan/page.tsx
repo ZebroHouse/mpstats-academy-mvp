@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import Link from 'next/link';
 import { Wrench } from 'lucide-react';
 import { toast } from 'sonner';
@@ -24,28 +24,43 @@ import type { LessonWithProgress } from '@mpstats/shared';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
-// Priority badge per diagnostic section. Colors reuse SECTION_STYLES.badgeColor.
-const SECTION_BADGES: Record<string, string> = {
-  errors: 'Ошибка',
-  deepening: 'Углубление',
-  growth: 'Рост',
-  advanced: 'Продвинутый',
+function pluralLessons(n: number): string {
+  if (n % 10 === 1 && n % 100 !== 11) return `${n} урок`;
+  if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return `${n} урока`;
+  return `${n} уроков`;
+}
+
+// Per-section description — the priority "label" lives ONCE here in the section
+// header (not duplicated as a badge on every lesson card). UAT 04.06.
+const SECTION_DESCRIPTIONS: Record<string, (count: number) => string> = {
+  errors: (n) => `${pluralLessons(n)} по темам, где были ошибки`,
+  deepening: (n) => `${pluralLessons(n)} для слабых навыков`,
+  growth: (n) => `${pluralLessons(n)} для средних навыков`,
+  advanced: (n) => `${pluralLessons(n)} повышенной сложности`,
 };
 
-const SECTION_STYLES: Record<string, { badgeColor: string }> = {
-  errors: { badgeColor: 'bg-red-100 text-red-700' },
-  deepening: { badgeColor: 'bg-mp-blue-100 text-mp-blue-700' },
-  growth: { badgeColor: 'bg-mp-green-100 text-mp-green-700' },
-  advanced: { badgeColor: 'bg-yellow-100 text-yellow-700' },
+// Elegant section identity: a colored left-accent + a small icon chip, on a
+// neutral white header — cohesive instead of four loud full-color blocks.
+const SECTION_STYLES: Record<
+  string,
+  { icon: string; accent: string; chip: string; title: string }
+> = {
+  errors: { icon: '!', accent: 'border-l-red-400', chip: 'bg-red-100 text-red-700', title: 'text-red-700' },
+  deepening: { icon: '↓', accent: 'border-l-mp-blue-400', chip: 'bg-mp-blue-100 text-mp-blue-700', title: 'text-mp-blue-700' },
+  growth: { icon: '↑', accent: 'border-l-mp-green-400', chip: 'bg-mp-green-100 text-mp-green-700', title: 'text-mp-green-700' },
+  advanced: { icon: '★', accent: 'border-l-yellow-400', chip: 'bg-yellow-100 text-yellow-700', title: 'text-yellow-700' },
 };
 
 // Diagnostic-only section order (custom intentionally absent — manual additions
-// live in «Избранное», Wave D / 61-07). Order = lesson priority: errors first.
+// live in «Избранное», Wave D / 61-07). Order = priority: errors first.
 const DIAGNOSTIC_SECTION_IDS = ['errors', 'deepening', 'growth', 'advanced'];
 
 // ── page ─────────────────────────────────────────────────────────────────────
 
 export default function PlanPage() {
+  // Only «Ошибки» open by default — focuses attention on the highest priority.
+  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['errors']));
+
   const { data: recommendedPath, isLoading } = trpc.learning.getRecommendedPath.useQuery();
 
   const utils = trpc.useUtils();
@@ -113,25 +128,23 @@ export default function PlanPage() {
     [diagnosticSections],
   );
 
-  // Flatten all diagnostic-section lessons into one prioritized list
-  // (errors → deepening → growth → advanced). Each lesson carries its section id
-  // so we can render a priority badge above the card.
-  const flatLessons = useMemo(() => {
-    return DIAGNOSTIC_SECTION_IDS.flatMap((sectionId) => {
-      const section = diagnosticSections.find((s: any) => s.id === sectionId);
-      if (!section) return [];
-      return (section.lessons as any[]).map((lesson: any) => ({ lesson, sectionId }));
-    });
-  }, [diagnosticSections]);
-
   const firstUnfinishedLesson = useMemo(() => {
-    const flat = flatLessons.map((e) => e.lesson);
+    const flat = diagnosticSections.flatMap((s: any) => s.lessons as any[]);
     return (
       flat.find((l: any) => l.status === 'IN_PROGRESS') ??
       flat.find((l: any) => l.status === 'NOT_STARTED') ??
       null
     );
-  }, [flatLessons]);
+  }, [diagnosticSections]);
+
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections((prev) => {
+      const next = new Set(prev);
+      if (next.has(sectionId)) next.delete(sectionId);
+      else next.add(sectionId);
+      return next;
+    });
+  };
 
   // ── loading ────────────────────────────────────────────────────────────────
 
@@ -292,39 +305,88 @@ export default function PlanPage() {
             </div>
           )}
 
-          {/* ── Рекомендованные уроки — плоский список с бейджем приоритета ── */}
-          {flatLessons.length > 0 && (
+          {/* ── Рекомендованные уроки — секции-аккордеон по приоритету ─────── */}
+          {hasDiagnosticLessons && (
             <div className="space-y-3">
               <h2 className="text-heading font-semibold text-mp-gray-900">
                 Рекомендованные уроки
               </h2>
-              <div className="grid gap-3">
-                {flatLessons.map(({ lesson, sectionId }) => {
-                  const badgeColor =
-                    SECTION_STYLES[sectionId]?.badgeColor ?? SECTION_STYLES.growth.badgeColor;
-                  const badgeLabel = SECTION_BADGES[sectionId] ?? SECTION_BADGES.growth;
+              {diagnosticSections
+                .filter((section: any) => section.lessons.length > 0)
+                .map((section: any) => {
+                  const style = SECTION_STYLES[section.id] ?? SECTION_STYLES.growth;
+                  const isOpen = expandedSections.has(section.id);
+                  const completedInSection = (section.lessons as any[]).filter(
+                    (l: { status: string }) => l.status === 'COMPLETED',
+                  ).length;
+
                   return (
-                    <div key={lesson.id} className="space-y-1">
-                      <span
-                        className={`inline-flex items-center px-2 py-0.5 rounded-md text-caption font-medium ${badgeColor}`}
+                    <Card key={section.id} className={`shadow-mp-card overflow-hidden border-l-4 ${style.accent}`}>
+                      <button
+                        onClick={() => toggleSection(section.id)}
+                        aria-expanded={isOpen}
+                        className="w-full text-left px-5 py-4 flex items-center justify-between gap-3 hover:bg-mp-gray-50 transition-colors"
                       >
-                        {badgeLabel}
-                      </span>
-                      <LessonCard
-                        lesson={lesson as LessonWithProgress}
-                        showCourse
-                        courseName={
-                          ((lesson as unknown) as Record<string, unknown>).courseName as string
-                        }
-                        locked={lesson.locked}
-                        onRemoveFromTrack={() =>
-                          removeFromTrackMutation.mutate({ lessonId: lesson.id })
-                        }
-                      />
-                    </div>
+                        <div className="flex items-center gap-3 min-w-0">
+                          <span
+                            className={`inline-flex items-center justify-center w-9 h-9 rounded-xl text-base font-bold shrink-0 ${style.chip}`}
+                          >
+                            {style.icon}
+                          </span>
+                          <div className="min-w-0">
+                            <h3 className={`text-heading font-semibold ${style.title}`}>
+                              {section.title}
+                            </h3>
+                            <p className="text-body-sm text-mp-gray-500">
+                              {(SECTION_DESCRIPTIONS[section.id] ?? SECTION_DESCRIPTIONS.growth)(
+                                section.lessons.length,
+                              )}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-3 shrink-0">
+                          <span className="text-body-sm font-medium text-mp-gray-500 tabular-nums">
+                            {completedInSection}/{section.lessons.length}
+                          </span>
+                          <svg
+                            className={`w-5 h-5 text-mp-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </div>
+                      </button>
+
+                      {isOpen && (
+                        <CardContent className="pt-3 pb-4 px-2 sm:px-5 border-t border-mp-gray-100">
+                          <div className="grid gap-2 sm:gap-3">
+                            {(section.lessons as any[]).map((lesson: any, idx: number) => (
+                              <LessonCard
+                                key={lesson.id}
+                                lesson={
+                                  {
+                                    ...lesson,
+                                    title: `${idx + 1}. ${lesson.title}`,
+                                  } as LessonWithProgress
+                                }
+                                showCourse
+                                courseName={
+                                  ((lesson as unknown) as Record<string, unknown>).courseName as string
+                                }
+                                locked={lesson.locked}
+                                onRemoveFromTrack={() =>
+                                  removeFromTrackMutation.mutate({ lessonId: lesson.id })
+                                }
+                              />
+                            ))}
+                          </div>
+                        </CardContent>
+                      )}
+                    </Card>
                   );
                 })}
-              </div>
             </div>
           )}
 
