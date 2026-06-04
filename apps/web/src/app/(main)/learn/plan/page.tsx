@@ -80,11 +80,6 @@ export default function PlanPage() {
     onError: () => toast.error('Не удалось обновить план'),
   });
 
-  const isSectioned = useMemo(
-    () => recommendedPath?.isSectioned === true && !!recommendedPath?.sections,
-    [recommendedPath],
-  );
-
   // Diagnostic sections only — the `custom` section (manual additions) is split off
   // into «Избранное» in Wave D / 61-07 and must NOT surface as part of «план» now.
   const diagnosticSections = useMemo(() => {
@@ -156,8 +151,12 @@ export default function PlanPage() {
 
   // План is "empty" when there is neither diagnostic-built lessons NOR recommended
   // jobs to show. addedJobs alone keeps the План non-empty (a jobs-only plan).
+  // NOTE: do NOT gate on `isSectioned` here — legacy flat-format paths (no sections)
+  // still carry addedJobs, and gating on isSectioned would hide the «Рекомендованные
+  // задачи» block from those users (WR-01). hasDiagnosticLessons already requires
+  // sections, so flat paths contribute only via addedJobs.
   const planIsEmpty =
-    !recommendedPath || !isSectioned || (!hasDiagnosticLessons && addedJobs.length === 0);
+    !recommendedPath || (!hasDiagnosticLessons && addedJobs.length === 0);
 
   // ── render ─────────────────────────────────────────────────────────────────
 
