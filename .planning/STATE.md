@@ -4,13 +4,13 @@ milestone: v1.12
 milestone_name: Marketplace-aware Diagnostic
 status: executing — Phase 61 Wave 8 (61-07 favorites split) PARTIAL — code shipped, prod DATA-migration pending owner approval
 stopped_at: Completed 61-04-PLAN.md (scope-aware AgentSearch + Library material catalog)
-last_updated: "2026-06-04T12:58:37.140Z"
+last_updated: "2026-06-04T13:01:08.327Z"
 progress:
-  total_phases: 41
-  completed_phases: 30
-  total_plans: 91
-  completed_plans: 87
-  percent: 73
+  total_phases: 42
+  completed_phases: 31
+  total_plans: 96
+  completed_plans: 89
+  percent: 74
 ---
 
 # Project State
@@ -20,12 +20,12 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Core value:** Пользователь проходит AI-диагностику, получает точную карту навыков и персонализированный трек обучения из реальных данных
-**Current focus:** Phase 61 — learning-2-0
+**Current focus:** Phase 61.1 — learning-2-0-uat-fixes
 
 ## Current Position
 
-Phase: 61 (learning-2-0) — EXECUTING
-Plan: 7 of 8
+Phase: 61.1 (learning-2-0-uat-fixes) — EXECUTING
+Plan: 1 of 5
 No active phase. Last shipped:
 
 - Phase 60 (Ambassador Referral Codes) — PR #13 + #14 hotfix, 2026-05-28
