@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import Link from 'next/link';
+import { Wrench } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -93,6 +94,13 @@ export default function PlanPage() {
 
   const hasDiagnosticLessons = diagnosticSections.some((s: any) => s.lessons.length > 0);
 
+  // Recommended jobs (Phase 58). Backend returns addedJobs as { id, slug, title,
+  // marketplace, lessons[] }. План shows them as link-cards (no сердечко).
+  const addedJobs = useMemo(
+    () => (recommendedPath?.addedJobs as any[] | undefined) ?? [],
+    [recommendedPath],
+  );
+
   // Header progress must count ONLY the visible diagnostic sections — NOT
   // recommendedPath.totalLessons (which still includes the custom/manual section
   // that now lives in «Избранное»). Otherwise the header (0/33) contradicts the
@@ -146,8 +154,10 @@ export default function PlanPage() {
     );
   }
 
-  // План is "empty" when there is no diagnostic-built section content to show.
-  const planIsEmpty = !recommendedPath || !isSectioned || !hasDiagnosticLessons;
+  // План is "empty" when there is neither diagnostic-built lessons NOR recommended
+  // jobs to show. addedJobs alone keeps the План non-empty (a jobs-only plan).
+  const planIsEmpty =
+    !recommendedPath || !isSectioned || (!hasDiagnosticLessons && addedJobs.length === 0);
 
   // ── render ─────────────────────────────────────────────────────────────────
 
@@ -241,6 +251,44 @@ export default function PlanPage() {
                     width: `${Math.round((visibleCompleted / visibleTotal) * 100)}%`,
                   }}
                 />
+              </div>
+            </div>
+          )}
+
+          {/* ── Рекомендованные задачи — карточки-ссылки из addedJobs ──────── */}
+          {addedJobs.length > 0 && (
+            <div className="space-y-3">
+              <h2 className="text-heading font-semibold text-mp-gray-900">
+                Рекомендованные задачи
+              </h2>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {addedJobs.map((job: any) => {
+                  const lessons = (job.lessons as any[]) ?? [];
+                  const total = lessons.length;
+                  const completed = lessons.filter(
+                    (l: any) => l.status === 'COMPLETED',
+                  ).length;
+                  return (
+                    <Link
+                      key={job.id}
+                      href={`/learn/job/${job.slug}`}
+                      className="flex items-start gap-3 bg-white border border-mp-gray-200 rounded-xl p-4 shadow-mp-card hover:shadow-mp-card-hover transition-shadow"
+                    >
+                      <div className="p-2 rounded-md bg-mp-gray-50 text-mp-gray-500 shrink-0">
+                        <Wrench className="w-5 h-5" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="text-xs text-mp-gray-500 mb-0.5">Задача</div>
+                        <div className="text-body font-semibold text-mp-gray-900 leading-snug line-clamp-2">
+                          {job.title}
+                        </div>
+                        <div className="text-body-sm text-mp-gray-500 mt-1">
+                          {total} уроков · прогресс {completed}/{total}
+                        </div>
+                      </div>
+                    </Link>
+                  );
+                })}
               </div>
             </div>
           )}
