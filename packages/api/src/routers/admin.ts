@@ -14,6 +14,7 @@ import { router, adminProcedure, superadminProcedure } from '../trpc';
 import { handleDatabaseError } from '../utils/db-errors';
 import { refreshBankForCategory } from '../utils/question-bank';
 import { resolveIncludeHidden, canToggleHidden, type AdminRole } from '../utils/visibility';
+import { mapActiveUserStats, type ActiveUserDayRow } from '../utils/active-user-stats';
 import { createClient } from '@supabase/supabase-js';
 import type { SkillCategory } from '@mpstats/shared';
 
@@ -170,6 +171,72 @@ export const adminRouter = router({
         const activity = dates.map((date) => ({ date, count: activityMap.get(date) || 0 }));
 
         return { userGrowth, activity };
+      } catch (error) {
+        handleDatabaseError(error);
+      }
+    }),
+
+  /**
+   * Active-user analytics: per-day DAU / WAU / MAU + stickiness over a window.
+   *
+   * Source of truth = "UserActivityDay" (one row per user per UTC calendar day).
+   * For each day d in [today-(days-1) .. today]:
+   *   dau(d) = distinct users active ON d
+   *   wau(d) = distinct users active in [d-6 .. d]   (rolling 7-day)
+   *   mau(d) = distinct users active in [d-29 .. d]  (rolling 30-day)
+   * Counts are cast ::int to avoid BigInt serialization issues.
+   *
+   * `current` = last day's metrics; `previous` = the first day's metrics in the
+   * window (baseline for trend deltas). `days` is clamped 1..90 → safe to embed,
+   * but date math is still parameterized.
+   */
+  getActiveUserStats: adminProcedure
+    .input(z.object({ days: z.number().int().min(1).max(90).default(30) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const days = input.days;
+
+        // generate_series of UTC calendar days for the window, then a rolling
+        // distinct-count per day. $1 = days. End of window = current UTC date.
+        const rows = await ctx.prisma.$queryRawUnsafe<
+          Array<{ date: string; dau: number; wau: number; mau: number }>
+        >(
+          `
+          WITH bounds AS (
+            SELECT (now() AT TIME ZONE 'UTC')::date AS end_day
+          ),
+          day_series AS (
+            SELECT gs::date AS d
+            FROM bounds,
+                 generate_series(end_day - ($1::int - 1), end_day, interval '1 day') AS gs
+          )
+          SELECT
+            to_char(ds.d, 'YYYY-MM-DD') AS date,
+            (SELECT COUNT(DISTINCT a."userId")::int
+               FROM "UserActivityDay" a
+              WHERE a."day" = ds.d) AS dau,
+            (SELECT COUNT(DISTINCT a."userId")::int
+               FROM "UserActivityDay" a
+              WHERE a."day" BETWEEN ds.d - 6 AND ds.d) AS wau,
+            (SELECT COUNT(DISTINCT a."userId")::int
+               FROM "UserActivityDay" a
+              WHERE a."day" BETWEEN ds.d - 29 AND ds.d) AS mau
+          FROM day_series ds
+          ORDER BY ds.d ASC
+          `,
+          days,
+        );
+
+        // Numeric coercion guard: ::int may surface as number already, but
+        // normalize defensively before the pure mapper.
+        const normalized: ActiveUserDayRow[] = rows.map((r) => ({
+          date: r.date,
+          dau: Number(r.dau),
+          wau: Number(r.wau),
+          mau: Number(r.mau),
+        }));
+
+        return mapActiveUserStats(normalized);
       } catch (error) {
         handleDatabaseError(error);
       }

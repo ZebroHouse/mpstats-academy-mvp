@@ -48,13 +48,18 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
         now.getUTCMonth(),
         now.getUTCDate(),
       ));
-      ctx.prisma.userActivityDay.upsert({
-        where: { userId_day: { userId, day } },
-        create: { userId, day },
-        update: {},
-      }).catch(err => {
-        console.error('[tRPC] userActivityDay upsert failed:', err);
-      });
+      try {
+        ctx.prisma.userActivityDay.upsert({
+          where: { userId_day: { userId, day } },
+          create: { userId, day },
+          update: {},
+        }).catch(err => {
+          console.error('[tRPC] userActivityDay upsert failed:', err);
+        });
+      } catch (err) {
+        // Synchronous throw (e.g. model unavailable) — never affect lastActiveAt.
+        console.error('[tRPC] userActivityDay upsert threw:', err);
+      }
 
       return ctx.prisma.userProfile.update({
         where: { id: userId },
