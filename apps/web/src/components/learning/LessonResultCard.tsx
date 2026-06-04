@@ -45,9 +45,7 @@ export function LessonResultCard({ lesson }: { lesson: LessonResultCardData }) {
         />
       </div>
       <p className="text-caption text-mp-gray-500 mt-1">{lesson.courseTitle}</p>
-      {lesson.snippet && (
-        <p className="text-body-sm text-mp-gray-600 mt-2 line-clamp-2">{lesson.snippet}</p>
-      )}
+      {/* Сниппет vision-RAG («[ЭКРАН @ …]») намеренно НЕ показываем — только заголовок + курс (UAT 03.06) */}
       <div className="h-1.5 bg-mp-gray-200 rounded-full mt-3 overflow-hidden">
         <div
           className={cn('h-full rounded-full', done ? 'bg-mp-green-500' : 'bg-mp-blue-500')}
