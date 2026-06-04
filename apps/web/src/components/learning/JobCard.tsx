@@ -65,7 +65,7 @@ export function JobCard({
           disabled={isAddPending}
           className="mt-3 h-9 rounded-lg bg-mp-blue-500 text-white text-body-sm font-medium hover:bg-mp-blue-600 transition-colors disabled:opacity-50"
         >
-          {isAddPending ? 'Добавляем…' : '+ В трек'}
+          {isAddPending ? 'Добавляем…' : '+ В план'}
         </button>
       )}
     </Link>
