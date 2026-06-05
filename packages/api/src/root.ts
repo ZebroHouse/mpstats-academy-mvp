@@ -14,6 +14,7 @@ import { jobRouter } from './routers/job';
 import { onboardingRouter } from './routers/onboarding';
 import { intentRouter } from './routers/intent';
 import { favoriteRouter } from './routers/favorite';
+import { partnerRouter } from './routers/partner';
 
 export const appRouter = router({
   profile: profileRouter,
@@ -31,6 +32,7 @@ export const appRouter = router({
   onboarding: onboardingRouter,
   intent: intentRouter,
   favorite: favoriteRouter,
+  partner: partnerRouter,
 });
 
 export type AppRouter = typeof appRouter;
