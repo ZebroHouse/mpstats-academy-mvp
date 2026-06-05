@@ -62,7 +62,7 @@ async function getLessonsByCategory(
     where: {
       skillCategory: category,
       isHidden: false,
-      course: { isHidden: false },
+      course: { isHidden: false, partnerKey: null },
     },
     orderBy: { order: 'asc' },
     select: { id: true },
@@ -218,7 +218,7 @@ async function generateFullRecommendedPath(
       where: {
         skillCategory: cat.category,
         isHidden: false,
-        course: { isHidden: false },
+        course: { isHidden: false, partnerKey: null },
       },
       orderBy: { order: 'asc' },
       select: { id: true },
@@ -274,7 +274,7 @@ export async function generateSectionedPath(
         where: {
           id: { in: errorLessonIds },
           isHidden: false,
-          course: { isHidden: false },
+          course: { isHidden: false, partnerKey: null },
         },
         select: { id: true, skillCategory: true, order: true },
       })
@@ -313,7 +313,7 @@ export async function generateSectionedPath(
 
   // ── Fetch all lessons for sections 2-4 ──
   const allLessons = await prisma.lesson.findMany({
-    where: { isHidden: false, course: { isHidden: false } },
+    where: { isHidden: false, course: { isHidden: false, partnerKey: null } },
     select: { id: true, skillCategory: true, skillCategories: true, skillLevel: true, order: true },
     orderBy: { order: 'asc' },
   });
