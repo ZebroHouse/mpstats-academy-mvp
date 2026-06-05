@@ -260,6 +260,9 @@ export interface SearchLessonResult {
   status: LessonStatus;
   locked: boolean;
   inRecommendedPath: boolean;
+  /** True when the lesson belongs to a partner course (e.g. partnerKey='mpstats').
+   *  UI should route to /mpstats-tools/<id> instead of /learn/<id>. */
+  isPartner: boolean;
 }
 
 // ============== KINESCOPE ==============
