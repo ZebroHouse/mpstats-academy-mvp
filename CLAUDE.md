@@ -53,11 +53,12 @@ Sibling project `D:/GpT_docs/Ai_MP_manager/` запустил `prisma db push --
 | v1.10 Diagnostic on Jobs | Shipped 2026-05-28 (Phase 58 — диагностика рекомендует top-3 джобы, slim marketplace-aware онбординг, legacy LearningPath auto-rebuild) |
 | v1.11 Ambassador Codes | Shipped 2026-05-28 (Phase 60 — админ-управляемые AMBASSADOR реф-коды для блогеров с кастомным trial-сроком + admin UI + статистика) |
 | v1.12 Marketplace-aware Diagnostic | Shipped 2026-06-01 (Phase 59 v2 — pivot к hand-curated static deck: 30 вопросов 15WB+15Ozon, 5×3 axis/level matrix, seeded option shuffle, balanced 7-8 mix for BOTH users) |
+| v1.13 Обучение 2.0 | Shipped 2026-06-05 (Phase 61 + 61.1 + DAU/WAU/MAU аналитика — release `4145a68`) |
 
 **Remaining work:**
 1. Phase 33-03: CQ Dashboard Setup (на стороне CQ команды).
 
-_Done since 2026-05-22: Phase 57 polish (PR #9 hidden-lesson auto-sync) + Track B (PR #10) + admin-analytics fix (PR #11) + Phase 58 (PR #12, 2026-05-28) + Phase 60 base (PR #13, 2026-05-28) + Phase 60 register-banner hotfix (PR #14, 2026-05-28) + Phase 59 v2 static-deck diagnostic (PR #16, 2026-06-01)._
+_Done since 2026-05-22: Phase 57 polish (PR #9 hidden-lesson auto-sync) + Track B (PR #10) + admin-analytics fix (PR #11) + Phase 58 (PR #12, 2026-05-28) + Phase 60 base (PR #13, 2026-05-28) + Phase 60 register-banner hotfix (PR #14, 2026-05-28) + Phase 59 v2 static-deck diagnostic (PR #16, 2026-06-01) + Обучение 2.0 release (Phase 61 + 61.1 + DAU/WAU/MAU, master `4145a68`, 2026-06-05)._
 
 ## Active Branches
 
@@ -66,6 +67,7 @@ _No long-lived branches in flight._
 Worktrees `.claude/worktrees/track-b-intent-jobs-engine/`, `.claude/worktrees/phase-60-ambassador-codes/`, `.claude/worktrees/phase-60-banner-fix/` остались post-merge — безопасно удалять. Cleanup на Windows иногда падает с «filename too long», тогда через `cmd //c rd /s /q <path>` + `git worktree prune`.
 
 Track B (intent→jobs engine) merged via PR #10 (`a9c8402`) + hotfix `820c5b8` (job-catalog marker split). Phase 53A + 53B (referral) merged. Phase 55 Sprint 3 (vision-RAG, 91.5%) merged. Phase 56 (entry-flow) merged. Phase 57 (library redesign) merged via PR #8 (`bb84013`) + PR #9 (`3059ad8`). Phase 58 (diagnostic on jobs) merged via PR #12 (`3ca8fb6`). Phase 60 (ambassador codes) merged via PR #13 (`6927f21`) + hotfix PR #14 (`eb1946c`).
+Обучение 2.0 (Phase 61 + 61.1 + DAU/WAU/MAU) merged via release commit `4145a68` (no-ff merge of `learning-2.0-redesign`→master), prod 2026-06-05; ветка `learning-2.0-redesign` смержена и удалена (local + origin).
 Referral flag i1→i2 switch still scheduled ~2026-06-01 (manual: DB INSERT + env + rebuild).
 Archive directory `D:/GpT_docs/MPSTATS ACADEMY ADAPTIVE LEARNING/MAAL-phase55/` (orphan, not a worktree) holds Sprint 2C VLM dumps (`results/vlm-runs-sprint2c.json` 1.7MB, 644 frame jpgs in `results/frames/`) — useful if a re-ingest is needed without re-running LLM. Safe to delete to free ~300MB when no longer needed.
 
@@ -102,7 +104,26 @@ Archive directory `D:/GpT_docs/MPSTATS ACADEMY ADAPTIVE LEARNING/MAAL-phase55/` 
 
 **Внимание (исторический lesson):** CP хранит `amount` на своей стороне на момент создания подписки. При смене цен отменять старые ACTIVE подписки чтобы автосписания пошли по новым тарифам.
 
-## Last Session (2026-06-01) — Phase 59 v2 (static-deck diagnostic) shipped to prod
+## Last Session (2026-06-05) — Обучение 2.0 (Phase 61 + 61.1 + DAU/WAU/MAU) shipped to prod
+
+**Release `4145a68` merged `learning-2.0-redesign`→master + prod deploy `maal-web-1`.** Один большой релиз: вся Phase 61 (редизайн раздела «Обучение») + Phase 61.1 (UAT-фиксы) + админская аналитика активных юзеров.
+
+**Что на проде сейчас:**
+- **Phase 61 «Обучение 2.0»**: раздел разведён на 4 сущности — `/learn/plan` (Персональный план), `/learn/solutions` (Решения под задачу, scoped AgentSearch→intent.resolve), `/learn/library` (База знаний, ai.searchLessons + каталог материалов), `/learn/favorites` (Избранное). Сабменю «Обучение» в sidebar + mobile pill-tabs. Дашборд с 3 входами + hero-поиск. Модель `Favorite` (полиморфная, IDOR-safe CRUD) + сердечко на Job/Material/Lesson. Миграция трек→Избранное (backfill применён ранее).
+- **Phase 61.1 UAT-фиксы**: задачи добавляются только в Избранное (сердечко, модель A — убрана track-механика); Персональный план — **секции-аккордеон** по приоритету (errors/deepening/growth/advanced; иттерация после UAT 04.06 — плоские бейджи дублировались/перекрывались) + блок «Рекомендованные задачи» из addedJobs; полный нейминг джоба→задача / трек→план; крошки «Решения под задачу / [Задача] / Урок» при заходе в урок из задачи (`?from=job:`). CR-01 (--dry-run precedence в cleanup-скрипте) + WR-01 (legacy flat-path видит jobs-блок) исправлены.
+- **DAU/WAU/MAU аналитика** на `/admin/analytics` (add-on, не отдельная фаза): таблица `UserActivityDay` (heartbeat пиггибэком на `lastActiveAt` в protectedProcedure), `admin.getActiveUserStats` (rolling DISTINCT SQL), UI — 3 серии recharts + карточки + stickiness + период-селектор. История бэкафилл-нута приблизительно (250 строк / 190 юзеров из diagnostic/chat/comments) — точные значения копятся going-forward.
+
+**Прод-БД операции (через Supabase Mgmt API):** `UserActivityDay` table + index созданы, `_prisma_migrations` row записан (checksum), бэкафилл 250 строк. **addedJobs cleanup применён**: 13→0 планов с непустым addedJobs, Favorite(JOB)=42 и LessonProgress=1708 не изменились (инвариант D-03/D-07). Favorite table + трек→Избранное backfill были применены ранее (в ходе Phase 61 dev).
+
+**Tests на момент релиза:** api 168/168, web 208/208, typecheck (web+api) зелёные. Staging-прогон через `--no-cache` build + content-check. Прод smoke: `maal-web-1` healthy, bundle-content (3 маркера) ✓, HTTP 200.
+
+**Откат:** `git revert -m 1 4145a68` + редеплой (релиз — один merge-коммит).
+
+**UAT-статус:** HUMAN-UAT фаз 61 и 61.1 формально остались `partial` (owner принял решение шипить по факту тестов на staging). Файлы `.planning/phases/61-*/61-HUMAN-UAT.md` + `61.1-*/61.1-HUMAN-UAT.md` ещё всплывут в `/gsd:progress` — закрыть после прод-UAT по живым данным.
+
+**Память:** `project_learning_2_0_release.md` (в `~/.claude/projects/.../memory/`).
+
+## Previous Session (2026-06-01) — Phase 59 v2 (static-deck diagnostic) shipped to prod
 
 **PR #16 `b89a54e` merged to master + prod deploy `maal-web-1`.** Pivot away from LLM-generated marketplace-tagged question banks to a hand-curated static deck of 30 questions (15 WB Q1-Q15 + 15 Ozon Q16-Q30), 5 competencies × 3 difficulty levels per deck. Methodology source: 2 Google Docs prepared by content team, snapshotted as raw JSON + parsed markdown under `.planning/phases/59-.../methodology-decks/`.
 

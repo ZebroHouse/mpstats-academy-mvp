@@ -1142,6 +1142,7 @@ Plans:
 **Spec:** `docs/superpowers/specs/2026-06-03-learning-2.0-redesign-design.md`
 **Requirements**: TBD
 **Depends on:** Phase 60
+**Status:** ✅ Shipped 2026-06-05 (release `4145a68`, merged `learning-2.0-redesign`→master). Прод-data-миграции (Favorite table, трек→Избранное backfill) применены ранее через Mgmt API.
 **Plans:** 8/8 plans complete
 
 Plans:
@@ -1152,14 +1153,14 @@ Plans:
 - [x] 61-04-PLAN.md — Wave B: AgentSearch scope (solutions/library) + каталог материалов в Базе знаний
 - [x] 61-05-PLAN.md — Wave E: дашборд 3 входа + hero-поиск (LearningHero)
 - [x] 61-06-PLAN.md — Wave D: модель Favorite + favorite router (commits 4ca4be6, 9c7b764); schema-миграция применена на prod 2026-06-03 (Favorite table live)
-- [~] 61-07-PLAN.md — Wave D: код ГОТОВ (commits 00e8a32, 280e555) — migrate-script + FavoriteButton + Избранное + План диагностический; [BLOCKING] прод data-миграция трек→избранное — PENDING owner approval
+- [x] 61-07-PLAN.md — Wave D: migrate-script + FavoriteButton + Избранное + План диагностический (commits 00e8a32, 280e555); прод data-миграция трек→Избранное применена
 
-Waves (порядок разработки, единый деплой через staging):
-- [ ] A — Каркас + ренейминг (61-01, 61-02): сабменю «Обучение», routes /learn/{plan,solutions,library,favorites}, расщепление lens, ренейм UI-строк
+Waves (порядок разработки, единый деплой через staging) — все смержены и в проде 2026-06-05:
+- [x] A — Каркас + ренейминг (61-01, 61-02): сабменю «Обучение», routes /learn/{plan,solutions,library,favorites}, расщепление lens, ренейм UI-строк
 - [x] B — Контекстный поиск (61-04): AgentSearch с scope (решения→intent.resolve, база знаний→ai.searchLessons)
-- [ ] C — Материалы в Базе знаний (61-03, 61-04): material.listForUser + isStandalone + каталог/фильтр/поиск
-- [ ] D — Избранное (61-06, 61-07): модель Favorite + миграция трек→избранное + сердечко, План→чисто диагностический
-- [ ] E — UI (61-05): дашборд 3 входа (слайд 17) + hero-поиск (слайд 6)
+- [x] C — Материалы в Базе знаний (61-03, 61-04): material.listForUser + isStandalone + каталог/фильтр/поиск
+- [x] D — Избранное (61-06, 61-07): модель Favorite + миграция трек→избранное + сердечко, План→чисто диагностический
+- [x] E — UI (61-05): дашборд 3 входа (слайд 17) + hero-поиск (слайд 6)
 
 ---
 
@@ -1168,7 +1169,7 @@ Waves (порядок разработки, единый деплой через
 **Goal:** Закрыть баги UAT-сессии 03–04.06 и довести модель до консистентной: задачи добавляются только в Избранное (сердечко, модель A), Персональный план перестроен в плоский Избранное-like вид (рекомендованные задачи + уроки с бейджем приоритета), полный нейминг джоба→задача / трек→план, 2-й уровень навигации урок↔задача.
 **Scope:** `.planning/phases/61-learning-2-0/61.1-UAT-FIXES-SCOPE.md` (решения зафиксированы)
 **Depends on:** Phase 61
-**Status:** planned (5 plans)
+**Status:** ✅ Shipped 2026-06-05 (в составе релиза `4145a68`). Persona-план иттерирован к секциям-аккордеону (UAT 04.06: плоские бейджи дублировались). CR-01 (--dry-run precedence) + WR-01 (legacy flat-path jobs-блок) исправлены. Прод addedJobs cleanup применён (13→0, Favorite/LessonProgress нетронуты).
 
 Воркстримы:
 - W1 — Задачи → Избранное (убрать «трек»-механику у задач, заменить сердечком; AgentSearch/JobCard/JobCatalog/JobDetail/favorites)

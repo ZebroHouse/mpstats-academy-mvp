@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: Marketplace-aware Diagnostic
-status: executing — Phase 61 Wave 8 (61-07 favorites split) PARTIAL — code shipped, prod DATA-migration pending owner approval
-stopped_at: Completed 61-04-PLAN.md (scope-aware AgentSearch + Library material catalog)
-last_updated: "2026-06-04T13:01:08.327Z"
+status: shipped — Обучение 2.0 (Phase 61 + 61.1 + DAU/WAU/MAU analytics) LIVE on prod 2026-06-05 (release 4145a68)
+stopped_at: Shipped release 4145a68 to prod (merged learning-2.0-redesign→master); addedJobs cleanup applied
+last_updated: "2026-06-05T08:48:22.000Z"
 progress:
   total_phases: 42
-  completed_phases: 31
-  total_plans: 96
-  completed_plans: 89
-  percent: 74
+  completed_phases: 33
+  total_plans: 101
+  completed_plans: 94
+  percent: 79
 ---
 
 # Project State
@@ -20,14 +20,13 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Core value:** Пользователь проходит AI-диагностику, получает точную карту навыков и персонализированный трек обучения из реальных данных
-**Current focus:** Phase 61.1 — learning-2-0-uat-fixes
+**Current focus:** None — Обучение 2.0 shipped to prod; awaiting next milestone/phase
 
 ## Current Position
 
-Phase: 61.1 (learning-2-0-uat-fixes) — EXECUTING
-Plan: 1 of 5
 No active phase. Last shipped:
 
+- Обучение 2.0 — Phase 61 (редизайн раздела) + Phase 61.1 (UAT-фиксы, секции-аккордеон Плана) + DAU/WAU/MAU admin-аналитика — release `4145a68`, prod 2026-06-05
 - Phase 60 (Ambassador Referral Codes) — PR #13 + #14 hotfix, 2026-05-28
 - Phase 58 (Diagnostic on Jobs) — PR #12 `3ca8fb6`, 2026-05-28
 - Phase 59 v2 (Static-deck Diagnostic) — PR #16 `b89a54e`, 2026-06-01
