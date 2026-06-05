@@ -53,9 +53,12 @@ describe('WelcomePage — fork navigation', () => {
   it('leaves the wizard with a hard navigation, not a soft router.push', () => {
     const { getByRole } = render(<WelcomePage />);
 
-    // Step 1 → 2 → 3 → fork (the next button never blocks).
+    // Step 1 → 2 → 3 → fork — each step needs an answer before advancing.
+    fireEvent.click(getByRole('button', { name: 'Увеличить продажи' }));
     fireEvent.click(getByRole('button', { name: 'Продолжить' }));
+    fireEvent.click(getByRole('button', { name: 'Wildberries' }));
     fireEvent.click(getByRole('button', { name: 'Далее →' }));
+    fireEvent.click(getByRole('button', { name: /Только присматриваюсь/ }));
     fireEvent.click(getByRole('button', { name: 'Далее →' }));
 
     // On the fork, choose the diagnostic path.
@@ -69,5 +72,38 @@ describe('WelcomePage — fork navigation', () => {
 
     // Must be a full-page load to bust Next's Router Cache.
     expect(assignMock).toHaveBeenCalledWith('/diagnostic');
+  });
+});
+
+describe('WelcomePage — required answers per step', () => {
+  it('blocks each step until an answer is chosen', () => {
+    const { getByRole } = render(<WelcomePage />);
+
+    // Step 1: no goal selected → "Продолжить" is disabled.
+    expect(getByRole('button', { name: 'Продолжить' })).toBeDisabled();
+    fireEvent.click(getByRole('button', { name: 'Увеличить продажи' }));
+    expect(getByRole('button', { name: 'Продолжить' })).not.toBeDisabled();
+    fireEvent.click(getByRole('button', { name: 'Продолжить' }));
+
+    // Step 2: no marketplace selected → "Далее →" is disabled.
+    expect(getByRole('button', { name: 'Далее →' })).toBeDisabled();
+    fireEvent.click(getByRole('button', { name: 'Wildberries' }));
+    expect(getByRole('button', { name: 'Далее →' })).not.toBeDisabled();
+    fireEvent.click(getByRole('button', { name: 'Далее →' }));
+
+    // Step 3: no experience selected → "Далее →" is disabled.
+    expect(getByRole('button', { name: 'Далее →' })).toBeDisabled();
+    fireEvent.click(getByRole('button', { name: /Только присматриваюсь/ }));
+    expect(getByRole('button', { name: 'Далее →' })).not.toBeDisabled();
+  });
+
+  it('accepts free-text intent as a step 1 answer', () => {
+    const { getByRole, getByPlaceholderText } = render(<WelcomePage />);
+
+    expect(getByRole('button', { name: 'Продолжить' })).toBeDisabled();
+    fireEvent.change(getByPlaceholderText('Напишите, и мы поможем подобрать материалы…'), {
+      target: { value: 'хочу разобраться с рекламой' },
+    });
+    expect(getByRole('button', { name: 'Продолжить' })).not.toBeDisabled();
   });
 });

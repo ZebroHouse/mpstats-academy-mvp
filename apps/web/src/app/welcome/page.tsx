@@ -78,6 +78,17 @@ export default function WelcomePage() {
     );
   };
 
+  // Each question is required — the next button stays disabled until the current
+  // step has an answer (prod bug 2026-06-05: empty steps were skippable).
+  const canAdvance =
+    step === 1
+      ? goals.length > 0 || goalText.trim().length > 0
+      : step === 2
+        ? marketplaces.length > 0
+        : step === 3
+          ? experienceLevel !== null
+          : true;
+
   // Honest reframe — client-side echo of the chosen goals, no LLM.
   const reframe = (() => {
     const labels = goals
@@ -137,6 +148,7 @@ export default function WelcomePage() {
               </Button>
               <Button
                 variant="default"
+                disabled={!canAdvance}
                 onClick={() =>
                   step === 1
                     ? advanceFromStep1()
@@ -147,7 +159,9 @@ export default function WelcomePage() {
               </Button>
             </div>
             <p className="text-center text-caption text-mp-gray-400">
-              Ответы помогут персонализировать ваш опыт.
+              {canAdvance
+                ? 'Ответы помогут персонализировать ваш опыт.'
+                : 'Выберите хотя бы один вариант, чтобы продолжить.'}
             </p>
           </div>
         )}
