@@ -47,13 +47,14 @@ export async function getUserActiveSubscriptions(
  * lessons from courses they don't personally have subs for.
  */
 export function isLessonAccessible(
-  lesson: { order: number; courseId: string },
+  lesson: { order: number; courseId: string; isPartnerFree?: boolean },
   subscriptions: SubscriptionWithPlan[],
   billingEnabled: boolean,
   isAdminBypass = false,
 ): boolean {
   if (!billingEnabled) return true;
   if (isAdminBypass) return true;
+  if (lesson.isPartnerFree) return true; // партнёрский курс — полностью бесплатный
   if (lesson.order <= FREE_LESSON_THRESHOLD) return true;
   if (subscriptions.some((s) => s.plan.type === 'PLATFORM')) return true;
   if (subscriptions.some((s) => s.plan.type === 'COURSE' && s.courseId === lesson.courseId)) return true;
@@ -80,7 +81,7 @@ export async function getUserAdminBypass(
  */
 export async function checkLessonAccess(
   userId: string,
-  lesson: { order: number; courseId: string },
+  lesson: { order: number; courseId: string; isPartnerFree?: boolean },
   prisma: PrismaClient,
 ): Promise<AccessResult> {
   const billingEnabled = await isFeatureEnabled('billing_enabled');
@@ -96,6 +97,10 @@ export async function checkLessonAccess(
   });
   if (userProfile?.role === 'ADMIN' || userProfile?.role === 'SUPERADMIN') {
     return { hasAccess: true, reason: 'admin_bypass', hasPlatformSubscription: false };
+  }
+
+  if (lesson.isPartnerFree) {
+    return { hasAccess: true, reason: 'free_lesson', hasPlatformSubscription: false };
   }
 
   const subscriptions = await getUserActiveSubscriptions(userId, prisma);
