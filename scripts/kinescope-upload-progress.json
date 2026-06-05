@@ -1,6 +1,6 @@
 {
   "startedAt": "2026-02-18T10:26:44.172Z",
-  "lastUpdated": "2026-02-20T21:43:40.288Z",
+  "lastUpdated": "2026-06-05T13:43:10.991Z",
   "uploaded": [
     {
       "courseId": "01_analytics",
@@ -2731,516 +2731,852 @@
       "uploadedAt": "2026-02-20T21:03:54.108Z"
     },
     {
-      "lessonId": "06_express_c02_seo_m02_keywords_010",
-      "videoId": "8edaa647-1d53-4d93-9155-64a61a51352f",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 9.43,
+      "lessonId": "06_express_c02_seo_m02_keywords_010",
+      "videoId": "8edaa647-1d53-4d93-9155-64a61a51352f",
       "uploadedAt": "2026-02-20T21:14:41.965Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m01_start_004",
-      "videoId": "f63b788f-c7da-44cf-a3e9-96dee98c1927",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 10.14,
+      "lessonId": "06_express_c04_product_choice_m01_start_004",
+      "videoId": "f63b788f-c7da-44cf-a3e9-96dee98c1927",
       "uploadedAt": "2026-02-20T21:14:50.019Z"
     },
     {
-      "lessonId": "06_express_c02_seo_m01_search_002",
-      "videoId": "4961bc65-3ab6-406a-bbc2-38a02d561a09",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 14.07,
+      "lessonId": "06_express_c02_seo_m01_search_002",
+      "videoId": "4961bc65-3ab6-406a-bbc2-38a02d561a09",
       "uploadedAt": "2026-02-20T21:14:57.926Z"
     },
     {
-      "lessonId": "06_express_c02_seo_m01_search_003",
-      "videoId": "f10bb99b-2262-472d-a33d-fa9690ee5af9",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 15.95,
+      "lessonId": "06_express_c02_seo_m01_search_003",
+      "videoId": "f10bb99b-2262-472d-a33d-fa9690ee5af9",
       "uploadedAt": "2026-02-20T21:15:06.207Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m04_launch_plan_023",
-      "videoId": "a11c01ed-00fb-455c-adbc-f846205118d1",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 19.37,
+      "lessonId": "06_express_c04_product_choice_m04_launch_plan_023",
+      "videoId": "a11c01ed-00fb-455c-adbc-f846205118d1",
       "uploadedAt": "2026-02-20T21:15:14.161Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m01_start_002",
-      "videoId": "24eae697-6253-4efe-a05e-8fd997bcaddd",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 20.8,
+      "lessonId": "06_express_c04_product_choice_m01_start_002",
+      "videoId": "24eae697-6253-4efe-a05e-8fd997bcaddd",
       "uploadedAt": "2026-02-20T21:15:22.529Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m01_start_003",
-      "videoId": "ee5e7c20-fb59-4cf9-adc9-a43a5c82ba6c",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 28.65,
+      "lessonId": "06_express_c04_product_choice_m01_start_003",
+      "videoId": "ee5e7c20-fb59-4cf9-adc9-a43a5c82ba6c",
       "uploadedAt": "2026-02-20T21:15:30.373Z"
     },
     {
-      "lessonId": "06_express_c02_seo_m03_launch_015",
-      "videoId": "6ff82362-7f53-4dd9-9638-2af560fcd3ee",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 34.45,
+      "lessonId": "06_express_c02_seo_m03_launch_015",
+      "videoId": "6ff82362-7f53-4dd9-9638-2af560fcd3ee",
       "uploadedAt": "2026-02-20T21:15:38.253Z"
     },
     {
-      "lessonId": "06_express_c03_competitors_m02_why_choose_008",
-      "videoId": "16c17971-fbab-4efe-a537-15c400ac1710",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 37.67,
+      "lessonId": "06_express_c03_competitors_m02_why_choose_008",
+      "videoId": "16c17971-fbab-4efe-a537-15c400ac1710",
       "uploadedAt": "2026-02-20T21:15:46.857Z"
     },
     {
-      "lessonId": "06_express_c02_seo_m03_launch_014",
-      "videoId": "c24e1180-1f8d-4053-97ca-3a0b34ae57c9",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 41.23,
+      "lessonId": "06_express_c02_seo_m03_launch_014",
+      "videoId": "c24e1180-1f8d-4053-97ca-3a0b34ae57c9",
       "uploadedAt": "2026-02-20T21:15:55.156Z"
     },
     {
-      "lessonId": "06_express_c02_seo_m01_search_007",
-      "videoId": "5f7fb013-6163-47b7-b64a-ee687d61296e",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 68.52,
+      "lessonId": "06_express_c02_seo_m01_search_007",
+      "videoId": "5f7fb013-6163-47b7-b64a-ee687d61296e",
       "uploadedAt": "2026-02-20T21:16:04.188Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m01_start_001",
-      "videoId": "f60a3540-dd00-4c1f-86eb-44f4a92da4bc",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 69.31,
+      "lessonId": "06_express_c04_product_choice_m01_start_001",
+      "videoId": "f60a3540-dd00-4c1f-86eb-44f4a92da4bc",
       "uploadedAt": "2026-02-20T21:16:12.559Z"
     },
     {
-      "lessonId": "06_express_c02_seo_m01_search_004",
-      "videoId": "18cfc291-900b-4561-aaba-e50611ffe45b",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 72.58,
+      "lessonId": "06_express_c02_seo_m01_search_004",
+      "videoId": "18cfc291-900b-4561-aaba-e50611ffe45b",
       "uploadedAt": "2026-02-20T21:16:20.820Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m01_start_008",
-      "videoId": "63f7c3dc-aad7-4d2e-8290-823424f174d1",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 90.94,
+      "lessonId": "06_express_c04_product_choice_m01_start_008",
+      "videoId": "63f7c3dc-aad7-4d2e-8290-823424f174d1",
       "uploadedAt": "2026-02-20T21:16:29.966Z"
     },
     {
-      "lessonId": "06_express_c01_ai_content_m03_prompts_003",
-      "videoId": "5bd91dd8-ad1f-4486-90ff-95717afd5aa1",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 100.24,
+      "lessonId": "06_express_c01_ai_content_m03_prompts_003",
+      "videoId": "5bd91dd8-ad1f-4486-90ff-95717afd5aa1",
       "uploadedAt": "2026-02-20T21:16:39.003Z"
     },
     {
-      "lessonId": "06_express_c02_seo_m01_search_005",
-      "videoId": "1a882071-7cca-4fa1-a306-752ada01d6e1",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 105.06,
+      "lessonId": "06_express_c02_seo_m01_search_005",
+      "videoId": "1a882071-7cca-4fa1-a306-752ada01d6e1",
       "uploadedAt": "2026-02-20T21:16:48.496Z"
     },
     {
-      "lessonId": "06_express_c03_competitors_m02_why_choose_009",
-      "videoId": "f3288e8f-5911-4869-8b84-c85c7ac3ce16",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 109.57,
+      "lessonId": "06_express_c03_competitors_m02_why_choose_009",
+      "videoId": "f3288e8f-5911-4869-8b84-c85c7ac3ce16",
       "uploadedAt": "2026-02-20T21:16:58.245Z"
     },
     {
-      "lessonId": "06_express_c03_competitors_m03_profit_012",
-      "videoId": "70dd3f76-6f4f-423f-a181-ef2cfcf97fb2",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 112.16,
+      "lessonId": "06_express_c03_competitors_m03_profit_012",
+      "videoId": "70dd3f76-6f4f-423f-a181-ef2cfcf97fb2",
       "uploadedAt": "2026-02-20T21:17:07.643Z"
     },
     {
-      "lessonId": "06_express_c01_ai_content_m03_prompts_004",
-      "videoId": "aeb0cd55-d8af-40b1-8ea7-d2307fa1f5b9",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 126.14,
+      "lessonId": "06_express_c01_ai_content_m03_prompts_004",
+      "videoId": "aeb0cd55-d8af-40b1-8ea7-d2307fa1f5b9",
       "uploadedAt": "2026-02-20T21:17:18.013Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m02_categories_009",
-      "videoId": "e6786c1e-d738-42c0-9fe3-803c574c9c89",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 146.48,
+      "lessonId": "06_express_c04_product_choice_m02_categories_009",
+      "videoId": "e6786c1e-d738-42c0-9fe3-803c574c9c89",
       "uploadedAt": "2026-02-20T21:17:28.300Z"
     },
     {
-      "lessonId": "06_express_c03_competitors_m02_why_choose_010",
-      "videoId": "20c0c7e9-277e-496c-bd1e-1269806f80b6",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 162.37,
+      "lessonId": "06_express_c03_competitors_m02_why_choose_010",
+      "videoId": "20c0c7e9-277e-496c-bd1e-1269806f80b6",
       "uploadedAt": "2026-02-20T21:17:42.743Z"
     },
     {
-      "lessonId": "06_express_c02_seo_m02_keywords_011",
-      "videoId": "b3f8b450-5845-4b96-9c3e-51c9f3591bb6",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 163.94,
+      "lessonId": "06_express_c02_seo_m02_keywords_011",
+      "videoId": "b3f8b450-5845-4b96-9c3e-51c9f3591bb6",
       "uploadedAt": "2026-02-20T21:17:56.290Z"
     },
     {
-      "lessonId": "06_express_c03_competitors_m01_types_002",
-      "videoId": "f0a102df-37e6-4606-81e9-c6a423c1898c",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 164.33,
+      "lessonId": "06_express_c03_competitors_m01_types_002",
+      "videoId": "f0a102df-37e6-4606-81e9-c6a423c1898c",
       "uploadedAt": "2026-02-20T21:18:09.111Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m02_categories_011",
-      "videoId": "abd92a23-a846-4df6-a547-9a1990c27db5",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 164.33,
+      "lessonId": "06_express_c04_product_choice_m02_categories_011",
+      "videoId": "abd92a23-a846-4df6-a547-9a1990c27db5",
       "uploadedAt": "2026-02-20T21:18:19.958Z"
     },
     {
-      "lessonId": "06_express_c03_competitors_m02_why_choose_004",
-      "videoId": "345e86ff-d16c-4de9-bba2-50b8718962d6",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 177.45,
+      "lessonId": "06_express_c03_competitors_m02_why_choose_004",
+      "videoId": "345e86ff-d16c-4de9-bba2-50b8718962d6",
       "uploadedAt": "2026-02-20T21:18:31.540Z"
     },
     {
-      "lessonId": "06_express_c02_seo_m03_launch_013",
-      "videoId": "a0959a50-d7fb-4c67-aae0-295c6eacc9d1",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 177.66,
+      "lessonId": "06_express_c02_seo_m03_launch_013",
+      "videoId": "a0959a50-d7fb-4c67-aae0-295c6eacc9d1",
       "uploadedAt": "2026-02-20T21:18:43.597Z"
     },
     {
-      "lessonId": "06_express_c02_seo_m04_strategies_018",
-      "videoId": "d41f5e1e-6644-43b0-a7a1-a6e0a98810ad",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 187.87,
+      "lessonId": "06_express_c02_seo_m04_strategies_018",
+      "videoId": "d41f5e1e-6644-43b0-a7a1-a6e0a98810ad",
       "uploadedAt": "2026-02-20T21:18:54.889Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m04_launch_plan_026",
-      "videoId": "1c1ce665-7767-4a90-bb32-51b0755c819c",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 190.22,
+      "lessonId": "06_express_c04_product_choice_m04_launch_plan_026",
+      "videoId": "1c1ce665-7767-4a90-bb32-51b0755c819c",
       "uploadedAt": "2026-02-20T21:19:06.947Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m04_launch_plan_024",
-      "videoId": "d338fc76-b205-4f3d-8b58-f80433240405",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 233.02,
+      "lessonId": "06_express_c04_product_choice_m04_launch_plan_024",
+      "videoId": "d338fc76-b205-4f3d-8b58-f80433240405",
       "uploadedAt": "2026-02-20T21:19:28.752Z"
     },
     {
-      "lessonId": "06_express_c03_competitors_m02_why_choose_005",
-      "videoId": "20615e4b-fc54-44fd-ac36-ce0443477f8a",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 257.01,
+      "lessonId": "06_express_c03_competitors_m02_why_choose_005",
+      "videoId": "20615e4b-fc54-44fd-ac36-ce0443477f8a",
       "uploadedAt": "2026-02-20T21:19:44.057Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m04_launch_plan_025",
-      "videoId": "579d8183-59ca-4d1b-be89-69f0c4dce04e",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 287.18,
+      "lessonId": "06_express_c04_product_choice_m04_launch_plan_025",
+      "videoId": "579d8183-59ca-4d1b-be89-69f0c4dce04e",
       "uploadedAt": "2026-02-20T21:20:00.204Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m01_start_005",
-      "videoId": "0c886858-0024-4ef9-b788-2c567c23a41a",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 287.19,
+      "lessonId": "06_express_c04_product_choice_m01_start_005",
+      "videoId": "0c886858-0024-4ef9-b788-2c567c23a41a",
       "uploadedAt": "2026-02-20T21:20:16.274Z"
     },
     {
-      "lessonId": "06_express_c03_competitors_m04_attract_015",
-      "videoId": "19657a9b-2bbc-401d-aa4f-dd09080bdab4",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 296.22,
+      "lessonId": "06_express_c03_competitors_m04_attract_015",
+      "videoId": "19657a9b-2bbc-401d-aa4f-dd09080bdab4",
       "uploadedAt": "2026-02-20T21:20:33.417Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m01_start_006",
-      "videoId": "920f9aa0-9771-4a36-b410-d316bc277930",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 304.15,
+      "lessonId": "06_express_c04_product_choice_m01_start_006",
+      "videoId": "920f9aa0-9771-4a36-b410-d316bc277930",
       "uploadedAt": "2026-02-20T21:20:49.241Z"
     },
     {
-      "lessonId": "06_express_c03_competitors_m03_profit_011",
-      "videoId": "f81948a2-ebab-4412-8673-e72caab733c6",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 409.35,
+      "lessonId": "06_express_c03_competitors_m03_profit_011",
+      "videoId": "f81948a2-ebab-4412-8673-e72caab733c6",
       "uploadedAt": "2026-02-20T21:21:09.000Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m02_categories_013",
-      "videoId": "047e3dad-8d92-49a8-b560-b92c007a5b53",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 409.35,
+      "lessonId": "06_express_c04_product_choice_m02_categories_013",
+      "videoId": "047e3dad-8d92-49a8-b560-b92c007a5b53",
       "uploadedAt": "2026-02-20T21:21:29.480Z"
     },
     {
-      "lessonId": "06_express_c03_competitors_m02_why_choose_007",
-      "videoId": "09a0b7f8-9324-4f25-8e79-4e624bf01e33",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 446.21,
+      "lessonId": "06_express_c03_competitors_m02_why_choose_007",
+      "videoId": "09a0b7f8-9324-4f25-8e79-4e624bf01e33",
       "uploadedAt": "2026-02-20T21:21:53.038Z"
     },
     {
-      "lessonId": "06_express_c02_seo_m02_keywords_009",
-      "videoId": "0a00092d-3855-4452-845d-b81f65d5b599",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 486.82,
+      "lessonId": "06_express_c02_seo_m02_keywords_009",
+      "videoId": "0a00092d-3855-4452-845d-b81f65d5b599",
       "uploadedAt": "2026-02-20T21:22:22.118Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m03_validation_021",
-      "videoId": "7d0a5a7a-2f14-43bf-b7a7-b9f7c8388cdf",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 508.86,
+      "lessonId": "06_express_c04_product_choice_m03_validation_021",
+      "videoId": "7d0a5a7a-2f14-43bf-b7a7-b9f7c8388cdf",
       "uploadedAt": "2026-02-20T21:22:47.593Z"
     },
     {
-      "lessonId": "06_express_c02_seo_m04_strategies_016",
-      "videoId": "d41b6099-c07b-4bd4-a2d6-d4f5150d0e18",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 590.9,
+      "lessonId": "06_express_c02_seo_m04_strategies_016",
+      "videoId": "d41b6099-c07b-4bd4-a2d6-d4f5150d0e18",
       "uploadedAt": "2026-02-20T21:23:18.256Z"
     },
     {
-      "lessonId": "06_express_c02_seo_m01_search_001",
-      "videoId": "d0a83941-6f48-4a34-8a28-6c7ad04d619e",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 595.51,
+      "lessonId": "06_express_c02_seo_m01_search_001",
+      "videoId": "d0a83941-6f48-4a34-8a28-6c7ad04d619e",
       "uploadedAt": "2026-02-20T21:23:48.444Z"
     },
     {
-      "lessonId": "06_express_c03_competitors_m04_attract_013",
-      "videoId": "6916c733-cdb9-4a8c-88d7-8a9c4d2d6659",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 599.75,
+      "lessonId": "06_express_c03_competitors_m04_attract_013",
+      "videoId": "6916c733-cdb9-4a8c-88d7-8a9c4d2d6659",
       "uploadedAt": "2026-02-20T21:24:17.035Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m03_validation_016",
-      "videoId": "1d63f0eb-ca25-411d-9713-9364ee0c1dc2",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 621.81,
+      "lessonId": "06_express_c04_product_choice_m03_validation_016",
+      "videoId": "1d63f0eb-ca25-411d-9713-9364ee0c1dc2",
       "uploadedAt": "2026-02-20T21:24:49.905Z"
     },
     {
-      "lessonId": "06_express_c03_competitors_m02_why_choose_006",
-      "videoId": "907573d8-2afb-49c8-93f2-32c1cc4029a7",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 695.96,
+      "lessonId": "06_express_c03_competitors_m02_why_choose_006",
+      "videoId": "907573d8-2afb-49c8-93f2-32c1cc4029a7",
       "uploadedAt": "2026-02-20T21:25:23.598Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m01_start_007",
-      "videoId": "b98de3c1-29f8-4522-ae4f-edf36d8cf042",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 718.96,
+      "lessonId": "06_express_c04_product_choice_m01_start_007",
+      "videoId": "b98de3c1-29f8-4522-ae4f-edf36d8cf042",
       "uploadedAt": "2026-02-20T21:26:05.252Z"
     },
     {
-      "lessonId": "06_express_c03_competitors_m01_types_001",
-      "videoId": "9aa7563f-ab56-4ac6-b3ca-e50850a8cd8c",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 739.03,
+      "lessonId": "06_express_c03_competitors_m01_types_001",
+      "videoId": "9aa7563f-ab56-4ac6-b3ca-e50850a8cd8c",
       "uploadedAt": "2026-02-20T21:26:44.431Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m02_categories_010",
-      "videoId": "ad9cb0e5-4cc6-4125-9a2c-76aa439a71af",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 739.03,
+      "lessonId": "06_express_c04_product_choice_m02_categories_010",
+      "videoId": "ad9cb0e5-4cc6-4125-9a2c-76aa439a71af",
       "uploadedAt": "2026-02-20T21:27:27.980Z"
     },
     {
-      "lessonId": "06_express_c02_seo_m04_strategies_017",
-      "videoId": "5b8e57b8-e8e9-4945-adf0-345b8fe99f98",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 759.82,
+      "lessonId": "06_express_c02_seo_m04_strategies_017",
+      "videoId": "5b8e57b8-e8e9-4945-adf0-345b8fe99f98",
       "uploadedAt": "2026-02-20T21:28:07.713Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m03_validation_017",
-      "videoId": "bb106021-d9ec-40c2-8c56-9fa1c687b4cb",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 774.73,
+      "lessonId": "06_express_c04_product_choice_m03_validation_017",
+      "videoId": "bb106021-d9ec-40c2-8c56-9fa1c687b4cb",
       "uploadedAt": "2026-02-20T21:28:46.727Z"
     },
     {
-      "lessonId": "06_express_c03_competitors_m01_types_003",
-      "videoId": "1b8871f6-8a52-4f69-9582-e0a91e12bb65",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 790.88,
+      "lessonId": "06_express_c03_competitors_m01_types_003",
+      "videoId": "1b8871f6-8a52-4f69-9582-e0a91e12bb65",
       "uploadedAt": "2026-02-20T21:29:25.191Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m02_categories_012",
-      "videoId": "93398b25-bda3-4851-8475-8c5cc468ea2d",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 790.88,
+      "lessonId": "06_express_c04_product_choice_m02_categories_012",
+      "videoId": "93398b25-bda3-4851-8475-8c5cc468ea2d",
       "uploadedAt": "2026-02-20T21:30:06.415Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m03_validation_020",
-      "videoId": "1b4b2036-bbae-4047-bca5-65feb8fe1281",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 795.76,
+      "lessonId": "06_express_c04_product_choice_m03_validation_020",
+      "videoId": "1b4b2036-bbae-4047-bca5-65feb8fe1281",
       "uploadedAt": "2026-02-20T21:30:48.486Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m03_validation_014",
-      "videoId": "f433211a-a38f-43cb-8b99-381408c02365",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 841.33,
+      "lessonId": "06_express_c04_product_choice_m03_validation_014",
+      "videoId": "f433211a-a38f-43cb-8b99-381408c02365",
       "uploadedAt": "2026-02-20T21:31:29.317Z"
     },
     {
-      "lessonId": "06_express_c02_seo_m01_search_006",
-      "videoId": "c0230104-b828-49db-977b-ae8c7e78156a",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 892.75,
+      "lessonId": "06_express_c02_seo_m01_search_006",
+      "videoId": "c0230104-b828-49db-977b-ae8c7e78156a",
       "uploadedAt": "2026-02-20T21:32:13.788Z"
     },
     {
-      "lessonId": "06_express_c03_competitors_m04_attract_014",
-      "videoId": "66b63338-dd49-4788-97c5-956e64e852c1",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 916.01,
+      "lessonId": "06_express_c03_competitors_m04_attract_014",
+      "videoId": "66b63338-dd49-4788-97c5-956e64e852c1",
       "uploadedAt": "2026-02-20T21:32:58.119Z"
     },
     {
-      "lessonId": "06_express_c02_seo_m03_launch_012",
-      "videoId": "d7b53ff2-cf0d-41e3-8f89-b71ac1448c79",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 922.54,
+      "lessonId": "06_express_c02_seo_m03_launch_012",
+      "videoId": "d7b53ff2-cf0d-41e3-8f89-b71ac1448c79",
       "uploadedAt": "2026-02-20T21:33:41.434Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m04_launch_plan_022",
-      "videoId": "65b4b826-1819-4493-8de6-49831c07a01f",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 946.25,
+      "lessonId": "06_express_c04_product_choice_m04_launch_plan_022",
+      "videoId": "65b4b826-1819-4493-8de6-49831c07a01f",
       "uploadedAt": "2026-02-20T21:34:27.523Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m03_validation_015",
-      "videoId": "a6edc9f8-3d12-4fcb-9120-32578677de24",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 1082.88,
+      "lessonId": "06_express_c04_product_choice_m03_validation_015",
+      "videoId": "a6edc9f8-3d12-4fcb-9120-32578677de24",
       "uploadedAt": "2026-02-20T21:35:17.070Z"
     },
     {
-      "lessonId": "06_express_c02_seo_m02_keywords_008",
-      "videoId": "a7f43daf-729c-4d66-a2f2-724c644f7c60",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 1348.15,
+      "lessonId": "06_express_c02_seo_m02_keywords_008",
+      "videoId": "a7f43daf-729c-4d66-a2f2-724c644f7c60",
       "uploadedAt": "2026-02-20T21:36:18.296Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m03_validation_019",
-      "videoId": "007f6295-9ea7-4e43-b025-eb606f547399",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 1662.34,
+      "lessonId": "06_express_c04_product_choice_m03_validation_019",
+      "videoId": "007f6295-9ea7-4e43-b025-eb606f547399",
       "uploadedAt": "2026-02-20T21:37:29.393Z"
     },
     {
-      "lessonId": "06_express_c01_ai_content_m02_video_002",
-      "videoId": "2999a095-3cd3-4979-bf11-1be98eb56985",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 1785.27,
+      "lessonId": "06_express_c01_ai_content_m02_video_002",
+      "videoId": "2999a095-3cd3-4979-bf11-1be98eb56985",
       "uploadedAt": "2026-02-20T21:38:42.119Z"
     },
     {
-      "lessonId": "06_express_c01_ai_content_m01_content_001",
-      "videoId": "ab7a3b1f-7f8c-4c4d-af21-0b30a5bb8a0b",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 1903.66,
+      "lessonId": "06_express_c01_ai_content_m01_content_001",
+      "videoId": "ab7a3b1f-7f8c-4c4d-af21-0b30a5bb8a0b",
       "uploadedAt": "2026-02-20T21:40:09.969Z"
     },
     {
-      "lessonId": "06_express_c03_competitors_m05_analytics_strategy_016",
-      "videoId": "34c808ff-5988-494a-95a2-00de20a5f07f",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 2352.95,
+      "lessonId": "06_express_c03_competitors_m05_analytics_strategy_016",
+      "videoId": "34c808ff-5988-494a-95a2-00de20a5f07f",
       "uploadedAt": "2026-02-20T21:41:50.868Z"
     },
     {
-      "lessonId": "06_express_c04_product_choice_m03_validation_018",
-      "videoId": "0a272224-5c55-4564-ad9a-0490ae38f027",
       "courseId": "06_express",
       "folderId": "865be5b0-c6f7-4a44-a4da-6684dd78e695",
       "sizeMB": 2550.9,
+      "lessonId": "06_express_c04_product_choice_m03_validation_018",
+      "videoId": "0a272224-5c55-4564-ad9a-0490ae38f027",
       "uploadedAt": "2026-02-20T21:43:40.288Z"
+    },
+    {
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 25.6,
+      "lessonId": "07_instruments_m12_repricer_ozon_001",
+      "videoId": "7f0e69cf-24db-4d88-9a18-3bb33041529f",
+      "uploadedAt": "2026-06-05T13:31:44.100Z"
+    },
+    {
+      "lessonId": "07_instruments_m14_price_management_001",
+      "videoId": "fc5061c4-1602-43ce-a086-60db576a68c9",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 27.5,
+      "uploadedAt": "2026-06-05T13:32:10.712Z"
+    },
+    {
+      "lessonId": "07_instruments_m01_bidder_004",
+      "videoId": "d105790b-2459-4927-aed6-b58356875c8c",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 31.1,
+      "uploadedAt": "2026-06-05T13:32:18.315Z"
+    },
+    {
+      "lessonId": "07_instruments_m01_bidder_003",
+      "videoId": "076fe489-8ee0-47b4-864d-a0aa6d092b9e",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 33.9,
+      "uploadedAt": "2026-06-05T13:32:26.052Z"
+    },
+    {
+      "lessonId": "07_instruments_m03_va_ozon_005",
+      "videoId": "12ea6dbe-aab6-4fb7-a70b-c61db18af5ca",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 39.8,
+      "uploadedAt": "2026-06-05T13:32:33.909Z"
+    },
+    {
+      "lessonId": "07_instruments_m08_ym_groups_001",
+      "videoId": "f8450d6e-ff3b-493b-b9a2-ce70e808e7cf",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 52.7,
+      "uploadedAt": "2026-06-05T13:32:42.234Z"
+    },
+    {
+      "lessonId": "07_instruments_m02_va_wb_003",
+      "videoId": "6af67d1c-8829-4211-9146-670ce1990af6",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 63,
+      "uploadedAt": "2026-06-05T13:32:50.941Z"
+    },
+    {
+      "lessonId": "07_instruments_m02_va_wb_007",
+      "videoId": "db0b493a-c8df-409f-bc12-58a702568f39",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 63.6,
+      "uploadedAt": "2026-06-05T13:32:59.966Z"
+    },
+    {
+      "lessonId": "07_instruments_m05_seo_003",
+      "videoId": "9c6e5a5a-5ee8-472b-89d0-13bbe9892904",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 65,
+      "uploadedAt": "2026-06-05T13:33:07.952Z"
+    },
+    {
+      "lessonId": "07_instruments_m05_seo_004",
+      "videoId": "180f4831-24c7-4ece-82b0-0c5280db75f7",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 80.5,
+      "uploadedAt": "2026-06-05T13:33:16.701Z"
+    },
+    {
+      "lessonId": "07_instruments_m04_cabinet_wb_004",
+      "videoId": "2f725e68-bbf5-4842-bc75-c03d6ff3ac0c",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 84.4,
+      "uploadedAt": "2026-06-05T13:33:25.472Z"
+    },
+    {
+      "lessonId": "07_instruments_m04_cabinet_wb_001",
+      "videoId": "89afcfa5-7f19-4626-b397-a15c85786016",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 102.2,
+      "uploadedAt": "2026-06-05T13:33:34.765Z"
+    },
+    {
+      "lessonId": "07_instruments_m05_seo_002",
+      "videoId": "e35a5a2d-c801-4909-9832-aec6e548fa83",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 103.5,
+      "uploadedAt": "2026-06-05T13:33:43.522Z"
+    },
+    {
+      "lessonId": "07_instruments_m01_bidder_002",
+      "videoId": "c5787ccf-90e8-42fe-9efc-46f8669768e4",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 106.4,
+      "uploadedAt": "2026-06-05T13:33:53.342Z"
+    },
+    {
+      "lessonId": "07_instruments_m05_seo_005",
+      "videoId": "ac662456-9f4d-43e6-acb1-1310908ccb07",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 107.5,
+      "uploadedAt": "2026-06-05T13:34:02.263Z"
+    },
+    {
+      "lessonId": "07_instruments_m03_va_ozon_006",
+      "videoId": "e3afadb8-d281-412c-bdce-756b1e2ae270",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 112.3,
+      "uploadedAt": "2026-06-05T13:34:11.920Z"
+    },
+    {
+      "lessonId": "07_instruments_m02_va_wb_005",
+      "videoId": "043f7942-0581-4523-aed3-0897bd1f2cc6",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 122.6,
+      "uploadedAt": "2026-06-05T13:34:21.634Z"
+    },
+    {
+      "lessonId": "07_instruments_m13_repricer_wb_001",
+      "videoId": "554540ba-74b6-4262-bfdc-4dae8836703a",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 165.6,
+      "uploadedAt": "2026-06-05T13:34:35.012Z"
+    },
+    {
+      "lessonId": "07_instruments_m03_va_ozon_004",
+      "videoId": "c8558589-4e13-46d2-a510-bc240a98f7f6",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 173.4,
+      "uploadedAt": "2026-06-05T13:34:50.850Z"
+    },
+    {
+      "lessonId": "07_instruments_m15_photo_editor_001",
+      "videoId": "62b03c98-5f3f-4fc3-a30a-b01b765a7dd0",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 176.6,
+      "uploadedAt": "2026-06-05T13:35:05.652Z"
+    },
+    {
+      "lessonId": "07_instruments_m05_seo_009",
+      "videoId": "ff49fba3-b020-4c51-a4fa-a9dd6cd2da9b",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 181,
+      "uploadedAt": "2026-06-05T13:35:19.013Z"
+    },
+    {
+      "lessonId": "07_instruments_m06_autoresponses_001",
+      "videoId": "de04d7e9-3db6-4921-bed2-a77df647f62a",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 186.5,
+      "uploadedAt": "2026-06-05T13:35:34.320Z"
+    },
+    {
+      "lessonId": "07_instruments_m04_cabinet_wb_003",
+      "videoId": "db1e55c4-abf5-4d5d-9862-0343c08dd91d",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 195,
+      "uploadedAt": "2026-06-05T13:35:48.319Z"
+    },
+    {
+      "lessonId": "07_instruments_m09_my_cards_001",
+      "videoId": "fa099107-2782-46b4-9b96-43e6e1d818fd",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 208.1,
+      "uploadedAt": "2026-06-05T13:36:03.665Z"
+    },
+    {
+      "lessonId": "07_instruments_m04_cabinet_wb_005",
+      "videoId": "9ee1b772-f122-449b-a960-d08215e2590e",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 221.4,
+      "uploadedAt": "2026-06-05T13:36:19.809Z"
+    },
+    {
+      "lessonId": "07_instruments_m04_cabinet_wb_002",
+      "videoId": "410e4de9-9c9e-4093-9cf3-964ce04a2239",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 233.4,
+      "uploadedAt": "2026-06-05T13:36:37.009Z"
+    },
+    {
+      "lessonId": "07_instruments_m05_seo_001",
+      "videoId": "f69b2169-53c5-4708-a440-e2e3c15e1ac2",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 238.7,
+      "uploadedAt": "2026-06-05T13:36:53.946Z"
+    },
+    {
+      "lessonId": "07_instruments_m11_ruka_na_pulse_001",
+      "videoId": "0f094177-3df8-432f-b3c2-fe1d465b26f6",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 248.5,
+      "uploadedAt": "2026-06-05T13:37:12.432Z"
+    },
+    {
+      "lessonId": "07_instruments_m03_va_ozon_002",
+      "videoId": "2f23677c-b98b-4643-8769-7983873364b0",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 250.1,
+      "uploadedAt": "2026-06-05T13:37:29.645Z"
+    },
+    {
+      "lessonId": "07_instruments_m02_va_wb_004",
+      "videoId": "005b4c82-70d9-42c3-9ab6-0206e36395dd",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 255,
+      "uploadedAt": "2026-06-05T13:37:47.998Z"
+    },
+    {
+      "lessonId": "07_instruments_m05_seo_007",
+      "videoId": "c6f2005a-2fef-42b3-b5ea-cab89fc7c52a",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 256.8,
+      "uploadedAt": "2026-06-05T13:38:06.891Z"
+    },
+    {
+      "lessonId": "07_instruments_m03_va_ozon_003",
+      "videoId": "c7e37309-931e-44c2-927d-b2f380d9c674",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 269.3,
+      "uploadedAt": "2026-06-05T13:38:25.100Z"
+    },
+    {
+      "lessonId": "07_instruments_m02_va_wb_002",
+      "videoId": "23b0e827-4c0f-4b42-97d1-00baafb85b6b",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 279,
+      "uploadedAt": "2026-06-05T13:38:43.957Z"
+    },
+    {
+      "lessonId": "07_instruments_m03_va_ozon_007",
+      "videoId": "3200dc93-308d-484a-86f6-66744d3ed1d8",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 289.5,
+      "uploadedAt": "2026-06-05T13:39:05.615Z"
+    },
+    {
+      "lessonId": "07_instruments_m07_external_ads_001",
+      "videoId": "8e6f5170-6621-498f-a5f2-7985cd7249e1",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 328.5,
+      "uploadedAt": "2026-06-05T13:39:28.576Z"
+    },
+    {
+      "lessonId": "07_instruments_m03_va_ozon_001",
+      "videoId": "d5fc1719-9860-4451-b7d4-4f80a412c453",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 344.4,
+      "uploadedAt": "2026-06-05T13:39:51.489Z"
+    },
+    {
+      "lessonId": "07_instruments_m02_va_wb_006",
+      "videoId": "8e1b0217-3d30-4fe8-88f9-d4d98ab650e7",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 423.2,
+      "uploadedAt": "2026-06-05T13:40:18.919Z"
+    },
+    {
+      "lessonId": "07_instruments_m02_va_wb_001",
+      "videoId": "5972a72a-2513-4833-a392-eaf685dd38b4",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 439.4,
+      "uploadedAt": "2026-06-05T13:40:47.205Z"
+    },
+    {
+      "lessonId": "07_instruments_m10_plugin_001",
+      "videoId": "b07b423d-f2af-4207-9e08-ef3320c774a2",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 466.8,
+      "uploadedAt": "2026-06-05T13:41:19.371Z"
+    },
+    {
+      "lessonId": "07_instruments_m05_seo_006",
+      "videoId": "8fdb7c74-4f20-4269-868e-ae3de15f5998",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 538.7,
+      "uploadedAt": "2026-06-05T13:41:54.948Z"
+    },
+    {
+      "lessonId": "07_instruments_m01_bidder_001",
+      "videoId": "c4a27025-8afb-4989-9ba7-95f564067925",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 552.5,
+      "uploadedAt": "2026-06-05T13:42:31.911Z"
+    },
+    {
+      "lessonId": "07_instruments_m05_seo_008",
+      "videoId": "cb6d60b0-4557-4d68-bcac-ac0522408f96",
+      "courseId": "07_instruments",
+      "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
+      "sizeMB": 560.5,
+      "uploadedAt": "2026-06-05T13:43:10.991Z"
     }
   ],
   "failed": [
