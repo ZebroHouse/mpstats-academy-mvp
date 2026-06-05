@@ -1,0 +1,58 @@
+{
+  "course": {
+    "id": "mpstats_tools",
+    "title": "Инструменты MPSTATS",
+    "slug": "mpstats-tools",
+    "description": "Видеоуроки по инструментам сервиса аналитики MPSTATS",
+    "partnerKey": "mpstats"
+  },
+  "lessons": [
+    { "id": "mpstats_bidder_001", "toolGroup": "Биддер", "title": "Биддер (полный обзор)", "partnerModuleKey": "bidder-overview", "videoId": "" },
+    { "id": "mpstats_bidder_002", "toolGroup": "Биддер", "title": "Журнал продвижения", "partnerModuleKey": "bidder-journal", "videoId": "" },
+    { "id": "mpstats_bidder_003", "toolGroup": "Биддер", "title": "Проверка рекламных позиций", "partnerModuleKey": "bidder-ad-positions", "videoId": "" },
+    { "id": "mpstats_bidder_004", "toolGroup": "Биддер", "title": "Пульс рекламы", "partnerModuleKey": "bidder-pulse", "videoId": "" },
+
+    { "id": "mpstats_ext_wb_001", "toolGroup": "Внешняя аналитика ВБ", "title": "Анализ отзывов", "partnerModuleKey": "ext-wb-reviews", "videoId": "" },
+    { "id": "mpstats_ext_wb_002", "toolGroup": "Внешняя аналитика ВБ", "title": "Категории", "partnerModuleKey": "ext-wb-categories", "videoId": "" },
+    { "id": "mpstats_ext_wb_003", "toolGroup": "Внешняя аналитика ВБ", "title": "Товары в поиске", "partnerModuleKey": "ext-wb-search-items", "videoId": "" },
+    { "id": "mpstats_ext_wb_004", "toolGroup": "Внешняя аналитика ВБ", "title": "Группы", "partnerModuleKey": "ext-wb-groups", "videoId": "" },
+    { "id": "mpstats_ext_wb_005", "toolGroup": "Внешняя аналитика ВБ", "title": "Поиск по SKU", "partnerModuleKey": "ext-wb-sku-search", "videoId": "" },
+    { "id": "mpstats_ext_wb_006", "toolGroup": "Внешняя аналитика ВБ", "title": "Продавцы", "partnerModuleKey": "ext-wb-sellers", "videoId": "" },
+    { "id": "mpstats_ext_wb_007", "toolGroup": "Внешняя аналитика ВБ", "title": "Анализ характеристик SKU", "partnerModuleKey": "ext-wb-sku-attrs", "videoId": "" },
+
+    { "id": "mpstats_ext_ozon_001", "toolGroup": "Внешняя аналитика Озон", "title": "Выбор ниши", "partnerModuleKey": "ext-ozon-niche", "videoId": "" },
+    { "id": "mpstats_ext_ozon_002", "toolGroup": "Внешняя аналитика Озон", "title": "Поиск по SKU", "partnerModuleKey": "ext-ozon-sku-search", "videoId": "" },
+    { "id": "mpstats_ext_ozon_003", "toolGroup": "Внешняя аналитика Озон", "title": "Группы", "partnerModuleKey": "ext-ozon-groups", "videoId": "" },
+    { "id": "mpstats_ext_ozon_004", "toolGroup": "Внешняя аналитика Озон", "title": "Категории", "partnerModuleKey": "ext-ozon-categories", "videoId": "" },
+    { "id": "mpstats_ext_ozon_005", "toolGroup": "Внешняя аналитика Озон", "title": "Анализ характеристик SKU", "partnerModuleKey": "ext-ozon-sku-attrs", "videoId": "" },
+    { "id": "mpstats_ext_ozon_006", "toolGroup": "Внешняя аналитика Озон", "title": "Бренды", "partnerModuleKey": "ext-ozon-brands", "videoId": "" },
+    { "id": "mpstats_ext_ozon_007", "toolGroup": "Внешняя аналитика Озон", "title": "Продавцы", "partnerModuleKey": "ext-ozon-sellers", "videoId": "" },
+
+    { "id": "mpstats_cab_wb_001", "toolGroup": "Кабинет ВБ", "title": "Загрузка себестоимости", "partnerModuleKey": "cab-wb-cost", "videoId": "" },
+    { "id": "mpstats_cab_wb_002", "toolGroup": "Кабинет ВБ", "title": "Кабинет ВБ (обзор)", "partnerModuleKey": "cab-wb-overview", "videoId": "" },
+    { "id": "mpstats_cab_wb_003", "toolGroup": "Кабинет ВБ", "title": "Продажи и заказы", "partnerModuleKey": "cab-wb-sales-orders", "videoId": "" },
+    { "id": "mpstats_cab_wb_004", "toolGroup": "Кабинет ВБ", "title": "Расчёт поставки", "partnerModuleKey": "cab-wb-supply", "videoId": "" },
+    { "id": "mpstats_cab_wb_005", "toolGroup": "Кабинет ВБ", "title": "Сводка", "partnerModuleKey": "cab-wb-summary", "videoId": "" },
+
+    { "id": "mpstats_seo_001", "toolGroup": "Модуль SEO", "title": "Вступление + результаты поиска (SERP)", "partnerModuleKey": "seo-serp", "videoId": "" },
+    { "id": "mpstats_seo_002", "toolGroup": "Модуль SEO", "title": "Товары", "partnerModuleKey": "seo-products", "videoId": "" },
+    { "id": "mpstats_seo_003", "toolGroup": "Модуль SEO", "title": "Бренды", "partnerModuleKey": "seo-brands", "videoId": "" },
+    { "id": "mpstats_seo_004", "toolGroup": "Модуль SEO", "title": "Мониторинг позиций", "partnerModuleKey": "seo-position-monitoring", "videoId": "" },
+    { "id": "mpstats_seo_005", "toolGroup": "Модуль SEO", "title": "Проверка группы запросов", "partnerModuleKey": "seo-query-group-check", "videoId": "" },
+    { "id": "mpstats_seo_006", "toolGroup": "Модуль SEO", "title": "Проверка карточки товара", "partnerModuleKey": "seo-card-check", "videoId": "" },
+    { "id": "mpstats_seo_007", "toolGroup": "Модуль SEO", "title": "Поиск кластеров", "partnerModuleKey": "seo-clusters", "videoId": "" },
+    { "id": "mpstats_seo_008", "toolGroup": "Модуль SEO", "title": "Расширение запросов", "partnerModuleKey": "seo-query-expansion", "videoId": "" },
+    { "id": "mpstats_seo_009", "toolGroup": "Модуль SEO", "title": "AI", "partnerModuleKey": "seo-ai", "videoId": "" },
+
+    { "id": "mpstats_autoreply_001", "toolGroup": "Автоответы", "title": "Автоответы", "partnerModuleKey": "autoreply", "videoId": "" },
+    { "id": "mpstats_extads_001", "toolGroup": "Внешняя реклама", "title": "Внешняя реклама", "partnerModuleKey": "external-ads", "videoId": "" },
+    { "id": "mpstats_ym_groups_001", "toolGroup": "Группы Яндекс Маркет", "title": "Группы Яндекс Маркет", "partnerModuleKey": "ym-groups", "videoId": "" },
+    { "id": "mpstats_mycards_001", "toolGroup": "Мои карточки", "title": "Мои карточки", "partnerModuleKey": "my-cards", "videoId": "" },
+    { "id": "mpstats_plugin_001", "toolGroup": "Плагин", "title": "Плагин", "partnerModuleKey": "plugin", "videoId": "" },
+    { "id": "mpstats_rnp_001", "toolGroup": "РНП", "title": "РНП", "partnerModuleKey": "rnp", "videoId": "" },
+    { "id": "mpstats_repricer_ozon_001", "toolGroup": "Репрайсер Озон", "title": "Репрайсер Озон", "partnerModuleKey": "repricer-ozon", "videoId": "" },
+    { "id": "mpstats_repricer_wb_001", "toolGroup": "Репрайсер ВБ", "title": "Репрайсер ВБ", "partnerModuleKey": "repricer-wb", "videoId": "" },
+    { "id": "mpstats_pricing_001", "toolGroup": "Управление ценой и скидками", "title": "Управление ценой и скидками", "partnerModuleKey": "price-discount-mgmt", "videoId": "" },
+    { "id": "mpstats_photo_001", "toolGroup": "Фоторедактор", "title": "Фоторедактор", "partnerModuleKey": "photo-editor", "videoId": "" }
+  ]
+}
