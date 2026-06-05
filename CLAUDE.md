@@ -119,7 +119,7 @@ Archive directory `D:/GpT_docs/MPSTATS ACADEMY ADAPTIVE LEARNING/MAAL-phase55/` 
 
 **Откат:** `git revert -m 1 4145a68` + редеплой (релиз — один merge-коммит).
 
-**UAT-статус:** HUMAN-UAT фаз 61 и 61.1 формально остались `partial` (owner принял решение шипить по факту тестов на staging). Файлы `.planning/phases/61-*/61-HUMAN-UAT.md` + `61.1-*/61.1-HUMAN-UAT.md` ещё всплывут в `/gsd:progress` — закрыть после прод-UAT по живым данным.
+**UAT-статус:** ✅ Закрыт. HUMAN-UAT фаз 61 (9/9) и 61.1 (6/6) → `status: passed` 2026-06-05 — owner проверил всё на staging + prod, замечаний нет.
 
 **Память:** `project_learning_2_0_release.md` (в `~/.claude/projects/.../memory/`).
 
