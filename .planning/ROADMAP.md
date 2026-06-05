@@ -1136,6 +1136,57 @@ Plans:
 
 **Plans:** TBD
 
+### Phase 61: Обучение 2.0 — редизайн раздела
+
+**Goal:** Развести раздел «Обучение» на 4 сущности с ясными зонами (Персональный план / Решения под задачу / База знаний / Избранное), сделать поиск контекстным по сущности раздела, перестроить дашборд в 3 входа + вывести поиск на видное место. Закрывает задачи owner 2 (поиск), 3 (сабменю), 4 (UI).
+**Spec:** `docs/superpowers/specs/2026-06-03-learning-2.0-redesign-design.md`
+**Requirements**: TBD
+**Depends on:** Phase 60
+**Plans:** 8/8 plans complete
+
+Plans:
+- [x] 61-00-PLAN.md — Wave 0: тест-заглушки (Nyquist) для favorite/migration/AgentSearch/redirect/material
+- [x] 61-01-PLAN.md — Wave A: сабменю «Обучение» (sidebar+mobile+LearningTabs), /learn/track→/learn/plan редирект
+- [x] 61-02-PLAN.md — Wave A: расщепление lens на 4 страницы, /learn серверный редирект, ренейм строк, data-tour
+- [x] 61-03-PLAN.md — Wave C (backend): material.listForUser + опциональный lessonId в MaterialCard
+- [x] 61-04-PLAN.md — Wave B: AgentSearch scope (solutions/library) + каталог материалов в Базе знаний
+- [x] 61-05-PLAN.md — Wave E: дашборд 3 входа + hero-поиск (LearningHero)
+- [x] 61-06-PLAN.md — Wave D: модель Favorite + favorite router (commits 4ca4be6, 9c7b764); schema-миграция применена на prod 2026-06-03 (Favorite table live)
+- [~] 61-07-PLAN.md — Wave D: код ГОТОВ (commits 00e8a32, 280e555) — migrate-script + FavoriteButton + Избранное + План диагностический; [BLOCKING] прод data-миграция трек→избранное — PENDING owner approval
+
+Waves (порядок разработки, единый деплой через staging):
+- [ ] A — Каркас + ренейминг (61-01, 61-02): сабменю «Обучение», routes /learn/{plan,solutions,library,favorites}, расщепление lens, ренейм UI-строк
+- [x] B — Контекстный поиск (61-04): AgentSearch с scope (решения→intent.resolve, база знаний→ai.searchLessons)
+- [ ] C — Материалы в Базе знаний (61-03, 61-04): material.listForUser + isStandalone + каталог/фильтр/поиск
+- [ ] D — Избранное (61-06, 61-07): модель Favorite + миграция трек→избранное + сердечко, План→чисто диагностический
+- [ ] E — UI (61-05): дашборд 3 входа (слайд 17) + hero-поиск (слайд 6)
+
+---
+
+### Phase 61.1: Обучение 2.0 — UAT-фиксы + редизайн Плана
+
+**Goal:** Закрыть баги UAT-сессии 03–04.06 и довести модель до консистентной: задачи добавляются только в Избранное (сердечко, модель A), Персональный план перестроен в плоский Избранное-like вид (рекомендованные задачи + уроки с бейджем приоритета), полный нейминг джоба→задача / трек→план, 2-й уровень навигации урок↔задача.
+**Scope:** `.planning/phases/61-learning-2-0/61.1-UAT-FIXES-SCOPE.md` (решения зафиксированы)
+**Depends on:** Phase 61
+**Status:** planned (5 plans)
+
+Воркстримы:
+- W1 — Задачи → Избранное (убрать «трек»-механику у задач, заменить сердечком; AgentSearch/JobCard/JobCatalog/JobDetail/favorites)
+- W1b — Редизайн Персонального плана (плоский карточный вид: рекомендованные задачи из addedJobs + уроки с бейджем приоритета; разовый клин-ап addedJobs на проде)
+- W2 — Полный нейминг джоба→задача, трек→план
+- W3 — 2-й уровень навигации (урок из задачи сохраняет контекст в крошках)
+
+**Plans:** 5/5 plans complete
+
+Plans:
+- [x] 61.1-01-PLAN.md — W1: задачи → Избранное (AgentSearch recommend / JobCard / JobDetail на сердечке)
+- [x] 61.1-02-PLAN.md — W1b: редизайн Плана в плоский вид (задачи + уроки с бейджем приоритета)
+- [x] 61.1-03-PLAN.md — W1b: разовый owner-gated клин-ап addedJobs на проде (скрипт + Mgmt API)
+- [x] 61.1-04-PLAN.md — W2: добивка нейминга джоба→задача / трек→план по живым компонентам
+- [x] 61.1-05-PLAN.md — W3: 2-й уровень навигации (урок из задачи сохраняет контекст в крошках)
+
+_Мелкие баги 3 (табы), 5 (сниппет), 6 (счётчик плана) уже исправлены в основной сессии 61 и на staging._
+
 ---
 
 ## v1.7 RAG Quality (Phases 55+)

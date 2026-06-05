@@ -2,28 +2,47 @@ import { describe, it, expect, vi, afterEach } from 'vitest';
 import { render, fireEvent, waitFor, cleanup } from '@testing-library/react';
 
 const mockResolve = vi.fn();
-const mockAddJob = vi.fn();
 const mockInvalidate = vi.fn();
-let mockTrackData: { addedJobs?: Array<{ id: string }> } = { addedJobs: [] };
+const mockSearchLessons = vi.fn();
+const mockListForUser = vi.fn();
+const mockAddFavorite = vi.fn();
+const mockRemoveFavorite = vi.fn();
+// `favorited` entries use the "JOB:<jobId>" key format returned by favorite.isFavorited.
+let mockFavData: { favorited: string[] } = { favorited: [] };
 vi.mock('sonner', () => ({ toast: { success: vi.fn(), error: vi.fn() } }));
 vi.mock('@/lib/trpc/client', () => ({
   trpc: {
     useUtils: () => ({
-      learning: { getRecommendedPath: { invalidate: mockInvalidate } },
-      job: { getCatalog: { invalidate: mockInvalidate } },
+      favorite: {
+        isFavorited: { invalidate: mockInvalidate },
+        list: { invalidate: mockInvalidate },
+      },
+      ai: { searchLessons: { fetch: mockSearchLessons } },
+      material: { listForUser: { fetch: mockListForUser } },
     }),
     intent: {
       resolve: { useMutation: () => ({ mutateAsync: mockResolve, isPending: false }) },
     },
-    learning: {
-      getRecommendedPath: { useQuery: () => ({ data: mockTrackData }) },
-      addJobToTrack: {
-        useMutation: (opts: { onSuccess?: (data: unknown, vars: { jobId: string }) => void; onError?: (e: Error) => void }) => ({
-          mutate: (vars: { jobId: string }) => {
-            mockAddJob(vars);
-            // Simulate cache update: backend adds the job → next render sees it as tracked
-            mockTrackData = { addedJobs: [...(mockTrackData.addedJobs ?? []), { id: vars.jobId }] };
-            opts.onSuccess?.({ added: 1 }, vars);
+    favorite: {
+      isFavorited: { useQuery: () => ({ data: mockFavData }) },
+      add: {
+        useMutation: (opts: { onMutate?: () => void; onSuccess?: () => void; onSettled?: () => void }) => ({
+          mutate: (vars: { itemType: string; itemId: string }) => {
+            mockAddFavorite(vars);
+            opts.onMutate?.();
+            opts.onSuccess?.();
+            opts.onSettled?.();
+          },
+          isPending: false,
+        }),
+      },
+      remove: {
+        useMutation: (opts: { onMutate?: () => void; onSuccess?: () => void; onSettled?: () => void }) => ({
+          mutate: (vars: { itemType: string; itemId: string }) => {
+            mockRemoveFavorite(vars);
+            opts.onMutate?.();
+            opts.onSuccess?.();
+            opts.onSettled?.();
           },
           isPending: false,
         }),
@@ -37,11 +56,11 @@ import { AgentSearch } from '@/components/learning/AgentSearch';
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
-  mockTrackData = { addedJobs: [] };
+  mockFavData = { favorited: [] };
 });
 
-describe('AgentSearch', () => {
-  it('renders recommended jobs with title, reason, lesson count and add-to-track button', async () => {
+describe('AgentSearch (solutions)', () => {
+  it('renders recommended jobs with title, reason, lesson count and a favorite heart', async () => {
     mockResolve.mockResolvedValue({
       mode: 'recommend',
       answer: 'Подобрал 1 набор',
@@ -51,16 +70,17 @@ describe('AgentSearch', () => {
         slug: 'snizit-drr-wb',
         lessonCount: 5,
         reason: 'покрывает рекламу WB',
-        actions: [{ type: 'add_to_track', jobId: 'j1', label: 'Положить в трек' }],
+        actions: [],
       }],
     });
-    const { getByPlaceholderText, getByText } = render(<AgentSearch />);
-    fireEvent.change(getByPlaceholderText(/тему/i), { target: { value: 'снизить ДРР' } });
-    fireEvent.submit(getByPlaceholderText(/тему/i).closest('form')!);
+    const { getByPlaceholderText, getByText, getByLabelText } = render(<AgentSearch scope="solutions" />);
+    fireEvent.change(getByPlaceholderText(/задачу/i), { target: { value: 'снизить ДРР' } });
+    fireEvent.submit(getByPlaceholderText(/задачу/i).closest('form')!);
     await waitFor(() => expect(getByText('Снизить ДРР')).toBeDefined());
     expect(getByText('покрывает рекламу WB')).toBeDefined();
     expect(getByText('5 уроков')).toBeDefined();
-    expect(getByText('Положить в трек')).toBeDefined();
+    // Track button is gone — replaced by the favorite heart.
+    expect(getByLabelText('Добавить в избранное')).toBeDefined();
   });
 
   it('renders clarify options as clickable chips', async () => {
@@ -70,15 +90,15 @@ describe('AgentSearch', () => {
       options: [{ label: 'Запустить', intent: 'запустить рекламу' }, { label: 'Снизить ДРР', intent: 'снизить ДРР' }],
       conversationState: 'cs1',
     });
-    const { getByPlaceholderText, getByText } = render(<AgentSearch />);
-    fireEvent.change(getByPlaceholderText(/тему/i), { target: { value: 'реклама' } });
-    fireEvent.submit(getByPlaceholderText(/тему/i).closest('form')!);
+    const { getByPlaceholderText, getByText } = render(<AgentSearch scope="solutions" />);
+    fireEvent.change(getByPlaceholderText(/задачу/i), { target: { value: 'реклама' } });
+    fireEvent.submit(getByPlaceholderText(/задачу/i).closest('form')!);
     await waitFor(() => expect(getByText('Что именно?')).toBeDefined());
     expect(getByText('Запустить')).toBeDefined();
     expect(getByText('Снизить ДРР')).toBeDefined();
   });
 
-  it('calls addJobToTrack on button click', async () => {
+  it('adds a recommended job to favorites on heart click', async () => {
     mockResolve.mockResolvedValue({
       mode: 'recommend',
       answer: '',
@@ -88,19 +108,19 @@ describe('AgentSearch', () => {
         slug: 'x-wb',
         lessonCount: 5,
         reason: 'r',
-        actions: [{ type: 'add_to_track', jobId: 'j1', label: 'Положить в трек' }],
+        actions: [],
       }],
     });
-    const { getByPlaceholderText, getByText } = render(<AgentSearch />);
-    fireEvent.change(getByPlaceholderText(/тему/i), { target: { value: 'q' } });
-    fireEvent.submit(getByPlaceholderText(/тему/i).closest('form')!);
-    await waitFor(() => expect(getByText('Положить в трек')).toBeDefined());
-    fireEvent.click(getByText('Положить в трек'));
-    expect(mockAddJob).toHaveBeenCalledWith({ jobId: 'j1' });
+    const { getByPlaceholderText, getByLabelText } = render(<AgentSearch scope="solutions" />);
+    fireEvent.change(getByPlaceholderText(/задачу/i), { target: { value: 'q' } });
+    fireEvent.submit(getByPlaceholderText(/задачу/i).closest('form')!);
+    await waitFor(() => expect(getByLabelText('Добавить в избранное')).toBeDefined());
+    fireEvent.click(getByLabelText('Добавить в избранное'));
+    expect(mockAddFavorite).toHaveBeenCalledWith({ itemType: 'JOB', itemId: 'j1' });
   });
 
-  it('shows В треке ✓ for jobs already in the user track (server state)', async () => {
-    mockTrackData = { addedJobs: [{ id: 'j1' }] };
+  it('shows a filled heart for jobs already in favorites (server state)', async () => {
+    mockFavData = { favorited: ['JOB:j1'] };
     mockResolve.mockResolvedValue({
       mode: 'recommend',
       answer: '',
@@ -110,13 +130,13 @@ describe('AgentSearch', () => {
         slug: 'x-wb',
         lessonCount: 5,
         reason: 'r',
-        actions: [{ type: 'add_to_track', jobId: 'j1', label: 'Положить в трек' }],
+        actions: [],
       }],
     });
-    const { getByPlaceholderText, getByText, queryByText } = render(<AgentSearch />);
-    fireEvent.change(getByPlaceholderText(/тему/i), { target: { value: 'q' } });
-    fireEvent.submit(getByPlaceholderText(/тему/i).closest('form')!);
-    await waitFor(() => expect(getByText('В треке ✓')).toBeDefined());
-    expect(queryByText('Положить в трек')).toBeNull();
+    const { getByPlaceholderText, getByLabelText, queryByLabelText } = render(<AgentSearch scope="solutions" />);
+    fireEvent.change(getByPlaceholderText(/задачу/i), { target: { value: 'q' } });
+    fireEvent.submit(getByPlaceholderText(/задачу/i).closest('form')!);
+    await waitFor(() => expect(getByLabelText('Убрать из избранного')).toBeDefined());
+    expect(queryByLabelText('Добавить в избранное')).toBeNull();
   });
 });

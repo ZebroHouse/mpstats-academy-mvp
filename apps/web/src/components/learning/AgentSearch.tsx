@@ -4,37 +4,98 @@ import { useMemo, useState } from 'react';
 import { toast } from 'sonner';
 import type { IntentResult } from '@mpstats/ai';
 import { trpc } from '@/lib/trpc/client';
+import { cn } from '@/lib/utils';
+import { LessonResultCard, type LessonResultCardData } from './LessonResultCard';
+import { MaterialCard, type MaterialCardProps } from './MaterialCard';
+import { FavoriteButton } from './FavoriteButton';
 
-export function AgentSearch() {
+type Scope = 'solutions' | 'library';
+
+const PLACEHOLDER: Record<Scope, string> = {
+  solutions: 'Опишите задачу — подберём решение',
+  library: 'Найдите урок или материал по теме',
+};
+
+type LibraryResult = {
+  lessons: LessonResultCardData[];
+  materials: MaterialCardProps[];
+};
+
+export function AgentSearch({ scope, size = 'default' }: { scope: Scope; size?: 'default' | 'hero' }) {
+  const isHero = size === 'hero';
   const [query, setQuery] = useState('');
   const [conversationState, setConversationState] = useState<string | undefined>();
   const [result, setResult] = useState<IntentResult | null>(null);
+  const [libResult, setLibResult] = useState<LibraryResult | null>(null);
+  const [pending, setPending] = useState(false);
 
   const utils = trpc.useUtils();
-  // Reactive set of jobIds already in the user's track. Source of truth — backend.
-  const recommendedPath = trpc.learning.getRecommendedPath.useQuery();
-  const trackedJobIds = useMemo(() => {
-    const added = (recommendedPath.data as { addedJobs?: Array<{ id: string }> } | undefined)?.addedJobs;
-    return new Set((added ?? []).map((pb) => pb.id));
-  }, [recommendedPath.data]);
-
   const resolveMutation = trpc.intent.resolve.useMutation();
-  const addJobMutation = trpc.learning.addJobToTrack.useMutation({
-    onSuccess: () => {
-      toast.success('Плейбук в треке');
-      utils.learning.getRecommendedPath.invalidate();
-      utils.job.getCatalog.invalidate();
-    },
-    onError: (e) => {
-      toast.error(e.message || 'Не удалось добавить');
-    },
-  });
 
-  async function submit(q: string) {
-    if (!q.trim()) return;
-    const res = await resolveMutation.mutateAsync({ query: q.trim(), surface: 'learn', conversationState });
+  // Seed «сердечка» для recommend-задач: один batch-запрос по jobId результата.
+  const recommendJobIds = useMemo(
+    () => (result?.mode === 'recommend' ? result.jobs.map((j) => j.jobId) : []),
+    [result],
+  );
+  const { data: favData } = trpc.favorite.isFavorited.useQuery(
+    { items: recommendJobIds.map((itemId) => ({ itemType: 'JOB' as const, itemId })) },
+    { enabled: recommendJobIds.length > 0 },
+  );
+  const favoritedSet = useMemo(
+    () => new Set(favData?.favorited ?? []),
+    [favData],
+  );
+
+  async function submitSolutions(q: string) {
+    const res = await resolveMutation.mutateAsync({ query: q, surface: 'learn', conversationState });
     setResult(res);
     setConversationState(res.mode === 'clarify' ? res.conversationState : undefined);
+  }
+
+  async function submitLibrary(q: string) {
+    // Two parallel queries against the isHidden-filtered read endpoints.
+    const [lessonsRes, materialsRes] = await Promise.all([
+      utils.ai.searchLessons.fetch({ query: q }),
+      utils.material.listForUser.fetch({ search: q }),
+    ]);
+
+    const lessons: LessonResultCardData[] = (lessonsRes?.results ?? []).map((r) => ({
+      id: r.lesson.id,
+      title: r.lesson.title,
+      courseTitle: r.course.title,
+      snippet: r.snippets[0]?.content ?? null,
+      watchedPercent: r.watchedPercent,
+      locked: r.locked,
+    }));
+
+    const materials: MaterialCardProps[] = (materialsRes?.items ?? []).map((m) => ({
+      id: m.id,
+      type: m.type as MaterialCardProps['type'],
+      title: m.title,
+      description: m.description,
+      ctaText: m.ctaText,
+      externalUrl: m.externalUrl,
+      hasFile: m.hasFile,
+    }));
+
+    setLibResult({ lessons, materials });
+  }
+
+  async function submit(raw: string) {
+    const q = raw.trim();
+    if (!q) return;
+    setPending(true);
+    try {
+      if (scope === 'solutions') {
+        await submitSolutions(q);
+      } else {
+        await submitLibrary(q);
+      }
+    } catch {
+      toast.error('Не удалось выполнить поиск. Попробуйте ещё раз.');
+    } finally {
+      setPending(false);
+    }
   }
 
   async function pickOption(intent: string) {
@@ -42,24 +103,37 @@ export function AgentSearch() {
     await submit(intent);
   }
 
-  const isPending = resolveMutation.isPending;
+  const isPending = pending || (scope === 'solutions' && resolveMutation.isPending);
 
   return (
     <div className="space-y-3">
       <form
         onSubmit={(e) => { e.preventDefault(); submit(query); }}
-        className="flex items-center h-12 border border-mp-gray-200 rounded-lg bg-white"
+        className={cn(
+          'flex items-center bg-white',
+          isHero
+            ? 'h-14 rounded-xl border border-mp-gray-200 shadow-mp-card pr-1.5 focus-within:ring-2 focus-within:ring-mp-blue-500'
+            : 'h-12 rounded-lg border border-mp-gray-200',
+        )}
       >
         <input
-          className="flex-1 h-full bg-transparent px-4 placeholder:text-mp-gray-400 focus:outline-none"
-          placeholder="Напишите тему, которая вас интересует"
+          className={cn(
+            'flex-1 h-full bg-transparent px-4 placeholder:text-mp-gray-400 focus:outline-none',
+            isHero && 'text-body',
+          )}
+          placeholder={PLACEHOLDER[scope]}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           disabled={isPending}
         />
         <button
           type="submit"
-          className="px-4 text-mp-blue-500 disabled:opacity-50"
+          className={cn(
+            'disabled:opacity-50',
+            isHero
+              ? 'h-11 px-5 rounded-lg bg-mp-blue-500 text-white text-body-sm font-semibold disabled:bg-mp-gray-300'
+              : 'px-4 text-mp-blue-500',
+          )}
           disabled={isPending || !query.trim()}
         >
           {isPending ? 'Ищем…' : 'Найти'}
@@ -69,11 +143,12 @@ export function AgentSearch() {
       {isPending && (
         <div className="rounded-lg border p-4 bg-mp-gray-50 text-mp-gray-600 text-sm flex items-center gap-2">
           <span className="inline-block w-2 h-2 rounded-full bg-mp-blue-500 animate-pulse" />
-          Ищем лучший ответ среди плейбуков…
+          {scope === 'solutions' ? 'Ищем лучший ответ среди решений…' : 'Ищем по урокам и материалам…'}
         </div>
       )}
 
-      {!isPending && result?.mode === 'clarify' && (
+      {/* ── Solutions scope render (intent.resolve) ─────────────────────── */}
+      {scope === 'solutions' && !isPending && result?.mode === 'clarify' && (
         <div className="rounded-lg border p-4 space-y-3">
           <p className="font-medium">{result.question}</p>
           <div className="flex flex-wrap gap-2">
@@ -90,34 +165,30 @@ export function AgentSearch() {
         </div>
       )}
 
-      {!isPending && result?.mode === 'recommend' && (
+      {scope === 'solutions' && !isPending && result?.mode === 'recommend' && (
         <div className="space-y-3">
           <p className="text-mp-gray-800">{result.answer}</p>
-          {result.jobs.map((j) => {
-            const isAdded = trackedJobIds.has(j.jobId);
-            return (
-              <div key={j.jobId} className="rounded-lg border p-4 flex items-start justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <a href={`/learn/job/${j.slug}`} className="font-medium hover:underline">
-                    {j.title}
-                  </a>
-                  <p className="text-sm text-mp-gray-600 mt-1">{j.reason}</p>
-                  <p className="text-xs text-mp-gray-500 mt-1">{j.lessonCount} уроков</p>
-                </div>
-                <button
-                  onClick={() => addJobMutation.mutate({ jobId: j.jobId })}
-                  disabled={isAdded || addJobMutation.isPending}
-                  className="px-3 py-2 rounded-md bg-mp-blue-500 text-white text-sm disabled:bg-mp-gray-300 whitespace-nowrap"
-                >
-                  {isAdded ? 'В треке ✓' : (j.actions[0]?.label ?? 'В трек')}
-                </button>
+          {result.jobs.map((j) => (
+            <div key={j.jobId} className="rounded-lg border p-4 flex items-start justify-between gap-4">
+              <div className="min-w-0 flex-1">
+                <a href={`/learn/job/${j.slug}`} className="font-medium hover:underline">
+                  {j.title}
+                </a>
+                <p className="text-sm text-mp-gray-600 mt-1">{j.reason}</p>
+                <p className="text-xs text-mp-gray-500 mt-1">{j.lessonCount} уроков</p>
               </div>
-            );
-          })}
+              <FavoriteButton
+                itemType="JOB"
+                itemId={j.jobId}
+                initialFavorited={favoritedSet.has(`JOB:${j.jobId}`)}
+                className="-mt-2 -mr-2 shrink-0"
+              />
+            </div>
+          ))}
         </div>
       )}
 
-      {!isPending && result?.mode === 'fallback' && (
+      {scope === 'solutions' && !isPending && result?.mode === 'fallback' && (
         <div className="rounded-lg border p-4 space-y-2">
           <p>{result.answer}</p>
           {result.lessons.length > 0 && (
@@ -128,13 +199,43 @@ export function AgentSearch() {
             </ul>
           )}
           <p className="text-xs text-mp-gray-500">
-            Точного плейбука не нашли. Попробуй переформулировать запрос или открой каталог ниже.
+            Попробуйте переформулировать запрос или откройте каталог ниже.
           </p>
         </div>
       )}
 
-      {!isPending && result?.mode === 'empty' && (
-        <p className="text-mp-gray-600 text-sm">{result.message}</p>
+      {scope === 'solutions' && !isPending && result?.mode === 'empty' && (
+        <p className="text-mp-gray-600 text-sm">Ничего не нашли</p>
+      )}
+
+      {/* ── Library scope render (ai.searchLessons + material.listForUser) ── */}
+      {scope === 'library' && !isPending && libResult && (
+        libResult.lessons.length === 0 && libResult.materials.length === 0 ? (
+          <p className="text-mp-gray-600 text-sm">Ничего не нашли</p>
+        ) : (
+          <div className="space-y-6">
+            {libResult.lessons.length > 0 && (
+              <section className="space-y-3">
+                <h3 className="text-body-sm font-semibold text-mp-gray-700">Уроки</h3>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {libResult.lessons.map((l) => (
+                    <LessonResultCard key={l.id} lesson={l} />
+                  ))}
+                </div>
+              </section>
+            )}
+            {libResult.materials.length > 0 && (
+              <section className="space-y-3">
+                <h3 className="text-body-sm font-semibold text-mp-gray-700">Материалы</h3>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  {libResult.materials.map((m) => (
+                    <MaterialCard key={m.id} {...m} />
+                  ))}
+                </div>
+              </section>
+            )}
+          </div>
+        )
       )}
     </div>
   );

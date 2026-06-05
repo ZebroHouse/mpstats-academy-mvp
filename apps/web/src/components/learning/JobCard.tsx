@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import type { JobSummary } from '@mpstats/shared';
+import { FavoriteButton } from './FavoriteButton';
 
 function fmtDuration(min: number): string {
   if (min < 60) return `${min} мин`;
@@ -14,10 +15,12 @@ export function JobCard({
   job,
   onAddToTrack,
   isAddPending,
+  initialFavorited,
 }: {
   job: JobSummary;
   onAddToTrack?: (jobId: string) => void;
   isAddPending?: boolean;
+  initialFavorited?: boolean;
 }) {
   const pct = job.lessonCount > 0
     ? Math.round((job.completedLessons / job.lessonCount) * 100)
@@ -33,14 +36,14 @@ export function JobCard({
         {job.marketplace === 'BOTH' && (
           <span className="text-caption font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-700">WB + Ozon</span>
         )}
-        {job.isInTrack && (
-          <span className="text-caption font-bold px-2 py-0.5 rounded bg-mp-green-100 text-mp-green-700">В треке</span>
-        )}
         {job.isRecommended && !job.isInTrack && (
           <span className="text-caption font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-700">Рекомендовано диагностикой</span>
         )}
       </div>
-      <h3 className="text-body font-semibold text-mp-gray-900 leading-snug">{job.title}</h3>
+      <div className="flex items-start gap-1">
+        <h3 className="text-body font-semibold text-mp-gray-900 leading-snug flex-1">{job.title}</h3>
+        <FavoriteButton itemType="JOB" itemId={job.id} initialFavorited={initialFavorited} className="-mt-2 -mr-2 shrink-0" />
+      </div>
       <p className="text-body-sm text-mp-gray-500 mt-1 flex-1 line-clamp-2">{job.description}</p>
       <div className="text-caption text-mp-gray-400 mt-2.5">
         {job.lessonCount} уроков · ~{fmtDuration(job.totalDurationMin)}
@@ -62,7 +65,7 @@ export function JobCard({
           disabled={isAddPending}
           className="mt-3 h-9 rounded-lg bg-mp-blue-500 text-white text-body-sm font-medium hover:bg-mp-blue-600 transition-colors disabled:opacity-50"
         >
-          {isAddPending ? 'Добавляем…' : '+ В трек'}
+          {isAddPending ? 'Добавляем…' : '+ В план'}
         </button>
       )}
     </Link>

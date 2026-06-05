@@ -40,6 +40,27 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
     const now = new Date();
     const fiveMinAgo = new Date(now.getTime() - 5 * 60 * 1000);
     if (!profile?.lastActiveAt || profile.lastActiveAt < fiveMinAgo) {
+      // Record per-day activity for DAU/WAU/MAU analytics. Idempotent no-op on
+      // conflict (composite PK userId+day). Fully isolated: its own catch so an
+      // error here never breaks lastActiveAt or the request.
+      const day = new Date(Date.UTC(
+        now.getUTCFullYear(),
+        now.getUTCMonth(),
+        now.getUTCDate(),
+      ));
+      try {
+        ctx.prisma.userActivityDay.upsert({
+          where: { userId_day: { userId, day } },
+          create: { userId, day },
+          update: {},
+        }).catch(err => {
+          console.error('[tRPC] userActivityDay upsert failed:', err);
+        });
+      } catch (err) {
+        // Synchronous throw (e.g. model unavailable) — never affect lastActiveAt.
+        console.error('[tRPC] userActivityDay upsert threw:', err);
+      }
+
       return ctx.prisma.userProfile.update({
         where: { id: userId },
         data: { lastActiveAt: now },

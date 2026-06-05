@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import type { LessonWithProgress } from '@mpstats/shared';
+import { FavoriteButton } from './FavoriteButton';
 
 interface LessonCardProps {
   lesson: LessonWithProgress;
@@ -14,6 +15,11 @@ interface LessonCardProps {
   inTrack?: boolean;
   onToggleTrack?: () => void;
   onRemoveFromTrack?: () => void;
+  /**
+   * When provided, renders the «сердечко» (Избранное, D-06) in the action slot.
+   * Used in the База знаний catalog so manual adds go to Избранное, not the План.
+   */
+  favorite?: { itemId: string; initialFavorited?: boolean };
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -70,7 +76,7 @@ const LOCK_ICON = (
   </svg>
 );
 
-export function LessonCard({ lesson, showCourse, courseName, isRecommended, locked, inTrack, onToggleTrack, onRemoveFromTrack }: LessonCardProps) {
+export function LessonCard({ lesson, showCourse, courseName, isRecommended, locked, inTrack, onToggleTrack, onRemoveFromTrack, favorite }: LessonCardProps) {
   const isLocked = locked ?? lesson.locked;
   const status = STATUS_CONFIG[lesson.status];
 
@@ -156,6 +162,16 @@ export function LessonCard({ lesson, showCourse, courseName, isRecommended, lock
               )}
             </div>
 
+            {/* Избранное «сердечко» (D-06) — manual add lands in Избранное, not the План */}
+            {favorite && (
+              <FavoriteButton
+                itemType="LESSON"
+                itemId={favorite.itemId}
+                initialFavorited={favorite.initialFavorited}
+                className="flex-shrink-0 -mr-1"
+              />
+            )}
+
             {/* Track toggle button — labeled so users actually find it */}
             {onToggleTrack && (
               <button
@@ -170,21 +186,21 @@ export function LessonCard({ lesson, showCourse, courseName, isRecommended, lock
                     ? 'bg-mp-green-100 text-mp-green-700 hover:bg-mp-green-200 cursor-default'
                     : 'bg-mp-blue-50 text-mp-blue-700 border border-mp-blue-200 hover:bg-mp-blue-100'
                 )}
-                title={inTrack ? 'Уже в твоём треке' : 'Добавить в твой трек обучения'}
+                title={inTrack ? 'Уже в твоём плане' : 'Добавить в твой план обучения'}
               >
                 {inTrack ? (
                   <>
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
                     </svg>
-                    <span className="hidden sm:inline">В треке</span>
+                    <span className="hidden sm:inline">В плане</span>
                   </>
                 ) : (
                   <>
                     <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M12 4v16m8-8H4" />
                     </svg>
-                    <span className="hidden sm:inline">В трек</span>
+                    <span className="hidden sm:inline">В план</span>
                   </>
                 )}
               </button>
@@ -199,7 +215,7 @@ export function LessonCard({ lesson, showCourse, courseName, isRecommended, lock
                   onRemoveFromTrack();
                 }}
                 className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center bg-red-50 text-red-400 hover:bg-red-100 hover:text-red-600 transition-all"
-                title="Убрать из трека"
+                title="Убрать из плана"
               >
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />

@@ -194,6 +194,71 @@ export const materialRouter = router({
       }
     }),
 
+  /**
+   * listForUser (D-05) — user-facing read для каталога «База знаний».
+   *
+   * Отличия от admin `list`:
+   *  - protectedProcedure (любой залогиненный юзер), НЕ adminProcedure.
+   *  - ВСЕГДА форсит `where.isHidden = false` — нет `includeHidden` escape (T-61-03-01).
+   *  - возвращает standalone (isStandalone=true) И lesson-attached материалы.
+   *  - НИКОГДА не отдаёт storagePath клиенту — только hasFile boolean (State 49-02).
+   *
+   * Download ACL (getSignedUrl) НЕ трогается: standalone = externalUrl-only этот pass (A8).
+   */
+  listForUser: protectedProcedure
+    .input(
+      z.object({
+        type: materialTypeSchema.optional(),
+        search: z.string().optional(),
+        limit: z.number().int().min(1).max(100).default(50),
+        cursor: z.string().optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const where: any = { isHidden: false };
+        if (input.type) where.type = input.type;
+        if (input.search) {
+          where.title = { contains: input.search, mode: 'insensitive' };
+        }
+
+        const rows = await ctx.prisma.material.findMany({
+          where,
+          orderBy: { createdAt: 'desc' },
+          take: input.limit,
+          ...(input.cursor
+            ? { cursor: { id: input.cursor }, skip: 1 }
+            : {}),
+          select: {
+            id: true,
+            type: true,
+            title: true,
+            description: true,
+            ctaText: true,
+            externalUrl: true,
+            isStandalone: true,
+            // storagePath НЕ выбираем для клиента — деривируем hasFile из его
+            // наличия через отдельный boolean-флаг ниже (State 49-02).
+            storagePath: true,
+          },
+        });
+
+        // Маппим storagePath → hasFile boolean, storagePath НИКОГДА не уходит клиенту.
+        const items = rows.map(({ storagePath, ...rest }) => ({
+          ...rest,
+          hasFile: storagePath != null,
+        }));
+
+        return {
+          items,
+          nextCursor:
+            items.length === input.limit ? items[items.length - 1].id : null,
+        };
+      } catch (e) {
+        handleDatabaseError(e);
+      }
+    }),
+
   // ===== CREATE / UPDATE / DELETE =====
 
   create: adminProcedure

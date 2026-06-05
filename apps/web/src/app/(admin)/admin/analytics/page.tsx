@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { trpc } from '@/lib/trpc/client';
 import { ActivityChart } from '@/components/admin/ActivityChart';
+import { ActiveUsersSection } from '@/components/admin/ActiveUsersSection';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
@@ -60,6 +61,17 @@ export default function AnalyticsPage() {
             </button>
           ))}
         </div>
+      </div>
+
+      {/* Active Users Section (DAU/WAU/MAU) */}
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-heading font-bold text-mp-gray-900">Активные пользователи</h3>
+          <p className="text-body-sm text-mp-gray-500 mt-1">
+            DAU / WAU / MAU и липкость аудитории
+          </p>
+        </div>
+        <ActiveUsersSection />
       </div>
 
       {/* Summary stats */}

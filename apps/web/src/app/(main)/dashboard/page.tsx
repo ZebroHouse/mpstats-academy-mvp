@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { CalendarCheck, Search, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -45,6 +46,38 @@ const ACTIVITY_ICONS: Record<string, JSX.Element> = {
     </div>
   ),
 };
+
+// 3 accent entry cards (D-08, UI-SPEC §3). plan→soft-blue, library→soft-green,
+// solutions→gradient.
+const ENTRY_CARDS = [
+  {
+    href: '/learn/plan',
+    variant: 'soft-blue' as const,
+    icon: CalendarCheck,
+    iconBg: 'bg-mp-blue-200 text-mp-blue-600',
+    title: 'Продолжить мой план',
+    sub: 'Персональный план на основе диагностики',
+    dataTour: 'dashboard-learn-cta',
+  },
+  {
+    href: '/learn/library',
+    variant: 'soft-green' as const,
+    icon: Search,
+    iconBg: 'bg-mp-green-200 text-mp-green-600',
+    title: 'Найти быстрый ответ',
+    sub: 'Поиск по урокам и материалам',
+    dataTour: undefined,
+  },
+  {
+    href: '/learn/solutions',
+    variant: 'gradient' as const,
+    icon: Target,
+    iconBg: 'bg-white/70 text-mp-blue-600',
+    title: 'Решить задачу',
+    sub: 'Инструкции под конкретную задачу',
+    dataTour: undefined,
+  },
+];
 
 export default function DashboardPage() {
   const { data: profile } = trpc.profile.get.useQuery();
@@ -134,88 +167,75 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 animate-slide-up" style={{ animationDelay: '50ms' }}>
-        <Card className="shadow-mp-card hover:shadow-mp-card-hover transition-shadow">
-          <CardContent className="py-5">
-            <div className="text-display-sm font-bold text-mp-gray-900">
-              {dashboard?.stats.totalLessonsCompleted || 0}
-            </div>
-            <div className="text-body-sm text-mp-gray-500">Уроков пройдено</div>
-          </CardContent>
-        </Card>
-        <Card className="shadow-mp-card hover:shadow-mp-card-hover transition-shadow">
-          <CardContent className="py-5">
-            <div className="text-display-sm font-bold text-mp-blue-500">
-              {dashboard?.stats.totalWatchTime || 0} мин
-            </div>
-            <div className="text-body-sm text-mp-gray-500">Время обучения</div>
-          </CardContent>
-        </Card>
-        <Card className="shadow-mp-card hover:shadow-mp-card-hover transition-shadow">
-          <CardContent className="py-5">
-            <div className="text-display-sm font-bold text-mp-green-500 flex items-center gap-1">
-              {dashboard?.stats.currentStreak || 0}
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 24 24">
-                <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z" />
-              </svg>
-            </div>
-            <div className="text-body-sm text-mp-gray-500">Дней подряд</div>
-          </CardContent>
-        </Card>
-        <Card className="shadow-mp-card hover:shadow-mp-card-hover transition-shadow">
-          <CardContent className="py-5">
-            <div className="text-display-sm font-bold text-mp-pink-500">
-              {dashboard?.completionPercent || 0}%
-            </div>
-            <div className="text-body-sm text-mp-gray-500">Прогресс курса</div>
-          </CardContent>
-        </Card>
+      {/* 3 accent entry cards (D-08) — lead the dashboard above condensed stats */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 animate-slide-up" style={{ animationDelay: '50ms' }}>
+        {ENTRY_CARDS.map(({ href, variant, icon: Icon, iconBg, title, sub, dataTour }) => (
+          <Link key={href} href={href}>
+            <Card variant={variant} interactive className="h-full p-6" data-tour={dataTour}>
+              <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${iconBg}`}>
+                <Icon className="w-6 h-6" />
+              </div>
+              <h2 className="text-heading-lg text-mp-gray-900">{title}</h2>
+              <p className="text-body-sm text-mp-gray-600 mt-1">{sub}</p>
+            </Card>
+          </Link>
+        ))}
       </div>
+
+      {/* Condensed stats strip (D-08) — all-zero new users get a hint, not dead zeros */}
+      {(() => {
+        const lessons = dashboard?.stats.totalLessonsCompleted || 0;
+        const watch = dashboard?.stats.totalWatchTime || 0;
+        const streak = dashboard?.stats.currentStreak || 0;
+        const completion = dashboard?.completionPercent || 0;
+        const allZero = lessons === 0 && watch === 0 && streak === 0 && completion === 0;
+
+        if (allZero) {
+          return (
+            <p className="text-body-sm text-mp-gray-500 animate-slide-up" style={{ animationDelay: '75ms' }}>
+              Начните с диагностики — и здесь появится ваша статистика обучения.
+            </p>
+          );
+        }
+
+        return (
+          <div className="flex flex-wrap gap-x-6 gap-y-2 text-body-sm animate-slide-up" style={{ animationDelay: '75ms' }}>
+            <span className="text-mp-gray-500">
+              Уроков пройдено: <span className="font-semibold text-mp-gray-900">{lessons}</span>
+            </span>
+            <span className="text-mp-gray-500">
+              Время обучения: <span className="font-semibold text-mp-blue-600">{watch} мин</span>
+            </span>
+            <span className="text-mp-gray-500">
+              Дней подряд: <span className="font-semibold text-mp-green-600">{streak}</span>
+            </span>
+            <span className="text-mp-gray-500">
+              Прогресс курса: <span className="font-semibold text-mp-pink-600">{completion}%</span>
+            </span>
+          </div>
+        );
+      })()}
 
       <div className="grid lg:grid-cols-3 gap-6 animate-slide-up" style={{ animationDelay: '100ms' }}>
         {/* Left column */}
         <div className="lg:col-span-2 space-y-6">
-          {/* Quick actions */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <Card data-tour="dashboard-diagnostic-cta" variant="soft-blue" className="hover:shadow-mp-card-hover transition-all duration-300 hover:-translate-y-1">
-              <CardHeader>
-                <div className="w-12 h-12 rounded-xl bg-mp-blue-200 flex items-center justify-center mb-3">
-                  <svg className="w-6 h-6 text-mp-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {/* Diagnostic entry — container-as-button, consistent with the top D-08 cards.
+              «Продолжить обучение» removed — it duplicated the «Продолжить мой план» entry card above. */}
+          <Link href="/diagnostic">
+            <Card data-tour="dashboard-diagnostic-cta" variant="soft-blue" interactive className="p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-12 h-12 rounded-xl bg-mp-blue-200 text-mp-blue-600 flex items-center justify-center shrink-0">
+                  <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
-                <CardTitle className="text-heading">Пройти диагностику</CardTitle>
-                <CardDescription className="text-body-sm">
-                  Узнайте свой уровень по 5 ключевым навыкам
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Link href="/diagnostic">
-                  <Button className="w-full">Начать тест</Button>
-                </Link>
-              </CardContent>
-            </Card>
-
-            <Card data-tour="dashboard-learn-cta" variant="soft-green" className="hover:shadow-mp-card-hover transition-all duration-300 hover:-translate-y-1">
-              <CardHeader>
-                <div className="w-12 h-12 rounded-xl bg-mp-green-200 flex items-center justify-center mb-3">
-                  <svg className="w-6 h-6 text-mp-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-                  </svg>
+                <div>
+                  <h2 className="text-heading-lg text-mp-gray-900">Пройти диагностику</h2>
+                  <p className="text-body-sm text-mp-gray-600 mt-1">Узнайте свой уровень по 5 ключевым навыкам</p>
                 </div>
-                <CardTitle className="text-heading">Продолжить обучение</CardTitle>
-                <CardDescription className="text-body-sm">
-                  Персональный план на основе диагностики
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <Link href="/learn">
-                  <Button variant="outline" className="w-full">К урокам</Button>
-                </Link>
-              </CardContent>
+              </div>
             </Card>
-          </div>
+          </Link>
 
           {/* Next lesson */}
           {dashboard?.nextLesson && (

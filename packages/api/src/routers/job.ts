@@ -119,6 +119,23 @@ export const jobRouter = router({
       }
     }),
 
+  // Лёгкий резолв названия задачи по slug — для контекстных хлебных крошек.
+  // НЕ тянет lessons/subs/billing (в отличие от getJob).
+  getTitleBySlug: protectedProcedure
+    .input(z.object({ slug: z.string() }))
+    .query(async ({ ctx, input }): Promise<{ slug: string; title: string } | null> => {
+      try {
+        const job = await ctx.prisma.job.findUnique({
+          where: { slug: input.slug },
+          select: { slug: true, title: true, isPublished: true },
+        });
+        if (!job || !job.isPublished) return null;
+        return { slug: job.slug, title: job.title };
+      } catch (error) {
+        handleDatabaseError(error);
+      }
+    }),
+
   // Одна джоба по slug — с упорядоченными уроками и прогрессом
   getJob: protectedProcedure
     .input(z.object({ slug: z.string() }))

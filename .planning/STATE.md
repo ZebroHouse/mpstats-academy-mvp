@@ -2,15 +2,15 @@
 gsd_state_version: 1.0
 milestone: v1.12
 milestone_name: Marketplace-aware Diagnostic
-status: idle — Phase 58 + 59 + 60 shipped to prod
-stopped_at: ready for next milestone planning
-last_updated: "2026-06-01T10:00:00.000Z"
+status: executing — Phase 61 Wave 8 (61-07 favorites split) PARTIAL — code shipped, prod DATA-migration pending owner approval
+stopped_at: Completed 61-04-PLAN.md (scope-aware AgentSearch + Library material catalog)
+last_updated: "2026-06-04T13:01:08.327Z"
 progress:
-  total_phases: 0
-  completed_phases: 0
-  total_plans: 0
-  completed_plans: 0
-  percent: 0
+  total_phases: 42
+  completed_phases: 31
+  total_plans: 96
+  completed_plans: 89
+  percent: 74
 ---
 
 # Project State
@@ -20,11 +20,14 @@ progress:
 See: .planning/PROJECT.md (updated 2026-03-06)
 
 **Core value:** Пользователь проходит AI-диагностику, получает точную карту навыков и персонализированный трек обучения из реальных данных
-**Current focus:** idle — Phase 59 v2 (static deck diagnostic) shipped 2026-06-01, awaiting next milestone
+**Current focus:** Phase 61.1 — learning-2-0-uat-fixes
 
 ## Current Position
 
+Phase: 61.1 (learning-2-0-uat-fixes) — EXECUTING
+Plan: 1 of 5
 No active phase. Last shipped:
+
 - Phase 60 (Ambassador Referral Codes) — PR #13 + #14 hotfix, 2026-05-28
 - Phase 58 (Diagnostic on Jobs) — PR #12 `3ca8fb6`, 2026-05-28
 - Phase 59 v2 (Static-deck Diagnostic) — PR #16 `b89a54e`, 2026-06-01
@@ -168,8 +171,33 @@ Full v1.1 decision history: `milestones/v1.1-ROADMAP.md`
 - [56-04]: Жёсткий гейт диагностики на уроке снят — урок доступен на подписке без теста; удалена ТОЛЬКО ветка hasDiagnostic === false, подписочный LockOverlay нетронут
 - [56-04]: DiagnosticGateBanner — закрываемый хинт; dismissed инициализируется true (не false), чтобы карточка не мелькала у юзеров с установленным localStorage-флагом до useEffect-проверки
 - [56-04]: QualificationSection вынесена в отдельный компонент (паттерн SecurityCard) — profile/page.tsx уже 838 строк; переиспользует welcome-options без хардкода списков
+- [61-00]: Wave 0 RED scaffolds — it.skip/test.fixme bodies, БЕЗ top-level import не-существующих favoriteRouter/migrate-script (иначе collection error); GREEN-рецепт в комментариях. FavoriteItemType не импортируется из @mpstats/db (enum в 61-06) — строковые литералы
+- [61-00]: api vitest include расширен `../../scripts/__tests__/**/*.test.ts` — root migration-тест бежит под node-харнессом api (у scripts/ нет своего пакета)
+- [61-01]: Expandable «Обучение» nav group — hand-rolled useState + chevron rotate-180, БЕЗ radix Collapsible; рендерится inline после «Диагностика» в navItems.map (сохраняет порядок), exported learnSubItems для downstream waves
+- [61-01]: Mobile bottom-bar «Обучение» (href /learn/plan) — active state special-cased на pathname.startsWith('/learn'), иначе не подсвечивается на /learn/library; LearningTabs pill-strip (md:hidden) для монтажа в 61-02
+- [61-01]: /learn/track → /learn/plan через Server Component redirect() (не client router.push — router-cache loop guard); только /learn/track e2e-кейс un-skipped, /learn default-redirect остаётся test.fixme до 61-02
+- [61-02]: /learn split на 4 routed sub-pages (plan/solutions/library/favorites); /learn — Server Component, читает prisma.learningPath напрямую (как layout.tsx), redirect() на /learn/plan при non-empty lessons[] иначе /learn/library — никакого router.push
+- [61-02]: /learn/plan показывает ТОЛЬКО диагностические секции (allowlist errors/deepening/growth/advanced); custom-секция отброшена — ручные добавления уходят в «Избранное» в Wave D / 61-07, выводить их как «план» сейчас = ввести в заблуждение
+- [61-02]: D-02 канон применён ко всем видимым строкам (трек→план, +В трек→В план, Все курсы→База знаний, плейбук/джоба→решение/задача); 0 запрещённых строк по grep
+- [61-02]: tour-якоря перенесены (D-10) — удалены мёртвые learn-view-toggle/learn-filters; getSteps DOM-probe теперь на learn-sections (plan view) vs catalog; catalog-вариант получил шаг learn-submenu (lens-тоггла больше нет)
+- [61-03]: material.listForUser — protectedProcedure, ВСЕГДА where.isHidden=false (нет includeHidden escape, T-61-03-01); storagePath читается в select, но маппится в hasFile boolean ДО возврата — клиенту НИКОГДА не уходит (payload-level guarantee, State 49-02); standalone+attached оба включены (нет lessons:{some} констрейнта)
+- [61-03]: getSignedUrl download ACL frozen (A8) — diff к material.ts чисто additive (+65 строк), FORBIDDEN-ветка :437 нетронута; standalone = externalUrl-only этот pass, ACL-gap не триггерится
+- [61-03]: MaterialCard.lessonId required→optional — расширение безопасно (единственный caller LessonMaterials передаёт lessonId); file download-путь (getSignedUrl) gated на Boolean(lessonId), standalone-карточка externalUrl-only; FavoriteButton-слот задокументирован под 61-07 (сердце не добавлено)
+- [61-04]: AgentSearch scope: 'solutions' | 'library' (D-04). solutions→intent.resolve (job-карточки, без изменений); library→параллельно ai.searchLessons + material.listForUser через useUtils().fetch (НЕ useMutation — это .query процедуры), рендер сгруппирован «Уроки»/«Материалы». Новый LessonResultCard (title→/learn/[id], course, snippet, прогресс, lock)
+- [61-04]: 61-00 scope-стаб мокал useMutation, но рантайм-паттерн для on-submit .query — useUtils().fetch; GREEN-fill переключил моки на .fetch shape (стаб-тело было it.skip scaffold, не frozen contract — прецедент 61-03)
+- [61-04]: Library material catalog — single-select chip-row (5 MaterialType + «Уроки» toggle на courses accordion); material.listForUser.useQuery({type},{enabled}) — «Уроки» view не делает material-fetch; empty «Материалов этого типа пока нет». isHidden не байпасится (оба эндпоинта уже фильтруют)
+- [Phase ?]: [61-05]: hero search via LearningHero (bg-mp-hero-gradient + text-display-sm + data-tour=learn-search) wrapping scoped AgentSearch; AgentSearch grows via opt-in size='hero' prop (h-14 rounded-xl + solid-pill submit), NO fork — default callers untouched
+- [Phase ?]: [61-05]: dashboard leads with 3 accent entry cards (plan→soft-blue/library→soft-green/solutions→gradient, Card interactive + lucide); 4 stat tiles condensed to a flex label:value strip with all-zero new-user hint instead of dead zeros
+- [61-06]: Favorite polymorphic model (itemType/itemId, NO FK on itemId — app-level integrity in favorite.list); add upsert idempotent on @@unique; userId ALWAYS ctx.user.id (IDOR T-61-06-01), zod input only {itemType,itemId}; list filters Lesson/Material isHidden:false (+course.isHidden:false), Job isPublished:true, drops dangling/hidden refs (D-10); isFavorited batch keyed itemType:itemId, no N+1
+- [61-06]: additive migration 20260603000000_add_favorite — APPLIED to prod 2026-06-03 (Favorite table live, _prisma_migrations row recorded). Code unblocked.
+- [61-07]: migrate-track-to-favorites.ts — pure collectFavoriteRows() + migrate(prisma,{apply}); custom-section lessonIds→Favorite(LESSON), addedJobs[] string array→Favorite(JOB); createMany({skipDuplicates}); LessonProgress count-only (never written, D-03/D-07). PrismaClient lazy-required (test imports migrate() under api vitest harness без @prisma/client в module graph). 6 unit tests green.
+- [61-07]: FavoriteButton — shared optimistic heart ('LESSON'|'JOB'|'MATERIAL' string-literal props, НЕ @mpstats/db enum → Prisma не тянется в client bundle); add/remove с onMutate flip + onError rollback + toast + onSettled invalidate(isFavorited/list); mp-pink-500 filled = saved; min-h-11 tap target; aria-pressed; preventDefault/stopPropagation внутри Link-карточек. Все useMutation/useUtils выше любого early return (нет early returns вообще).
+- [61-07]: FavoriteButton смонтирован на JobCard(JOB)/MaterialCard(MATERIAL)/LessonResultCard(LESSON); JobCatalog batch-сидит initialFavorited через favorite.isFavorited (без N+1). Избранное page — favorite.list + chip-фильтр (Все/Уроки/Решения/Материалы); FavItem тип через inferRouterOutputs<AppRouter> (useQuery data-union ширился до {} из-за void-catch). Карточки favorites purpose-built под resolved-shape ({id,title,slug/type}), MaterialCard не переиспользуется (list-entity не несёт externalUrl/ctaText).
+- [61-07]: 3 getRecommendedPath consumers согласованы — План (61-02 уже diagnostic-only allowlist, 0 addedJobs/custom), AgentSearch trackedJobIds (green «В плане» из addedJobs) и pink heart (favorite) НЕЗАВИСИМЫ, former track page = чистый server redirect. D-10: НЕТ pa_*/reachGoal событий на track/plan add/remove flow (только MATERIAL_OPEN/MATERIAL_SECTION_VIEW, нетронуты) → no silent regression, ничего не дропнуто.
 
 ### Blockers/Concerns
+
+- [61-07 PENDING]: track→favorites DATA migration NOT run on prod Supabase `saecuecevicwjkpmaoot` (~170 users с ручными добавлениями). Owner runs `npx tsx scripts/migrate-track-to-favorites.ts --dry-run` then `--apply` against prod DATABASE_URL behind blocking checkpoint. Idempotent (createMany skipDuplicates), LessonProgress untouched (count-only). Re-run must leave Favorite count unchanged. Resume signal: "migrated".
 
 - Supabase Admin API session creation for custom OAuth needs sandbox validation (Phase 17)
 - CloudPayments webhook payload format needs sandbox testing (Phase 18)
@@ -193,6 +221,7 @@ Full v1.1 decision history: `milestones/v1.1-ROADMAP.md`
 - Phase 34 added: User Profile Enhancement — аватар upload, display name, завершённость профиля
 - Phase 35 added: Lesson Comments — комментарии к урокам с ответами (1 уровень вложенности)
 - Phase 36 added: Product Tour / Onboarding — 3 tooltip-тура для новых пользователей
+- Phase 61 added: Обучение 2.0 — редизайн раздела на 4 сущности + контекстный поиск + дашборд 3 входа (waves A-E, spec 2026-06-03)
 
 ### Pending Todos
 
@@ -251,11 +280,17 @@ None.
 | 56    | 02   | 6min     | 2     | 3     |
 | 56    | 03   | 9min     | 3     | 11    |
 | 56    | 04   | 6min     | 2     | 4     |
+| 61    | 00   | 7min     | 2     | 6     |
+| 61    | 01   | 12min    | 2     | 5     |
+| 61    | 02   | 18min    | 2     | 7     |
+| 61    | 03   | 9min     | 2     | 3     |
+| 61    | 04   | 10min    | 2     | 6     |
+| Phase 61 P05 | ~12min | 2 tasks | 5 files |
 
 ## Session Continuity
 
-Last session: 2026-05-26T13:01:41.804Z
-Stopped at: Phase 58 context gathered
+Last session: 2026-06-03T09:55:47.751Z
+Stopped at: Completed 61-04-PLAN.md (scope-aware AgentSearch + Library material catalog)
 
 ### Session 2026-03-12 — Billing Payment Flow Testing & Fixes
 

@@ -1,6 +1,8 @@
 'use client';
 
+import { useMemo } from 'react';
 import { JobCard } from './JobCard';
+import { trpc } from '@/lib/trpc/client';
 import type { JobCatalogAxis } from '@mpstats/shared';
 
 const AXIS_COLOR: Record<string, string> = {
@@ -28,8 +30,22 @@ export function JobCatalog({ axes, progressFilter }: {
     }))
     .filter((a) => a.jobs.length > 0);
 
+  // Batch-seed «сердечко» state for every visible job (no N+1 per card).
+  const allJobIds = useMemo(
+    () => axes.flatMap((a) => a.jobs.map((j) => j.id)),
+    [axes],
+  );
+  const favoritedQuery = trpc.favorite.isFavorited.useQuery(
+    { items: allJobIds.map((id) => ({ itemType: 'JOB' as const, itemId: id })) },
+    { enabled: allJobIds.length > 0 },
+  );
+  const favoritedSet = useMemo(
+    () => new Set(favoritedQuery.data?.favorited ?? []),
+    [favoritedQuery.data],
+  );
+
   if (filtered.length === 0) {
-    return <p className="text-body-sm text-mp-gray-500 py-8 text-center">Под фильтр джоб не нашлось.</p>;
+    return <p className="text-body-sm text-mp-gray-500 py-8 text-center">Под фильтр задач не нашлось.</p>;
   }
 
   return (
@@ -39,10 +55,16 @@ export function JobCatalog({ axes, progressFilter }: {
           <div className="flex items-center gap-2 mb-3">
             <span className={`w-1 h-5 rounded ${AXIS_COLOR[axis.axis] ?? 'bg-mp-gray-400'}`} />
             <h2 className="text-heading font-bold text-mp-gray-900">{axis.title}</h2>
-            <span className="text-caption text-mp-gray-400 font-semibold">· {axis.jobs.length} джоб</span>
+            <span className="text-caption text-mp-gray-400 font-semibold">· {axis.jobs.length} задач</span>
           </div>
           <div className="grid gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
-            {axis.jobs.map((job) => <JobCard key={job.id} job={job} />)}
+            {axis.jobs.map((job) => (
+              <JobCard
+                key={job.id}
+                job={job}
+                initialFavorited={favoritedSet.has(`JOB:${job.id}`)}
+              />
+            ))}
           </div>
         </section>
       ))}

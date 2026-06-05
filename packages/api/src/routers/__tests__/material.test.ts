@@ -177,5 +177,96 @@ describe('material.create XOR validation', () => {
     expect((r as any).id).toBe('m-new');
   });
 });
+/**
+ * Wave 0 RED stub — Phase 61 (Обучение 2.0).
+ *
+ * `material.listForUser` (protectedProcedure) does NOT exist yet; it lands in
+ * 61-04. It mirrors the admin `list` read shape but:
+ *   - is `protectedProcedure` (any signed-in user), NOT `adminProcedure`;
+ *   - FORCES `where.isHidden = false` with NO `includeHidden` escape (T-info-hidden);
+ *   - honors optional `type` filter and `title contains` search (insensitive);
+ *   - includes standalone (`isStandalone:true`) rows alongside lesson-attached ones;
+ *   - DOES NOT touch / weaken the `getSignedUrl` download ACL (frozen, D-05).
+ *
+ * Behavioral bodies are `it.skip(... 'pending 61-04')`; flipping them to `it`
+ * (and calling `caller.listForUser(...)`) is the GREEN step in 61-04.
+ */
+describe('material.listForUser', () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  // Note: makeCtx() defaults userProfile.role='ADMIN', но listForUser —
+  // protectedProcedure: достаточно ctx.user. Любой залогиненный юзер проходит.
+
+  it('forces where.isHidden = false with no includeHidden escape', async () => {
+    const ctx = makeCtx();
+    const caller = materialRouter.createCaller(ctx);
+    await caller.listForUser({});
+    const arg = ctx.prisma.material.findMany.mock.calls[0][0];
+    expect(arg.where.isHidden).toBe(false);
+    // even if a caller smuggles includeHidden, it must be ignored:
+    await caller.listForUser({ includeHidden: true } as any);
+    expect(
+      ctx.prisma.material.findMany.mock.calls[1][0].where.isHidden,
+    ).toBe(false);
+  });
+
+  it('honors optional type filter and title contains search (insensitive)', async () => {
+    const ctx = makeCtx();
+    const caller = materialRouter.createCaller(ctx);
+    await caller.listForUser({ type: 'CHECKLIST', search: 'Ozon' });
+    const arg = ctx.prisma.material.findMany.mock.calls[0][0];
+    expect(arg.where.type).toBe('CHECKLIST');
+    expect(arg.where.title).toEqual({ contains: 'Ozon', mode: 'insensitive' });
+  });
+
+  it('includes standalone (isStandalone:true) materials, not only lesson-attached', async () => {
+    const ctx = makeCtx();
+    const caller = materialRouter.createCaller(ctx);
+    await caller.listForUser({});
+    const arg = ctx.prisma.material.findMany.mock.calls[0][0];
+    // no `lessons: { some: {} }` constraint that would hide standalone rows
+    expect(arg.where.lessons).toBeUndefined();
+  });
+
+  it('never returns storagePath to the client — exposes hasFile boolean only', async () => {
+    const ctx = makeCtx();
+    ctx.prisma.material.findMany.mockResolvedValue([
+      {
+        id: 'm-1',
+        type: 'CHECKLIST',
+        title: 'Чек-лист',
+        description: null,
+        ctaText: 'Скачать',
+        externalUrl: null,
+        storagePath: 'checklist/m-1/file.pdf',
+        isStandalone: true,
+        isHidden: false,
+      },
+    ]);
+    const caller = materialRouter.createCaller(ctx);
+    const res = await caller.listForUser({});
+    const item = res.items[0] as any;
+    // storagePath НИКОГДА не уходит клиенту — payload экспонирует hasFile boolean.
+    expect(item.storagePath).toBeUndefined();
+    expect(item.hasFile).toBe(true);
+  });
+
+  it('does NOT reference or weaken getSignedUrl ACL (download ACL frozen, D-05)', async () => {
+    // getSignedUrl остаётся FORBIDDEN для standalone (no attached lesson) —
+    // listForUser его не трогает. Регресс-проверка ACL.
+    const ctx = makeCtx();
+    ctx.prisma.material.findUnique.mockResolvedValue({
+      id: 'm-1',
+      isHidden: false,
+      storagePath: 'pdf/m-1/file.pdf',
+      lessons: [], // standalone — нет видимых уроков
+    });
+    const caller = materialRouter.createCaller(ctx);
+    await expect(
+      caller.getSignedUrl({ materialId: 'm-1' }),
+    ).rejects.toMatchObject({ code: 'FORBIDDEN' });
+  });
+});
+
 // Reference unused import to avoid TS noUnusedLocals if strict
 void TRPCError;

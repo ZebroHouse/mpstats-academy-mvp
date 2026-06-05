@@ -46,6 +46,7 @@ model UserProfile {
   diagnosticSessions     DiagnosticSession[]
   skillProfile           SkillProfile?
   learningPath           LearningPath?
+  favorites              Favorite[]
   chatMessages           ChatMessage[]
   lessonComments         LessonComment[]
   subscriptions          Subscription[]
@@ -659,4 +660,43 @@ model JobLesson {
 
   @@id([jobId, lessonId])
   @@index([lessonId])
+}
+
+// ============== FAVORITES (Phase 61, D-06) ==============
+// Полиморфное «избранное»: один пользователь хранит избранные уроки/задачи/материалы.
+// itemId — полиморфный ref (БЕЗ FK, чтобы не плодить три nullable-колонки);
+// целостность контролируется на уровне приложения: favorite.list резолвит itemId→сущность
+// с isHidden:false и тихо отбрасывает повисшие/скрытые ссылки (D-10).
+enum FavoriteItemType {
+  LESSON
+  JOB
+  MATERIAL
+}
+
+model Favorite {
+  id        String           @id @default(cuid())
+  userId    String
+  itemType  FavoriteItemType
+  itemId    String
+  createdAt DateTime         @default(now())
+
+  user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, itemType, itemId])
+  @@index([userId, itemType])
+}
+
+// ============== ACTIVITY ANALYTICS ==============
+// DAU/WAU/MAU active-user tracking. One row per (user, calendar day UTC).
+// Standalone/additive: NO FK relation to UserProfile (avoids cascade risk on
+// shared prod DB). Composite PK gives idempotent per-user-per-day uniqueness.
+// Accurate data accrues going-forward via protectedProcedure heartbeat;
+// history can be approximately backfilled from engaged-action signals.
+model UserActivityDay {
+  userId    String   // matches UserProfile.id (text)
+  day       DateTime @db.Date
+  createdAt DateTime @default(now())
+
+  @@id([userId, day])
+  @@index([day])
 }
