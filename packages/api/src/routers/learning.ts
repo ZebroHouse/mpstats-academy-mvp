@@ -23,7 +23,7 @@ export const learningRouter = router({
   getCourses: protectedProcedure.query(async ({ ctx }): Promise<CourseWithProgress[]> => {
     try {
       const courses = await ctx.prisma.course.findMany({
-        where: { isHidden: false },
+        where: { isHidden: false, partnerKey: null },
         include: {
           lessons: {
             where: { isHidden: false },
@@ -99,8 +99,8 @@ export const learningRouter = router({
     .input(z.object({ courseId: z.string() }))
     .query(async ({ ctx, input }): Promise<CourseWithProgress | null> => {
       try {
-        const course = await ctx.prisma.course.findUnique({
-          where: { id: input.courseId },
+        const course = await ctx.prisma.course.findFirst({
+          where: { id: input.courseId, isHidden: false, partnerKey: null },
           include: {
             lessons: {
               where: { isHidden: false },
@@ -114,8 +114,8 @@ export const learningRouter = router({
           },
         });
 
-        // Treat a hidden course the same as «not found» for users
-        if (!course || course.isHidden) return null;
+        // Treat a hidden or partner course the same as «not found» for users
+        if (!course) return null;
 
         const [subs, billingEnabled, isAdminBypass] = await Promise.all([
           getUserActiveSubscriptions(ctx.user.id, ctx.prisma),
@@ -192,7 +192,7 @@ export const learningRouter = router({
       // If no path exists, return all lessons with no progress
       if (!path) {
         const allLessons = await ctx.prisma.lesson.findMany({
-          where: { isHidden: false, course: { isHidden: false } },
+          where: { isHidden: false, course: { isHidden: false, partnerKey: null } },
           orderBy: [{ courseId: 'asc' }, { order: 'asc' }],
         });
 
@@ -232,7 +232,7 @@ export const learningRouter = router({
 
       // Get ALL lessons (path may not have progress for all)
       const allLessons = await ctx.prisma.lesson.findMany({
-        where: { isHidden: false, course: { isHidden: false } },
+        where: { isHidden: false, course: { isHidden: false, partnerKey: null } },
         orderBy: [{ courseId: 'asc' }, { order: 'asc' }],
       });
 
@@ -320,7 +320,7 @@ export const learningRouter = router({
             where: { id: { in: addedJobIds }, isPublished: true },
             include: {
               lessons: {
-                where: { lesson: { isHidden: false, course: { isHidden: false } } },
+                where: { lesson: { isHidden: false, course: { isHidden: false, partnerKey: null } } },
                 orderBy: { order: 'asc' },
                 include: {
                   lesson: {
@@ -373,7 +373,7 @@ export const learningRouter = router({
           where: {
             id: { in: allLessonIds },
             isHidden: false,
-            course: { isHidden: false },
+            course: { isHidden: false, partnerKey: null },
           },
           include: {
             progress: { where: { path: { userId: ctx.user.id } } },
@@ -382,7 +382,7 @@ export const learningRouter = router({
         });
         const lessonMap = new Map(lessons.map(l => [l.id, l]));
 
-        // Filter out lessonIds that no longer resolve (hidden / deleted) and
+        // Filter out lessonIds that no longer resolve (hidden / deleted / partner) and
         // drop sections that become empty as a result.
         const sectionsWithData = activeParsed.sections
           .map(section => ({
@@ -417,7 +417,7 @@ export const learningRouter = router({
         where: {
           id: { in: recommendedIds },
           isHidden: false,
-          course: { isHidden: false },
+          course: { isHidden: false, partnerKey: null },
         },
         include: {
           progress: { where: { path: { userId: ctx.user.id } } },

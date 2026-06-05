@@ -1,0 +1,387 @@
+{
+  "generated": "2026-06-05T00:00:00.000Z",
+  "matched": [
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Биддер\\Биддер. Полный обзор.mp4",
+      "lessonId": "07_instruments_m01_bidder_001",
+      "title": "Биддер. Полный обзор",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 552.5,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Биддер\\Журнал продвижения.mp4",
+      "lessonId": "07_instruments_m01_bidder_002",
+      "title": "Журнал продвижения",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 106.4,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Биддер\\Проверка рекламных позиций.mp4",
+      "lessonId": "07_instruments_m01_bidder_003",
+      "title": "Проверка рекламных позиций",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 33.9,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Биддер\\Пульс рекламы.mp4",
+      "lessonId": "07_instruments_m01_bidder_004",
+      "title": "Пульс рекламы",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 31.1,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Внешняя аналитика Wildberries\\Категории.mp4",
+      "lessonId": "07_instruments_m02_va_wb_001",
+      "title": "Категории",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 439.4,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Внешняя аналитика Wildberries\\Группы.mp4",
+      "lessonId": "07_instruments_m02_va_wb_002",
+      "title": "Группы",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 279,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Внешняя аналитика Wildberries\\Товары в поиске.mp4",
+      "lessonId": "07_instruments_m02_va_wb_003",
+      "title": "Товары в поиске",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 63,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Внешняя аналитика Wildberries\\Поиск по SKU.mp4",
+      "lessonId": "07_instruments_m02_va_wb_004",
+      "title": "Поиск по SKU",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 255,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Внешняя аналитика Wildberries\\Анализ характеристик SKU.mp4",
+      "lessonId": "07_instruments_m02_va_wb_005",
+      "title": "Анализ характеристик SKU",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 122.6,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Внешняя аналитика Wildberries\\Продавцы.mp4",
+      "lessonId": "07_instruments_m02_va_wb_006",
+      "title": "Продавцы",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 423.2,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Внешняя аналитика Wildberries\\Анализ отзывов.mp4",
+      "lessonId": "07_instruments_m02_va_wb_007",
+      "title": "Анализ отзывов",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 63.6,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Внешняя аналитика Ozon\\Выбор ниши.mp4",
+      "lessonId": "07_instruments_m03_va_ozon_001",
+      "title": "Выбор ниши",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 344.4,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Внешняя аналитика Ozon\\Категории.mp4",
+      "lessonId": "07_instruments_m03_va_ozon_002",
+      "title": "Категории",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 250.1,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Внешняя аналитика Ozon\\Группы.mp4",
+      "lessonId": "07_instruments_m03_va_ozon_003",
+      "title": "Группы",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 269.3,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Внешняя аналитика Ozon\\Поиск по SKU.mp4",
+      "lessonId": "07_instruments_m03_va_ozon_004",
+      "title": "Поиск по SKU",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 173.4,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Внешняя аналитика Ozon\\Анализ характеристик SKU.mp4",
+      "lessonId": "07_instruments_m03_va_ozon_005",
+      "title": "Анализ характеристик SKU",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 39.8,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Внешняя аналитика Ozon\\Бренды.mp4",
+      "lessonId": "07_instruments_m03_va_ozon_006",
+      "title": "Бренды",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 112.3,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Внешняя аналитика Ozon\\Продавцы.mp4",
+      "lessonId": "07_instruments_m03_va_ozon_007",
+      "title": "Продавцы",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 289.5,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Кабинет Wildberries\\Кабинет Wildberries. Обзор.mp4",
+      "lessonId": "07_instruments_m04_cabinet_wb_001",
+      "title": "Кабинет Wildberries. Обзор",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 102.2,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Кабинет Wildberries\\Сводка.mp4",
+      "lessonId": "07_instruments_m04_cabinet_wb_002",
+      "title": "Сводка",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 233.4,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Кабинет Wildberries\\Продажи и заказы.mp4",
+      "lessonId": "07_instruments_m04_cabinet_wb_003",
+      "title": "Продажи и заказы",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 195,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Кабинет Wildberries\\Загрузка себестоимости.mp4",
+      "lessonId": "07_instruments_m04_cabinet_wb_004",
+      "title": "Загрузка себестоимости",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 84.4,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Кабинет Wildberries\\Расчёт поставки.mp4",
+      "lessonId": "07_instruments_m04_cabinet_wb_005",
+      "title": "Расчёт поставки",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 221.4,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\SEO\\Вступление и результаты поиска (SERP).mp4",
+      "lessonId": "07_instruments_m05_seo_001",
+      "title": "Вступление и результаты поиска (SERP)",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 238.7,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\SEO\\Расширение запросов.mp4",
+      "lessonId": "07_instruments_m05_seo_002",
+      "title": "Расширение запросов",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 103.5,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\SEO\\Поиск кластеров.mp4",
+      "lessonId": "07_instruments_m05_seo_003",
+      "title": "Поиск кластеров",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 65,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\SEO\\Проверка группы запросов.mp4",
+      "lessonId": "07_instruments_m05_seo_004",
+      "title": "Проверка группы запросов",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 80.5,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\SEO\\Мониторинг позиций.mp4",
+      "lessonId": "07_instruments_m05_seo_005",
+      "title": "Мониторинг позиций",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 107.5,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\SEO\\Проверка карточки товара.mp4",
+      "lessonId": "07_instruments_m05_seo_006",
+      "title": "Проверка карточки товара",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 538.7,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\SEO\\Товары.mp4",
+      "lessonId": "07_instruments_m05_seo_007",
+      "title": "Товары",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 256.8,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\SEO\\Бренды.mp4",
+      "lessonId": "07_instruments_m05_seo_008",
+      "title": "Бренды",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 560.5,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\SEO\\AI-инструменты.mp4",
+      "lessonId": "07_instruments_m05_seo_009",
+      "title": "AI-инструменты",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 181,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Автоответы\\Автоответы.mp4",
+      "lessonId": "07_instruments_m06_autoresponses_001",
+      "title": "Автоответы",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 186.5,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Внешняя реклама\\Внешняя реклама.mp4",
+      "lessonId": "07_instruments_m07_external_ads_001",
+      "title": "Внешняя реклама",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 328.5,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Группы Яндекс Маркет\\Группы Яндекс Маркет.mp4",
+      "lessonId": "07_instruments_m08_ym_groups_001",
+      "title": "Группы Яндекс Маркет",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 52.7,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Мои карточки\\Мои карточки.mp4",
+      "lessonId": "07_instruments_m09_my_cards_001",
+      "title": "Мои карточки",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 208.1,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Плагин\\Плагин.mp4",
+      "lessonId": "07_instruments_m10_plugin_001",
+      "title": "Плагин",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 466.8,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Рука на Пульсе (РнП)\\Рука на Пульсе (РнП).mp4",
+      "lessonId": "07_instruments_m11_ruka_na_pulse_001",
+      "title": "Рука на Пульсе (РнП)",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 248.5,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Репрайсер Ozon\\Репрайсер Ozon.mp4",
+      "lessonId": "07_instruments_m12_repricer_ozon_001",
+      "title": "Репрайсер Ozon",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 25.6,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Репрайсер Wildberries\\Репрайсер Wildberries.mp4",
+      "lessonId": "07_instruments_m13_repricer_wb_001",
+      "title": "Репрайсер Wildberries",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 165.6,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Управление ценой и скидками\\Управление ценой и скидками.mp4",
+      "lessonId": "07_instruments_m14_price_management_001",
+      "title": "Управление ценой и скидками",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 27.5,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:\\Academy Courses\\Free Course MPSTATS instruments\\Фоторедактор\\Фоторедактор.mp4",
+      "lessonId": "07_instruments_m15_photo_editor_001",
+      "title": "Фоторедактор",
+      "courseId": "07_instruments",
+      "fileExists": true,
+      "fileSizeMB": 176.6,
+      "extension": ".mp4"
+    }
+  ],
+  "stats": {
+    "total": 42,
+    "matched": 42
+  }
+}

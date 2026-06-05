@@ -13,6 +13,8 @@ export type LessonResultCardData = {
   watchedPercent: number;
   locked: boolean;
   initialFavorited?: boolean;
+  /** Партнёрский урок («Инструменты MPSTATS») → ссылка ведёт в /mpstats-tools, не в /learn. */
+  isPartner?: boolean;
 };
 
 /**
@@ -29,13 +31,18 @@ export function LessonResultCard({ lesson }: { lesson: LessonResultCardData }) {
 
   return (
     <Link
-      href={`/learn/${lesson.id}`}
+      href={lesson.isPartner ? `/mpstats-tools/${lesson.id}` : `/learn/${lesson.id}`}
       className="flex flex-col bg-white border border-mp-gray-200 rounded-xl p-4 shadow-mp-card hover:shadow-mp-card-hover transition-shadow"
     >
       <div className="flex items-start gap-1">
         <h3 className="text-body font-semibold text-mp-gray-900 leading-snug flex-1">
           {lesson.title}
         </h3>
+        {lesson.isPartner && (
+          <span className="text-[11px] font-medium text-[#00B341] bg-[#00B341]/10 rounded px-1.5 py-0.5 shrink-0 whitespace-nowrap">
+            Инструменты MPSTATS
+          </span>
+        )}
         {lesson.locked && <Lock className="w-4 h-4 text-mp-gray-400 shrink-0 mt-0.5" />}
         <FavoriteButton
           itemType="LESSON"

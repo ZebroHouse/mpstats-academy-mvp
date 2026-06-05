@@ -284,7 +284,7 @@ export const aiRouter = router({
           course: { isHidden: false },
         },
         include: {
-          course: { select: { id: true, title: true, isHidden: true } },
+          course: { select: { id: true, title: true, isHidden: true, partnerKey: true } },
           progress: {
             where: { path: { userId: ctx.user.id } },
             take: 1,
@@ -327,8 +327,9 @@ export const aiRouter = router({
 
       const results: SearchLessonResult[] = lessons.map((lesson) => {
         const chunkList = lessonChunksMap.get(lesson.id) || [];
+        const isPartner = lesson.course.partnerKey != null;
         const locked = !isLessonAccessible(
-          { order: lesson.order, courseId: lesson.courseId },
+          { order: lesson.order, courseId: lesson.courseId, isPartnerFree: isPartner },
           subs,
           billingEnabled,
           isAdminBypass,
@@ -369,6 +370,7 @@ export const aiRouter = router({
           watchedPercent: lesson.progress[0]?.watchedPercent || 0,
           status: (lesson.progress[0]?.status || 'NOT_STARTED') as any,
           locked,
+          isPartner,
           inRecommendedPath: recommendedLessonIds.has(lesson.id),
         };
       })

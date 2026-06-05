@@ -138,12 +138,14 @@ model Course {
   isHidden    Boolean   @default(false) // soft-hide: hides course and all its lessons from users
   hiddenBy    String?
   hiddenAt    DateTime?
+  partnerKey  String?   // null = обычный академический курс; 'mpstats' = партнёрский (бесплатный, изолированный)
 
   lessons       Lesson[]
   subscriptions Subscription[]
   promoCodes    PromoCode[]
 
   @@index([isHidden])
+  @@index([partnerKey])
 }
 
 model Lesson {
