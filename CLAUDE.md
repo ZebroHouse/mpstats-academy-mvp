@@ -104,7 +104,15 @@ Archive directory `D:/GpT_docs/MPSTATS ACADEMY ADAPTIVE LEARNING/MAAL-phase55/` 
 
 **Внимание (исторический lesson):** CP хранит `amount` на своей стороне на момент создания подписки. При смене цен отменять старые ACTIVE подписки чтобы автосписания пошли по новым тарифам.
 
-## Last Session (2026-06-05) — Обучение 2.0 (Phase 61 + 61.1 + DAU/WAU/MAU) shipped to prod
+## Last Session (2026-06-05) — Onboarding hotfix: required answer per wizard step
+
+**Hotfix `dc645c7` (direct to master, prod deploy `maal-web-1`).** Прод-баг: кнопка «Продолжить»/«Далее» в визарде `/welcome` пропускала шаг даже без выбранного ответа — юзеры проскакивали онбординг с пустыми полями квалификации (goals/marketplaces/experience).
+
+**Фикс** (`apps/web/src/app/welcome/page.tsx`): добавлен `canAdvance` — гейт по шагам, кнопка `disabled` пока нет ответа. Шаг 1 = хотя бы один чип цели **или** непустой свободный текст; шаг 2 = ≥1 маркетплейс; шаг 3 = выбран уровень опыта. Подсказка под кнопкой меняется на «Выберите хотя бы один вариант, чтобы продолжить», пока ответа нет. Тест `apps/web/tests/unit/welcome-page.test.tsx`: старый regression-тест навигации обновлён (выбирает ответы), +2 новых теста (гейт на каждом шаге; свободный текст = ответ на шаге 1). web 210/210, typecheck зелёный.
+
+**Деплой:** master clean == origin до пуша (зашипился только этот фикс), VPS ff-pull → `build --no-cache web` → recreate (healthy). Content-check: новая строка в свежем `.next` (2 файла, не стейл — node-скан внутри контейнера, т.к. grep по кириллице через SSH→docker мангалит кодировку). Прод-smoke: `/` 200, `/welcome` 307 (auth-redirect). Откат: `git revert dc645c7` + редеплой.
+
+## Previous Session (2026-06-05) — Обучение 2.0 (Phase 61 + 61.1 + DAU/WAU/MAU) shipped to prod
 
 **Release `4145a68` merged `learning-2.0-redesign`→master + prod deploy `maal-web-1`.** Один большой релиз: вся Phase 61 (редизайн раздела «Обучение») + Phase 61.1 (UAT-фиксы) + админская аналитика активных юзеров.
 
