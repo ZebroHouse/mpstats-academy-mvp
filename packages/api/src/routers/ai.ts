@@ -377,7 +377,12 @@ export const aiRouter = router({
       .sort((a, b) => b.bestSimilarity - a.bestSimilarity)
       .slice(0, 10);
 
-      return { query: input.query, results, totalChunks: chunks.length };
+      // Partner courses are env-gated: hide their lessons from search unless enabled
+      // for this environment (staging on / prod off until launch sign-off).
+      const partnerEnabled = process.env.PARTNER_COURSES_ENABLED === 'true';
+      const visibleResults = partnerEnabled ? results : results.filter((r) => !r.isPartner);
+
+      return { query: input.query, results: visibleResults, totalChunks: chunks.length };
     }),
 
   /**

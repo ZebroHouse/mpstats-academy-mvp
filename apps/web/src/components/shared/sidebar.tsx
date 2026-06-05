@@ -106,7 +106,7 @@ const billingNavItem: NavItem = {
   ),
 };
 
-export function Sidebar() {
+export function Sidebar({ partnerEnabled = false }: { partnerEnabled?: boolean }) {
   const pathname = usePathname();
   const isLearnActive = pathname.startsWith('/learn');
   const [learnOpen, setLearnOpen] = useState(isLearnActive);
@@ -119,8 +119,9 @@ export function Sidebar() {
     refetchOnWindowFocus: false,
   });
 
-  // Build nav items with conditional billing and admin links
-  const items = [...navItems];
+  // Build nav items with conditional billing and admin links.
+  // Partner-courses entry («Инструменты MPSTATS») is env-gated via partnerEnabled.
+  const items = [...navItems].filter((i) => i.href !== '/mpstats-tools' || partnerEnabled);
   if (billingEnabled) {
     // Insert before "Профиль" (last item)
     items.splice(items.length - 1, 0, billingNavItem);

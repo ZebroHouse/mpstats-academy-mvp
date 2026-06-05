@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // server-only guard throws in non-server environments — mock it out
 vi.mock('server-only', () => ({}));
@@ -76,6 +76,11 @@ beforeEach(() => {
   mockBillingFlag.mockResolvedValue(true);  // billing enabled
   mockAdminBypass.mockResolvedValue(false); // not admin
   mockPathFindUnique.mockResolvedValue(null);
+  process.env.PARTNER_COURSES_ENABLED = 'true'; // partner section enabled (staging-like)
+});
+
+afterEach(() => {
+  delete process.env.PARTNER_COURSES_ENABLED;
 });
 
 describe('ai.searchLessons — partner course handling', () => {
@@ -152,5 +157,29 @@ describe('ai.searchLessons — partner course handling', () => {
     // Non-partner, no subscription, order>2 → must be locked
     expect(result.locked).toBe(true);
     expect((result as any).isPartner).toBe(false);
+  });
+
+  it('partner lesson is filtered OUT of search results when PARTNER_COURSES_ENABLED is off (prod gate)', async () => {
+    process.env.PARTNER_COURSES_ENABLED = 'false';
+    mockSearchChunks.mockResolvedValue([
+      {
+        id: 'ch-p1',
+        lesson_id: 'lp1',
+        content: 'анализ конкурентов через mpstats',
+        timecode_start: 0,
+        timecode_end: 15,
+        source_type: 'academy_audio',
+        trust_tier: 1,
+        similarity: 0.85,
+      },
+    ]);
+    mockLessonFindMany
+      .mockResolvedValueOnce([])
+      .mockResolvedValueOnce([partnerLessonRow()]);
+
+    const res = await caller().searchLessons({ query: 'конкуренты mpstats' });
+
+    // Flag off → partner lessons excluded from search entirely
+    expect(res.results).toHaveLength(0);
   });
 });

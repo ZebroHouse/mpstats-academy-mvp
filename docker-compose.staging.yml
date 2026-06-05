@@ -32,6 +32,9 @@ services:
       - .env.staging
     environment:
       NODE_OPTIONS: --dns-result-order=ipv4first
+      # Partner-courses section («Инструменты MPSTATS») visible on staging for review.
+      # Prod keeps this unset (off) until launch sign-off. Runtime flag — no rebuild to flip.
+      PARTNER_COURSES_ENABLED: "true"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health"]

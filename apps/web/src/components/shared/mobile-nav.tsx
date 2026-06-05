@@ -93,7 +93,7 @@ const billingNavItem: NavItem = {
   ),
 };
 
-export function MobileNav() {
+export function MobileNav({ partnerEnabled = false }: { partnerEnabled?: boolean }) {
   const pathname = usePathname();
   const { data: billingEnabled } = trpc.billing.isEnabled.useQuery(undefined, {
     retry: false,
@@ -104,8 +104,9 @@ export function MobileNav() {
     refetchOnWindowFocus: false,
   });
 
-  // Build nav items with conditional billing and admin links
-  const items = [...navItems];
+  // Build nav items with conditional billing and admin links.
+  // Partner-courses entry («Инструменты MPSTATS») is env-gated via partnerEnabled.
+  const items = [...navItems].filter((i) => i.href !== '/mpstats-tools' || partnerEnabled);
   if (billingEnabled) {
     // Insert before "Профиль" (last item)
     items.splice(items.length - 1, 0, billingNavItem);

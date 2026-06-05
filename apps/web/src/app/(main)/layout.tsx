@@ -70,10 +70,14 @@ export default async function MainLayout({
     ? createHmac('sha256', cqUserAuthKey).update(user.id).digest('hex')
     : '';
 
+  // Partner-courses section («Инструменты MPSTATS») is env-gated per environment
+  // (staging on / prod off until launch sign-off). Runtime flag — no rebuild to flip.
+  const partnerEnabled = process.env.PARTNER_COURSES_ENABLED === 'true';
+
   return (
     <div className="min-h-screen bg-mp-gray-50">
       {/* Sidebar - fixed on desktop */}
-      <Sidebar />
+      <Sidebar partnerEnabled={partnerEnabled} />
 
       {/* Main content area — TourProvider wraps header+main so HelpCircleButton can access useTour */}
       <TourProvider>
@@ -110,7 +114,7 @@ export default async function MainLayout({
       </TourProvider>
 
       {/* Mobile navigation */}
-      <MobileNav />
+      <MobileNav partnerEnabled={partnerEnabled} />
 
       {/* Carrot Quest user identification */}
       {cqHash && (
