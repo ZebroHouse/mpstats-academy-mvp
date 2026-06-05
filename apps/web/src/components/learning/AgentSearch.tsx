@@ -66,6 +66,7 @@ export function AgentSearch({ scope, size = 'default' }: { scope: Scope; size?: 
       snippet: r.snippets[0]?.content ?? null,
       watchedPercent: r.watchedPercent,
       locked: r.locked,
+      isPartner: r.isPartner,
     }));
 
     const materials: MaterialCardProps[] = (materialsRes?.items ?? []).map((m) => ({
