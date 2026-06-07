@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { trpc } from '@/lib/trpc/client';
+import { LogoIcon } from './Logo';
 
 interface NavItem {
   title: string;
@@ -40,16 +41,10 @@ const navItems: NavItem[] = [
     ),
   },
   {
-    // TODO: replace placeholder SVG with exact brand icon from go_mpstats_academy/brand-assets
-    // Color #00B341 is a placeholder for the real MPSTATS brand green
+    // MPSTATS logo mark = platform LogoIcon in the MPSTATS brand green (#17BF50).
     title: 'Инструменты',
     href: '/mpstats-tools',
-    icon: (
-      <svg className="w-6 h-6 text-[#00B341]" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-        {/* MPSTATS «треугольники» — placeholder; заменить на точный бренд-SVG из go_mpstats_academy/brand-assets когда будет */}
-        <path d="M12 3l4 7H8l4-7zM6 13l3 5H3l3-5zm12 0l3 5h-6l3-5z" />
-      </svg>
-    ),
+    icon: <LogoIcon size={24} primaryColor="#17BF50" className="w-6 h-6" />,
   },
   {
     title: 'Профиль',

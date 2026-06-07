@@ -19,7 +19,7 @@ const sizeConfig = {
 };
 
 // MPSTATS Academy Icon (play button mark)
-function LogoIcon({
+export function LogoIcon({
   size = 24,
   primaryColor = '#2C4FF8',
   className
