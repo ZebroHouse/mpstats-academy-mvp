@@ -54,6 +54,7 @@ Sibling project `D:/GpT_docs/Ai_MP_manager/` запустил `prisma db push --
 | v1.11 Ambassador Codes | Shipped 2026-05-28 (Phase 60 — админ-управляемые AMBASSADOR реф-коды для блогеров с кастомным trial-сроком + admin UI + статистика) |
 | v1.12 Marketplace-aware Diagnostic | Shipped 2026-06-01 (Phase 59 v2 — pivot к hand-curated static deck: 30 вопросов 15WB+15Ozon, 5×3 axis/level matrix, seeded option shuffle, balanced 7-8 mix for BOTH users) |
 | v1.13 Обучение 2.0 | Shipped 2026-06-05 (Phase 61 + 61.1 + DAU/WAU/MAU аналитика — release `4145a68`) |
+| v1.14 Инструменты MPSTATS | Shipped 2026-06-08 (Phase 62 — бесплатный партнёрский курс `/mpstats-tools`, env-gated, изолирован от диагностики) |
 
 **Remaining work:**
 1. Phase 33-03: CQ Dashboard Setup (на стороне CQ команды).
@@ -104,7 +105,32 @@ Archive directory `D:/GpT_docs/MPSTATS ACADEMY ADAPTIVE LEARNING/MAAL-phase55/` 
 
 **Внимание (исторический lesson):** CP хранит `amount` на своей стороне на момент создания подписки. При смене цен отменять старые ACTIVE подписки чтобы автосписания пошли по новым тарифам.
 
-## Last Session (2026-06-05) — Onboarding hotfix: required answer per wizard step
+## Last Session (2026-06-08) — Phase 62 «Инструменты MPSTATS» partner course shipped to prod
+
+**Бесплатный курс инструментов сервиса MPSTATS как изолированный раздел `/mpstats-tools`** (паттерн «партнёрский курс», верх воронки: юзер приходит за инструментами → видит платный контент → paywall → конверсия). Расширяемо под будущие партнёрские курсы (Точка Банк через Точка ID). Релиз через `git merge --no-ff` в master + env-флаг.
+
+**Что на проде (включено `PARTNER_COURSES_ENABLED=true` в `docker-compose.yml`):**
+- Курс `07_instruments` (`Course.partnerKey='mpstats'`, новый nullable столбец + миграция), 42 урока / 15 инструментов. Каталог = компактные карточки, мульти-инструмент = аккордеон inline, одиночный → сразу плеер. Плеер переиспользует KinescopePlayer + ai.chat + saveWatchProgress.
+- **Изоляция:** `course.partnerKey: null` добавлен в diagnostic.ts (4 запроса) + learning.ts (трек + getCourses/getCourse) → партнёрка НЕ в диагностике/треке/job-каталоге. В `ai.searchLessons` остаётся (помечена `isPartner`, всегда unlocked, роутится на `/mpstats-tools/<id>`). Бесплатность — bypass в `access.ts` по `partnerKey`, **НЕ по `isFree`** (тот dormant `@default(true)` — открыл бы все платные курсы).
+- **Иконка** сайдбара = play-mark платформы (`LogoIcon`, экспортирован из `Logo.tsx`) в фирменном зелёном MPSTATS `#17BF50` (из `go_mpstats_academy/brand-assets/logos`).
+- **Видео:** 42 ролика (8.5 ГБ) залиты на Kinescope (папка `a1c43064...`), `Lesson.videoId`/`videoUrl` проставлены. **RAG:** 231 chunk на проде (RAG Phase A сделана в проекте `E:\Academy Courses`, courseId/lesson_id = `07_instruments_*`; `Lesson.id` обязан совпадать с `content_chunk.lesson_id` — сверено 42/42, 0 orphan).
+- **Партнёр-роутер** `packages/api/src/routers/partner.ts`: `getCatalog` (группы по `metadata.toolGroup`), `resolveModule` (deep-link `?module=<key>` по `metadata.partnerModuleKey`), `getLesson` (всегда unlocked).
+
+**Env-флаг (ключевой паттерн):** `PARTNER_COURSES_ENABLED` (runtime, на контейнер). Нужен потому что **staging делит ту же prod-Supabase** → `isHidden` не разводит видимость stage/prod. Гейт: nav-item (sidebar+mobile через проп из `(main)/layout.tsx`), весь раздел (`(main)/mpstats-tools/layout.tsx` server-redirect→/learn), searchLessons (фильтр isPartner). Флипается env + `docker compose up -d` без пересборки. Прод: `=true` (включён). Выключить = убрать строку из prod compose + up -d.
+
+**Прод-БД операции через Supabase Mgmt API** (паттерн `reference_supabase_migration_via_mgmt_api.md`): миграция `partnerKey` (колонка+индекс+`_prisma_migrations`), seed Course+42 Lesson (upsert, videoId не трогается при повторе).
+
+**Косяк сессии (учиться):** при просьбе owner «сначала staging, потом отдельно прод» агент склеил staging+prod-деплой+раскрытие в один runbook и выкатил раздел видимым на прод без ревью. Исправлено env-флагом (prod off / staging on), owner проверил на staging → дал ОК → включили на проде. Урок: «сначала staging» = НЕ катить прод в том же заходе; на shared-БД для prod-hidden/staging-visible нужен env-флаг с самого начала.
+
+**Tests:** api 187/187, web 210/210, typecheck 6/6. Попутно починен orphan-тест `welcome-step-intent-resolve.test.tsx` (хотфикс `dc645c7` сделал ответ на шаге обязательным, старый тест кликал «Далее» без выбора) + `pnpm install --force` (параллельный инстанс затёр `@jridgewell/sourcemap-codec` в pnpm-сторе).
+
+**Релизные коммиты:** `f491661` (merge phase-62→master) → `daf3b0b` (env-flag) → флаг-on на проде (`docker-compose.yml`). Откат: убрать флаг (мгновенно скрыть) или `git revert` + редеплой.
+
+**Осталось:** финал `partnerModuleKey` согласовать с командой MPSTATS (кнопки deep-link в их сервисе; сейчас provisional, ссылки рабочие). **Часть 2 — бесшовная авторизация** (отдельный спек, спек Части 1 в `docs/superpowers/specs/2026-06-05-mpstats-tools-partner-course-design.md`; блокер = что выставит команда MPSTATS: OAuth / подписанный токен / секрет).
+
+**Память:** `project_phase62_mpstats_tools.md`.
+
+## Previous Session (2026-06-05) — Onboarding hotfix: required answer per wizard step
 
 **Hotfix `dc645c7` (direct to master, prod deploy `maal-web-1`).** Прод-баг: кнопка «Продолжить»/«Далее» в визарде `/welcome` пропускала шаг даже без выбранного ответа — юзеры проскакивали онбординг с пустыми полями квалификации (goals/marketplaces/experience).
 
