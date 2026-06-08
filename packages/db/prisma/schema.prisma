@@ -29,6 +29,7 @@ model UserProfile {
   avatarUrl               String?
   role                    Role      @default(USER)
   isActive                Boolean   @default(true)
+  isTest                  Boolean   @default(false) // Phase 63: excludes user from revenue/funnel analytics
   yandexId                String?   @unique // For Phase 17 Yandex ID OAuth binding
   phone                   String?
   toursCompleted          String[]  @default([]) // Onboarding tour state (per-user, not per-device): ['dashboard', 'learn', 'lesson']
