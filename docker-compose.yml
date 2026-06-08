@@ -19,6 +19,9 @@ services:
       - .env.production
     environment:
       NODE_OPTIONS: --dns-result-order=ipv4first
+      # Partner-courses section («Инструменты MPSTATS») — enabled on prod after owner
+      # sign-off (Phase 62). Runtime flag — flip off by removing this line + up -d.
+      PARTNER_COURSES_ENABLED: "true"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health"]
