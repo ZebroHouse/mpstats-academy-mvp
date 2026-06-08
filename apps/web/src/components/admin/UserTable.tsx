@@ -12,6 +12,7 @@ interface UserRow {
   email: string | null;
   role: Role;
   isActive: boolean;
+  isTest: boolean;
   createdAt: Date;
   _count: { diagnosticSessions: number };
 }
@@ -130,6 +131,8 @@ export function UserTable({ users, totalCount, page, totalPages, onPageChange, c
 
   // Optimistic state for isActive toggles
   const [optimisticActive, setOptimisticActive] = useState<Record<string, boolean>>({});
+  // Optimistic state for isTest toggles
+  const [optimisticTest, setOptimisticTest] = useState<Record<string, boolean>>({});
   // Optimistic state for role changes
   const [optimisticRole, setOptimisticRole] = useState<Record<string, Role>>({});
 
@@ -149,6 +152,33 @@ export function UserTable({ users, totalCount, page, totalPages, onPageChange, c
           },
           onSettled: () => {
             setOptimisticActive((prev) => {
+              const copy = { ...prev };
+              delete copy[userId];
+              return copy;
+            });
+          },
+        },
+      );
+    },
+    [toggleField],
+  );
+
+  const handleToggleTest = useCallback(
+    (userId: string, currentValue: boolean) => {
+      setOptimisticTest((prev) => ({ ...prev, [userId]: !currentValue }));
+
+      toggleField.mutate(
+        { userId, field: 'isTest' },
+        {
+          onError: () => {
+            setOptimisticTest((prev) => {
+              const copy = { ...prev };
+              delete copy[userId];
+              return copy;
+            });
+          },
+          onSettled: () => {
+            setOptimisticTest((prev) => {
               const copy = { ...prev };
               delete copy[userId];
               return copy;
@@ -192,6 +222,11 @@ export function UserTable({ users, totalCount, page, totalPages, onPageChange, c
     return serverValue;
   };
 
+  const getTestValue = (userId: string, serverValue: boolean) => {
+    if (userId in optimisticTest) return optimisticTest[userId];
+    return serverValue;
+  };
+
   const getRoleValue = (userId: string, serverValue: Role) => {
     if (userId in optimisticRole) return optimisticRole[userId];
     return serverValue;
@@ -216,6 +251,7 @@ export function UserTable({ users, totalCount, page, totalPages, onPageChange, c
               <th className="px-4 py-3 text-xs font-semibold text-mp-gray-500 uppercase tracking-wider">Registered</th>
               <th className="px-4 py-3 text-xs font-semibold text-mp-gray-500 uppercase tracking-wider text-center">Diagnostics</th>
               <th className="px-4 py-3 text-xs font-semibold text-mp-gray-500 uppercase tracking-wider text-center">Active</th>
+              <th className="px-4 py-3 text-xs font-semibold text-mp-gray-500 uppercase tracking-wider text-center">Тест</th>
               <th className="px-4 py-3 text-xs font-semibold text-mp-gray-500 uppercase tracking-wider text-center">Role</th>
             </tr>
           </thead>
@@ -264,6 +300,21 @@ export function UserTable({ users, totalCount, page, totalPages, onPageChange, c
                   ) : (
                     <span className={cn('text-xs font-medium', user.isActive ? 'text-mp-green-600' : 'text-mp-gray-400')}>
                       {user.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  )}
+                </td>
+
+                {/* isTest toggle — SUPERADMIN only */}
+                <td className="px-4 py-3 text-center">
+                  {currentUserRole === 'SUPERADMIN' ? (
+                    <Toggle
+                      checked={getTestValue(user.id, user.isTest)}
+                      onChange={() => handleToggleTest(user.id, user.isTest)}
+                      disabled={toggleField.isPending || user.id === currentUserId}
+                    />
+                  ) : (
+                    <span className={cn('text-xs font-medium', user.isTest ? 'text-amber-600' : 'text-mp-gray-400')}>
+                      {user.isTest ? 'Тест' : '—'}
                     </span>
                   )}
                 </td>
