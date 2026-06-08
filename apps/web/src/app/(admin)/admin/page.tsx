@@ -66,7 +66,7 @@ function DashboardSkeleton() {
 export default function AdminDashboardPage() {
   const stats = trpc.admin.getDashboardStats.useQuery();
   const activity = trpc.admin.getRecentActivity.useQuery();
-  const analytics = trpc.admin.getAnalytics.useQuery({ days: 7 });
+  const analytics = trpc.admin.analytics.getAnalytics.useQuery({ days: 7 });
   const commentStats = trpc.admin.getComments.useQuery(
     { status: 'all', period: 'all' },
     { select: (data) => ({ total: data?.totalCount ?? 0, newCount: data?.newCount ?? 0 }) }

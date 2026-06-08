@@ -26,8 +26,8 @@ function SummaryStat({ label, value }: { label: string; value: string | number }
 
 export default function AnalyticsPage() {
   const [days, setDays] = useState(7);
-  const analytics = trpc.admin.getAnalytics.useQuery({ days });
-  const watchStats = trpc.admin.getWatchStats.useQuery();
+  const analytics = trpc.admin.analytics.getAnalytics.useQuery({ days });
+  const watchStats = trpc.admin.analytics.getWatchStats.useQuery();
 
   // Calculate summary stats
   const userTotal = analytics.data?.userGrowth.reduce((s, d) => s + d.count, 0) ?? 0;
