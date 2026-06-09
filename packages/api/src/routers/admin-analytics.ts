@@ -14,6 +14,8 @@ import { router, adminProcedure } from '../trpc';
 import { handleDatabaseError } from '../utils/db-errors';
 import { mapActiveUserStats, type ActiveUserDayRow } from '../utils/active-user-stats';
 import { computeRevenueOverview, computeUpcomingRenewals, groupRevenueByDay } from '../utils/revenue-metrics';
+import { deriveTrialConversion } from '../utils/trial-conversion';
+import { computeConversionFunnel, churnRate, type FunnelUserRow } from '../utils/funnel-metrics';
 
 export const adminAnalyticsRouter = router({
   /**
@@ -366,6 +368,150 @@ export const adminAnalyticsRouter = router({
         // paidAt is nullable in schema but COMPLETED rows have it; filter defensively.
         const rows = payments.filter((p) => p.paidAt != null);
         return groupRevenueByDay(rows as never);
+      } catch (error) {
+        handleDatabaseError(error);
+      }
+    }),
+
+  /** Registration → diagnostic → paid conversion within `days`. Excludes test users. */
+  getConversionFunnel: adminProcedure
+    .input(z.object({ days: z.number().int().min(1).max(90).default(30) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const start = new Date();
+        start.setDate(start.getDate() - input.days);
+
+        const registered = await ctx.prisma.userProfile.findMany({
+          where: { createdAt: { gte: start }, isTest: false },
+          select: { id: true },
+        });
+        const ids = registered.map((u) => u.id);
+        if (ids.length === 0) return computeConversionFunnel([]);
+
+        const diagUsers = await ctx.prisma.diagnosticSession.findMany({
+          where: { status: 'COMPLETED', userId: { in: ids } },
+          select: { userId: true },
+          distinct: ['userId'],
+        });
+        const diagSet = new Set(diagUsers.map((d) => d.userId));
+
+        const paidRows = await ctx.prisma.payment.findMany({
+          where: { status: 'COMPLETED', subscription: { userId: { in: ids }, user: { isTest: false }, plan: { hidden: false } } },
+          select: { subscription: { select: { userId: true } } },
+        });
+        const paidSet = new Set(paidRows.map((p) => p.subscription.userId));
+
+        const rows: FunnelUserRow[] = ids.map((id) => ({
+          userId: id,
+          completedDiagnostic: diagSet.has(id),
+          paid: paidSet.has(id),
+        }));
+        return computeConversionFunnel(rows);
+      } catch (error) {
+        handleDatabaseError(error);
+      }
+    }),
+
+  /** Accurate trial→paid, derived from TRIAL rows + COMPLETED payments. */
+  getTrialConversion: adminProcedure
+    .input(z.object({ days: z.number().int().min(1).max(90).default(90) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const start = new Date();
+        start.setDate(start.getDate() - input.days);
+
+        const trials = await ctx.prisma.subscription.findMany({
+          where: { status: 'TRIAL', currentPeriodStart: { gte: start } },
+          select: {
+            userId: true,
+            currentPeriodStart: true,
+            currentPeriodEnd: true,
+            user: { select: { isTest: true } },
+            plan: { select: { hidden: true } },
+          },
+        });
+
+        const payments = await ctx.prisma.payment.findMany({
+          where: { status: 'COMPLETED' },
+          select: {
+            paidAt: true,
+            subscription: { select: { userId: true, user: { select: { isTest: true } }, plan: { select: { hidden: true } } } },
+          },
+        });
+
+        const trialRows = trials.map((t) => ({
+          userId: t.userId,
+          trialStart: t.currentPeriodStart,
+          trialEnd: t.currentPeriodEnd,
+          user: t.user,
+          plan: t.plan,
+        }));
+        const paymentRows = payments
+          .filter((p) => p.paidAt != null)
+          .map((p) => ({
+            userId: p.subscription.userId,
+            paidAt: p.paidAt as Date,
+            subscription: { user: p.subscription.user, plan: p.subscription.plan },
+          }));
+
+        return deriveTrialConversion(trialRows, paymentRows, new Date());
+      } catch (error) {
+        handleDatabaseError(error);
+      }
+    }),
+
+  /** Churn over `days`: cancellations, current PAST_DUE, approx churn rate. */
+  getChurn: adminProcedure
+    .input(z.object({ days: z.number().int().min(1).max(90).default(30) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const now = new Date();
+        const start = new Date();
+        start.setDate(start.getDate() - input.days);
+        const notTest = { user: { isTest: false }, plan: { hidden: false } };
+
+        const [cancelled, pastDue, activeBase] = await Promise.all([
+          ctx.prisma.subscription.count({ where: { status: 'CANCELLED', cancelledAt: { gte: start }, ...notTest } }),
+          ctx.prisma.subscription.count({ where: { status: 'PAST_DUE', ...notTest } }),
+          ctx.prisma.subscription.count({ where: { status: 'ACTIVE', currentPeriodEnd: { gt: now }, ...notTest } }),
+        ]);
+
+        return { cancelled, pastDue, activeBase, churnRate: churnRate(cancelled, activeBase) };
+      } catch (error) {
+        handleDatabaseError(error);
+      }
+    }),
+
+  /** Revenue source: referred vs organic paying users within `days`. */
+  getAttribution: adminProcedure
+    .input(z.object({ days: z.number().int().min(1).max(90).default(30) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const start = new Date();
+        start.setDate(start.getDate() - input.days);
+
+        const paidRows = await ctx.prisma.payment.findMany({
+          where: { status: 'COMPLETED', paidAt: { gte: start }, subscription: { user: { isTest: false }, plan: { hidden: false } } },
+          select: { amount: true, subscription: { select: { userId: true } } },
+        });
+
+        const userIds = [...new Set(paidRows.map((p) => p.subscription.userId))];
+        const referredRows = userIds.length
+          ? await ctx.prisma.referral.findMany({ where: { referredUserId: { in: userIds } }, select: { referredUserId: true } })
+          : [];
+        const referredSet = new Set(referredRows.map((r) => r.referredUserId));
+
+        const acc = { referred: { users: new Set<string>(), revenue: 0 }, organic: { users: new Set<string>(), revenue: 0 } };
+        for (const p of paidRows) {
+          const uid = p.subscription.userId;
+          const bucket = referredSet.has(uid) ? acc.referred : acc.organic;
+          bucket.users.add(uid);
+          bucket.revenue += p.amount;
+        }
+        return {
+          referred: { users: acc.referred.users.size, revenue: acc.referred.revenue },
+          organic: { users: acc.organic.users.size, revenue: acc.organic.revenue },
+        };
       } catch (error) {
         handleDatabaseError(error);
       }
