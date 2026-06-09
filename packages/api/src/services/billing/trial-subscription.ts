@@ -17,6 +17,10 @@ export interface CreateTrialOpts {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+// INVARIANT (Phase 63 analytics): a TRIAL row's `status` is never mutated.
+// Paying creates a SEPARATE Subscription row (see billing.initiatePayment).
+// deriveTrialConversion() relies on this to read the trial cohort historically.
+// Guarded by apps/web/src/lib/cloudpayments/__tests__/trial-invariant.test.ts.
 export async function createTrialSubscription(opts: CreateTrialOpts) {
   const tx = opts.prismaClient ?? defaultPrisma;
 
