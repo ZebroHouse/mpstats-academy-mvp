@@ -13,6 +13,7 @@ import { z } from 'zod';
 import { router, adminProcedure } from '../trpc';
 import { handleDatabaseError } from '../utils/db-errors';
 import { mapActiveUserStats, type ActiveUserDayRow } from '../utils/active-user-stats';
+import { computeRevenueOverview, computeUpcomingRenewals, groupRevenueByDay } from '../utils/revenue-metrics';
 
 export const adminAnalyticsRouter = router({
   /**
@@ -272,4 +273,101 @@ export const adminAnalyticsRouter = router({
       handleDatabaseError(error);
     }
   }),
+
+  /** Revenue overview: paying base, MRR, ARPU, plan split. Excludes test users. */
+  getRevenueOverview: adminProcedure.query(async ({ ctx }) => {
+    try {
+      const subs = await ctx.prisma.subscription.findMany({
+        where: { status: { in: ['ACTIVE', 'TRIAL'] } },
+        select: {
+          userId: true,
+          status: true,
+          currentPeriodEnd: true,
+          cpSubscriptionId: true,
+          plan: { select: { type: true, price: true, hidden: true } },
+          user: { select: { isTest: true } },
+        },
+      });
+      return computeRevenueOverview(subs as never, new Date());
+    } catch (error) {
+      handleDatabaseError(error);
+    }
+  }),
+
+  /** Upcoming recurrent renewals within `days`. Returns enriched rows + total. */
+  getUpcomingRenewals: adminProcedure
+    .input(z.object({ days: z.number().int().min(1).max(90).default(30) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const now = new Date();
+        const windowEnd = new Date(now.getTime() + input.days * 24 * 60 * 60 * 1000);
+
+        const subs = await ctx.prisma.subscription.findMany({
+          where: { status: 'ACTIVE', cpSubscriptionId: { not: null }, currentPeriodEnd: { gte: now, lte: windowEnd } },
+          select: {
+            userId: true,
+            status: true,
+            currentPeriodEnd: true,
+            cpSubscriptionId: true,
+            plan: { select: { type: true, price: true, hidden: true } },
+            user: { select: { isTest: true } },
+          },
+        });
+
+        const { rows, totalExpected } = computeUpcomingRenewals(subs as never, now, windowEnd);
+
+        // Enrich with name + email (same pattern as getWatchStats).
+        const userIds = [...new Set(rows.map((r) => r.userId))];
+        const profiles = userIds.length
+          ? await ctx.prisma.userProfile.findMany({ where: { id: { in: userIds } }, select: { id: true, name: true } })
+          : [];
+        const nameMap = new Map(profiles.map((p) => [p.id, p.name]));
+        const emailMap = new Map<string, string>();
+        if (userIds.length) {
+          try {
+            const r = await ctx.prisma.$queryRawUnsafe<Array<{ id: string; email: string | null }>>(
+              `SELECT id::text AS id, email FROM auth.users WHERE id IN (${userIds.map((_, i) => `$${i + 1}::uuid`).join(',')})`,
+              ...userIds,
+            );
+            r.forEach((row) => { if (row.email) emailMap.set(row.id, row.email); });
+          } catch { /* emails optional */ }
+        }
+
+        return {
+          rows: rows.map((r) => ({
+            ...r,
+            name: nameMap.get(r.userId) ?? 'Unknown',
+            email: emailMap.get(r.userId) ?? null,
+          })),
+          totalExpected,
+        };
+      } catch (error) {
+        handleDatabaseError(error);
+      }
+    }),
+
+  /** Actual cash-in: COMPLETED payments per day within `days`. Excludes test users. */
+  getActualRevenue: adminProcedure
+    .input(z.object({ days: z.number().int().min(1).max(90).default(30) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const start = new Date();
+        start.setDate(start.getDate() - input.days);
+        const payments = await ctx.prisma.payment.findMany({
+          where: { status: 'COMPLETED', paidAt: { gte: start } },
+          select: {
+            paidAt: true,
+            amount: true,
+            subscription: {
+              select: { plan: { select: { hidden: true } }, user: { select: { isTest: true } } },
+            },
+          },
+        });
+        // paidAt is nullable in schema but COMPLETED rows have it; filter defensively.
+        const rows = payments.filter((p) => p.paidAt != null);
+        return groupRevenueByDay(rows as never);
+      } catch (error) {
+        handleDatabaseError(error);
+      }
+    }),
 });
