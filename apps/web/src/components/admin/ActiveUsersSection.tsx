@@ -52,7 +52,7 @@ function trendCaption(current: number, previous: number): string | undefined {
 
 export function ActiveUsersSection() {
   const [days, setDays] = useState(30);
-  const stats = trpc.admin.getActiveUserStats.useQuery({ days });
+  const stats = trpc.admin.analytics.getActiveUserStats.useQuery({ days });
 
   const data = stats.data;
 
