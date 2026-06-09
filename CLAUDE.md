@@ -55,6 +55,7 @@ Sibling project `D:/GpT_docs/Ai_MP_manager/` запустил `prisma db push --
 | v1.12 Marketplace-aware Diagnostic | Shipped 2026-06-01 (Phase 59 v2 — pivot к hand-curated static deck: 30 вопросов 15WB+15Ozon, 5×3 axis/level matrix, seeded option shuffle, balanced 7-8 mix for BOTH users) |
 | v1.13 Обучение 2.0 | Shipped 2026-06-05 (Phase 61 + 61.1 + DAU/WAU/MAU аналитика — release `4145a68`) |
 | v1.14 Инструменты MPSTATS | Shipped 2026-06-08 (Phase 62 — бесплатный партнёрский курс `/mpstats-tools`, env-gated, изолирован от диагностики) |
+| v1.15 Аналитика 2.0 | Shipped 2026-06-09 (Phase 63 — раздел `/admin/analytics` разведён на 4 таба Обзор/Выручка/Воронка/Контент; Выручка (MRR рекуррент-only, ARPU, сплит, продления, приход), Воронка (конверсия рег→диагностика→оплата, точный trial→paid, отток, атрибуция); `UserProfile.isTest` + исключение тест-юзеров; release `90b6192`) |
 
 **Remaining work:**
 1. Phase 33-03: CQ Dashboard Setup (на стороне CQ команды).
@@ -105,7 +106,25 @@ Archive directory `D:/GpT_docs/MPSTATS ACADEMY ADAPTIVE LEARNING/MAAL-phase55/` 
 
 **Внимание (исторический lesson):** CP хранит `amount` на своей стороне на момент создания подписки. При смене цен отменять старые ACTIVE подписки чтобы автосписания пошли по новым тарифам.
 
-## Last Session (2026-06-08) — Phase 62 «Инструменты MPSTATS» partner course shipped to prod
+## Last Session (2026-06-09) — Phase 63 «Аналитика 2.0» shipped to prod
+
+**Release `90b6192` (`--no-ff` merge `phase-63-analytics-revamp`→master) + prod deploy `maal-web-1`.** Груминг + выручка + воронка раздела `/admin/analytics`, 3 волны субагентами (TDD), каждая прошла staging + холистическое ревью (все READY TO SHIP).
+
+**Что на проде:**
+- **Навигация:** `/admin/analytics` разведён на 4 таба (Обзор/Выручка/Воронка/Контент) через `AnalyticsTabs` + `analytics/layout.tsx`. **Баг «оторванной шапки» пофикшен структурно** — у каждого таба свой селектор периода над своими графиками. Аналитика вынесена из разбухшего `admin.ts` (1187 стр) в `admin.analytics.*` (`admin-analytics.ts`).
+- **Выручка** (`/revenue`): MRR = **только рекуррент** (`ACTIVE + cpSubscriptionId != null`, by owner request — не-рекуррентные ACTIVE не раздувают), `recurringPayers`, ARPU = mrr/recurringPayers, сплит планов, приход по дням (`Payment` COMPLETED), прогноз продлений (рекуррент в окне).
+- **Воронка** (`/funnel`): конверсия рег→диагностика→оплата; **точный trial→paid** через `deriveTrialConversion` (вывод из данных: TRIAL = отдельные иммутабельные строки, конверсия = первый COMPLETED `Payment`; conversionRate по «дозревшим» триалам; days-to-convert от trialEnd) + **регресс-тест инварианта** «TRIAL-строки не меняют статус» (`trial-invariant.test.ts`); отток (CANCELLED/PAST_DUE/churnRate); атрибуция реферал/органика.
+- **Тест-юзеры:** `UserProfile.isTest` (аддитивная миграция через Mgmt API) + хелпер `isExcludedFromRevenue` (правило: `user.isTest || plan.hidden`) во всех денежных/воронных метриках + тогл в `/admin/users`. **19 аккаунтов помечены `isTest=true`** (весь штат `@mpstats.io`/`@mpstats.academy` + `e.n.vasilyev@yandex.ru` через hidden-план).
+
+**Чистые функции** (`packages/api/src/utils/`): `test-exclusion`, `revenue-metrics`, `trial-conversion`, `funnel-metrics` — все юнит-тестированы изолированно. Процедуры тонкие (fetch → pure fn → enrich).
+
+**Прод-БД:** миграция `20260608000000_add_user_is_test` применена к общей Supabase через Mgmt API (аддитивно, прод-коду до релиза невидима) + `_prisma_migrations` row + бэкафилл 19 isTest. Деплой: build при работающем контейнере → `up -d` (recreate, минимум даунтайма). Smoke: `/` 200, content-check `getTrialConversion` в бандле. **Откат:** `git revert -m 1 90b6192` + редеплой.
+
+**Tests на релиз:** typecheck 6/6, api 209/209, web 211/211, ai 58/58. Спека+планы: `docs/superpowers/specs/2026-06-08-phase-63-analytics-revamp-design.md` + `docs/superpowers/plans/2026-06-08-phase-63-wave-{1,2,3}-*.md`.
+
+**Память:** `project_phase63_analytics_revamp.md`.
+
+## Previous Session (2026-06-08) — Phase 62 «Инструменты MPSTATS» partner course shipped to prod
 
 **Бесплатный курс инструментов сервиса MPSTATS как изолированный раздел `/mpstats-tools`** (паттерн «партнёрский курс», верх воронки: юзер приходит за инструментами → видит платный контент → paywall → конверсия). Расширяемо под будущие партнёрские курсы (Точка Банк через Точка ID). Релиз через `git merge --no-ff` в master + env-флаг.
 
