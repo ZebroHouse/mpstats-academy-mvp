@@ -32,7 +32,7 @@ export default function AnalyticsRevenuePage() {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h2 className="text-heading-lg font-bold text-mp-gray-900">Выручка</h2>
-          <p className="text-body-sm text-mp-gray-500 mt-1">MRR, продления, приход, ARPU (без тестовых)</p>
+          <p className="text-body-sm text-mp-gray-500 mt-1">MRR (только авто-продления), продления, приход, ARPU (без тестовых)</p>
         </div>
         <div className="flex items-center gap-1 bg-mp-gray-100 rounded-lg p-1">
           {PERIODS.map((p) => (
@@ -52,7 +52,7 @@ export default function AnalyticsRevenuePage() {
         </div>
       ) : o ? (
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-          <StatCard title="MRR" value={rub(o.mrr)} icon={Wallet} color="green" />
+          <StatCard title="MRR" value={rub(o.mrr)} icon={Wallet} color="green" trend={`${o.recurringPayers} на авто-продлении`} />
           <StatCard title="Платящих (ACTIVE)" value={o.activePaying} icon={CreditCard} color="blue" />
           <StatCard title="Триалы (пайплайн)" value={o.trialPipeline} icon={FlaskConical} color="pink" />
           <StatCard title="Активная база" value={o.payingUsers} icon={Users} color="gray" />

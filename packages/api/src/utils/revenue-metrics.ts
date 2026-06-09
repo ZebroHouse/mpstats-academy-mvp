@@ -23,6 +23,7 @@ export interface RevenueSubRow {
 export interface RevenueOverview {
   payingUsers: number;
   activePaying: number;
+  recurringPayers: number;
   trialPipeline: number;
   mrr: number;
   arpu: number;
@@ -37,15 +38,22 @@ export function computeRevenueOverview(rows: RevenueSubRow[], now: Date): Revenu
   const active = inPeriod.filter((r) => r.status === 'ACTIVE');
   const trials = inPeriod.filter((r) => r.status === 'TRIAL');
 
+  // MRR = guaranteed recurring revenue → only ACTIVE subs on a real CP recurrent
+  // (cpSubscriptionId != null). A non-recurrent ACTIVE sub (manual/promo/referral
+  // activation, one-time pay) grants access now but won't auto-charge next period,
+  // so it counts as a paying user but NOT toward MRR.
+  const recurringActive = active.filter((r) => r.cpSubscriptionId != null);
+
   const payingUsers = new Set(activeBase.map((r) => r.userId)).size;
   const activePaying = new Set(active.map((r) => r.userId)).size;
+  const recurringPayers = new Set(recurringActive.map((r) => r.userId)).size;
   const trialPipeline = new Set(trials.map((r) => r.userId)).size;
 
-  const mrr = active.reduce((sum, r) => sum + r.plan.price, 0);
-  const arpu = activePaying > 0 ? Math.round(mrr / activePaying) : 0;
+  const mrr = recurringActive.reduce((sum, r) => sum + r.plan.price, 0);
+  const arpu = recurringPayers > 0 ? Math.round(mrr / recurringPayers) : 0;
 
   const splitMap = new Map<PlanType, { count: number; revenue: number }>();
-  for (const r of active) {
+  for (const r of recurringActive) {
     const e = splitMap.get(r.plan.type) ?? { count: 0, revenue: 0 };
     e.count += 1;
     e.revenue += r.plan.price;
@@ -57,7 +65,7 @@ export function computeRevenueOverview(rows: RevenueSubRow[], now: Date): Revenu
     revenue: splitMap.get(type)?.revenue ?? 0,
   }));
 
-  return { payingUsers, activePaying, trialPipeline, mrr, arpu, planSplit };
+  return { payingUsers, activePaying, recurringPayers, trialPipeline, mrr, arpu, planSplit };
 }
 
 export interface RenewalRow {

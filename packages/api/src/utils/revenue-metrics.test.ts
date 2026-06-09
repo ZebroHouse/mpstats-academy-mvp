@@ -57,6 +57,17 @@ describe('computeRevenueOverview', () => {
     expect(platform).toMatchObject({ count: 1, revenue: 2990 });
     expect(course).toMatchObject({ count: 1, revenue: 1990 });
   });
+
+  it('MRR counts only recurrent ACTIVE subs; non-recurrent ACTIVE still counts as paying', () => {
+    const r = computeRevenueOverview([
+      sub({ userId: 'a', status: 'ACTIVE', cpSubscriptionId: 'sc_a', plan: { type: 'PLATFORM', price: 2990, hidden: false } }),
+      sub({ userId: 'b', status: 'ACTIVE', cpSubscriptionId: null, plan: { type: 'PLATFORM', price: 2990, hidden: false } }),
+    ], NOW);
+    expect(r.activePaying).toBe(2);     // both have active paid access
+    expect(r.recurringPayers).toBe(1);  // only 'a' auto-renews
+    expect(r.mrr).toBe(2990);           // MRR = recurrent only
+    expect(r.arpu).toBe(2990);          // mrr / recurringPayers
+  });
 });
 
 describe('computeUpcomingRenewals', () => {
