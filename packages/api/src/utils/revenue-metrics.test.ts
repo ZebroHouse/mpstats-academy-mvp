@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { computeRevenueOverview, type RevenueSubRow } from './revenue-metrics';
+import { computeUpcomingRenewals, groupRevenueByDay, type PaymentRow } from './revenue-metrics';
 
 const NOW = new Date('2026-06-08T00:00:00Z');
 const future = new Date('2026-07-01T00:00:00Z');
@@ -55,5 +56,39 @@ describe('computeRevenueOverview', () => {
     const course = r.planSplit.find((p) => p.type === 'COURSE')!;
     expect(platform).toMatchObject({ count: 1, revenue: 2990 });
     expect(course).toMatchObject({ count: 1, revenue: 1990 });
+  });
+});
+
+describe('computeUpcomingRenewals', () => {
+  const NOW2 = new Date('2026-06-08T00:00:00Z');
+  const within = new Date('2026-06-12T00:00:00Z');
+  const beyond = new Date('2026-07-20T00:00:00Z');
+
+  it('keeps only ACTIVE recurrent subs renewing within the window, sorted', () => {
+    const r = computeUpcomingRenewals([
+      sub({ userId: 'a', status: 'ACTIVE', cpSubscriptionId: 'sc_a', currentPeriodEnd: within, plan: { type: 'PLATFORM', price: 2990, hidden: false } }),
+      sub({ userId: 'b', status: 'ACTIVE', cpSubscriptionId: null, currentPeriodEnd: within }),    // not recurrent
+      sub({ userId: 'c', status: 'TRIAL', cpSubscriptionId: 'sc_c', currentPeriodEnd: within }),   // not ACTIVE
+      sub({ userId: 'd', status: 'ACTIVE', cpSubscriptionId: 'sc_d', currentPeriodEnd: beyond }),  // out of window
+    ], NOW2, new Date('2026-06-15T00:00:00Z'));
+    expect(r.rows).toHaveLength(1);
+    expect(r.rows[0]).toMatchObject({ userId: 'a', planType: 'PLATFORM', amount: 2990 });
+    expect(r.totalExpected).toBe(2990);
+  });
+});
+
+describe('groupRevenueByDay', () => {
+  function pay(p: Partial<PaymentRow>): PaymentRow {
+    return { paidAt: new Date('2026-06-05T10:00:00Z'), amount: 2990, subscription: { plan: { hidden: false }, user: { isTest: false } }, ...p };
+  }
+  it('sums COMPLETED payments per UTC day, excluding test/hidden', () => {
+    const r = groupRevenueByDay([
+      pay({ paidAt: new Date('2026-06-05T10:00:00Z'), amount: 2990 }),
+      pay({ paidAt: new Date('2026-06-05T20:00:00Z'), amount: 1990 }),
+      pay({ amount: 999, subscription: { plan: { hidden: false }, user: { isTest: true } } }),
+    ]);
+    const day = r.byDay.find((d) => d.date === '2026-06-05')!;
+    expect(day.amount).toBe(4980);
+    expect(r.total).toBe(4980);
   });
 });

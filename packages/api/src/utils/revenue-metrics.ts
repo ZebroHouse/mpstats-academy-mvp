@@ -59,3 +59,53 @@ export function computeRevenueOverview(rows: RevenueSubRow[], now: Date): Revenu
 
   return { payingUsers, activePaying, trialPipeline, mrr, arpu, planSplit };
 }
+
+export interface RenewalRow {
+  userId: string;
+  planType: PlanType;
+  amount: number;
+  renewalDate: Date;
+}
+
+export function computeUpcomingRenewals(
+  rows: RevenueSubRow[],
+  now: Date,
+  windowEnd: Date,
+): { rows: RenewalRow[]; totalExpected: number } {
+  const kept = rows
+    .filter((r) => !isExcludedFromRevenue(r))
+    .filter((r) => r.status === 'ACTIVE' && r.cpSubscriptionId != null)
+    .filter((r) => r.currentPeriodEnd >= now && r.currentPeriodEnd <= windowEnd)
+    .map((r) => ({
+      userId: r.userId,
+      planType: r.plan.type,
+      amount: r.plan.price,
+      renewalDate: r.currentPeriodEnd,
+    }))
+    .sort((a, b) => a.renewalDate.getTime() - b.renewalDate.getTime());
+
+  return { rows: kept, totalExpected: kept.reduce((s, r) => s + r.amount, 0) };
+}
+
+export interface PaymentRow {
+  paidAt: Date;
+  amount: number;
+  subscription: { plan: { hidden: boolean }; user: { isTest: boolean } };
+}
+
+export function groupRevenueByDay(
+  payments: PaymentRow[],
+): { byDay: Array<{ date: string; amount: number }>; total: number } {
+  const map = new Map<string, number>();
+  let total = 0;
+  for (const p of payments) {
+    if (isExcludedFromRevenue({ user: p.subscription.user, plan: p.subscription.plan })) continue;
+    const key = p.paidAt.toISOString().split('T')[0];
+    map.set(key, (map.get(key) ?? 0) + p.amount);
+    total += p.amount;
+  }
+  const byDay = [...map.entries()]
+    .map(([date, amount]) => ({ date, amount }))
+    .sort((a, b) => a.date.localeCompare(b.date));
+  return { byDay, total };
+}
