@@ -1,6 +1,9 @@
 # Stage 1: Base image with pnpm
 FROM node:20-alpine AS base
-RUN apk update && apk add --no-cache libc6-compat
+# openssl: Prisma engine needs libssl at BUILD time too (next build prerenders
+# pages that init Prisma). Without it Alpine's musl base falls back to the
+# openssl-1.1 engine and fails on missing libssl.so.1.1. Mirrors runner stage.
+RUN apk update && apk add --no-cache libc6-compat openssl
 ENV PNPM_HOME="/pnpm"
 ENV PATH="$PNPM_HOME:$PATH"
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
