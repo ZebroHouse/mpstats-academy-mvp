@@ -24,28 +24,28 @@ const TEXT = '#121212';
 /* ── Data: 5 Skill Axes ────────────────────────────────── */
 
 const SKILL_AXES_DATA = [
-  { name: 'Аналитика', color: '#2C4FF8', desc: 'Юнит-экономика, ABC-анализ, отчёты, ДРР, оборачиваемость' },
-  { name: 'Маркетинг', color: '#ff6b16', desc: 'Реклама, ставки, автостратегии, бюджет, SEO-продвижение' },
-  { name: 'Контент', color: '#10B981', desc: 'SEO-оптимизация карточек, инфографика, A/B-тесты' },
-  { name: 'Операции', color: '#8B5CF6', desc: 'Логистика, FBO/FBS, поставки, возвраты, склад' },
-  { name: 'Финансы', color: '#EC4899', desc: 'P&L, себестоимость, маржинальность, налоги' },
+  { name: 'Аналитика', color: '#2C4FF8', desc: 'Юнит-экономика, ABC-анализ, продажи, ДРР, оборачиваемость' },
+  { name: 'Маркетинг', color: '#ff6b16', desc: 'Реклама, ставки, продвижение, SEO' },
+  { name: 'Контент', color: '#10B981', desc: 'Карточки товаров, инфографика, тестирование контента' },
+  { name: 'Операции', color: '#8B5CF6', desc: 'Поставки, склады, остатки, FBO/FBS, кабинет, работа с Ozon' },
+  { name: 'Финансы', color: '#EC4899', desc: 'Маржинальность, себестоимость, налоги и финансовые показатели' },
 ];
 
 /* ── Data: What you get ────────────────────────────────── */
 
 const RESULTS_DATA = [
-  { title: 'Карта навыков', desc: 'Визуальный профиль по 5 направлениям — где сильны, а где пробелы.' },
-  { title: 'Gap-analysis', desc: 'Конкретные темы, которые нужно подтянуть, с приоритетами.' },
-  { title: 'Персональный план', desc: 'Рекомендованная последовательность уроков под ваш уровень.' },
-  { title: 'Рекомендованные уроки', desc: 'Прямые ссылки на видеоуроки, релевантные вашим пробелам.' },
+  { title: 'Карта навыков', desc: 'Увидите сильные стороны и направления, которым стоит уделить больше внимания.' },
+  { title: 'Персональные рекомендации', desc: 'Узнаете, какие темы помогут быстрее продвинуться к вашей цели.' },
+  { title: 'План обучения', desc: 'Получите последовательность уроков с учетом текущего уровня подготовки.' },
+  { title: 'Подборка уроков', desc: 'Сразу перейдете к материалам, которые важно изучить в первую очередь.' },
 ];
 
 /* ── Data: How it works ────────────────────────────────── */
 
 const STEPS_DATA = [
-  { num: '01', title: 'Отвечаешь на вопросы', desc: 'Короткие адаптивные вопросы — сложность подстраивается под твои ответы в реальном времени.' },
-  { num: '02', title: 'AI анализирует ответы', desc: 'Нейросеть определяет уровень по каждой оси с точностью до конкретных тем.' },
-  { num: '03', title: 'Получаешь результат', desc: 'Карта навыков, точки роста и персональный план обучения — сразу после прохождения.' },
+  { num: '01', title: 'Отвечаете на вопросы', desc: 'Вопросы охватывают 5 направлений работы на маркетплейсах.' },
+  { num: '02', title: 'AI анализирует ответы', desc: 'Оценивает текущий уровень по каждому направлению.' },
+  { num: '03', title: 'Получаете рекомендации', desc: 'Сразу после прохождения видите результаты и персональный план обучения.' },
 ];
 
 /* ── Hero SkillRadar (concentric circles) ──────────────── */
@@ -167,12 +167,12 @@ export default function DesignNewV8Diagnostic() {
         <div className="max-w-[1160px] mx-auto flex flex-col lg:flex-row items-center gap-12 lg:gap-16">
           <div className="flex-1 text-center lg:text-left">
             <h1 className="text-[28px] sm:text-[36px] md:text-[48px] lg:text-[56px] font-bold leading-[1.1] tracking-tight text-white">
-              AI-диагностика:{' '}
-              <span className="block">узнай свои точки роста</span>
-              <span className="block">за 10 минут</span>
+              AI-диагностика покажет,{' '}
+              <span className="block">чему уделить внимание</span>
+              <span className="block">в первую очередь</span>
             </h1>
             <p className="mt-5 sm:mt-6 text-[16px] sm:text-[18px] leading-relaxed max-w-[520px] mx-auto lg:mx-0" style={{ color: 'rgba(255,255,255,0.7)' }}>
-              Ответь на короткие вопросы по 5 осям навыков. Получи персональный план обучения — только по твоим пробелам.
+              За 10 минут оценит ваш уровень по 5 направлениям и подготовит персональный план обучения
             </p>
             <div className="mt-8 sm:mt-10 flex justify-center lg:justify-start">
               <a
@@ -199,11 +199,59 @@ export default function DesignNewV8Diagnostic() {
         </div>
       </section>
 
-      {/* ── 2. Bento: 5 Axes (white) ──────────────────── */}
+      {/* ── 2. Результаты диагностики (white) ──────────── */}
+      <section id="results" className="py-[80px] sm:py-[120px] px-4 sm:px-6 md:px-10 lg:px-0 bg-white">
+        <div className="max-w-[1160px] mx-auto">
+          <h2 className="text-[24px] sm:text-[32px] md:text-[40px] font-bold tracking-tight text-center mb-10 sm:mb-14">
+            Результаты диагностики
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {RESULTS_DATA.map((item, i) => (
+              <Reveal key={item.title} className="rounded-[40px] p-8 transition-transform duration-300 hover:-translate-y-1" style={{ backgroundColor: GRAY_BG }} delay={i * 80}>
+                <h3 className="text-[18px] sm:text-[20px] font-bold mb-3" style={{ color: TEXT }}>
+                  {item.title}
+                </h3>
+                <p className="text-[14px] sm:text-[15px] leading-relaxed" style={{ color: TEXT, opacity: 0.7 }}>
+                  {item.desc}
+                </p>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 3. Как проходит диагностика (gray bg) ──────── */}
+      <section id="how" className="py-[80px] sm:py-[120px] px-4 sm:px-6 md:px-10 lg:px-0" style={{ backgroundColor: GRAY_BG }}>
+        <div className="max-w-[1160px] mx-auto">
+          <h2 className="text-[24px] sm:text-[32px] md:text-[40px] font-bold tracking-tight text-center mb-10 sm:mb-14">
+            Как проходит диагностика
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+            {STEPS_DATA.map((step, i) => (
+              <Reveal key={step.num} className="flex flex-col items-center text-center" delay={i * 100}>
+                <div
+                  className="inline-flex items-center justify-center w-[56px] h-[56px] rounded-full text-[20px] font-bold text-white mb-5"
+                  style={{ backgroundColor: BLUE }}
+                >
+                  {step.num}
+                </div>
+                <h3 className="text-[18px] sm:text-[20px] font-bold mb-3" style={{ color: TEXT }}>
+                  {step.title}
+                </h3>
+                <p className="text-[14px] sm:text-[15px] leading-relaxed max-w-[280px]" style={{ color: TEXT, opacity: 0.7 }}>
+                  {step.desc}
+                </p>
+              </Reveal>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── 4. Какие направления оценивает (white) ────── */}
       <section id="axes" className="py-[80px] sm:py-[120px] px-4 sm:px-6 md:px-10 lg:px-0 bg-white">
         <div className="max-w-[1160px] mx-auto">
           <h2 className="text-[24px] sm:text-[32px] md:text-[40px] font-bold tracking-tight text-center mb-10 sm:mb-14">
-            Что проверяет диагностика
+            Какие направления оценивает диагностика
           </h2>
 
           {/* Bento grid: large card (2 cols) + 4 smaller */}
@@ -237,7 +285,7 @@ export default function DesignNewV8Diagnostic() {
               <div>
                 <span className="inline-block text-[13px] font-medium text-white/60 uppercase tracking-wider mb-4">AI-диагностика</span>
                 <h3 className="text-[24px] sm:text-[28px] lg:text-[32px] font-bold text-white leading-tight">
-                  5 осей навыков
+                  5 направлений
                 </h3>
                 <p className="mt-3 text-[15px] sm:text-[16px] leading-relaxed text-white/70 max-w-[420px]">
                   Каждый вопрос оценивает конкретное направление. Результат — детальный профиль ваших компетенций на маркетплейсах.
@@ -284,63 +332,15 @@ export default function DesignNewV8Diagnostic() {
         </div>
       </section>
 
-      {/* ── 3. What you get (gray bg) ─────────────────── */}
-      <section id="results" className="py-[80px] sm:py-[120px] px-4 sm:px-6 md:px-10 lg:px-0" style={{ backgroundColor: GRAY_BG }}>
-        <div className="max-w-[1160px] mx-auto">
-          <h2 className="text-[24px] sm:text-[32px] md:text-[40px] font-bold tracking-tight text-center mb-10 sm:mb-14">
-            Что получишь
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {RESULTS_DATA.map((item, i) => (
-              <Reveal key={item.title} className="rounded-[40px] p-8 bg-white transition-transform duration-300 hover:-translate-y-1" delay={i * 80}>
-                <h3 className="text-[18px] sm:text-[20px] font-bold mb-3" style={{ color: TEXT }}>
-                  {item.title}
-                </h3>
-                <p className="text-[14px] sm:text-[15px] leading-relaxed" style={{ color: TEXT, opacity: 0.7 }}>
-                  {item.desc}
-                </p>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* ── 4. How it works (white) ───────────────────── */}
-      <section id="how" className="py-[80px] sm:py-[120px] px-4 sm:px-6 md:px-10 lg:px-0 bg-white">
-        <div className="max-w-[1160px] mx-auto">
-          <h2 className="text-[24px] sm:text-[32px] md:text-[40px] font-bold tracking-tight text-center mb-10 sm:mb-14">
-            Как проходит диагностика
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-            {STEPS_DATA.map((step, i) => (
-              <Reveal key={step.num} className="flex flex-col items-center text-center" delay={i * 100}>
-                <div
-                  className="inline-flex items-center justify-center w-[56px] h-[56px] rounded-full text-[20px] font-bold text-white mb-5"
-                  style={{ backgroundColor: BLUE }}
-                >
-                  {step.num}
-                </div>
-                <h3 className="text-[18px] sm:text-[20px] font-bold mb-3" style={{ color: TEXT }}>
-                  {step.title}
-                </h3>
-                <p className="text-[14px] sm:text-[15px] leading-relaxed max-w-[280px]" style={{ color: TEXT, opacity: 0.7 }}>
-                  {step.desc}
-                </p>
-              </Reveal>
-            ))}
-          </div>
-        </div>
-      </section>
-
       {/* ── 5. CTA (blue) ─────────────────────────────── */}
       <section id="cta" className="py-[80px] sm:py-[120px] px-4 sm:px-6 md:px-10 lg:px-0" style={{ backgroundColor: BLUE }}>
         <div className="max-w-[760px] mx-auto text-center">
           <h2 className="text-[28px] sm:text-[36px] md:text-[48px] font-bold text-white leading-tight">
-            10 минут. Бесплатно.{' '}
-            <span className="block">Персональный план на выходе.</span>
+            Узнайте, чему стоит уделить{' '}
+            <span className="block">внимание в первую очередь</span>
           </h2>
           <p className="mt-4 sm:mt-6 text-[16px] sm:text-[18px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.75)' }}>
-            Узнай свой уровень и получи программу под твои точки роста
+            Персональный план обучения формируется сразу после прохождения диагностики
           </p>
           <a
             href={ctaHref}

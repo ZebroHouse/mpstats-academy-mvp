@@ -28,27 +28,27 @@ const TEXT = '#121212';
 const steps = [
   {
     num: '01',
-    title: 'Проходишь AI-диагностику',
-    desc: 'За 10 минут отвечаешь на короткие вопросы по 5 осям навыков. На выходе — карта твоих точек роста.',
-    badge: '10 минут',
+    title: 'Проходите AI-диагностику',
+    desc: 'Отвечаете на вопросы по 5 направлениям. В результате видите сильные стороны и темы, которым стоит уделить внимание.',
+    badge: 'Быстро',
   },
   {
     num: '02',
-    title: 'Получаешь персональную программу',
-    desc: 'AI скрывает то, что ты уже знаешь, и показывает только пробелы. Программа собирается под твой уровень.',
-    badge: 'Под тебя',
+    title: 'Получаете персональную программу',
+    desc: 'AI составляет актуальный для вас трек обучения и помогает сосредоточиться на темах, которые важно усилить.',
+    badge: 'Индивидуально',
   },
   {
     num: '03',
-    title: 'Учишься с AI-ассистентом',
-    desc: 'Задаёшь вопрос прямо в уроке — ассистент отвечает с таймкодами по всему каталогу. Не нужно искать в общем чате.',
-    badge: 'В каждом уроке',
+    title: 'Учитесь с AI-ассистентом',
+    desc: 'Задаете вопрос и сразу переходите к нужному уроку или фрагменту. Не нужно пересматривать десятки материалов в поисках ответа.',
+    badge: 'Удобно',
   },
   {
     num: '04',
-    title: 'Растёшь вместе с платформой',
-    desc: 'Новые материалы, плейбуки и инструменты добавляются регулярно. Платформа реагирует на изменения WB и Ozon.',
-    badge: 'Живая платформа',
+    title: 'Обновляете знания',
+    desc: 'В каталоге регулярно появляются новые материалы по изменениям Wildberries и Ozon.',
+    badge: 'Актуально',
   },
 ];
 
@@ -60,45 +60,40 @@ type ComparisonRow = {
 };
 
 const comparison: ComparisonRow[] = [
-  { param: 'Цена',          value1: '45 000 – 90 000 ₽ сразу',     value2: '2 990 ₽/мес' },
+  { param: 'Цена',          value1: '45 000–90 000 ₽ сразу',       value2: '2 990 ₽ в месяц' },
   { param: 'Программа',     value1: 'Один поток для всех',          value2: 'Персональная траектория по AI-диагностике', highlight: true },
-  { param: 'Что смотришь',  value1: 'Всё подряд, включая знакомое', value2: 'Только там, где у тебя пробелы', highlight: true },
-  { param: 'Помощь',        value1: 'Ищи в общем чате',             value2: 'AI-ассистент с таймкодами по всему каталогу' },
-  { param: 'Обновления',    value1: 'Запись 2023 — правила менялись', value2: 'Живая платформа — растёт и обновляется' },
-  { param: 'Риск',          value1: '65 000 ₽ одной суммой',        value2: '2 990 ₽/мес', highlight: true },
+  { param: 'Что изучаете',  value1: 'Все темы подряд',             value2: 'Только темы, которые стоит усилить', highlight: true },
+  { param: 'Помощь',        value1: 'Ищите ответы в общем чате',    value2: 'AI-ассистент с таймкодами по всему каталогу' },
+  { param: 'Обновления',    value1: 'Записи прошлых лет',           value2: 'Материалы регулярно актуализируются' },
 ];
 
 const segments = [
-  { title: 'Новичкам на маркетплейсах', desc: 'Диагностика покажет пробелы и соберёт программу с нуля — не надо гадать, с чего начать.' },
-  { title: 'Действующим селлерам', desc: 'Углубишь аналитику, рекламу, юнит-экономику — программа адаптируется под твой уровень.' },
-  { title: 'Менеджерам маркетплейсов', desc: 'Системные знания вместо хаотичных курсов. Покажешь работодателю реальные навыки.' },
-  { title: 'Владельцам бизнеса', desc: 'Контролируй менеджеров осознанно. Понимай цифры, а не верь отчётам на слово.' },
+  { title: 'Новичкам на маркетплейсах', desc: 'Диагностика покажет пробелы и соберет программу с нуля — не надо гадать, с чего начать.' },
+  { title: 'Действующим селлерам', desc: 'Усилите знания в аналитике, рекламе и юнит-экономике — программа адаптируется под ваш уровень.' },
+  { title: 'Менеджерам маркетплейсов', desc: 'Прокачаете навыки, чтобы расти в должности и работать с более крупными проектами.' },
+  { title: 'Владельцам бизнеса', desc: 'Будете увереннее оценивать работу команды и понимать ключевые показатели бизнеса.' },
 ];
 
 const faqs = [
   {
     q: 'Как работает AI-диагностика?',
-    a: 'Отвечаешь на короткие вопросы по 5 осям навыков: Аналитика, Маркетинг, Контент, Операции, Финансы. Нейросеть определяет твой уровень и собирает персональный план — только по твоим пробелам. Занимает 10 минут.',
+    a: 'Вы отвечаете на короткие вопросы по 5 направлениям: аналитика, маркетинг, контент, операции и финансы. Система определяет ваш текущий уровень и формирует персональный план обучения. Диагностика занимает около 10 минут.',
   },
   {
     q: 'Сколько стоит подписка?',
-    a: 'Подписка на один курс — 1 990 ₽/мес. Полный доступ ко всему каталогу — 2 990 ₽/мес. В подписку PLATFORM входит AI-диагностика, персональный план и AI-ассистент.',
+    a: 'Подписка на один курс стоит 1 990 ₽/мес. Полный доступ ко всей платформе — 2 990 ₽/мес. В этот тариф входят AI-диагностика, персональный план обучения и AI-ассистент.',
   },
   {
-    q: 'Какие маркетплейсы покрываются?',
-    a: 'Wildberries и Ozon. Материалы покрывают 5 осей навыков: Аналитика, Маркетинг, Контент, Операции, Финансы — для обоих маркетплейсов.',
+    q: 'Какие маркетплейсы охватывает платформа?',
+    a: 'Платформа помогает развивать навыки для работы с Wildberries и Ozon. Материалы сфокусированы на 5 направлениях: аналитике, маркетинге, контенте, операциях и финансах.',
   },
   {
     q: 'Можно ли отключить подписку?',
-    a: 'Да. Отключаешь в кабинете в один клик — больше не списывается. Не нужны звонки, письма, менеджеры.',
-  },
-  {
-    q: 'За что я плачу каждый месяц?',
-    a: 'За три вещи: доступ ко всему каталогу (400+ уроков, 150+ часов контента), персонализацию под твой уровень (AI-диагностика + персональный план + AI-ассистент), и живую платформу — новые материалы, плейбуки и инструменты добавляются регулярно.',
+    a: 'Да. Подписку можно отключить в личном кабинете в любой момент. После этого ежемесячные списания прекратятся.',
   },
   {
     q: 'Что такое AI-ассистент?',
-    a: 'Спрашиваешь прямо в уроке — ассистент отвечает с таймкодами по всему каталогу. Если спросишь «где об этом рассказывают», покажет точную минуту в нужном уроке.',
+    a: 'AI-ассистент — это помощник, который быстро находит нужную информацию в материалах платформы. Задайте вопрос прямо в уроке — искусственный интеллект подберет подходящие материалы и покажет точную минуту в видео.',
   },
 ];
 
@@ -120,12 +115,12 @@ const plans = [
     price: '2 990',
     period: '/мес',
     features: [
-      'Весь каталог по 5 осям навыков',
+      'Весь каталог по 5 направлениям',
       '400+ уроков, 150+ часов контента',
       'AI-диагностика за 10 минут',
       'AI-ассистент с таймкодами',
       'Персональный план обучения',
-      'Живая платформа — растёт и обновляется',
+      'Гибкая платформа — растет и обновляется',
     ],
     highlighted: true,
   },
@@ -367,7 +362,7 @@ export default function DesignNewV8() {
               <span className="block">для селлеров</span>
             </h1>
             <p className="mt-5 sm:mt-6 text-[16px] sm:text-[18px] leading-relaxed max-w-[520px] mx-auto lg:mx-0" style={{ color: 'rgba(255,255,255,0.7)' }}>
-              Пройди AI-диагностику за 10 минут и получи программу, собранную под твой уровень. Без воды.
+              Пройдите AI-диагностику за 10 минут и получите программу, которая учитывает ваш запрос и уровень подготовки
             </p>
             <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
               <a
@@ -387,7 +382,7 @@ export default function DesignNewV8() {
               </a>
             </div>
             <p className="mt-6 sm:mt-8 text-[13px] sm:text-[14px] text-white/50">
-              2 990 ₽/мес · Живая платформа · 400+ уроков по 5 осям навыков
+              2 990 ₽/мес · Гибкая платформа · 400+ уроков · 5 направлений
             </p>
           </div>
           <div
@@ -407,7 +402,7 @@ export default function DesignNewV8() {
       <section id="возможности" className="py-[80px] sm:py-[120px] px-4 sm:px-6 md:px-10 lg:px-0 bg-white">
         <div className="max-w-[1160px] mx-auto">
           <h2 className="text-[24px] sm:text-[32px] md:text-[40px] font-bold tracking-tight text-center mb-10 sm:mb-14">
-            Всё для роста на маркетплейсах
+            Все для роста на маркетплейсах
           </h2>
 
           {/* Bento grid: CSS Grid with asymmetric layout */}
@@ -449,12 +444,12 @@ export default function DesignNewV8() {
               {/* AI-Diagnostic — big card */}
               <Reveal className="bento-diag rounded-[40px] p-8 sm:p-10 flex flex-col justify-between min-h-[280px] lg:min-h-[400px] transition-transform duration-300 hover:-translate-y-1" style={{ backgroundColor: BLUE }} delay={0}>
                 <div>
-                  <span className="inline-block text-[13px] font-medium text-white/60 uppercase tracking-wider mb-4">Ключевая фича</span>
+                  <span className="inline-block text-[13px] font-medium text-white/60 uppercase tracking-wider mb-4">Ключевая особенность</span>
                   <h3 className="text-[24px] sm:text-[28px] lg:text-[32px] font-bold text-white leading-tight">
                     AI-диагностика
                   </h3>
                   <p className="mt-3 text-[15px] sm:text-[16px] leading-relaxed text-white/70 max-w-[420px]">
-                    За 10 минут определяет твой уровень по 5 осям навыков и собирает персональный план — только по твоим пробелам.
+                    За 10 минут определяет ваш уровень по 5 направлениям и составляет персональный план обучения.
                   </p>
                 </div>
                 <div className="mt-6 flex items-end justify-between">
@@ -473,7 +468,7 @@ export default function DesignNewV8() {
               <Reveal className="bento-plan rounded-[40px] p-8 transition-transform duration-300 hover:-translate-y-1" style={{ backgroundColor: GRAY_BG }} delay={80}>
                 <h3 className="text-[20px] sm:text-[22px] font-bold mb-4">Персональный план</h3>
                 <ul className="space-y-3">
-                  {['Скрывает изученное', 'Показывает пробелы', 'Адаптируется к прогрессу', 'Приоритизирует слабые темы'].map((item) => (
+                  {['Исключает знакомые темы', 'Определяет следующие шаги', 'Адаптируется к прогрессу', 'Помогает сосредоточиться на важном'].map((item) => (
                     <li key={item} className="flex items-start gap-3 text-[14px] sm:text-[15px]" style={{ color: TEXT, opacity: 0.8 }}>
                       <span className="flex-shrink-0 mt-0.5" style={{ color: BLUE }}><CheckIcon /></span>
                       {item}
@@ -486,7 +481,7 @@ export default function DesignNewV8() {
               <Reveal className="bento-assist rounded-[40px] p-8 transition-transform duration-300 hover:-translate-y-1" style={{ backgroundColor: GRAY_BG }} delay={160}>
                 <h3 className="text-[20px] sm:text-[22px] font-bold mb-3">AI-ассистент</h3>
                 <p className="text-[14px] sm:text-[15px] leading-relaxed" style={{ color: TEXT, opacity: 0.7 }}>
-                  Задаёшь вопрос прямо в уроке — ассистент отвечает с таймкодами по всему каталогу.
+                  Задаете вопрос прямо в уроке — ассистент отвечает и показывает нужные фрагменты по всему каталогу.
                 </p>
                 <div className="mt-4 flex gap-2">
                   <span className="text-[12px] bg-[#121212]/5 rounded-full px-3 py-1">Таймкоды</span>
@@ -500,16 +495,16 @@ export default function DesignNewV8() {
                 <Counter end={400} suffix="+" duration={1600} className="text-[56px] sm:text-[64px] font-bold leading-none text-white" />
                 <div>
                   <h3 className="text-[20px] sm:text-[22px] font-bold text-white">уроков</h3>
-                  <p className="mt-1 text-[14px] text-white/50">Каталог по 5 осям навыков селлера</p>
+                  <p className="mt-1 text-[14px] text-white/50">Собрали в единую систему обучения</p>
                 </div>
               </Reveal>
 
               {/* Live platform — wide */}
               <Reveal className="bento-live rounded-[40px] p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 min-h-[160px] transition-transform duration-300 hover:-translate-y-1" style={{ backgroundColor: ORANGE }} delay={320}>
                 <div>
-                  <h3 className="text-[20px] sm:text-[24px] font-bold text-white">Живая платформа</h3>
+                  <h3 className="text-[20px] sm:text-[24px] font-bold text-white">Гибкая платформа</h3>
                   <p className="mt-2 text-[14px] sm:text-[15px] text-white/80">
-                    Материалы, плейбуки и инструменты добавляются регулярно. Платформа реагирует на изменения WB и Ozon.
+                    Регулярно добавляем новые материалы, инструкции и инструменты. Реагируем на изменения Wildberries и Ozon.
                   </p>
                 </div>
                 <span className="flex-shrink-0 text-[40px] sm:text-[48px] font-bold text-white/30">+</span>
@@ -523,10 +518,10 @@ export default function DesignNewV8() {
       <section id="чем-отличаемся" className="py-[80px] sm:py-[120px] px-4 sm:px-6 md:px-10 lg:px-0 bg-white">
         <div className="max-w-[1160px] mx-auto">
           <h2 className="text-[24px] sm:text-[32px] md:text-[40px] font-bold tracking-tight text-center mb-4 leading-tight">
-            Обычный курс и Платформа MPSTATS Academy —<br className="hidden sm:block" /> разные форматы
+            Обычный курс и платформа MPSTATS Academy —<br className="hidden sm:block" /> разные форматы
           </h2>
           <p className="text-center text-[15px] sm:text-[17px] leading-relaxed max-w-[680px] mx-auto mb-10 sm:mb-14" style={{ color: TEXT, opacity: 0.6 }}>
-            Адаптивное обучение против линейных курсов. Вот что это значит на практике.
+            Адаптивное обучение вместо единой программы для всех. Вот как это выглядит на практике
           </p>
 
           {/* Desktop: 3-column table with expanding BLUE column */}
@@ -589,8 +584,8 @@ export default function DesignNewV8() {
           <div className="mt-8 sm:mt-10 bg-white rounded-[32px] p-6 sm:p-8 flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-6">
             <p className="text-[14px] sm:text-[15px] text-center sm:text-left leading-relaxed" style={{ color: TEXT, opacity: 0.75 }}>
               Внутри:{' '}
-              <span className="font-semibold" style={{ color: TEXT, opacity: 1 }}>400+ уроков по 5 осям навыков</span>
-              {' '}· 4 больших курса · 24 разбора кабинетов · экспресс-уроки
+              <span className="font-semibold" style={{ color: TEXT, opacity: 1 }}>400+ уроков по 5 направлениям</span>
+              {' '}· 4 больших курса · 24 разбора кабинетов · уроки до 20 минут
             </p>
             <a
               href="/courses"
@@ -610,7 +605,7 @@ export default function DesignNewV8() {
       <section className="py-[80px] sm:py-[120px] px-4 sm:px-6 md:px-10 lg:px-0 bg-white">
         <div className="max-w-[1160px] mx-auto">
           <h2 className="text-[24px] sm:text-[32px] md:text-[40px] font-bold tracking-tight text-center mb-10 sm:mb-14">
-            Кому подойдёт платформа
+            Кому подойдет платформа
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {segments.map((seg, i) => (
@@ -637,10 +632,10 @@ export default function DesignNewV8() {
       <section className="py-[80px] px-4 sm:px-6 md:px-10 lg:px-0" style={{ backgroundColor: BLUE }}>
         <div className="max-w-[760px] mx-auto text-center">
           <h2 className="text-[24px] sm:text-[32px] md:text-[40px] font-bold text-white leading-tight">
-            Начни с бесплатной диагностики
+            Начните с бесплатной диагностики
           </h2>
           <p className="mt-4 text-[16px] sm:text-[18px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.75)' }}>
-            10 минут — и ты узнаешь свои точки роста по 5 осям навыков
+            Получите рекомендации по обучению и персональный маршрут развития
           </p>
           <a
             href="#cta"
@@ -702,7 +697,7 @@ export default function DesignNewV8() {
                     e.currentTarget.style.backgroundColor = plan.highlighted ? 'white' : BLUE;
                   }}
                 >
-                  Выбрать план
+                  Выбрать тариф
                 </a>
               </Reveal>
             ))}
@@ -714,7 +709,7 @@ export default function DesignNewV8() {
       <section id="faq" className="py-[80px] sm:py-[120px] px-4 sm:px-6 md:px-10 lg:px-0 bg-white">
         <div className="max-w-[760px] mx-auto">
           <h2 className="text-[24px] sm:text-[32px] md:text-[40px] font-bold tracking-tight text-center mb-10 sm:mb-14">
-            Частые вопросы
+            Часто задаваемые вопросы
           </h2>
           <div>
             {faqs.map((faq) => (
@@ -728,10 +723,10 @@ export default function DesignNewV8() {
       <section id="cta" className="py-[80px] sm:py-[120px] px-4 sm:px-6 md:px-10 lg:px-0" style={{ backgroundColor: DARK }}>
         <div className="max-w-[760px] mx-auto text-center">
           <h2 className="text-[28px] sm:text-[36px] md:text-[48px] font-bold text-white leading-tight">
-            Начни с диагностики — это бесплатно
+            Начните с бесплатной AI-диагностики
           </h2>
           <p className="mt-4 sm:mt-6 text-[16px] sm:text-[18px] leading-relaxed" style={{ color: 'rgba(255,255,255,0.6)' }}>
-            10 минут. Персональный план на выходе. Учишь только то, где у тебя пробелы.
+            10 минут — и персональный план готов
           </p>
           <a
             href="/diagnostic"
@@ -749,8 +744,8 @@ export default function DesignNewV8() {
 
       <StickyCTA
         href="#cta"
-        title="Начни с AI-диагностики — это бесплатно"
-        subtitle="10 минут. Персональный план на выходе."
+        title="Начните с AI-диагностики — это бесплатно"
+        subtitle="10 минут — и персональный план готов"
       />
     </div>
   );

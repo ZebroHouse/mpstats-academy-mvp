@@ -31,8 +31,8 @@ const TEXT = '#121212';
 /* ── Data ──────────────────────────────────────────────── */
 
 const COURSE_FEATURES = [
-  'Все уроки по выбранной теме',
-  'AI-ассистент в каждом уроке',
+  'Все материалы курса',
+  'AI-ассистент',
   'Персональный план обучения',
 ];
 
@@ -45,31 +45,31 @@ const COURSE_SHORT_LABEL: Record<string, string> = {
 };
 
 const PLATFORM_FEATURES = [
-  'Весь каталог по 5 осям навыков',
+  'Все 4 курса платформы',
   '400+ уроков, 150+ часов контента',
-  'AI-диагностика за 10 минут',
-  'AI-ассистент с таймкодами',
+  'AI-диагностика',
+  'AI-ассистент',
   'Персональный план обучения',
-  'Живая платформа — растёт и обновляется',
+  'Новые материалы и обновления',
 ];
 
 const COMPARISON_ROWS = [
-  { feature: 'AI-диагностика',     course: false,         platform: true },
-  { feature: 'Персональный план',  course: true,          platform: true },
-  { feature: 'AI-ассистент',       course: true,          platform: true },
-  { feature: 'Охват каталога',     course: 'Один курс',   platform: 'Все 5 осей' },
-  { feature: 'Уроки',              course: '~70',         platform: '400+' },
-  { feature: 'Обновления',         course: true,          platform: true },
+  { feature: 'Курс',               course: 'Один на выбор', platform: 'Все курсы платформы' },
+  { feature: 'AI-диагностика',     course: false,           platform: true },
+  { feature: 'Персональный план',  course: true,            platform: true },
+  { feature: 'AI-ассистент',       course: true,            platform: true },
+  { feature: 'Уроки',              course: '~70',           platform: '400+' },
+  { feature: 'Новые материалы',    course: true,            platform: true },
 ];
 
 const FAQS = [
-  { q: 'Когда списывается оплата?', a: 'Оплата списывается сразу при оформлении подписки. Следующее списание — ровно через 30 дней. За 3 дня до продления придёт уведомление.' },
-  { q: 'Можно ли сменить тариф?', a: 'Да, можно перейти с «Подписки на курс» на «Полный доступ» в любой момент. Разница в стоимости пересчитывается автоматически.' },
-  { q: 'Можно ли отключить подписку?', a: 'Да. Отключаешь в кабинете в один клик — больше не списывается. Доступ сохраняется до конца оплаченного периода.' },
-  { q: 'Есть ли пробный период?', a: 'Пробного периода нет, но AI-диагностика доступна бесплатно — увидишь свой уровень и точки роста ещё до оплаты.' },
-  { q: 'Что входит в тариф «Полный доступ»?', a: 'Весь каталог по 5 осям навыков: Аналитика, Маркетинг, Контент, Операции, Финансы — 400+ уроков, 150+ часов контента. Плюс AI-диагностика за 10 минут, персональный план обучения и AI-ассистент с таймкодами по всему каталогу.' },
-  { q: 'За что я плачу каждый месяц?', a: 'За три вещи: доступ ко всему каталогу (400+ уроков, 150+ часов), персонализацию под твой уровень (AI-диагностика + персональный план + AI-ассистент), и живую платформу — новые материалы, плейбуки и инструменты добавляются регулярно.' },
-  { q: 'Возможна ли оплата от юрлица?', a: 'Да, работаем с юридическими лицами. Напиши на support@mpstats.academy — подготовим счёт и закрывающие документы.' },
+  { q: 'Когда списывается оплата?', a: 'Оплата списывается при оформлении подписки. Следующее списание происходит через 30 дней. За 3 дня до списания мы напомним о продлении и отправим уведомление.' },
+  { q: 'Можно ли сменить тариф?', a: 'Да. В любой момент можно перейти с подписки на курс на полный доступ. Новый тариф начнет действовать сразу.' },
+  { q: 'Можно ли отключить подписку?', a: 'Да. Подписку можно отключить в личном кабинете в любое время. Доступ к платформе сохранится до конца оплаченного периода.' },
+  { q: 'Есть ли пробный период?', a: 'Нет. Но вы можете бесплатно пройти AI-диагностику и получить рекомендации по обучению до оформления подписки.' },
+  { q: 'Что входит в тариф «Полный доступ»?', a: 'Все материалы платформы без ограничений: 4 курса, 400+ уроков, 150+ часов контента, AI-диагностика, персональный план обучения и AI-ассистент.' },
+  { q: 'Чем отличается подписка на курс от полного доступа?', a: 'Подписка на курс открывает один выбранный курс. Полный доступ включает все курсы, уроки и дополнительные материалы платформы.' },
+  { q: 'Можно ли оплатить обучение от лица компании?', a: 'Да. Мы работаем с юридическими лицами и предоставляем закрывающие документы. Для оформления напишите на support@mpstats.academy.' },
 ];
 
 const PROMO_STORAGE_KEY = 'pending_promo_code';
@@ -315,12 +315,12 @@ function PricingContent() {
       >
         <div className="max-w-[800px] mx-auto text-center">
           <h1 className="text-[36px] sm:text-[48px] md:text-[56px] font-bold leading-[1.1] tracking-tight text-white">
-            Вся Академия
+            400+ уроков MPSTATS Academy
             <br />
-            за 2 990 ₽/мес
+            за 2 990 ₽ в месяц
           </h1>
           <p className="mt-6 text-[18px] sm:text-[20px] leading-relaxed text-white/70 max-w-[520px] mx-auto">
-            Помесячная подписка. Без предоплаты за год — вместо одной суммы 45–90 тысяч ₽ за курс.
+            Помесячная подписка без оплаты курса целиком. Изучайте материалы платформы, пользуйтесь AI-инструментами и развивайте навыки за фиксированную сумму в месяц
           </p>
         </div>
       </section>
@@ -349,7 +349,7 @@ function PricingContent() {
               {/* Course picker */}
               <div className="mt-6">
                 <p className="text-[12px] font-medium uppercase tracking-wider mb-3" style={{ color: TEXT, opacity: 0.45 }}>
-                  Выбери курс
+                  Выберите курс
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {courseOptions.length === 0 ? (
@@ -457,7 +457,7 @@ function PricingContent() {
           {/* Promo code — under both cards */}
           <div className="mt-8 sm:mt-10 mx-auto w-full max-w-[420px]">
             <p className="text-center text-[13px] font-medium uppercase tracking-wider mb-3" style={{ color: TEXT, opacity: 0.45 }}>
-              Есть промо-код?
+              Есть промокод?
             </p>
             <div className="flex items-stretch justify-center gap-2 sm:gap-3">
               <input
@@ -468,7 +468,7 @@ function PricingContent() {
                   if (promoError) setPromoError('');
                 }}
                 onKeyDown={(e) => { if (e.key === 'Enter') handlePromoApply(); }}
-                placeholder="Введите код"
+                placeholder="Введите промокод"
                 disabled={activatePromo.isPending}
                 className="flex-1 min-w-0 h-[48px] sm:h-[52px] px-5 rounded-full border border-[#121212]/10 text-[14px] sm:text-[15px] font-medium outline-none transition-colors focus:border-[#2C4FF8] disabled:opacity-60"
                 style={{ color: TEXT, backgroundColor: '#fff' }}
@@ -503,7 +503,7 @@ function PricingContent() {
             <div className="grid grid-cols-3 gap-0">
               <div className="p-5 sm:p-6" />
               <div className="p-5 sm:p-6 text-center">
-                <span className="text-[14px] sm:text-[16px] font-medium" style={{ color: TEXT, opacity: 0.6 }}>Курс</span>
+                <span className="text-[14px] sm:text-[16px] font-medium" style={{ color: TEXT, opacity: 0.6 }}>Подписка на курс</span>
               </div>
               <div className="p-5 sm:p-6 text-center rounded-tr-[40px]" style={{ backgroundColor: BLUE }}>
                 <span className="text-[14px] sm:text-[16px] font-medium text-white">Полный доступ</span>
@@ -538,20 +538,20 @@ function PricingContent() {
       <section className="py-[80px] sm:py-[100px] px-6 bg-white">
         <div className="max-w-[1160px] mx-auto">
           <h2 className="text-[24px] sm:text-[32px] md:text-[36px] font-bold text-center mb-4 leading-tight" style={{ color: TEXT }}>
-            Что ты получаешь за 2 990 ₽ каждый месяц
+            Что входит в полный доступ
           </h2>
           <p className="text-center text-[15px] sm:text-[17px] leading-relaxed max-w-[620px] mx-auto mb-10 sm:mb-14" style={{ color: TEXT, opacity: 0.6 }}>
-            Три ценности, которые работают вместе
+            Все возможности платформы в одной подписке
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-[1040px] mx-auto">
             {/* 01 — Доступ */}
             <Reveal className="rounded-[32px] p-8 bg-white border border-[#121212]/10 transition-transform duration-300 hover:-translate-y-1" delay={0}>
               <span className="text-[32px] sm:text-[36px] font-bold leading-none" style={{ color: BLUE, opacity: 0.25 }}>01</span>
               <h3 className="mt-4 text-[18px] sm:text-[20px] font-bold leading-tight" style={{ color: TEXT }}>
-                Доступ ко всему сразу
+                4 курса
               </h3>
               <p className="mt-3 text-[14px] sm:text-[15px] leading-relaxed" style={{ color: TEXT, opacity: 0.7 }}>
-                400+ уроков, 150+ часов контента, практические инструменты — по 5 осям навыков селлера.
+                400+ уроков, практикумы, разборы кабинетов и дополнительные материалы.
               </p>
             </Reveal>
 
@@ -559,10 +559,10 @@ function PricingContent() {
             <Reveal className="rounded-[32px] p-8 transition-transform duration-300 hover:-translate-y-1" style={{ backgroundColor: BLUE }} delay={100}>
               <span className="text-[32px] sm:text-[36px] font-bold text-white/40 leading-none">02</span>
               <h3 className="mt-4 text-[18px] sm:text-[20px] font-bold leading-tight text-white">
-                Персонализация
+                Персональный маршрут обучения
               </h3>
               <p className="mt-3 text-[14px] sm:text-[15px] leading-relaxed text-white/85">
-                AI-диагностика → персональный план → AI-ассистент в уроке. Всё под твой уровень и пробелы.
+                Не нужно самостоятельно выбирать уроки — AI подскажет следующие шаги в обучении.
               </p>
             </Reveal>
 
@@ -570,10 +570,10 @@ function PricingContent() {
             <Reveal className="rounded-[32px] p-8 bg-white border border-[#121212]/10 transition-transform duration-300 hover:-translate-y-1" delay={200}>
               <span className="text-[32px] sm:text-[36px] font-bold leading-none" style={{ color: BLUE, opacity: 0.25 }}>03</span>
               <h3 className="mt-4 text-[18px] sm:text-[20px] font-bold leading-tight" style={{ color: TEXT }}>
-                Живая платформа
+                Актуальные материалы
               </h3>
               <p className="mt-3 text-[14px] sm:text-[15px] leading-relaxed" style={{ color: TEXT, opacity: 0.7 }}>
-                Новые материалы, плейбуки и инструменты добавляются регулярно. Платформа адаптируется под изменения WB и Ozon.
+                Добавляем новые уроки и учитываем изменения Wildberries и Ozon.
               </p>
             </Reveal>
           </div>
@@ -585,7 +585,7 @@ function PricingContent() {
       <section id="faq" className="py-[80px] sm:py-[100px] px-6" style={{ backgroundColor: GRAY_BG }}>
         <div className="max-w-[720px] mx-auto">
           <h2 className="text-[28px] sm:text-[36px] font-bold text-center mb-12" style={{ color: TEXT }}>
-            Частые вопросы
+            Часто задаваемые вопросы
           </h2>
           <div className="rounded-[40px] bg-white p-6 sm:p-10">
             {FAQS.map((faq) => (
@@ -599,10 +599,10 @@ function PricingContent() {
       <section className="py-[80px] sm:py-[100px] px-6" style={{ backgroundColor: DARK }}>
         <div className="max-w-[600px] mx-auto text-center">
           <h2 className="text-[28px] sm:text-[36px] md:text-[44px] font-bold leading-tight text-white">
-            Начните с диагностики
+            Не знаете, какой тариф выбрать?
           </h2>
           <p className="mt-4 text-[16px] sm:text-[18px] text-white/60 max-w-[440px] mx-auto">
-            Бесплатная AI-диагностика покажет ваш уровень знаний за 10 минут
+            Пройдите AI-диагностику и получите персональные рекомендации по обучению
           </p>
           <a
             href="/diagnostic"
@@ -620,8 +620,8 @@ function PricingContent() {
 
       <StickyCTA
         href="/skill-test"
-        title="Не уверен, какой тариф выбрать?"
-        subtitle="AI-диагностика за 10 минут подберёт программу под тебя."
+        title="Не уверены, какой тариф выбрать?"
+        subtitle="AI-диагностика за 10 минут подберет программу под вас."
       />
     </div>
   );
