@@ -26,7 +26,7 @@ interface Course {
 const mainCourses: Course[] = [
   {
     name: 'Аналитика для маркетплейсов',
-    subtitle: 'Юнит-экономика, анализ ниш, конкурентов и продаж',
+    subtitle: 'Считайте юнит-экономику, анализируйте ниши, конкурентов и продажи',
     modules: 8,
     lessons: 82,
     badges: ['WB', 'Ozon'],
@@ -36,7 +36,7 @@ const mainCourses: Course[] = [
   },
   {
     name: 'Внутренняя реклама WB',
-    subtitle: 'Настройка рекламы, которая приносит продажи, а не сливает бюджет',
+    subtitle: 'Управляйте рекламой, контролируйте расходы и повышайте эффективность кампаний',
     modules: 11,
     lessons: 67,
     badges: ['WB'],
@@ -45,8 +45,8 @@ const mainCourses: Course[] = [
     link: '/courses/ads',
   },
   {
-    name: 'Нейросети для селлеров',
-    subtitle: 'Автоматизация рутины и рост конверсии с помощью AI',
+    name: 'Нейросети для маркетплейсов',
+    subtitle: 'Используйте AI для создания контента, анализа данных и ежедневных задач',
     modules: 11,
     lessons: 92,
     badges: ['WB', 'Ozon'],
@@ -56,7 +56,7 @@ const mainCourses: Course[] = [
   },
   {
     name: 'Ozon: от старта к росту',
-    subtitle: 'Полный гид: личный кабинет, логистика, продвижение, аналитика',
+    subtitle: 'Научитесь работать с логистикой, продвижением и аналитикой на Ozon',
     modules: 8,
     lessons: 76,
     badges: ['Ozon'],
@@ -76,14 +76,14 @@ interface SupplementaryItem {
 const supplementary: SupplementaryItem[] = [
   {
     name: 'Практикумы',
-    count: '24 записи живых вебинаров',
-    desc: 'Разборы реальных кабинетов с экспертами MPSTATS Academy',
+    count: '24 вебинара в записи',
+    desc: 'Разбирайте реальные кабинеты и решения вместе с экспертами MPSTATS Academy',
     badges: ['WB', 'Ozon'],
   },
   {
     name: 'Экспресс-курсы',
     count: '16 коротких уроков',
-    desc: 'Быстрые интенсивы по узким задачам: SEO, выбор товара, аналитика конкурентов',
+    desc: 'Осваивайте отдельные задачи: SEO, выбор товара и анализ конкурентов',
     badges: ['WB', 'Ozon'],
   },
 ];
@@ -126,13 +126,10 @@ export default function DesignNewV8CoursesPage() {
       <section className="bg-[#0F172A] pt-28 sm:pt-36 pb-16 sm:pb-24">
         <div className="max-w-[1160px] mx-auto px-4 sm:px-6 text-center">
           <h1 className="text-3xl sm:text-5xl lg:text-6xl font-bold text-white leading-tight tracking-tight">
-            400+ уроков по 5 осям навыков.
-            <br />
-            Один AI-план под тебя.
+            400+ уроков по 5 направлениям
           </h1>
           <p className="mt-5 sm:mt-6 text-base sm:text-lg text-white/70 max-w-[640px] mx-auto leading-relaxed">
-            Весь каталог MPSTATS Academy — Аналитика, Маркетинг, Контент, Операции, Финансы.
-            Подписка PLATFORM даёт доступ ко всему.
+            Выберите один курс или откройте доступ ко всей библиотеке материалов без ограничений
           </p>
         </div>
       </section>
@@ -191,7 +188,7 @@ export default function DesignNewV8CoursesPage() {
       <section className="py-16 sm:py-24 bg-[#f4f4f4]">
         <div className="max-w-[1160px] mx-auto px-4 sm:px-6">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-[#121212] text-center mb-10 sm:mb-14">
-            Также в подписке
+            Что еще вы получите в подписке
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -246,10 +243,10 @@ export default function DesignNewV8CoursesPage() {
       <section className="py-16 sm:py-24 bg-[#0F172A]">
         <div className="max-w-[1160px] mx-auto px-4 sm:px-6 text-center">
           <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-tight">
-            Не знаешь с чего начать?
+            Не знаете, с чего начать?
           </h2>
           <p className="mt-4 text-base sm:text-lg text-white/60 max-w-[520px] mx-auto">
-            AI-диагностика определит твой уровень за 10 минут и составит персональный план обучения.
+            Пройдите AI-диагностику и получите рекомендации по темам и урокам
           </p>
           <button className="mt-8 px-8 h-[52px] sm:h-[62px] rounded-full text-base font-semibold bg-[#2C4FF8] text-white hover:bg-[#1D39C1] transition-colors">
             Пройти диагностику
