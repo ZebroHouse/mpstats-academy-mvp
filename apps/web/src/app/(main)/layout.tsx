@@ -12,6 +12,7 @@ import { TourProvider } from '@/components/shared/TourProvider';
 import { HelpCircleButton } from '@/components/shared/HelpCircleButton';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { ReferralBanner } from '@/components/referral/ReferralBanner';
+import { PartnerVerifyBanner } from '@/components/partner/PartnerVerifyBanner';
 
 export const metadata: Metadata = {
   title: 'Личный кабинет',
@@ -84,6 +85,10 @@ export default async function MainLayout({
         <div className="md:ml-64 flex flex-col min-h-screen">
           {/* Referral promo banner — above the sticky header, scrolls away */}
           <ReferralBanner />
+          {/* Partner email-verify soft banner — shown to auto-created partner users */}
+          {user.user_metadata?.partner_pending_verify === true && (
+            <PartnerVerifyBanner email={user.email ?? ''} />
+          )}
           {/* Header */}
           <header className="h-16 border-b border-mp-gray-200 bg-white/95 backdrop-blur-sm sticky top-0 z-40">
             <div className="h-full px-4 md:px-6 flex items-center justify-between">
