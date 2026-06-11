@@ -21,9 +21,6 @@ export default defineConfig({
       // `server-only` throws in non-server contexts; stub it out for jsdom tests.
       // Production behavior enforced by Next.js bundler.
       'server-only': path.resolve(__dirname, './tests/server-only-stub.ts'),
-      // `@sentry/nextjs` cannot run in jsdom/node test env; stub it out.
-      // Route handlers that import Sentry are tested with this no-op stub.
-      '@sentry/nextjs': path.resolve(__dirname, './tests/sentry-stub.ts'),
     },
   },
 });

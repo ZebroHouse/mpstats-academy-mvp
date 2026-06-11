@@ -1,16 +1,18 @@
 // apps/web/src/app/api/partner/mpstats/enter/route.ts
 import { NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
+import { prisma } from '@mpstats/db/client';
+import { getSupabaseAdmin } from '@/lib/auth/supabase-admin';
+import { createClient } from '@/lib/supabase/server';
+import { resolvePartnerLessonId } from '@/lib/partner/resolve-module';
+import { verifyPartnerSignature } from '@/lib/partner/signature';
+import { firePartnerEntryLead, sendPartnerConfirmEmail } from '@/lib/carrotquest/emails';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * Public entry from the MPSTATS service. NEVER logs the PII query params.
  * Design: docs/superpowers/specs/2026-06-10-mpstats-tools-seamless-auth-design.md
- *
- * All mocked dependencies are imported lazily (inside the handler) so the module
- * mock factories in tests resolve after vi.mock hoisting, avoiding TDZ errors when
- * mock const variables are declared after vi.mock() in the test file.
  */
 export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
@@ -26,16 +28,6 @@ export async function GET(request: Request): Promise<Response> {
   const moduleCode = url.searchParams.get('module_code') || '';
   const sig = url.searchParams.get('sig') || '';
   const exp = url.searchParams.get('exp') ? Number(url.searchParams.get('exp')) : NaN;
-
-  // Lazy imports — prevents TDZ errors in tests where mock const vars are defined
-  // after vi.mock() calls (a common vitest pattern that triggers factory before consts init).
-  const { prisma } = await import('@mpstats/db/client');
-  const { getSupabaseAdmin } = await import('@/lib/auth/supabase-admin');
-  const { resolvePartnerLessonId } = await import('@/lib/partner/resolve-module');
-  const { verifyPartnerSignature } = await import('@/lib/partner/signature');
-  const { firePartnerEntryLead, sendPartnerConfirmEmail } = await import('@/lib/carrotquest/emails');
-  // createClient kept for use in Tasks 6/7
-  const { createClient } = await import('@/lib/supabase/server');
 
   try {
     const lessonId = await resolvePartnerLessonId(prisma, moduleCode);
@@ -64,25 +56,18 @@ export async function GET(request: Request): Promise<Response> {
     const userId = await createPartnerUser(admin, email, name, /* pendingVerify */ true);
     if (!userId) return NextResponse.redirect(new URL('/login?error=partner_entry', origin));
 
-    await upsertPartnerProfile(prisma, userId, name, phone);
+    await upsertPartnerProfile(userId, name, phone);
     void firePartnerEntryLead(userId, { email, name, phone, moduleCode: moduleCode || undefined });
     return establishSession(admin, email, target, origin);
   } catch (error) {
     Sentry.captureException(error, { tags: { area: 'partner-entry', stage: 'unhandled' } });
     return NextResponse.redirect(new URL('/login?error=partner_entry', origin));
   }
-
-  // Suppress unused-import TS errors for Task 6/7 placeholders
-  void (createClient as unknown);
-  void (sendPartnerConfirmEmail as unknown);
 }
-
-type SupabaseAdmin = Awaited<ReturnType<typeof import('@/lib/auth/supabase-admin')['getSupabaseAdmin']>>;
-type PrismaClientType = typeof import('@mpstats/db/client')['prisma'];
 
 /** Creates a partner user (email_confirm:true so the session mints reliably). */
 async function createPartnerUser(
-  admin: SupabaseAdmin,
+  admin: ReturnType<typeof getSupabaseAdmin>,
   email: string,
   name: string | undefined,
   pendingVerify: boolean,
@@ -99,12 +84,7 @@ async function createPartnerUser(
   return created.data.user.id;
 }
 
-async function upsertPartnerProfile(
-  prisma: PrismaClientType,
-  userId: string,
-  name: string | undefined,
-  phone: string | undefined,
-): Promise<void> {
+async function upsertPartnerProfile(userId: string, name: string | undefined, phone: string | undefined): Promise<void> {
   await prisma.userProfile.upsert({
     where: { id: userId },
     update: { ...(phone ? { phone } : {}) },
@@ -114,7 +94,7 @@ async function upsertPartnerProfile(
 
 /** Mints a session for `email` and returns a redirect to `target` with cookies set. */
 async function establishSession(
-  admin: SupabaseAdmin,
+  admin: ReturnType<typeof getSupabaseAdmin>,
   email: string,
   target: string,
   origin: string,
