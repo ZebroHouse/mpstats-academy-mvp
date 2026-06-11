@@ -112,18 +112,28 @@ untrusted. Код и тесты пишем сейчас, чтобы зажгло
 **Технический факт:** Supabase→CQ хук (`/api/webhooks/supabase-email`) обрабатывает
 только `signup/recovery/email_change`; `magiclink` падает в `default` → не доставляется.
 
-**Решение:** добавить `case 'magiclink'` в хук → стреляем **существующее** событие
-`pa_doi` с confirm-ссылкой. Переиспользуем готовое DOI-правило в CarrotQuest — **нового
-CQ-правила не нужно.** Этим каналом доставляются и magic-link для existing-no-cookie,
-и ресенд из баннера верификации.
+**Решение:** добавить `case 'magiclink'` в хук → стреляем **выделенное** событие
+`pa_partner_magic_link` с confirm-ссылкой. Этим каналом доставляются и magic-link для
+existing-no-cookie, и ресенд из баннера верификации.
+
+> **Почему не `pa_doi` (решение пересмотрено, staging UAT 2026-06-11):** первоначально
+> планировалось переиспользовать существующее DOI-правило в CQ — новое правило не
+> нужно. Однако staging UAT показал: первое письмо доставляется, второй идентичный
+> запрос не приходит. CQ-правило `pa_doi` настроено как **once-per-lead** (каждый лид
+> получает DOI-письмо только один раз) — именно так работает confirmed-email-flow.
+> Повторные re-entry magic-link'и подавляются. Поэтому вводится **выделенный
+> `pa_partner_magic_link` event** со своим CQ-правилом, настроенным **без once-only
+> семантики** (отправляется каждый раз). Зависимость на CQ-команду сохраняется —
+> правило должно быть создано до продового запуска (добавлено в «Открытые вопросы»).
 
 ### 7. Мягкая верификация (баннер)
 
 Баннер «Подтвердите почту» показывается, когда у текущего юзера
 `user_metadata.partner_pending_verify === true`. Кнопка «Отправить ссылку» →
-`generateLink('magiclink')` → доставка через `pa_doi` (см. §6). На успешном
-`/auth/confirm` снимаем флаг `partner_pending_verify` из `user_metadata`. Ничего не
-блокирует. Welcome-письмо партнёрским авто-юзерам НЕ шлём (нет спама на чужие адреса).
+`generateLink('magiclink')` → доставка через `pa_partner_magic_link` (см. §6). На
+успешном `/auth/confirm` снимаем флаг `partner_pending_verify` из `user_metadata`.
+Ничего не блокирует. Welcome-письмо партнёрским авто-юзерам НЕ шлём (нет спама на
+чужие адреса).
 
 ### 8. Лиды
 
@@ -147,13 +157,16 @@ CQ-лид `pa_partner_entry` с `pa_partner_source=mpstats` (+ `pa_partner_modul
 
 ## Открытые вопросы (согласовать параллельно, не блокируют нашу сторону)
 
-1. **Маппинг 24 кодов Игоря ↔ наши `partnerModuleKey`.** Коды (2026-06-10):
+1. **CQ-правило `pa_partner_magic_link` — создать до продового запуска.** Новое
+   выделенное событие (вместо `pa_doi`); правило настраивается **без once-only семантики**
+   (отправлять каждый раз). Блокирует продовый запуск Phase 2 до создания правила.
+2. **Маппинг 24 кодов Игоря ↔ наши `partnerModuleKey`.** Коды (2026-06-10):
    `wb_external, ozon_external, ym_external, wb_account, ozon_account, repricer,
    auto_response, financial_module, calculators, seo, auto_bidder, adv_external,
    sku_auditor, exchange_sku_auditor, studio_cards, rnp, summary_analytics, uzum,
    repricer_ozon, auto_response_ai, avito, image_ai, ozon_lk, image_ai_editor`.
    Часть без урока (`uzum`, `avito`, `image_ai*`, `summary_analytics`) → fallback каталог.
-2. **HMAC-секрет** (`MPSTATS_PARTNER_SIGNING_SECRET`) — только когда появится бэкенд,
+3. **HMAC-секрет** (`MPSTATS_PARTNER_SIGNING_SECRET`) — только когда появится бэкенд,
    способный подписывать (у Игоря его нет). До тех пор trusted-ветка dormant.
 
 ## Критерии готовности
@@ -161,7 +174,7 @@ CQ-лид `pa_partner_entry` с `pa_partner_source=mpstats` (+ `pa_partner_modul
 - [ ] Публичная ручка `GET /api/partner/mpstats/enter` принимает параметры, отдаёт лид в CQ.
 - [ ] Untrusted, новый email → авто-сессия → редирект в урок без письма; `partner_pending_verify=true`.
 - [ ] Untrusted, существующий с кукой → прямой редирект в урок.
-- [ ] Untrusted, существующий без куки → magic-link (через `pa_doi`) → check-email.
+- [ ] Untrusted, существующий без куки → magic-link (через `pa_partner_magic_link`) → check-email.
 - [ ] Trusted-ветка (с подписью) работает в тесте; без секрета — dormant.
 - [ ] `module_code` резолвится; неизвестный/без урока → каталог.
 - [ ] Подделка GET без подписи **не** создаёт сессию для существующего юзера.

@@ -200,9 +200,15 @@ export async function firePartnerEntryLead(
 }
 
 /**
- * Sends a same-domain confirm link by reusing the EXISTING pa_doi CQ automation rule
- * (no email-hook change, no new CQ rule). Used for existing-user magic-link login and
- * the verify-email banner resend. Best-effort.
+ * Sends a same-domain confirm/magic-link via a DEDICATED pa_partner_magic_link CQ event.
+ * Used for existing-user magic-link login and the verify-email banner resend.
+ *
+ * Why not pa_doi: pa_doi's CQ rule is once-per-lead (DOI), so repeated re-entry magic-links
+ * get suppressed. pa_partner_magic_link has its own CQ rule configured without once-only
+ * semantics — fires every time. Discovered in staging UAT 2026-06-11.
+ *
+ * ⚠ Requires CQ team to create the pa_partner_magic_link automation rule before going live.
+ * Best-effort.
  */
 export async function sendPartnerConfirmEmail(
   userId: string,
@@ -213,9 +219,9 @@ export async function sendPartnerConfirmEmail(
     await cq.setUserProps(userId, {
       '$email': data.email,
       ...(data.name ? { '$name': data.name, pa_name: data.name } : {}),
-      pa_doi: data.confirmUrl,
+      pa_partner_magic_link: data.confirmUrl,
     });
-    await cq.trackEvent(userId, 'pa_doi');
+    await cq.trackEvent(userId, 'pa_partner_magic_link');
   } catch (error) {
     reportEmailError('sendPartnerConfirmEmail', userId, error);
   }

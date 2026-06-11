@@ -44,7 +44,8 @@ export type CQEventName =
   | 'pa_diagnostic_completed'
 
   // Partner entry (MPSTATS seamless auth, Phase 2)
-  | 'pa_partner_entry';
+  | 'pa_partner_entry'
+  | 'pa_partner_magic_link';
 
 /**
  * Event data payload — flat key-value map sent alongside the event.

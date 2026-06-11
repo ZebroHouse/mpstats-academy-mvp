@@ -48,7 +48,7 @@ describe('partner CQ helpers', () => {
     expect(cq.trackEvent).toHaveBeenCalledWith('u1', 'pa_partner_entry');
   });
 
-  it('sendPartnerConfirmEmail fires the existing pa_doi event with the confirm link', async () => {
+  it('sendPartnerConfirmEmail fires dedicated pa_partner_magic_link event with the confirm link', async () => {
     await sendPartnerConfirmEmail('u2', {
       email: 'a@b.com',
       name: 'Иван',
@@ -58,9 +58,9 @@ describe('partner CQ helpers', () => {
       'u2',
       expect.objectContaining({
         '$email': 'a@b.com',
-        pa_doi: 'https://x/auth/confirm?token_hash=abc',
+        pa_partner_magic_link: 'https://x/auth/confirm?token_hash=abc',
       }),
     );
-    expect(cq.trackEvent).toHaveBeenCalledWith('u2', 'pa_doi');
+    expect(cq.trackEvent).toHaveBeenCalledWith('u2', 'pa_partner_magic_link');
   });
 });
