@@ -2,9 +2,9 @@
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Build a public entry endpoint that receives a user from the MPSTATS service (`name/phone/email/module_code`), establishes a platform session (instantly if the payload is HMAC-signed, via magic-link otherwise), and lands them in the requested partner-course lesson.
+**Goal:** A public entry endpoint that receives a user from the MPSTATS service (`name/phone/email/module_code`), drops a **brand-new** email straight into the free partner course with a live session (no email round-trip), proves ownership via magic-link for existing emails, and softly nudges email confirmation with a non-blocking banner — without touching billing.
 
-**Architecture:** One public Next.js route handler `GET /api/partner/mpstats/enter`. It resolves `module_code → lessonId`, fires a CQ lead, then branches on trust: a valid HMAC signature → create/lookup user + establish a Supabase session server-side (the existing Yandex-callback pattern: `generateLink('magiclink')` → `verifyOtp` → `setSession` cookies) → 302 to the lesson; no/invalid signature → never auto-login a stranger — straight redirect only if the request already carries that user's session cookie, otherwise email a same-domain magic link via CarrotQuest and show a "check your email" page. Pure logic (signature verification, module resolution) is isolated into unit-tested helpers; the handler is integration-tested with mocked Supabase Admin/Prisma/CQ following `apps/web/tests/auth/yandex-oauth.test.ts`.
+**Architecture:** One public Next.js route handler `GET /api/partner/mpstats/enter`. It resolves `module_code → lessonId`, fires a CQ lead, then branches on trust. **Trusted (HMAC-signed) branch is built and tested but dormant** — MPSTATS (Igor) is frontend-only and cannot sign server-side, so no signer exists day-1; the branch lights up unchanged if a signing backend ever appears. **Untrusted (plain GET) is the day-1 path:** a new email → create user (`email_confirm:true`, `user_metadata.partner_pending_verify:true`) + establish a session server-side (the Yandex-callback pattern: `generateLink('magiclink')` → `verifyOtp` → `setSession` cookies) → 302 to the lesson; an existing email → straight in if the request already carries that user's session cookie, else magic-link to their inbox (delivered by firing the **existing** `pa_doi` CQ event with the confirm link — no email-hook change, no new CQ rule). A non-blocking "confirm your email" banner shows for `partner_pending_verify` users; confirming clears the flag. **No payment gate, no new schema field, no backfill.**
 
 **Tech Stack:** Next.js 14 App Router (route handlers), Supabase Auth Admin API + `@supabase/ssr`, Prisma (`@mpstats/db`), CarrotQuest client, Node `crypto` (HMAC), Vitest.
 
@@ -12,73 +12,63 @@
 
 ## Reference: established patterns to mirror
 
-- **Server-side session creation** — `apps/web/src/app/api/auth/yandex/callback/route.ts:117-198` (steps 7-10): `getSupabaseAdmin()` → `admin.auth.admin.generateLink({type:'magiclink', email})` → `admin.auth.verifyOtp({token_hash: linkData.properties.hashed_token, type:'magiclink'})` → build `NextResponse.redirect` → `createServerClient(...).auth.setSession({access_token, refresh_token})` with a `setAll` that writes onto `response.cookies`.
-- **Existing-user lookup (no pagination bug)** — raw SQL on `auth.users` (same file, lines 49-56): `prisma.$queryRaw\`SELECT id::text AS id, email FROM auth.users WHERE email = ${email} LIMIT 1\``.
-- **Same-domain magic-link URL** — `/auth/confirm` already accepts `type=magiclink` + `next` (`apps/web/src/app/auth/confirm/route.ts:21,99`). Email `${SITE_URL}/auth/confirm?token_hash=<hashed_token>&type=magiclink&next=<target>` (NOT the raw `*.supabase.co` action link).
-- **Reading the current session from cookies** — `createClient()` from `@/lib/supabase/server` then `supabase.auth.getUser()`.
-- **CQ** — `cq.setUserProps(userId, {...})` + `cq.trackEvent(userId, eventName, params?)` from `@/lib/carrotquest/client` (both `by_user_id=true`, need a Supabase user id). Email helpers live in `@/lib/carrotquest/emails`.
-- **Route-handler test mocking** — `apps/web/tests/auth/yandex-oauth.test.ts:1-70` (mock `@/lib/auth/supabase-admin`, `@supabase/ssr`, `@mpstats/db/client`, `next/headers`).
+- **Server-side session creation** — `apps/web/src/app/api/auth/yandex/callback/route.ts:117-198`: `getSupabaseAdmin()` → `admin.auth.admin.generateLink({type:'magiclink', email})` → `admin.auth.verifyOtp({token_hash: linkData.properties.hashed_token, type:'magiclink'})` → build `NextResponse.redirect` → `createServerClient(...).auth.setSession(...)` with a `setAll` writing onto `response.cookies`.
+- **Existing-user lookup (no pagination bug)** — raw SQL: `prisma.$queryRaw\`SELECT id::text AS id, email FROM auth.users WHERE email = ${email} LIMIT 1\`` (same file, lines 49-56).
+- **Same-domain confirm link + existing DOI delivery** — `pa_doi` is fired by setting `pa_doi` user-prop + `cq.trackEvent(userId,'pa_doi')` (`apps/web/src/app/api/webhooks/supabase-email/route.ts:113-124`). `/auth/confirm` already accepts `type=magiclink` + `next` (`apps/web/src/app/auth/confirm/route.ts:21,99`). Confirm URL shape: `${SITE_URL}/auth/confirm?token_hash=<hashed_token>&type=magiclink&next=<target>`.
+- **Reading current session** — `createClient()` from `@/lib/supabase/server` → `supabase.auth.getUser()`. `(main)/layout.tsx:30-33` already does this and renders banners (`ReferralBanner`).
+- **CQ** — `cq.setUserProps(userId, {...})` + `cq.trackEvent(userId, name, params?)` from `@/lib/carrotquest/client`.
+- **Route-handler test mocking** — `apps/web/tests/auth/yandex-oauth.test.ts:1-70`.
+- **user_metadata flag pattern** — `pending_promo` in `(main)/layout.tsx:42` + cleared elsewhere; mirror for `partner_pending_verify`.
 
 ## File structure
 
 | File | Responsibility |
 |------|----------------|
-| `apps/web/src/lib/partner/signature.ts` (create) | Pure HMAC verification of the signed payload. No IO. |
-| `apps/web/src/lib/partner/resolve-module.ts` (create) | `module_code → lessonId` via Prisma (public, no auth). |
-| `apps/web/src/lib/carrotquest/emails.ts` (modify) | Add `sendPartnerMagicLinkEmail` + lead helper `firePartnerEntryLead`. |
-| `apps/web/src/lib/carrotquest/types.ts` (modify) | Add `pa_partner_entry`, `pa_partner_magic_link` to `CQEventName`. |
-| `apps/web/src/app/api/partner/mpstats/enter/route.ts` (create) | The public entry handler (orchestration only). |
-| `apps/web/src/app/partner/check-email/page.tsx` (create) | Minimal "we emailed you a link" landing page. |
-| `apps/web/src/lib/partner/__tests__/signature.test.ts` (create) | Unit tests for signature. |
-| `apps/web/src/lib/partner/__tests__/resolve-module.test.ts` (create) | Unit tests for module resolver. |
-| `apps/web/tests/partner/entry-route.test.ts` (create) | Integration tests for the handler. |
+| `apps/web/src/lib/partner/signature.ts` (create) | Pure HMAC verification (trusted, dormant). |
+| `apps/web/src/lib/partner/resolve-module.ts` (create) | `module_code → lessonId` via Prisma (public). |
+| `apps/web/src/lib/carrotquest/emails.ts` (modify) | `firePartnerEntryLead` + `sendPartnerConfirmEmail` (reuses `pa_doi`). |
+| `apps/web/src/lib/carrotquest/types.ts` (modify) | Add `pa_partner_entry` to `CQEventName`. |
+| `apps/web/src/app/api/partner/mpstats/enter/route.ts` (create) | Public entry handler (orchestration). |
+| `apps/web/src/app/api/partner/verify/resend/route.ts` (create) | Resend confirm link for the banner. |
+| `apps/web/src/app/auth/confirm/route.ts` (modify) | Clear `partner_pending_verify` on successful confirm. |
+| `apps/web/src/app/partner/check-email/page.tsx` (create) | "We emailed you a link" landing. |
+| `apps/web/src/components/partner/PartnerVerifyBanner.tsx` (create) | Non-blocking confirm-email banner. |
+| `apps/web/src/app/(main)/layout.tsx` (modify) | Mount the banner for `partner_pending_verify` users. |
+| `apps/web/src/middleware.ts` (modify) | Allow `/partner/*` public paths. |
+| Tests | `__tests__/signature.test.ts`, `__tests__/resolve-module.test.ts`, `__tests__/partner-emails.test.ts`, `tests/partner/entry-route.test.ts`. |
 
-**Test commands** (run from repo root):
-- web: `pnpm --filter @mpstats/web test -- <path>`
-- api: `pnpm --filter @mpstats/api test`
-- typecheck: `pnpm typecheck`
+**Test commands** (repo root): web `pnpm --filter @mpstats/web test -- <path>`; api `pnpm --filter @mpstats/api test`; typecheck `pnpm typecheck`.
 
 ---
 
-## Task 1: CQ event names
+## Task 1: CQ event name
 
-**Files:**
-- Modify: `apps/web/src/lib/carrotquest/types.ts`
+**Files:** Modify `apps/web/src/lib/carrotquest/types.ts`
 
-- [ ] **Step 1: Add the two partner event names to the union**
-
-In `apps/web/src/lib/carrotquest/types.ts`, locate the `CQEventName` union (ends with `| 'pa_diagnostic_completed';`) and add two members before the closing `;`:
+- [ ] **Step 1:** In `CQEventName` (ends `| 'pa_diagnostic_completed';`) replace the trailing line with:
 
 ```typescript
   | 'pa_diagnostic_completed'
 
   // Partner entry (MPSTATS seamless auth, Phase 2)
-  | 'pa_partner_entry'
-  | 'pa_partner_magic_link';
+  | 'pa_partner_entry';
 ```
 
-- [ ] **Step 2: Typecheck**
-
-Run: `pnpm typecheck`
-Expected: PASS (no usages yet, just a wider union).
-
-- [ ] **Step 3: Commit**
+- [ ] **Step 2:** Run `pnpm typecheck` → PASS.
+- [ ] **Step 3:** Commit:
 
 ```bash
 git add apps/web/src/lib/carrotquest/types.ts
-git commit -m "feat(partner): add CQ event names for MPSTATS entry"
+git commit -m "feat(partner): add pa_partner_entry CQ event name"
 ```
 
 ---
 
-## Task 2: Signature verification helper (pure)
+## Task 2: Signature verification helper (pure, dormant trusted path)
 
-The signed payload canonical string is **exactly**:
-`{email}|{phone}|{name}|{module_code}|{exp}` — values are the raw (URL-decoded) query values, missing fields are the empty string, `exp` is Unix **seconds**. HMAC-SHA256 hex with the shared secret. This canonical format is the contract MPSTATS must implement identically.
+Canonical string MPSTATS must sign (future): `{email}|{phone}|{name}|{module_code}|{exp}`, missing optional = empty string, `exp` = Unix **seconds**, HMAC-SHA256 hex.
 
-**Files:**
-- Create: `apps/web/src/lib/partner/signature.ts`
-- Test: `apps/web/src/lib/partner/__tests__/signature.test.ts`
+**Files:** Create `apps/web/src/lib/partner/signature.ts`; Test `apps/web/src/lib/partner/__tests__/signature.test.ts`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -89,63 +79,44 @@ import { createHmac } from 'node:crypto';
 import { verifyPartnerSignature, partnerCanonicalString } from '../signature';
 
 const SECRET = 'test-secret';
-const NOW = 1_000_000; // unix seconds
-
-function sign(fields: { email: string; phone?: string; name?: string; moduleCode?: string; exp: number }) {
-  const canonical = partnerCanonicalString(fields);
-  return createHmac('sha256', SECRET).update(canonical).digest('hex');
+const NOW = 1_000_000;
+function sign(f: { email: string; phone?: string; name?: string; moduleCode?: string; exp: number }) {
+  return createHmac('sha256', SECRET).update(partnerCanonicalString(f)).digest('hex');
 }
 
 describe('verifyPartnerSignature', () => {
   const base = { email: 'a@b.com', phone: '+79990001122', name: 'Иван', moduleCode: 'auto_bidder', exp: NOW + 60 };
-
   it('accepts a valid, unexpired signature', () => {
-    const sig = sign(base);
-    expect(verifyPartnerSignature({ ...base, sig }, SECRET, NOW)).toBe(true);
+    expect(verifyPartnerSignature({ ...base, sig: sign(base) }, SECRET, NOW)).toBe(true);
   });
-
   it('rejects a tampered email', () => {
-    const sig = sign(base);
-    expect(verifyPartnerSignature({ ...base, email: 'evil@x.com', sig }, SECRET, NOW)).toBe(false);
+    expect(verifyPartnerSignature({ ...base, email: 'evil@x.com', sig: sign(base) }, SECRET, NOW)).toBe(false);
   });
-
   it('rejects an expired signature', () => {
-    const expired = { ...base, exp: NOW - 1 };
-    const sig = sign(expired);
-    expect(verifyPartnerSignature({ ...expired, sig }, SECRET, NOW)).toBe(false);
+    const e = { ...base, exp: NOW - 1 };
+    expect(verifyPartnerSignature({ ...e, sig: sign(e) }, SECRET, NOW)).toBe(false);
   });
-
   it('rejects exp too far in the future (> 600s)', () => {
-    const farFuture = { ...base, exp: NOW + 601 };
-    const sig = sign(farFuture);
-    expect(verifyPartnerSignature({ ...farFuture, sig }, SECRET, NOW)).toBe(false);
+    const f = { ...base, exp: NOW + 601 };
+    expect(verifyPartnerSignature({ ...f, sig: sign(f) }, SECRET, NOW)).toBe(false);
   });
-
-  it('rejects when secret is empty/missing', () => {
-    const sig = sign(base);
-    expect(verifyPartnerSignature({ ...base, sig }, '', NOW)).toBe(false);
+  it('rejects empty secret', () => {
+    expect(verifyPartnerSignature({ ...base, sig: sign(base) }, '', NOW)).toBe(false);
   });
-
-  it('handles missing optional fields (empty string in canonical)', () => {
-    const minimal = { email: 'a@b.com', exp: NOW + 60 };
-    const sig = sign(minimal);
-    expect(verifyPartnerSignature({ ...minimal, sig }, SECRET, NOW)).toBe(true);
+  it('handles missing optional fields', () => {
+    const m = { email: 'a@b.com', exp: NOW + 60 };
+    expect(verifyPartnerSignature({ ...m, sig: sign(m) }, SECRET, NOW)).toBe(true);
   });
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `pnpm --filter @mpstats/web test -- src/lib/partner/__tests__/signature.test.ts`
-Expected: FAIL — "Cannot find module '../signature'".
-
-- [ ] **Step 3: Write the implementation**
+- [ ] **Step 2:** Run `pnpm --filter @mpstats/web test -- src/lib/partner/__tests__/signature.test.ts` → FAIL (module missing).
+- [ ] **Step 3: Implement**
 
 ```typescript
 // apps/web/src/lib/partner/signature.ts
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
-/** Max allowed lifetime of a signed link, in seconds (replay window bound). */
 const MAX_TTL_SECONDS = 600;
 
 export interface PartnerSignedFields {
@@ -153,14 +124,9 @@ export interface PartnerSignedFields {
   phone?: string;
   name?: string;
   moduleCode?: string;
-  exp: number; // unix seconds
+  exp: number;
 }
 
-/**
- * Canonical string MPSTATS must sign, byte-identical on both sides:
- *   {email}|{phone}|{name}|{module_code}|{exp}
- * Missing optional values are the empty string.
- */
 export function partnerCanonicalString(f: PartnerSignedFields): string {
   return [f.email, f.phone ?? '', f.name ?? '', f.moduleCode ?? '', String(f.exp)].join('|');
 }
@@ -172,44 +138,34 @@ function safeEqualHex(a: string, b: string): boolean {
   return timingSafeEqual(ba, bb);
 }
 
-/**
- * Verifies the HMAC-SHA256 signature and the expiry window.
- * `nowSeconds` is injected for deterministic tests.
- */
 export function verifyPartnerSignature(
   input: PartnerSignedFields & { sig: string },
   secret: string,
   nowSeconds: number,
 ): boolean {
   if (!secret || !input.sig || !Number.isFinite(input.exp)) return false;
-  if (input.exp < nowSeconds) return false; // expired
-  if (input.exp > nowSeconds + MAX_TTL_SECONDS) return false; // overly long-lived
+  if (input.exp < nowSeconds) return false;
+  if (input.exp > nowSeconds + MAX_TTL_SECONDS) return false;
   const expected = createHmac('sha256', secret).update(partnerCanonicalString(input)).digest('hex');
   return safeEqualHex(expected, input.sig);
 }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
-
-Run: `pnpm --filter @mpstats/web test -- src/lib/partner/__tests__/signature.test.ts`
-Expected: PASS (6 tests).
-
+- [ ] **Step 4:** Re-run → PASS (6 tests).
 - [ ] **Step 5: Commit**
 
 ```bash
 git add apps/web/src/lib/partner/signature.ts apps/web/src/lib/partner/__tests__/signature.test.ts
-git commit -m "feat(partner): HMAC signature verification for signed entry payload"
+git commit -m "feat(partner): HMAC signature verification (dormant trusted path)"
 ```
 
 ---
 
 ## Task 3: Module resolution helper
 
-Mirrors `partner.resolveModule` (`packages/api/src/routers/partner.ts:48-64`) but as a public, auth-free function for use before the user has a session.
+Mirrors `partner.resolveModule` (`packages/api/src/routers/partner.ts:48-64`) as a public, auth-free function.
 
-**Files:**
-- Create: `apps/web/src/lib/partner/resolve-module.ts`
-- Test: `apps/web/src/lib/partner/__tests__/resolve-module.test.ts`
+**Files:** Create `apps/web/src/lib/partner/resolve-module.ts`; Test `apps/web/src/lib/partner/__tests__/resolve-module.test.ts`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -218,43 +174,30 @@ Mirrors `partner.resolveModule` (`packages/api/src/routers/partner.ts:48-64`) bu
 import { describe, it, expect, vi } from 'vitest';
 import { resolvePartnerLessonId } from '../resolve-module';
 
-function mockPrisma(returnValue: { id: string } | null) {
-  return { lesson: { findFirst: vi.fn().mockResolvedValue(returnValue) } } as any;
-}
+const mk = (rv: { id: string } | null) => ({ lesson: { findFirst: vi.fn().mockResolvedValue(rv) } } as any);
 
 describe('resolvePartnerLessonId', () => {
   it('returns lessonId for a known module code', async () => {
-    const prisma = mockPrisma({ id: 'lesson-123' });
+    const prisma = mk({ id: 'lesson-123' });
     await expect(resolvePartnerLessonId(prisma, 'auto_bidder')).resolves.toBe('lesson-123');
     expect(prisma.lesson.findFirst).toHaveBeenCalledWith({
-      where: {
-        isHidden: false,
-        course: { partnerKey: 'mpstats', isHidden: false },
-        metadata: { path: ['partnerModuleKey'], equals: 'auto_bidder' },
-      },
+      where: { isHidden: false, course: { partnerKey: 'mpstats', isHidden: false }, metadata: { path: ['partnerModuleKey'], equals: 'auto_bidder' } },
       select: { id: true },
     });
   });
-
-  it('returns null for an unknown / contentless code', async () => {
-    const prisma = mockPrisma(null);
-    await expect(resolvePartnerLessonId(prisma, 'uzum')).resolves.toBeNull();
+  it('returns null for unknown / contentless code', async () => {
+    await expect(resolvePartnerLessonId(mk(null), 'uzum')).resolves.toBeNull();
   });
-
   it('returns null for empty input without querying', async () => {
-    const prisma = mockPrisma(null);
+    const prisma = mk(null);
     await expect(resolvePartnerLessonId(prisma, '')).resolves.toBeNull();
     expect(prisma.lesson.findFirst).not.toHaveBeenCalled();
   });
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `pnpm --filter @mpstats/web test -- src/lib/partner/__tests__/resolve-module.test.ts`
-Expected: FAIL — "Cannot find module '../resolve-module'".
-
-- [ ] **Step 3: Write the implementation**
+- [ ] **Step 2:** Run the test → FAIL.
+- [ ] **Step 3: Implement**
 
 ```typescript
 // apps/web/src/lib/partner/resolve-module.ts
@@ -262,11 +205,6 @@ import type { PrismaClient } from '@prisma/client';
 
 export const MPSTATS_PARTNER_KEY = 'mpstats';
 
-/**
- * Resolves an MPSTATS module code to a partner-course lessonId.
- * Public (no auth) — used by the entry handler before a session exists.
- * Returns null for empty input, unknown codes, or codes without a lesson.
- */
 export async function resolvePartnerLessonId(
   prisma: Pick<PrismaClient, 'lesson'>,
   moduleCode: string,
@@ -284,13 +222,9 @@ export async function resolvePartnerLessonId(
 }
 ```
 
-> Note: `@prisma/client` import in `apps/web` can hit a vite-resolve issue per CLAUDE.md gotcha. If `pnpm typecheck` flags it, change the import to `import type { PrismaClient } from '@mpstats/db';`.
+> If `pnpm typecheck` flags the `@prisma/client` import (CLAUDE.md vite-resolve gotcha), switch to `import type { PrismaClient } from '@mpstats/db';`.
 
-- [ ] **Step 4: Run test to verify it passes**
-
-Run: `pnpm --filter @mpstats/web test -- src/lib/partner/__tests__/resolve-module.test.ts`
-Expected: PASS (3 tests).
-
+- [ ] **Step 4:** Re-run → PASS (3 tests).
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -300,60 +234,56 @@ git commit -m "feat(partner): public module_code -> lessonId resolver"
 
 ---
 
-## Task 4: CQ helpers — entry lead + magic-link email
+## Task 4: CQ helpers — entry lead + confirm email (reuses pa_doi)
 
-**Files:**
-- Modify: `apps/web/src/lib/carrotquest/emails.ts`
+**Files:** Modify `apps/web/src/lib/carrotquest/emails.ts`; Test `apps/web/src/lib/carrotquest/__tests__/partner-emails.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Open `emails.ts`** and note the exact `isEmailEnabled` import path and the `reportEmailError` helper name. Mirror them below and in the test mock.
+
+- [ ] **Step 2: Write the failing test**
 
 ```typescript
-// apps/web/src/lib/carrotquest/__tests__/partner-emails.test.ts (create)
+// apps/web/src/lib/carrotquest/__tests__/partner-emails.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 vi.mock('../client', () => ({
   cq: { setUserProps: vi.fn().mockResolvedValue(undefined), trackEvent: vi.fn().mockResolvedValue(undefined) },
 }));
-// isEmailEnabled lives in emails.ts via a FeatureFlag check — force-enable it.
+// Match the real isEmailEnabled import path used in emails.ts (fix after Step 1).
 vi.mock('../../feature-flags', () => ({ isEmailEnabled: vi.fn().mockResolvedValue(true) }), { virtual: true });
 
 import { cq } from '../client';
-import { firePartnerEntryLead, sendPartnerMagicLinkEmail } from '../emails';
+import { firePartnerEntryLead, sendPartnerConfirmEmail } from '../emails';
 
 describe('partner CQ helpers', () => {
   beforeEach(() => vi.clearAllMocks());
 
   it('firePartnerEntryLead sets source props and tracks pa_partner_entry', async () => {
-    await firePartnerEntryLead('user-1', { email: 'a@b.com', name: 'Иван', phone: '+7999', moduleCode: 'seo' });
-    expect(cq.setUserProps).toHaveBeenCalledWith('user-1', expect.objectContaining({
+    await firePartnerEntryLead('u1', { email: 'a@b.com', name: 'Иван', phone: '+7999', moduleCode: 'seo' });
+    expect(cq.setUserProps).toHaveBeenCalledWith('u1', expect.objectContaining({
       '$email': 'a@b.com', pa_partner_source: 'mpstats', pa_partner_module: 'seo',
     }));
-    expect(cq.trackEvent).toHaveBeenCalledWith('user-1', 'pa_partner_entry');
+    expect(cq.trackEvent).toHaveBeenCalledWith('u1', 'pa_partner_entry');
   });
 
-  it('sendPartnerMagicLinkEmail sets the link prop and tracks pa_partner_magic_link', async () => {
-    await sendPartnerMagicLinkEmail('user-2', { link: 'https://x/confirm?token_hash=abc' });
-    expect(cq.setUserProps).toHaveBeenCalledWith('user-2', { pa_partner_magic_link: 'https://x/confirm?token_hash=abc' });
-    expect(cq.trackEvent).toHaveBeenCalledWith('user-2', 'pa_partner_magic_link');
+  it('sendPartnerConfirmEmail fires the existing pa_doi event with the confirm link', async () => {
+    await sendPartnerConfirmEmail('u2', { email: 'a@b.com', name: 'Иван', confirmUrl: 'https://x/auth/confirm?token_hash=abc' });
+    expect(cq.setUserProps).toHaveBeenCalledWith('u2', expect.objectContaining({
+      '$email': 'a@b.com', pa_doi: 'https://x/auth/confirm?token_hash=abc',
+    }));
+    expect(cq.trackEvent).toHaveBeenCalledWith('u2', 'pa_doi');
   });
 });
 ```
 
-> Before writing, open `apps/web/src/lib/carrotquest/emails.ts` and check how the other helpers gate on email-enabled (`isEmailEnabled()` import path). Mirror that exact import in the new helpers and fix the mock path in this test to match it.
+- [ ] **Step 3:** Run `pnpm --filter @mpstats/web test -- src/lib/carrotquest/__tests__/partner-emails.test.ts` → FAIL (exports missing).
 
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `pnpm --filter @mpstats/web test -- src/lib/carrotquest/__tests__/partner-emails.test.ts`
-Expected: FAIL — `firePartnerEntryLead`/`sendPartnerMagicLinkEmail` are not exported.
-
-- [ ] **Step 3: Write the implementation**
-
-Append to `apps/web/src/lib/carrotquest/emails.ts` (reuse the file's existing `isEmailEnabled` import and `reportEmailError` helper — match their names exactly):
+- [ ] **Step 4: Implement** — append to `emails.ts` (reuse existing `cq`, `isEmailEnabled`, `reportEmailError`):
 
 ```typescript
 /**
- * Fire the MPSTATS partner-entry lead. Records source + module on the CQ lead and
- * fires pa_partner_entry. Best-effort (never throws into the request path).
+ * MPSTATS partner-entry lead. Records source + module and fires pa_partner_entry.
+ * Always runs (lead quality matters even if the email toggle is off). Best-effort.
  */
 export async function firePartnerEntryLead(
   userId: string,
@@ -374,45 +304,43 @@ export async function firePartnerEntryLead(
 }
 
 /**
- * Email a same-domain magic link to the user via CarrotQuest (CQ automation rule
- * on pa_partner_magic_link sends the actual email). Best-effort.
+ * Sends a same-domain confirm link by reusing the EXISTING pa_doi CQ automation rule
+ * (no email-hook change, no new CQ rule). Used for existing-user magic-link login and
+ * the verify-email banner resend. Best-effort.
  */
-export async function sendPartnerMagicLinkEmail(
+export async function sendPartnerConfirmEmail(
   userId: string,
-  data: { link: string },
+  data: { email: string; name?: string; confirmUrl: string },
 ): Promise<void> {
   try {
-    await cq.setUserProps(userId, { pa_partner_magic_link: data.link });
-    await cq.trackEvent(userId, 'pa_partner_magic_link');
+    if (!(await isEmailEnabled())) return;
+    await cq.setUserProps(userId, {
+      '$email': data.email,
+      ...(data.name ? { '$name': data.name, pa_name: data.name } : {}),
+      pa_doi: data.confirmUrl,
+    });
+    await cq.trackEvent(userId, 'pa_doi');
   } catch (error) {
-    reportEmailError('sendPartnerMagicLinkEmail', userId, error);
+    reportEmailError('sendPartnerConfirmEmail', userId, error);
   }
 }
 ```
 
-> If `emails.ts` gates every send behind `if (!(await isEmailEnabled())) return;`, keep that guard in `sendPartnerMagicLinkEmail` but NOT in `firePartnerEntryLead` (the lead must be recorded regardless of the email toggle). Adjust the test's `isEmailEnabled` mock accordingly.
+> If `emails.ts` does not import `isEmailEnabled`, drop that guard line from `sendPartnerConfirmEmail` and remove the corresponding mock from the test.
 
-- [ ] **Step 4: Run test to verify it passes**
-
-Run: `pnpm --filter @mpstats/web test -- src/lib/carrotquest/__tests__/partner-emails.test.ts`
-Expected: PASS (2 tests).
-
-- [ ] **Step 5: Commit**
+- [ ] **Step 5:** Re-run → PASS (2 tests).
+- [ ] **Step 6: Commit**
 
 ```bash
 git add apps/web/src/lib/carrotquest/emails.ts apps/web/src/lib/carrotquest/__tests__/partner-emails.test.ts
-git commit -m "feat(partner): CQ entry-lead + magic-link email helpers"
+git commit -m "feat(partner): CQ entry-lead + confirm-email helpers"
 ```
 
 ---
 
-## Task 5: Entry route — gate, parse, module resolve, untrusted-new baseline
+## Task 5: Entry route — gate, parse, resolve, lead, new-email auto-session
 
-This task builds the handler end-to-end for the **simplest** real branch (untrusted, brand-new email → create user + email magic link → check-email page) plus the guard rails (flag off, missing email, module resolve). Trusted and the other untrusted sub-branches come in Tasks 6-7.
-
-**Files:**
-- Create: `apps/web/src/app/api/partner/mpstats/enter/route.ts`
-- Test: `apps/web/tests/partner/entry-route.test.ts`
+**Files:** Create `apps/web/src/app/api/partner/mpstats/enter/route.ts`; Test `apps/web/tests/partner/entry-route.test.ts`
 
 - [ ] **Step 1: Write the failing test**
 
@@ -420,12 +348,7 @@ This task builds the handler end-to-end for the **simplest** real branch (untrus
 // apps/web/tests/partner/entry-route.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const mockAdmin = {
-  auth: {
-    admin: { createUser: vi.fn(), generateLink: vi.fn() },
-    verifyOtp: vi.fn(),
-  },
-};
+const mockAdmin = { auth: { admin: { createUser: vi.fn(), generateLink: vi.fn() }, verifyOtp: vi.fn() } };
 vi.mock('@/lib/auth/supabase-admin', () => ({ getSupabaseAdmin: () => mockAdmin }));
 
 const mockServerSupabase = { auth: { getUser: vi.fn().mockResolvedValue({ data: { user: null } }) } };
@@ -436,20 +359,17 @@ vi.mock('@supabase/ssr', () => ({
 }));
 
 const mockPrisma = {
-  $queryRaw: vi.fn().mockResolvedValue([]), // default: no existing user
+  $queryRaw: vi.fn().mockResolvedValue([]),
   userProfile: { upsert: vi.fn().mockResolvedValue({}) },
   lesson: { findFirst: vi.fn().mockResolvedValue(null) },
 };
 vi.mock('@mpstats/db/client', () => ({ prisma: mockPrisma }));
 
-const mockCq = { firePartnerEntryLead: vi.fn().mockResolvedValue(undefined), sendPartnerMagicLinkEmail: vi.fn().mockResolvedValue(undefined) };
+const mockCq = { firePartnerEntryLead: vi.fn().mockResolvedValue(undefined), sendPartnerConfirmEmail: vi.fn().mockResolvedValue(undefined) };
 vi.mock('@/lib/carrotquest/emails', () => mockCq);
 
 import { GET } from '@/app/api/partner/mpstats/enter/route';
-
-function req(qs: string) {
-  return new Request(`https://platform.test/api/partner/mpstats/enter?${qs}`);
-}
+const req = (qs: string) => new Request(`https://platform.test/api/partner/mpstats/enter?${qs}`);
 
 describe('GET /api/partner/mpstats/enter', () => {
   beforeEach(() => {
@@ -461,6 +381,7 @@ describe('GET /api/partner/mpstats/enter', () => {
     mockPrisma.lesson.findFirst.mockResolvedValue(null);
     mockAdmin.auth.admin.createUser.mockResolvedValue({ data: { user: { id: 'new-uid', email: 'new@x.com' } }, error: null });
     mockAdmin.auth.admin.generateLink.mockResolvedValue({ data: { properties: { hashed_token: 'tok123' } }, error: null });
+    mockAdmin.auth.verifyOtp.mockResolvedValue({ data: { session: { access_token: 'at', refresh_token: 'rt' } }, error: null });
     mockServerSupabase.auth.getUser.mockResolvedValue({ data: { user: null } });
   });
 
@@ -473,40 +394,33 @@ describe('GET /api/partner/mpstats/enter', () => {
 
   it('redirects to / when email is missing', async () => {
     const res = await GET(req('name=Ivan'));
-    expect(res.status).toBe(307);
     expect(res.headers.get('location')).toBe('https://platform.test/');
   });
 
-  it('untrusted new email: creates user, emails magic link, redirects to check-email', async () => {
-    const res = await GET(req('email=new@x.com&name=Ivan&module_code=seo'));
-    expect(mockAdmin.auth.admin.createUser).toHaveBeenCalledWith(
-      expect.objectContaining({ email: 'new@x.com', email_confirm: false }),
-    );
-    expect(mockCq.firePartnerEntryLead).toHaveBeenCalledWith('new-uid', expect.objectContaining({ email: 'new@x.com', moduleCode: 'seo' }));
-    expect(mockAdmin.auth.admin.generateLink).toHaveBeenCalledWith({ type: 'magiclink', email: 'new@x.com' });
-    expect(mockCq.sendPartnerMagicLinkEmail).toHaveBeenCalledWith('new-uid', {
-      link: 'https://platform.test/auth/confirm?token_hash=tok123&type=magiclink&next=%2Fmpstats-tools',
-    });
+  it('untrusted new email: creates pending-verify user, sets session, redirects to lesson (no email)', async () => {
+    mockPrisma.lesson.findFirst.mockResolvedValue({ id: 'lesson-9' });
+    const res = await GET(req('email=new@x.com&name=Ivan&module_code=auto_bidder'));
+    expect(mockAdmin.auth.admin.createUser).toHaveBeenCalledWith(expect.objectContaining({
+      email: 'new@x.com', email_confirm: true,
+      user_metadata: expect.objectContaining({ partner_pending_verify: true }),
+    }));
+    expect(mockCq.firePartnerEntryLead).toHaveBeenCalledWith('new-uid', expect.objectContaining({ email: 'new@x.com', moduleCode: 'auto_bidder' }));
+    expect(mockAdmin.auth.verifyOtp).toHaveBeenCalledWith({ token_hash: 'tok123', type: 'magiclink' });
+    expect(mockCq.sendPartnerConfirmEmail).not.toHaveBeenCalled();
     expect(res.status).toBe(307);
-    expect(res.headers.get('location')).toContain('/partner/check-email');
+    expect(res.headers.get('location')).toBe('https://platform.test/mpstats-tools/lesson-9');
   });
 
-  it('resolves module_code into the magic-link next target', async () => {
-    mockPrisma.lesson.findFirst.mockResolvedValue({ id: 'lesson-9' });
-    await GET(req('email=new@x.com&module_code=auto_bidder'));
-    expect(mockCq.sendPartnerMagicLinkEmail).toHaveBeenCalledWith('new-uid', {
-      link: 'https://platform.test/auth/confirm?token_hash=tok123&type=magiclink&next=%2Fmpstats-tools%2Flesson-9',
-    });
+  it('falls back to catalog when module_code has no lesson', async () => {
+    const res = await GET(req('email=new@x.com&module_code=uzum'));
+    expect(res.headers.get('location')).toBe('https://platform.test/mpstats-tools');
   });
 });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 2:** Run `pnpm --filter @mpstats/web test -- tests/partner/entry-route.test.ts` → FAIL (route missing).
 
-Run: `pnpm --filter @mpstats/web test -- tests/partner/entry-route.test.ts`
-Expected: FAIL — cannot import `@/app/api/partner/mpstats/enter/route`.
-
-- [ ] **Step 3: Write the implementation**
+- [ ] **Step 3: Implement**
 
 ```typescript
 // apps/web/src/app/api/partner/mpstats/enter/route.ts
@@ -517,14 +431,13 @@ import { getSupabaseAdmin } from '@/lib/auth/supabase-admin';
 import { createClient } from '@/lib/supabase/server';
 import { resolvePartnerLessonId } from '@/lib/partner/resolve-module';
 import { verifyPartnerSignature } from '@/lib/partner/signature';
-import { firePartnerEntryLead, sendPartnerMagicLinkEmail } from '@/lib/carrotquest/emails';
+import { firePartnerEntryLead, sendPartnerConfirmEmail } from '@/lib/carrotquest/emails';
 
 export const dynamic = 'force-dynamic';
 
 /**
  * Public entry from the MPSTATS service. NEVER logs the PII query params.
- * Branches on trust (HMAC signature) — see the design spec
- * docs/superpowers/specs/2026-06-10-mpstats-tools-seamless-auth-design.md.
+ * Design: docs/superpowers/specs/2026-06-10-mpstats-tools-seamless-auth-design.md
  */
 export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
@@ -539,8 +452,7 @@ export async function GET(request: Request): Promise<Response> {
   const phone = url.searchParams.get('phone') || undefined;
   const moduleCode = url.searchParams.get('module_code') || '';
   const sig = url.searchParams.get('sig') || '';
-  const expRaw = url.searchParams.get('exp');
-  const exp = expRaw ? Number(expRaw) : NaN;
+  const exp = url.searchParams.get('exp') ? Number(url.searchParams.get('exp')) : NaN;
 
   try {
     const lessonId = await resolvePartnerLessonId(prisma, moduleCode);
@@ -558,165 +470,51 @@ export async function GET(request: Request): Promise<Response> {
     `;
     const existingUser = existing[0] ?? null;
 
-    // --- Trusted branch: filled in Task 6 ---
+    // --- Trusted branch (dormant): filled in Task 6 ---
 
     // --- Untrusted, existing user: filled in Task 7 ---
     if (existingUser) {
       return NextResponse.redirect(new URL('/login', origin)); // placeholder, replaced in Task 7
     }
 
-    // --- Untrusted, brand-new email: create + email magic link ---
-    const created = await admin.auth.admin.createUser({ email, email_confirm: false, user_metadata: { full_name: name ?? '' } });
-    if (created.error || !created.data.user) {
-      Sentry.captureException(created.error ?? new Error('createUser returned no user'), { tags: { area: 'partner-entry', stage: 'create-user' } });
-      return NextResponse.redirect(new URL('/login?error=partner_entry', origin));
-    }
-    const userId = created.data.user.id;
+    // --- Untrusted, brand-new email: auto-create + auto-session ---
+    const userId = await createPartnerUser(admin, email, name, /* pendingVerify */ true);
+    if (!userId) return NextResponse.redirect(new URL('/login?error=partner_entry', origin));
 
-    await prisma.userProfile.upsert({
-      where: { id: userId },
-      update: { ...(phone ? { phone } : {}) },
-      create: { id: userId, name: name ?? null, phone: phone ?? null },
-    }).catch((e) => Sentry.captureException(e, { tags: { area: 'partner-entry', stage: 'profile-upsert' } }));
-
+    await upsertPartnerProfile(userId, name, phone);
     void firePartnerEntryLead(userId, { email, name, phone, moduleCode: moduleCode || undefined });
-    await emailMagicLink(admin, email, userId, target, origin);
-
-    return NextResponse.redirect(new URL(`/partner/check-email?email=${encodeURIComponent(email)}`, origin));
+    return establishSession(admin, email, target, origin);
   } catch (error) {
     Sentry.captureException(error, { tags: { area: 'partner-entry', stage: 'unhandled' } });
     return NextResponse.redirect(new URL('/login?error=partner_entry', origin));
   }
 }
 
-/** Generate a same-domain magic link and hand it to CQ for delivery. */
-async function emailMagicLink(
-  admin: ReturnType<typeof getSupabaseAdmin>,
-  email: string,
-  userId: string,
-  target: string,
-  origin: string,
-): Promise<void> {
-  const link = await admin.auth.admin.generateLink({ type: 'magiclink', email });
-  if (link.error || !link.data?.properties?.hashed_token) {
-    Sentry.captureException(link.error ?? new Error('generateLink returned no token'), { tags: { area: 'partner-entry', stage: 'generate-link' } });
-    return;
-  }
-  const confirmUrl = `${origin}/auth/confirm?token_hash=${link.data.properties.hashed_token}&type=magiclink&next=${encodeURIComponent(target)}`;
-  await sendPartnerMagicLinkEmail(userId, { link: confirmUrl });
-}
-```
-
-> The `NextResponse.redirect` default status is 307 (matches the test). The `next` value is URL-encoded; `/mpstats-tools` encodes to `%2Fmpstats-tools` and `/mpstats-tools/lesson-9` to `%2Fmpstats-tools%2Flesson-9` — matching the expected strings.
-
-- [ ] **Step 4: Run test to verify it passes**
-
-Run: `pnpm --filter @mpstats/web test -- tests/partner/entry-route.test.ts`
-Expected: PASS (4 tests). The existing-user test isn't written yet; the placeholder redirect is replaced in Task 7.
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add apps/web/src/app/api/partner/mpstats/enter/route.ts apps/web/tests/partner/entry-route.test.ts
-git commit -m "feat(partner): entry route — gate, parse, module resolve, untrusted-new"
-```
-
----
-
-## Task 6: Entry route — trusted branch (instant session)
-
-**Files:**
-- Modify: `apps/web/src/app/api/partner/mpstats/enter/route.ts`
-- Test: `apps/web/tests/partner/entry-route.test.ts`
-
-- [ ] **Step 1: Write the failing test**
-
-Add inside the existing `describe`, plus this import at the top of the file:
-
-```typescript
-import { createHmac } from 'node:crypto';
-
-function signEntry(fields: { email: string; phone?: string; name?: string; moduleCode?: string; exp: number }) {
-  const canonical = [fields.email, fields.phone ?? '', fields.name ?? '', fields.moduleCode ?? '', String(fields.exp)].join('|');
-  return createHmac('sha256', 'secret').update(canonical).digest('hex');
-}
-```
-
-```typescript
-  it('trusted new user: creates user, establishes session, redirects to lesson (no email)', async () => {
-    mockPrisma.lesson.findFirst.mockResolvedValue({ id: 'lesson-9' });
-    mockAdmin.auth.verifyOtp.mockResolvedValue({ data: { session: { access_token: 'at', refresh_token: 'rt' } }, error: null });
-    const exp = Math.floor(Date.now() / 1000) + 60;
-    const sig = signEntry({ email: 'new@x.com', name: 'Ivan', moduleCode: 'auto_bidder', exp });
-    const res = await GET(req(`email=new@x.com&name=Ivan&module_code=auto_bidder&exp=${exp}&sig=${sig}`));
-
-    expect(mockAdmin.auth.admin.createUser).toHaveBeenCalledWith(expect.objectContaining({ email: 'new@x.com', email_confirm: true }));
-    expect(mockAdmin.auth.verifyOtp).toHaveBeenCalledWith({ token_hash: 'tok123', type: 'magiclink' });
-    expect(mockCq.sendPartnerMagicLinkEmail).not.toHaveBeenCalled();
-    expect(res.status).toBe(307);
-    expect(res.headers.get('location')).toBe('https://platform.test/mpstats-tools/lesson-9');
-  });
-
-  it('trusted existing user: no createUser, establishes session, redirects to lesson', async () => {
-    mockPrisma.$queryRaw.mockResolvedValue([{ id: 'old-uid', email: 'old@x.com' }]);
-    mockPrisma.lesson.findFirst.mockResolvedValue({ id: 'lesson-9' });
-    mockAdmin.auth.verifyOtp.mockResolvedValue({ data: { session: { access_token: 'at', refresh_token: 'rt' } }, error: null });
-    const exp = Math.floor(Date.now() / 1000) + 60;
-    const sig = signEntry({ email: 'old@x.com', moduleCode: 'auto_bidder', exp });
-    const res = await GET(req(`email=old@x.com&module_code=auto_bidder&exp=${exp}&sig=${sig}`));
-
-    expect(mockAdmin.auth.admin.createUser).not.toHaveBeenCalled();
-    expect(res.headers.get('location')).toBe('https://platform.test/mpstats-tools/lesson-9');
-  });
-```
-
-- [ ] **Step 2: Run test to verify it fails**
-
-Run: `pnpm --filter @mpstats/web test -- tests/partner/entry-route.test.ts`
-Expected: FAIL — trusted tests fail (currently the signed request still falls through to the untrusted-new path, so `email_confirm` is `false` not `true`, and no session is established).
-
-- [ ] **Step 3: Write the implementation**
-
-Add a helper at the bottom of `route.ts` and wire the trusted branch where the `// --- Trusted branch: filled in Task 6 ---` marker sits:
-
-```typescript
-    if (trusted) {
-      const userId = existingUser
-        ? existingUser.id
-        : await createPartnerUser(admin, email, name, /* confirmed */ true);
-      if (!userId) return NextResponse.redirect(new URL('/login?error=partner_entry', origin));
-
-      await prisma.userProfile.upsert({
-        where: { id: userId },
-        update: { ...(phone ? { phone } : {}) },
-        create: { id: userId, name: name ?? null, phone: phone ?? null },
-      }).catch((e) => Sentry.captureException(e, { tags: { area: 'partner-entry', stage: 'profile-upsert' } }));
-
-      void firePartnerEntryLead(userId, { email, name, phone, moduleCode: moduleCode || undefined });
-      return establishSession(admin, email, target, origin);
-    }
-```
-
-Add these helpers (bottom of file):
-
-```typescript
-/** Creates a partner user; returns the new id or null on failure. */
+/** Creates a partner user (email_confirm:true so the session mints reliably). */
 async function createPartnerUser(
   admin: ReturnType<typeof getSupabaseAdmin>,
   email: string,
   name: string | undefined,
-  confirmed: boolean,
+  pendingVerify: boolean,
 ): Promise<string | null> {
   const created = await admin.auth.admin.createUser({
     email,
-    email_confirm: confirmed,
-    user_metadata: { full_name: name ?? '' },
+    email_confirm: true,
+    user_metadata: { full_name: name ?? '', ...(pendingVerify ? { partner_pending_verify: true } : {}) },
   });
   if (created.error || !created.data.user) {
     Sentry.captureException(created.error ?? new Error('createUser returned no user'), { tags: { area: 'partner-entry', stage: 'create-user' } });
     return null;
   }
   return created.data.user.id;
+}
+
+async function upsertPartnerProfile(userId: string, name: string | undefined, phone: string | undefined): Promise<void> {
+  await prisma.userProfile.upsert({
+    where: { id: userId },
+    update: { ...(phone ? { phone } : {}) },
+    create: { id: userId, name: name ?? null, phone: phone ?? null },
+  }).catch((e) => Sentry.captureException(e, { tags: { area: 'partner-entry', stage: 'profile-upsert' } }));
 }
 
 /** Mints a session for `email` and returns a redirect to `target` with cookies set. */
@@ -754,33 +552,88 @@ async function establishSession(
   await ssr.auth.setSession({ access_token: otp.data.session.access_token, refresh_token: otp.data.session.refresh_token });
   return response;
 }
+
+/** Builds the same-domain confirm URL for magic-link delivery (Task 7 / banner). */
+export function buildConfirmUrl(origin: string, tokenHash: string, target: string): string {
+  return `${origin}/auth/confirm?token_hash=${tokenHash}&type=magiclink&next=${encodeURIComponent(target)}`;
+}
 ```
 
-> Refactor the Task-5 untrusted-new path to reuse `createPartnerUser(admin, email, name, false)` instead of the inline `createUser` call, so user creation lives in one place (DRY). The existing test still passes — it asserts `email_confirm: false`, which `createPartnerUser(..., false)` preserves.
-
-- [ ] **Step 4: Run test to verify it passes**
-
-Run: `pnpm --filter @mpstats/web test -- tests/partner/entry-route.test.ts`
-Expected: PASS (6 tests).
-
+- [ ] **Step 4:** Re-run → PASS (4 tests). (Existing-user path is the placeholder, replaced in Task 7.)
 - [ ] **Step 5: Commit**
 
 ```bash
 git add apps/web/src/app/api/partner/mpstats/enter/route.ts apps/web/tests/partner/entry-route.test.ts
-git commit -m "feat(partner): trusted branch — instant server-side session"
+git commit -m "feat(partner): entry route — gate/parse/resolve/lead + new-email auto-session"
+```
+
+---
+
+## Task 6: Entry route — trusted branch (dormant, instant session)
+
+**Files:** Modify `route.ts` + `entry-route.test.ts`
+
+- [ ] **Step 1: Add test** (add the import + helper at top of the test file, then the cases):
+
+```typescript
+import { createHmac } from 'node:crypto';
+const signEntry = (f: { email: string; phone?: string; name?: string; moduleCode?: string; exp: number }) =>
+  createHmac('sha256', 'secret').update([f.email, f.phone ?? '', f.name ?? '', f.moduleCode ?? '', String(f.exp)].join('|')).digest('hex');
+```
+
+```typescript
+  it('trusted new user: creates user, sets session, redirects to lesson (no email)', async () => {
+    mockPrisma.lesson.findFirst.mockResolvedValue({ id: 'lesson-9' });
+    const exp = Math.floor(Date.now() / 1000) + 60;
+    const sig = signEntry({ email: 'new@x.com', name: 'Ivan', moduleCode: 'auto_bidder', exp });
+    const res = await GET(req(`email=new@x.com&name=Ivan&module_code=auto_bidder&exp=${exp}&sig=${sig}`));
+    expect(mockAdmin.auth.admin.createUser).toHaveBeenCalledWith(expect.objectContaining({ email: 'new@x.com', email_confirm: true }));
+    expect(mockAdmin.auth.verifyOtp).toHaveBeenCalledWith({ token_hash: 'tok123', type: 'magiclink' });
+    expect(res.headers.get('location')).toBe('https://platform.test/mpstats-tools/lesson-9');
+  });
+
+  it('trusted existing user: no createUser, sets session, redirects to lesson', async () => {
+    mockPrisma.$queryRaw.mockResolvedValue([{ id: 'old-uid', email: 'old@x.com' }]);
+    mockPrisma.lesson.findFirst.mockResolvedValue({ id: 'lesson-9' });
+    const exp = Math.floor(Date.now() / 1000) + 60;
+    const sig = signEntry({ email: 'old@x.com', moduleCode: 'auto_bidder', exp });
+    const res = await GET(req(`email=old@x.com&module_code=auto_bidder&exp=${exp}&sig=${sig}`));
+    expect(mockAdmin.auth.admin.createUser).not.toHaveBeenCalled();
+    expect(res.headers.get('location')).toBe('https://platform.test/mpstats-tools/lesson-9');
+  });
+```
+
+- [ ] **Step 2:** Run → FAIL (signed request still falls into untrusted-new: existing-trusted hits the `/login` placeholder; new-trusted path works only by luck of the new-email branch but creates without trusted semantics — assert the existing-user trusted case fails).
+
+- [ ] **Step 3: Implement** — replace the `// --- Trusted branch (dormant) ... ---` marker with:
+
+```typescript
+    if (trusted) {
+      const userId = existingUser ? existingUser.id : await createPartnerUser(admin, email, name, /* pendingVerify */ false);
+      if (!userId) return NextResponse.redirect(new URL('/login?error=partner_entry', origin));
+      await upsertPartnerProfile(userId, name, phone);
+      void firePartnerEntryLead(userId, { email, name, phone, moduleCode: moduleCode || undefined });
+      return establishSession(admin, email, target, origin);
+    }
+```
+
+- [ ] **Step 4:** Re-run → PASS (6 tests).
+- [ ] **Step 5: Commit**
+
+```bash
+git add apps/web/src/app/api/partner/mpstats/enter/route.ts apps/web/tests/partner/entry-route.test.ts
+git commit -m "feat(partner): trusted branch — instant server-side session (dormant)"
 ```
 
 ---
 
 ## Task 7: Entry route — untrusted existing-user branches
 
-Replaces the Task-5 placeholder. Two cases: (a) the request already carries a valid session for this email → straight redirect; (b) otherwise → email a magic link to the real owner → check-email page. A tampered signature must fall through to untrusted (no session created).
+Replaces the Task-5 placeholder. (a) request already authed as this email → straight in; (b) else → magic-link to the real inbox via `sendPartnerConfirmEmail` (reuses pa_doi) → `/partner/check-email`. A tampered signature falls through to untrusted (no auto-session).
 
-**Files:**
-- Modify: `apps/web/src/app/api/partner/mpstats/enter/route.ts`
-- Test: `apps/web/tests/partner/entry-route.test.ts`
+**Files:** Modify `route.ts` + `entry-route.test.ts`
 
-- [ ] **Step 1: Write the failing test**
+- [ ] **Step 1: Add tests**
 
 ```typescript
   it('untrusted existing + already logged in as them: straight redirect to lesson', async () => {
@@ -789,17 +642,17 @@ Replaces the Task-5 placeholder. Two cases: (a) the request already carries a va
     mockServerSupabase.auth.getUser.mockResolvedValue({ data: { user: { email: 'old@x.com' } } });
     const res = await GET(req('email=old@x.com&module_code=auto_bidder'));
     expect(mockAdmin.auth.admin.generateLink).not.toHaveBeenCalled();
-    expect(mockCq.sendPartnerMagicLinkEmail).not.toHaveBeenCalled();
+    expect(mockCq.sendPartnerConfirmEmail).not.toHaveBeenCalled();
     expect(res.headers.get('location')).toBe('https://platform.test/mpstats-tools/lesson-9');
   });
 
-  it('untrusted existing + no/other session: emails magic link, redirects to check-email', async () => {
+  it('untrusted existing + no session: emails confirm link, redirects to check-email', async () => {
     mockPrisma.$queryRaw.mockResolvedValue([{ id: 'old-uid', email: 'old@x.com' }]);
     mockServerSupabase.auth.getUser.mockResolvedValue({ data: { user: null } });
     const res = await GET(req('email=old@x.com'));
     expect(mockAdmin.auth.admin.createUser).not.toHaveBeenCalled();
-    expect(mockCq.sendPartnerMagicLinkEmail).toHaveBeenCalledWith('old-uid', expect.objectContaining({
-      link: expect.stringContaining('/auth/confirm?token_hash=tok123&type=magiclink'),
+    expect(mockCq.sendPartnerConfirmEmail).toHaveBeenCalledWith('old-uid', expect.objectContaining({
+      email: 'old@x.com', confirmUrl: expect.stringContaining('/auth/confirm?token_hash=tok123&type=magiclink'),
     }));
     expect(res.headers.get('location')).toContain('/partner/check-email');
   });
@@ -809,20 +662,15 @@ Replaces the Task-5 placeholder. Two cases: (a) the request already carries a va
     mockServerSupabase.auth.getUser.mockResolvedValue({ data: { user: null } });
     const exp = Math.floor(Date.now() / 1000) + 60;
     const res = await GET(req(`email=old@x.com&exp=${exp}&sig=deadbeef`));
-    expect(mockAdmin.auth.verifyOtp).not.toHaveBeenCalled(); // no trusted session mint
-    expect(mockCq.sendPartnerMagicLinkEmail).toHaveBeenCalled(); // fell through to untrusted
+    expect(mockAdmin.auth.verifyOtp).not.toHaveBeenCalled();
+    expect(mockCq.sendPartnerConfirmEmail).toHaveBeenCalled();
     expect(res.headers.get('location')).toContain('/partner/check-email');
   });
 ```
 
-- [ ] **Step 2: Run test to verify it fails**
+- [ ] **Step 2:** Run → FAIL (placeholder returns `/login`).
 
-Run: `pnpm --filter @mpstats/web test -- tests/partner/entry-route.test.ts`
-Expected: FAIL — existing-user path still returns the `/login` placeholder.
-
-- [ ] **Step 3: Write the implementation**
-
-Replace the placeholder block:
+- [ ] **Step 3: Implement** — replace:
 
 ```typescript
     if (existingUser) {
@@ -834,24 +682,25 @@ with:
 
 ```typescript
     if (existingUser) {
-      // Already authenticated as this exact user on this device → straight in.
       const server = await createClient();
       const { data: { user: sessionUser } } = await server.auth.getUser();
       if (sessionUser?.email && sessionUser.email.toLowerCase() === email.toLowerCase()) {
-        return NextResponse.redirect(new URL(target, origin));
+        return NextResponse.redirect(new URL(target, origin)); // already logged in on this device
       }
-      // Otherwise prove ownership via a magic link to the real inbox.
+      // Prove ownership via a magic link to the real inbox (reuses pa_doi delivery).
+      const link = await admin.auth.admin.generateLink({ type: 'magiclink', email });
+      const token = link.data?.properties?.hashed_token;
+      if (link.error || !token) {
+        Sentry.captureException(link.error ?? new Error('generateLink returned no token'), { tags: { area: 'partner-entry', stage: 'generate-link' } });
+        return NextResponse.redirect(new URL('/login?error=partner_entry', origin));
+      }
       void firePartnerEntryLead(existingUser.id, { email, name, phone, moduleCode: moduleCode || undefined });
-      await emailMagicLink(admin, email, existingUser.id, target, origin);
+      void sendPartnerConfirmEmail(existingUser.id, { email, name, confirmUrl: buildConfirmUrl(origin, token, target) });
       return NextResponse.redirect(new URL(`/partner/check-email?email=${encodeURIComponent(email)}`, origin));
     }
 ```
 
-- [ ] **Step 4: Run test to verify it passes**
-
-Run: `pnpm --filter @mpstats/web test -- tests/partner/entry-route.test.ts`
-Expected: PASS (9 tests).
-
+- [ ] **Step 4:** Re-run → PASS (9 tests).
 - [ ] **Step 5: Commit**
 
 ```bash
@@ -861,50 +710,35 @@ git commit -m "feat(partner): untrusted existing-user branches (cookie reuse / m
 
 ---
 
-## Task 8: Check-email landing page
+## Task 8: Check-email page + public middleware path
 
-**Files:**
-- Create: `apps/web/src/app/partner/check-email/page.tsx`
+**Files:** Create `apps/web/src/app/partner/check-email/page.tsx`; Modify `apps/web/src/middleware.ts`
 
-- [ ] **Step 1: Write the page**
+- [ ] **Step 1: Page**
 
 ```tsx
 // apps/web/src/app/partner/check-email/page.tsx
 export const dynamic = 'force-dynamic';
 
-export default function PartnerCheckEmailPage({
-  searchParams,
-}: {
-  searchParams: { email?: string };
-}) {
+export default function PartnerCheckEmailPage({ searchParams }: { searchParams: { email?: string } }) {
   const email = searchParams.email ?? '';
   return (
     <main className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center px-6 text-center">
       <h1 className="text-2xl font-semibold">Проверьте почту</h1>
       <p className="mt-3 text-muted-foreground">
-        {email ? (
-          <>Мы отправили ссылку для входа на <span className="font-medium">{email}</span>.</>
-        ) : (
-          <>Мы отправили ссылку для входа на вашу почту.</>
-        )}{' '}
+        {email ? <>Мы отправили ссылку для входа на <span className="font-medium">{email}</span>.</> : <>Мы отправили ссылку для входа на вашу почту.</>}{' '}
         Перейдите по ней, чтобы открыть бесплатный курс по инструментам MPSTATS.
       </p>
-      <p className="mt-4 text-sm text-muted-foreground">
-        Письма нет? Проверьте папку «Спам» или вернитесь и попробуйте ещё раз.
-      </p>
+      <p className="mt-4 text-sm text-muted-foreground">Письма нет? Проверьте «Спам» или вернитесь и попробуйте ещё раз.</p>
     </main>
   );
 }
 ```
 
-> Check whether `/partner/*` needs to be added to public routes in `apps/web/src/middleware.ts` (auth gate). The page is outside `(main)`, but if middleware redirects unauthenticated users by default, add `/partner` to the public-path allowlist. Grep the middleware for the public-path list and mirror how `/login` / `/register` are whitelisted.
+- [ ] **Step 2: Middleware** — open `apps/web/src/middleware.ts`, find how `/login` / `/register` are whitelisted as public (the matcher or the public-paths list). Add `/partner` (prefix) the same way so `/partner/check-email` is reachable while logged out. Do NOT change auth behavior for other paths.
 
-- [ ] **Step 2: Typecheck + build sanity**
-
-Run: `pnpm typecheck`
-Expected: PASS.
-
-- [ ] **Step 3: Commit**
+- [ ] **Step 3:** Run `pnpm typecheck` → PASS.
+- [ ] **Step 4: Commit**
 
 ```bash
 git add apps/web/src/app/partner/check-email/page.tsx apps/web/src/middleware.ts
@@ -913,54 +747,155 @@ git commit -m "feat(partner): check-email landing page + public route"
 
 ---
 
-## Task 9: Wrap-up — env docs + full test/typecheck
+## Task 9: Soft email-verify banner + resend + clear-on-confirm
 
-**Files:**
-- Modify: `.env.example` (if present) and/or `docker-compose.yml` docs note
+**Files:** Create `apps/web/src/components/partner/PartnerVerifyBanner.tsx`; Create `apps/web/src/app/api/partner/verify/resend/route.ts`; Modify `apps/web/src/app/(main)/layout.tsx`; Modify `apps/web/src/app/auth/confirm/route.ts`
 
-- [ ] **Step 1: Document the env var**
+- [ ] **Step 1: Resend route** (POST, session-protected)
 
-Add `MPSTATS_PARTNER_SIGNING_SECRET` to `.env.example` (grep the repo for an existing example env file; if none, add a one-line note to the spec's "Открытые вопросы"). Use a placeholder only — never a real secret:
+```typescript
+// apps/web/src/app/api/partner/verify/resend/route.ts
+import { NextResponse } from 'next/server';
+import * as Sentry from '@sentry/nextjs';
+import { createClient } from '@/lib/supabase/server';
+import { getSupabaseAdmin } from '@/lib/auth/supabase-admin';
+import { sendPartnerConfirmEmail } from '@/lib/carrotquest/emails';
+import { buildConfirmUrl } from '@/app/api/partner/mpstats/enter/route';
+
+export const dynamic = 'force-dynamic';
+
+export async function POST(): Promise<Response> {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user?.email) return NextResponse.json({ ok: false }, { status: 401 });
+
+  try {
+    const admin = getSupabaseAdmin();
+    const link = await admin.auth.admin.generateLink({ type: 'magiclink', email: user.email });
+    const token = link.data?.properties?.hashed_token;
+    if (link.error || !token) {
+      Sentry.captureException(link.error ?? new Error('generateLink returned no token'), { tags: { area: 'partner-verify', stage: 'generate-link' } });
+      return NextResponse.json({ ok: false }, { status: 500 });
+    }
+    const origin = process.env.NEXT_PUBLIC_SITE_URL || '';
+    await sendPartnerConfirmEmail(user.id, {
+      email: user.email,
+      name: (user.user_metadata?.full_name as string) || undefined,
+      confirmUrl: buildConfirmUrl(origin, token, '/mpstats-tools'),
+    });
+    return NextResponse.json({ ok: true });
+  } catch (error) {
+    Sentry.captureException(error, { tags: { area: 'partner-verify', stage: 'unhandled' } });
+    return NextResponse.json({ ok: false }, { status: 500 });
+  }
+}
+```
+
+- [ ] **Step 2: Banner component** (client)
+
+```tsx
+// apps/web/src/components/partner/PartnerVerifyBanner.tsx
+'use client';
+import { useState } from 'react';
+
+export function PartnerVerifyBanner({ email }: { email: string }) {
+  const [state, setState] = useState<'idle' | 'sending' | 'sent' | 'error'>('idle');
+
+  async function resend() {
+    setState('sending');
+    try {
+      const res = await fetch('/api/partner/verify/resend', { method: 'POST' });
+      setState(res.ok ? 'sent' : 'error');
+    } catch {
+      setState('error');
+    }
+  }
+
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-2 bg-amber-50 px-4 py-2 text-sm text-amber-900">
+      <span>Подтвердите почту <span className="font-medium">{email}</span>, чтобы не потерять доступ.</span>
+      {state === 'sent' ? (
+        <span className="font-medium">Ссылка отправлена ✓</span>
+      ) : (
+        <button onClick={resend} disabled={state === 'sending'} className="font-medium underline disabled:opacity-50">
+          {state === 'sending' ? 'Отправляем…' : 'Отправить ссылку'}
+        </button>
+      )}
+      {state === 'error' && <span className="text-red-700">Не удалось отправить, попробуйте позже.</span>}
+    </div>
+  );
+}
+```
+
+- [ ] **Step 3: Mount in `(main)/layout.tsx`** — `user` is already fetched (line ~32). Add, just inside the returned tree near `ReferralBanner`:
+
+```tsx
+{user.user_metadata?.partner_pending_verify === true && (
+  <PartnerVerifyBanner email={user.email ?? ''} />
+)}
+```
+
+And add the import at the top:
+
+```tsx
+import { PartnerVerifyBanner } from '@/components/partner/PartnerVerifyBanner';
+```
+
+- [ ] **Step 4: Clear flag on confirm** — in `apps/web/src/app/auth/confirm/route.ts`, in the success branch where it already does `supabase.auth.getUser()` (inside the `try` after `verifyOtp`), clear the flag when present:
+
+```typescript
+      if (user && user.user_metadata?.partner_pending_verify) {
+        const { getSupabaseAdmin } = await import('@/lib/auth/supabase-admin');
+        await getSupabaseAdmin().auth.admin.updateUserById(user.id, {
+          user_metadata: { ...user.user_metadata, partner_pending_verify: false },
+        }).catch((e) => console.error('[AuthConfirm] clear partner_pending_verify failed:', e));
+      }
+```
+
+- [ ] **Step 5:** Run `pnpm typecheck` → PASS. Run `pnpm --filter @mpstats/web test` → all PASS.
+- [ ] **Step 6: Commit**
+
+```bash
+git add apps/web/src/components/partner/PartnerVerifyBanner.tsx apps/web/src/app/api/partner/verify/resend/route.ts "apps/web/src/app/(main)/layout.tsx" apps/web/src/app/auth/confirm/route.ts
+git commit -m "feat(partner): soft email-verify banner + resend + clear-on-confirm"
+```
+
+---
+
+## Task 10: Wrap-up — env docs + full suites
+
+**Files:** Modify `.env.example` (if present)
+
+- [ ] **Step 1: Env doc** (placeholder only — never a real secret):
 
 ```
-# Shared HMAC secret for MPSTATS partner-entry signed links (Phase 2).
-# When unset, the entry endpoint runs untrusted-only (magic-link path).
+# Shared HMAC secret for MPSTATS partner-entry signed links (Phase 2, DORMANT).
+# Unset day-1 (Igor is frontend-only, cannot sign). When set + MPSTATS signs,
+# the entry endpoint trusts the payload and skips the magic-link step.
 MPSTATS_PARTNER_SIGNING_SECRET=<your-shared-secret>
 ```
 
-- [ ] **Step 2: Run the full web + api test suites**
+If no `.env.example` exists, add this note to the spec's "Открытые вопросы" instead.
 
-Run: `pnpm --filter @mpstats/web test`
-Expected: PASS (all existing + new partner tests).
-
-Run: `pnpm --filter @mpstats/api test`
-Expected: PASS (unchanged — no api package files touched).
-
-- [ ] **Step 3: Typecheck the whole repo**
-
-Run: `pnpm typecheck`
-Expected: PASS.
-
-- [ ] **Step 4: Commit**
+- [ ] **Step 2:** Run `pnpm --filter @mpstats/web test` → PASS (all). Run `pnpm --filter @mpstats/api test` → PASS (unchanged). Run `pnpm typecheck` → PASS.
+- [ ] **Step 3: Commit**
 
 ```bash
 git add .env.example
-git commit -m "docs(partner): document MPSTATS_PARTNER_SIGNING_SECRET env var"
+git commit -m "docs(partner): document MPSTATS_PARTNER_SIGNING_SECRET (dormant)"
 ```
 
 ---
 
 ## Post-implementation (out of plan scope — coordinate, don't code)
 
-1. **CQ automation rules** for `pa_partner_entry` (lead tagging) and `pa_partner_magic_link` (send the email containing the `pa_partner_magic_link` link prop). Without the magic-link rule, the untrusted path creates the session token but the user never receives it.
-2. **Module mapping table** — agree the 24 MPSTATS codes ↔ our `partnerModuleKey` values with Igor; set `Lesson.metadata.partnerModuleKey` on the partner lessons (via Mgmt API, additive). Codes without a lesson fall back to the catalog automatically.
-3. **HMAC secret** — share `MPSTATS_PARTNER_SIGNING_SECRET` with MPSTATS when they wire signing; set it in prod/staging env (`docker-compose.yml`). Until then untrusted-only.
+1. **Module mapping table** — agree the 24 MPSTATS codes ↔ our `partnerModuleKey` with Igor; set `Lesson.metadata.partnerModuleKey` on partner lessons (Mgmt API, additive). Codes without a lesson fall back to the catalog automatically.
+2. **HMAC secret** — only when a signing backend exists (Igor has none). Until then trusted is dormant; nothing to set.
+3. **Rate-limiting** — the new-email branch auto-creates accounts from unauthenticated GETs. Day-1 risk is low (free course, no welcome email = no spam to arbitrary inboxes), but add IP-based rate-limiting on `/api/partner/mpstats/enter` if abuse volume appears. Log creation volume.
 4. **Deploy** — staging first (`--no-cache` build + content-check), then prod, behind the existing `PARTNER_COURSES_ENABLED` flag.
-
----
 
 ## Self-review notes
 
-- **Spec coverage:** entry handler (§1) → Tasks 5-7; unified session primitive (§2) → `establishSession`/`emailMagicLink`; trust/signature (§3) → Task 2 + trusted branch; module resolve (§4) → Task 3; leads (§5) → `firePartnerEntryLead`; email delivery via CQ not the auth hook (§6) → Task 4 + `pa_partner_magic_link`; security — no auto-login without proof (§7) → untrusted branches + tampered-sig test; `PARTNER_COURSES_ENABLED` gate → Task 5; phone optional → upsert spreads phone only when present.
-- **Open items** are explicitly post-plan (CQ rules, mapping, secret) — not silently dropped.
-- **Type consistency:** `verifyPartnerSignature` / `partnerCanonicalString` / `resolvePartnerLessonId` / `firePartnerEntryLead` / `sendPartnerMagicLinkEmail` / `createPartnerUser` / `establishSession` / `emailMagicLink` used with identical signatures across tasks.
+- **Spec coverage:** endpoint (§1) → T5-7; branching (§2) → T5/6/7; session primitive (§3) → `establishSession`; signature dormant (§4) → T2 + T6; module resolve (§5) → T3; email delivery via pa_doi reuse (§6) → T4 + T7; soft verify banner (§7) → T9; leads (§8) → `firePartnerEntryLead`; security/no-auto-login-without-proof (§9) → T7 + tampered-sig test; "no billing / no schema / no backfill" → respected (no Prisma migration, no billing.ts touched).
+- **Type/name consistency:** `verifyPartnerSignature`/`partnerCanonicalString`/`resolvePartnerLessonId`/`firePartnerEntryLead`/`sendPartnerConfirmEmail`/`createPartnerUser`/`upsertPartnerProfile`/`establishSession`/`buildConfirmUrl`/`partner_pending_verify` used identically across tasks. `buildConfirmUrl` is exported from the entry route and reused by the resend route.
+- **Open items** are explicitly post-plan (mapping, secret, rate-limit) — not silently dropped.
