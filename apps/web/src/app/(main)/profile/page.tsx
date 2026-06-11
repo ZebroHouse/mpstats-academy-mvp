@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useRef } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -78,6 +79,94 @@ const subscriptionStatusMap: Record<string, { label: string; variant: 'success' 
   PAST_DUE: { label: 'Просрочена', variant: 'warning' },
   CANCELLED: { label: 'Отменена', variant: 'destructive' },
 };
+
+/**
+ * Shown to partner-entry users who were created without a password (passwordless: true).
+ * After they set a password, the flag is cleared and this section disappears.
+ */
+function SetPasswordCard({ onSuccess }: { onSuccess: () => void }) {
+  const [password, setPassword] = useState('');
+  const [confirm, setConfirm] = useState('');
+  const [isSaving, setIsSaving] = useState(false);
+
+  const handleSubmit = async () => {
+    if (password.length < 8) {
+      toast.error('Пароль должен быть минимум 8 символов');
+      return;
+    }
+    if (password !== confirm) {
+      toast.error('Пароли не совпадают');
+      return;
+    }
+    setIsSaving(true);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.auth.updateUser({
+        password,
+        data: { passwordless: false },
+      });
+      if (error) {
+        const msg = (error.message || '').toLowerCase();
+        if (msg.includes('weak')) {
+          toast.error('Слишком простой пароль', { description: 'Используйте комбинацию букв и цифр' });
+        } else if (msg.includes('session')) {
+          toast.error('Сессия истекла', { description: 'Войдите заново и повторите попытку' });
+        } else {
+          toast.error('Не удалось задать пароль', { description: error.message });
+        }
+        return;
+      }
+      toast.success('Пароль задан', { description: 'Теперь вы можете войти с этим паролем напрямую.' });
+      setPassword('');
+      setConfirm('');
+      onSuccess();
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  return (
+    <Card className="shadow-mp-card border-mp-blue-200">
+      <CardHeader>
+        <CardTitle className="text-heading">Задать пароль</CardTitle>
+        <CardDescription className="text-body-sm">
+          Ваш аккаунт создан через сервис MPSTATS. Задайте пароль, чтобы входить на платформу напрямую.
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div>
+          <label className="block text-body-sm font-medium text-mp-gray-700 mb-2">
+            Пароль
+          </label>
+          <Input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Минимум 8 символов"
+            minLength={8}
+            autoComplete="new-password"
+          />
+        </div>
+        <div>
+          <label className="block text-body-sm font-medium text-mp-gray-700 mb-2">
+            Повторите пароль
+          </label>
+          <Input
+            type="password"
+            value={confirm}
+            onChange={(e) => setConfirm(e.target.value)}
+            placeholder="Повторите пароль"
+            minLength={8}
+            autoComplete="new-password"
+          />
+        </div>
+        <Button onClick={handleSubmit} disabled={isSaving}>
+          {isSaving ? 'Сохранение...' : 'Задать пароль'}
+        </Button>
+      </CardContent>
+    </Card>
+  );
+}
 
 function SecurityCard({
   hasPassword,
@@ -214,6 +303,7 @@ function SecurityCard({
 }
 
 export default function ProfilePage() {
+  const router = useRouter();
   const [name, setName] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [cancelMessage, setCancelMessage] = useState('');
@@ -491,11 +581,18 @@ export default function ProfilePage() {
             </CardContent>
           </Card>
 
+          {/* Set password — partner-entry users who were created without one */}
+          {profile?.passwordless === true && (
+            <SetPasswordCard onSuccess={() => { refetch(); router.refresh(); }} />
+          )}
+
           {/* Security — change password (or info for OAuth users) */}
-          <SecurityCard
-            hasPassword={profile?.hasPassword ?? false}
-            oauthProviders={profile?.oauthProviders ?? []}
-          />
+          {profile?.passwordless !== true && (
+            <SecurityCard
+              hasPassword={profile?.hasPassword ?? false}
+              oauthProviders={profile?.oauthProviders ?? []}
+            />
+          )}
 
           {/* Квалификация — редактирование данных онбординга */}
           <QualificationSection />

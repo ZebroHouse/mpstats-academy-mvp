@@ -106,7 +106,7 @@ async function createPartnerUser(
   const created = await admin.auth.admin.createUser({
     email,
     email_confirm: true,
-    user_metadata: { full_name: name ?? '', ...(pendingVerify ? { partner_pending_verify: true } : {}) },
+    user_metadata: { full_name: name ?? '', passwordless: true, ...(pendingVerify ? { partner_pending_verify: true } : {}) },
   });
   if (created.error || !created.data.user) {
     Sentry.captureException(created.error ?? new Error('createUser returned no user'), { tags: { area: 'partner-entry', stage: 'create-user' } });
