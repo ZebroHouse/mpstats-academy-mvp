@@ -56,6 +56,7 @@ Sibling project `D:/GpT_docs/Ai_MP_manager/` запустил `prisma db push --
 | v1.13 Обучение 2.0 | Shipped 2026-06-05 (Phase 61 + 61.1 + DAU/WAU/MAU аналитика — release `4145a68`) |
 | v1.14 Инструменты MPSTATS | Shipped 2026-06-08 (Phase 62 — бесплатный партнёрский курс `/mpstats-tools`, env-gated, изолирован от диагностики) |
 | v1.15 Аналитика 2.0 | Shipped 2026-06-09 (Phase 63 — раздел `/admin/analytics` разведён на 4 таба Обзор/Выручка/Воронка/Контент; Выручка (MRR рекуррент-only, ARPU, сплит, продления, приход), Воронка (конверсия рег→диагностика→оплата, точный trial→paid, отток, атрибуция); `UserProfile.isTest` + исключение тест-юзеров; release `90b6192`) |
+| v1.16 Бесшовный вход из MPSTATS | Shipped **dark** 2026-06-11 (Phase 64 — публичная ручка `/api/partner/mpstats/enter` → авто-сессия в курс `07_instruments`; untrusted (новый email→авто-создание+сессия, существующий→кука/magic-link), HMAC trusted-ветка dormant; combined «finish setup» баннер (подтверди почту + задай пароль); merge `60e77b6`. Гейт `PARTNER_ENTRY_ENABLED` НЕ задан на проде → инертна до go-live) |
 
 **Remaining work:**
 1. Phase 33-03: CQ Dashboard Setup (на стороне CQ команды).
@@ -106,7 +107,24 @@ Archive directory `D:/GpT_docs/MPSTATS ACADEMY ADAPTIVE LEARNING/MAAL-phase55/` 
 
 **Внимание (исторический lesson):** CP хранит `amount` на своей стороне на момент создания подписки. При смене цен отменять старые ACTIVE подписки чтобы автосписания пошли по новым тарифам.
 
-## Last Session (2026-06-09) — Phase 63 «Аналитика 2.0» shipped to prod
+## Last Session (2026-06-11) — Phase 64 «Бесшовный вход из MPSTATS» shipped DARK to prod
+
+**Merge `60e77b6` (PR #18, `--no-ff` → master) + prod deploy `maal-web-1`. Эндпоинт ТЁМНЫЙ** (флаг `PARTNER_ENTRY_ENABLED` не задан на проде → ручка отдаёт redirect на `/`, юзеров не создаёт). Полный цикл: brainstorm → спек → план → 10 TDD-задач субагентами + ревью → staging UAT → 4 UX-доработки по фидбэку.
+
+**Что на проде (инертно до go-live):**
+- **Публичная ручка** `GET /api/partner/mpstats/enter` (`name/phone/email/module_code`) → приземляет в урок партнёрского курса `07_instruments`. Гейт `PARTNER_COURSES_ENABLED==='true' && PARTNER_ENTRY_ENABLED==='true'`.
+- **Ветвление:** trusted (HMAC-подпись) — **dormant** (у Игоря только фронт, подписывать некому; код готов, зажжётся при появлении бэк-подписанта, env `MPSTATS_PARTNER_SIGNING_SECRET`). Untrusted day-1: новый email → авто-создание (`email_confirm:true` + `user_metadata.partner_pending_verify/passwordless`) + авто-сессия (паттерн Yandex-callback); существующий + наша кука → молча в курс; существующий без куки → magic-link.
+- **Онбординг:** новый юзер → `/welcome?next=/mpstats-tools/...` → визард → финиш в курсе.
+- **Combined «finish setup» баннер** (`PartnerSetupBanner` в `(main)/layout`): 2 независимых CTA — «Подтвердите почту» (resend, 60s throttle) + «Задайте пароль»→`/profile`. Set-password: session-based `updateUser`, без старого пароля (`profile.passwordless`).
+- **Биллинг/схему НЕ трогали** (гейт оплаты осознанно отвергнут), миграций нет, бэкафилла нет. Подтверждённость в `user_metadata`.
+
+**Включение вживую** = `PARTNER_ENTRY_ENABLED: "true"` в прод `docker-compose.yml` + `up -d` (runtime, без rebuild), ПОСЛЕ 4 внешних: (1) CQ-правило на событие `pa_partner_magic_link` (без «один раз» — иначе magic-link не уходит); (2) маппинг 24 кодов Игоря → `Lesson.metadata.partnerModuleKey`; (3) форма Игоря постит на ручку; (4) Кара ставит `module_code` в кнопки. Плюс IP rate-limit на ручку перед флипом.
+
+**Откат:** `git revert -m 1 60e77b6` + редеплой (или не включать флаг).
+
+**Tests:** web 239, api 209, typecheck 6/6. Спек `docs/superpowers/specs/2026-06-10-mpstats-tools-seamless-auth-design.md` + план `docs/.../plans/2026-06-10-mpstats-tools-seamless-auth.md`. Память: `project_phase64_mpstats_seamless_auth.md`. Ветка `phase-64-mpstats-seamless-auth` смержена (можно удалять); на VPS staging остался на ней с `PARTNER_ENTRY_ENABLED=true` — перед след. прод-деплоем там нужен `git checkout master`.
+
+## Previous Session (2026-06-09) — Phase 63 «Аналитика 2.0» shipped to prod
 
 **Release `90b6192` (`--no-ff` merge `phase-63-analytics-revamp`→master) + prod deploy `maal-web-1`.** Груминг + выручка + воронка раздела `/admin/analytics`, 3 волны субагентами (TDD), каждая прошла staging + холистическое ревью (все READY TO SHIP).
 
@@ -405,8 +423,9 @@ MAAL/
 
 ## Deploy
 
-- VPS: **89.208.106.208** (deploy user, Docker Compose)
+- VPS (origin, апп тут): **89.208.106.208** (AEZA, deploy user, Docker Compose). Деплой апп — как и раньше, на эту коробку.
 - Redeploy: `git pull && docker compose down && docker compose build --no-cache && docker compose up -d`
+- **⚠️ Сеть (с 2026-06-10):** AEZA-IP `89.208.106.208` **заблокирован на РФ eyeball-сетях** (санкц. bulletproof AS210644). `platform.`/`go.` теперь смотрят на **чистый KVMKA-IP `185.246.118.152`** (Москва), который nginx TCP-passthrough'ит на origin AEZA. Деплой апп всё равно на AEZA; KVMKA — только фронт-IP. Полный переезд с AEZA отложен. Детали: `~/.claude/projects/.../memory/project_aeza_block_kvmka_bridge.md`.
 - Details: `.claude/memory/deploy-details.md`
 
 ## Staging
