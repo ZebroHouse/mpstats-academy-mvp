@@ -21,7 +21,7 @@ export async function GET(request: Request): Promise<Response> {
 
   if (process.env.PARTNER_COURSES_ENABLED !== 'true') return home();
 
-  const email = (url.searchParams.get('email') || '').trim();
+  const email = (url.searchParams.get('email') || '').trim().toLowerCase();
   if (!email) return home();
   const name = url.searchParams.get('name') || undefined;
   const phone = url.searchParams.get('phone') || undefined;

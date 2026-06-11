@@ -112,6 +112,16 @@ describe('GET /api/partner/mpstats/enter', () => {
     expect(res.headers.get('location')).toContain('/partner/check-email');
   });
 
+  it('case-variant email for existing user takes magic-link path (not error page)', async () => {
+    h.prisma.$queryRaw.mockResolvedValue([{ id: 'old-uid', email: 'old@x.com' }]);
+    h.server.auth.getUser.mockResolvedValue({ data: { user: null } });
+    const res = await GET(req('email=Old@X.com'));
+    expect(h.admin.auth.admin.createUser).not.toHaveBeenCalled();
+    expect(h.prisma.$queryRaw).toHaveBeenCalled(); // lookup ran with lowercased email
+    expect(h.cq.sendPartnerConfirmEmail).toHaveBeenCalled();
+    expect(res.headers.get('location')).toContain('/partner/check-email');
+  });
+
   it('tampered signature on existing user does NOT establish a session', async () => {
     h.prisma.$queryRaw.mockResolvedValue([{ id: 'old-uid', email: 'old@x.com' }]);
     h.server.auth.getUser.mockResolvedValue({ data: { user: null } });
