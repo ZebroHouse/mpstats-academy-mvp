@@ -56,7 +56,21 @@ export async function GET(request: Request): Promise<Response> {
 
     // --- Untrusted, existing user: filled in Task 7 ---
     if (existingUser) {
-      return NextResponse.redirect(new URL('/login', origin)); // placeholder, replaced in Task 7
+      const server = await createClient();
+      const { data: { user: sessionUser } } = await server.auth.getUser();
+      if (sessionUser?.email && sessionUser.email.toLowerCase() === email.toLowerCase()) {
+        return NextResponse.redirect(new URL(target, origin)); // already logged in on this device
+      }
+      // Prove ownership via a magic link to the real inbox (reuses pa_doi delivery).
+      const link = await admin.auth.admin.generateLink({ type: 'magiclink', email });
+      const token = link.data?.properties?.hashed_token;
+      if (link.error || !token) {
+        Sentry.captureException(link.error ?? new Error('generateLink returned no token'), { tags: { area: 'partner-entry', stage: 'generate-link' } });
+        return NextResponse.redirect(new URL('/login?error=partner_entry', origin));
+      }
+      void firePartnerEntryLead(existingUser.id, { email, name, phone, moduleCode: moduleCode || undefined });
+      void sendPartnerConfirmEmail(existingUser.id, { email, name, confirmUrl: buildConfirmUrl(origin, token, target) });
+      return NextResponse.redirect(new URL(`/partner/check-email?email=${encodeURIComponent(email)}`, origin));
     }
 
     // --- Untrusted, brand-new email: auto-create + auto-session ---

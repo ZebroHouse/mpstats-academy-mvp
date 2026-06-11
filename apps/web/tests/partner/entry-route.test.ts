@@ -90,4 +90,35 @@ describe('GET /api/partner/mpstats/enter', () => {
     expect(h.admin.auth.admin.createUser).not.toHaveBeenCalled();
     expect(res.headers.get('location')).toBe('https://platform.test/mpstats-tools/lesson-9');
   });
+
+  it('untrusted existing + already logged in as them: straight redirect to lesson', async () => {
+    h.prisma.$queryRaw.mockResolvedValue([{ id: 'old-uid', email: 'old@x.com' }]);
+    h.prisma.lesson.findFirst.mockResolvedValue({ id: 'lesson-9' });
+    h.server.auth.getUser.mockResolvedValue({ data: { user: { email: 'old@x.com' } } });
+    const res = await GET(req('email=old@x.com&module_code=auto_bidder'));
+    expect(h.admin.auth.admin.generateLink).not.toHaveBeenCalled();
+    expect(h.cq.sendPartnerConfirmEmail).not.toHaveBeenCalled();
+    expect(res.headers.get('location')).toBe('https://platform.test/mpstats-tools/lesson-9');
+  });
+
+  it('untrusted existing + no session: emails confirm link, redirects to check-email', async () => {
+    h.prisma.$queryRaw.mockResolvedValue([{ id: 'old-uid', email: 'old@x.com' }]);
+    h.server.auth.getUser.mockResolvedValue({ data: { user: null } });
+    const res = await GET(req('email=old@x.com'));
+    expect(h.admin.auth.admin.createUser).not.toHaveBeenCalled();
+    expect(h.cq.sendPartnerConfirmEmail).toHaveBeenCalledWith('old-uid', expect.objectContaining({
+      email: 'old@x.com', confirmUrl: expect.stringContaining('/auth/confirm?token_hash=tok123&type=magiclink'),
+    }));
+    expect(res.headers.get('location')).toContain('/partner/check-email');
+  });
+
+  it('tampered signature on existing user does NOT establish a session', async () => {
+    h.prisma.$queryRaw.mockResolvedValue([{ id: 'old-uid', email: 'old@x.com' }]);
+    h.server.auth.getUser.mockResolvedValue({ data: { user: null } });
+    const exp = Math.floor(Date.now() / 1000) + 60;
+    const res = await GET(req(`email=old@x.com&exp=${exp}&sig=deadbeef`));
+    expect(h.admin.auth.verifyOtp).not.toHaveBeenCalled();
+    expect(h.cq.sendPartnerConfirmEmail).toHaveBeenCalled();
+    expect(res.headers.get('location')).toContain('/partner/check-email');
+  });
 });
