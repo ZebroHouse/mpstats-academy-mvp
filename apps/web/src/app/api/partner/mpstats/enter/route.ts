@@ -80,12 +80,16 @@ export async function GET(request: Request): Promise<Response> {
     }
 
     // --- Untrusted, brand-new email: auto-create + auto-session ---
+    // New users have onboardingCompletedAt === null, so the (main) layout guard will
+    // bounce them to /welcome before they can reach `target`. Pass the intended
+    // destination as ?next= so the wizard can restore it after completion.
     const userId = await createPartnerUser(admin, email, name, /* pendingVerify */ true);
     if (!userId) return NextResponse.redirect(new URL('/login?error=partner_entry', origin));
 
     await upsertPartnerProfile(userId, name, phone);
     void firePartnerEntryLead(userId, { email, name, phone, moduleCode: moduleCode || undefined });
-    return establishSession(admin, email, target, origin);
+    const onboardingTarget = `/welcome?next=${encodeURIComponent(target)}`;
+    return establishSession(admin, email, onboardingTarget, origin);
   } catch (error) {
     Sentry.captureException(error, { tags: { area: 'partner-entry', stage: 'unhandled' } });
     return NextResponse.redirect(new URL('/login?error=partner_entry', origin));

@@ -60,7 +60,7 @@ describe('GET /api/partner/mpstats/enter', () => {
     expect(res.headers.get('location')).toBe('https://platform.test/');
   });
 
-  it('untrusted new email: creates pending-verify user, sets session, redirects to lesson (no email)', async () => {
+  it('untrusted new email: creates pending-verify user, sets session, redirects to onboarding wizard with ?next=lesson', async () => {
     h.prisma.lesson.findFirst.mockResolvedValue({ id: 'lesson-9' });
     const res = await GET(req('email=new@x.com&name=Ivan&module_code=auto_bidder'));
     expect(h.admin.auth.admin.createUser).toHaveBeenCalledWith(expect.objectContaining({
@@ -71,12 +71,18 @@ describe('GET /api/partner/mpstats/enter', () => {
     expect(h.admin.auth.verifyOtp).toHaveBeenCalledWith({ token_hash: 'tok123', type: 'magiclink' });
     expect(h.cq.sendPartnerConfirmEmail).not.toHaveBeenCalled();
     expect(res.status).toBe(307);
-    expect(res.headers.get('location')).toBe('https://platform.test/mpstats-tools/lesson-9');
+    // New users have no onboardingCompletedAt, so the (main) layout guard will bounce
+    // them to /welcome. We preserve the intended lesson as ?next= for post-wizard redirect.
+    expect(res.headers.get('location')).toBe(
+      'https://platform.test/welcome?next=%2Fmpstats-tools%2Flesson-9',
+    );
   });
 
-  it('falls back to catalog when module_code has no lesson', async () => {
+  it('falls back to catalog when module_code has no lesson (still via onboarding wizard)', async () => {
     const res = await GET(req('email=new@x.com&module_code=uzum'));
-    expect(res.headers.get('location')).toBe('https://platform.test/mpstats-tools');
+    expect(res.headers.get('location')).toBe(
+      'https://platform.test/welcome?next=%2Fmpstats-tools',
+    );
   });
 
   it('trusted new user: creates user, sets session, redirects to lesson (no email)', async () => {

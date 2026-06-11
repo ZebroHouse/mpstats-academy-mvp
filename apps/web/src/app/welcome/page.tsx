@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { trpc } from '@/lib/trpc/client';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
@@ -29,6 +30,15 @@ type Step = 1 | 2 | 3 | 'fork';
  * guard re-renders server-side against the freshly-written flag.
  */
 export default function WelcomePage() {
+  const searchParams = useSearchParams();
+  // Intended post-onboarding destination passed by the entry route for new partner
+  // users. Only internal paths are honoured (must start with exactly one '/').
+  // Guard against open-redirect: reject '//' and any absolute URL.
+  const rawNext = searchParams.get('next') ?? '';
+  const nextPath = rawNext.startsWith('/') && !rawNext.startsWith('//')
+    ? rawNext
+    : null;
+
   const [step, setStep] = useState<Step>(1);
   const [goals, setGoals] = useState<string[]>([]);
   const [goalText, setGoalText] = useState('');
@@ -67,6 +77,10 @@ export default function WelcomePage() {
   };
 
   const finish = (dest: '/diagnostic' | '/learn') => {
+    // If the user arrived from a partner entry with a ?next= destination, land
+    // them there after onboarding instead of the default fork choice. The hard
+    // navigation (window.location.assign) is intentional — see comment at top.
+    const finalDest = nextPath ?? dest;
     complete.mutate(
       {
         goals: goals as never,
@@ -74,7 +88,7 @@ export default function WelcomePage() {
         marketplaces: marketplaces as never,
         experienceLevel: experienceLevel as never,
       },
-      { onSuccess: () => window.location.assign(dest) },
+      { onSuccess: () => window.location.assign(finalDest) },
     );
   };
 

@@ -17,6 +17,14 @@ import { render, cleanup, fireEvent } from '@testing-library/react';
 const mutateMock = vi.fn();
 const assignMock = vi.fn();
 
+// useSearchParams mock — returns empty params by default; individual tests may
+// override this mock to simulate ?next= being present.
+const searchParamsGetMock = vi.fn((_key: string): string | null => null);
+
+vi.mock('next/navigation', () => ({
+  useSearchParams: () => ({ get: searchParamsGetMock }),
+}));
+
 vi.mock('@/lib/trpc/client', () => ({
   trpc: {
     profile: {
@@ -41,6 +49,8 @@ import WelcomePage from '@/app/welcome/page';
 beforeEach(() => {
   mutateMock.mockReset();
   assignMock.mockReset();
+  searchParamsGetMock.mockReset();
+  searchParamsGetMock.mockReturnValue(null); // default: no ?next=
   vi.stubGlobal('location', { assign: assignMock, href: 'http://localhost/welcome' });
 });
 
@@ -71,6 +81,59 @@ describe('WelcomePage — fork navigation', () => {
     onSuccess();
 
     // Must be a full-page load to bust Next's Router Cache.
+    expect(assignMock).toHaveBeenCalledWith('/diagnostic');
+  });
+});
+
+describe('WelcomePage — ?next= partner destination', () => {
+  it('navigates to ?next= path instead of fork default after wizard completion', () => {
+    // Simulate arriving from the partner entry route with ?next=/mpstats-tools/lesson-42
+    searchParamsGetMock.mockImplementation((key: string) =>
+      key === 'next' ? '/mpstats-tools/lesson-42' : null,
+    );
+
+    const { getByRole } = render(<WelcomePage />);
+
+    // Walk through all 3 steps (each requires an answer).
+    fireEvent.click(getByRole('button', { name: 'Увеличить продажи' }));
+    fireEvent.click(getByRole('button', { name: 'Продолжить' }));
+    fireEvent.click(getByRole('button', { name: 'Wildberries' }));
+    fireEvent.click(getByRole('button', { name: 'Далее →' }));
+    fireEvent.click(getByRole('button', { name: /Только присматриваюсь/ }));
+    fireEvent.click(getByRole('button', { name: 'Далее →' }));
+
+    // On the fork, choose the learn path (the default fork choice should be overridden).
+    fireEvent.click(getByRole('button', { name: 'Перейти в обучение' }));
+
+    expect(mutateMock).toHaveBeenCalledTimes(1);
+    const onSuccess = mutateMock.mock.calls[0][1].onSuccess as () => void;
+    onSuccess();
+
+    // Must navigate to the partner target, not the fork default (/learn).
+    expect(assignMock).toHaveBeenCalledWith('/mpstats-tools/lesson-42');
+  });
+
+  it('ignores ?next= if it is an absolute URL (open-redirect guard)', () => {
+    searchParamsGetMock.mockImplementation((key: string) =>
+      key === 'next' ? 'https://evil.com/steal' : null,
+    );
+
+    const { getByRole } = render(<WelcomePage />);
+
+    fireEvent.click(getByRole('button', { name: 'Увеличить продажи' }));
+    fireEvent.click(getByRole('button', { name: 'Продолжить' }));
+    fireEvent.click(getByRole('button', { name: 'Wildberries' }));
+    fireEvent.click(getByRole('button', { name: 'Далее →' }));
+    fireEvent.click(getByRole('button', { name: /Только присматриваюсь/ }));
+    fireEvent.click(getByRole('button', { name: 'Далее →' }));
+
+    fireEvent.click(getByRole('button', { name: 'Пройти диагностику' }));
+
+    expect(mutateMock).toHaveBeenCalledTimes(1);
+    const onSuccess = mutateMock.mock.calls[0][1].onSuccess as () => void;
+    onSuccess();
+
+    // The absolute URL must be rejected; fall back to the fork default (/diagnostic).
     expect(assignMock).toHaveBeenCalledWith('/diagnostic');
   });
 });
