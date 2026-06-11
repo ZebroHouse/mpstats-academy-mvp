@@ -176,3 +176,47 @@ export async function sendInactiveEmail(
     reportEmailError(`sendInactiveEmail-${days}d`, userId, error);
   }
 }
+
+/**
+ * MPSTATS partner-entry lead. Records source + module and fires pa_partner_entry.
+ * Always runs (lead quality matters even if the email toggle is off). Best-effort.
+ */
+export async function firePartnerEntryLead(
+  userId: string,
+  data: { email: string; name?: string; phone?: string; moduleCode?: string },
+): Promise<void> {
+  try {
+    await cq.setUserProps(userId, {
+      '$email': data.email,
+      ...(data.name ? { '$name': data.name, pa_name: data.name } : {}),
+      ...(data.phone ? { '$phone': data.phone, pa_phone: data.phone } : {}),
+      pa_partner_source: 'mpstats',
+      ...(data.moduleCode ? { pa_partner_module: data.moduleCode } : {}),
+    });
+    await cq.trackEvent(userId, 'pa_partner_entry');
+  } catch (error) {
+    reportEmailError('firePartnerEntryLead', userId, error);
+  }
+}
+
+/**
+ * Sends a same-domain confirm link by reusing the EXISTING pa_doi CQ automation rule
+ * (no email-hook change, no new CQ rule). Used for existing-user magic-link login and
+ * the verify-email banner resend. Best-effort.
+ */
+export async function sendPartnerConfirmEmail(
+  userId: string,
+  data: { email: string; name?: string; confirmUrl: string },
+): Promise<void> {
+  try {
+    if (!(await isEmailEnabled())) return;
+    await cq.setUserProps(userId, {
+      '$email': data.email,
+      ...(data.name ? { '$name': data.name, pa_name: data.name } : {}),
+      pa_doi: data.confirmUrl,
+    });
+    await cq.trackEvent(userId, 'pa_doi');
+  } catch (error) {
+    reportEmailError('sendPartnerConfirmEmail', userId, error);
+  }
+}
