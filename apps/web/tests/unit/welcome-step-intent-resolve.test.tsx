@@ -11,6 +11,10 @@ const completeMutateMock = vi.fn();
 const intentResolveMutateMock = vi.fn();
 const assignMock = vi.fn();
 
+vi.mock('next/navigation', () => ({
+  useSearchParams: () => ({ get: (_key: string) => null }),
+}));
+
 vi.mock('@/lib/trpc/client', () => ({
   trpc: {
     profile: {

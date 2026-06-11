@@ -75,6 +75,14 @@ export async function GET(request: NextRequest) {
         issueReferralOnSignup({ refCode, friendUserId: user.id })
           .catch(err => console.error('[AuthConfirm] referral issue failed:', err));
       }
+
+      // Clear partner_pending_verify flag when a partner auto-created user confirms their email.
+      if (user.user_metadata?.partner_pending_verify) {
+        const { getSupabaseAdmin } = await import('@/lib/auth/supabase-admin');
+        await getSupabaseAdmin().auth.admin.updateUserById(user.id, {
+          user_metadata: { ...user.user_metadata, partner_pending_verify: false },
+        }).catch((e) => console.error('[AuthConfirm] clear partner_pending_verify failed:', e));
+      }
     }
   } catch (err) {
     Sentry.captureException(err, { tags: { area: 'auth-confirm', stage: 'post-verify' } });

@@ -176,3 +176,53 @@ export async function sendInactiveEmail(
     reportEmailError(`sendInactiveEmail-${days}d`, userId, error);
   }
 }
+
+/**
+ * MPSTATS partner-entry lead. Records source + module and fires pa_partner_entry.
+ * Always runs (lead quality matters even if the email toggle is off). Best-effort.
+ */
+export async function firePartnerEntryLead(
+  userId: string,
+  data: { email: string; name?: string; phone?: string; moduleCode?: string },
+): Promise<void> {
+  try {
+    await cq.setUserProps(userId, {
+      '$email': data.email,
+      ...(data.name ? { '$name': data.name, pa_name: data.name } : {}),
+      ...(data.phone ? { '$phone': data.phone, pa_phone: data.phone } : {}),
+      pa_partner_source: 'mpstats',
+      ...(data.moduleCode ? { pa_partner_module: data.moduleCode } : {}),
+    });
+    await cq.trackEvent(userId, 'pa_partner_entry');
+  } catch (error) {
+    reportEmailError('firePartnerEntryLead', userId, error);
+  }
+}
+
+/**
+ * Sends a same-domain confirm/magic-link via a DEDICATED pa_partner_magic_link CQ event.
+ * Used for existing-user magic-link login and the verify-email banner resend.
+ *
+ * Why not pa_doi: pa_doi's CQ rule is once-per-lead (DOI), so repeated re-entry magic-links
+ * get suppressed. pa_partner_magic_link has its own CQ rule configured without once-only
+ * semantics — fires every time. Discovered in staging UAT 2026-06-11.
+ *
+ * ⚠ Requires CQ team to create the pa_partner_magic_link automation rule before going live.
+ * Best-effort.
+ */
+export async function sendPartnerConfirmEmail(
+  userId: string,
+  data: { email: string; name?: string; confirmUrl: string },
+): Promise<void> {
+  try {
+    if (!(await isEmailEnabled())) return;
+    await cq.setUserProps(userId, {
+      '$email': data.email,
+      ...(data.name ? { '$name': data.name, pa_name: data.name } : {}),
+      pa_partner_magic_link: data.confirmUrl,
+    });
+    await cq.trackEvent(userId, 'pa_partner_magic_link');
+  } catch (error) {
+    reportEmailError('sendPartnerConfirmEmail', userId, error);
+  }
+}

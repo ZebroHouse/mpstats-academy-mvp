@@ -190,6 +190,7 @@ export const profileRouter = router({
         ...nativeOauthProviders,
       ];
       const hasPassword = oauthProviders.length === 0;
+      const passwordless = (ctx.user.user_metadata?.passwordless as boolean | undefined) === true;
 
       return profile
         ? {
@@ -197,6 +198,7 @@ export const profileRouter = router({
             email: ctx.user.email ?? null,
             hasPassword,
             oauthProviders,
+            passwordless,
           }
         : null;
     } catch (error) {
