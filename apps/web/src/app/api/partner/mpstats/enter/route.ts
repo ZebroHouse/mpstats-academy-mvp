@@ -13,13 +13,19 @@ export const dynamic = 'force-dynamic';
 /**
  * Public entry from the MPSTATS service. NEVER logs the PII query params.
  * Design: docs/superpowers/specs/2026-06-10-mpstats-tools-seamless-auth-design.md
+ *
+ * Gated by TWO env flags:
+ *   PARTNER_COURSES_ENABLED — the /mpstats-tools section must be live.
+ *   PARTNER_ENTRY_ENABLED   — the entry endpoint itself (dark by default).
+ *                             Flip to "true" when Igor's form + Kara's button
+ *                             params are wired to this URL.
  */
 export async function GET(request: Request): Promise<Response> {
   const url = new URL(request.url);
   const origin = process.env.NEXT_PUBLIC_SITE_URL || url.origin;
   const home = () => NextResponse.redirect(new URL('/', origin));
 
-  if (process.env.PARTNER_COURSES_ENABLED !== 'true') return home();
+  if (process.env.PARTNER_COURSES_ENABLED !== 'true' || process.env.PARTNER_ENTRY_ENABLED !== 'true') return home();
 
   const email = (url.searchParams.get('email') || '').trim().toLowerCase();
   if (!email) return home();

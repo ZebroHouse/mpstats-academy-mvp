@@ -26,6 +26,7 @@ describe('GET /api/partner/mpstats/enter', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     process.env.PARTNER_COURSES_ENABLED = 'true';
+    process.env.PARTNER_ENTRY_ENABLED = 'true';
     process.env.NEXT_PUBLIC_SITE_URL = 'https://platform.test';
     process.env.MPSTATS_PARTNER_SIGNING_SECRET = 'secret';
     h.prisma.$queryRaw.mockResolvedValue([]);
@@ -42,6 +43,13 @@ describe('GET /api/partner/mpstats/enter', () => {
 
   it('redirects to / when the flag is off', async () => {
     process.env.PARTNER_COURSES_ENABLED = '';
+    const res = await GET(req('email=a@b.com'));
+    expect(res.status).toBe(307);
+    expect(res.headers.get('location')).toBe('https://platform.test/');
+  });
+
+  it('redirects to / when PARTNER_ENTRY_ENABLED is off (even if courses enabled)', async () => {
+    process.env.PARTNER_ENTRY_ENABLED = '';
     const res = await GET(req('email=a@b.com'));
     expect(res.status).toBe(307);
     expect(res.headers.get('location')).toBe('https://platform.test/');

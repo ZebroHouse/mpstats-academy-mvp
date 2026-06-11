@@ -1,7 +1,11 @@
 // apps/web/src/app/partner/check-email/page.tsx
+import { redirect } from 'next/navigation';
+
 export const dynamic = 'force-dynamic';
 
 export default function PartnerCheckEmailPage({ searchParams }: { searchParams: { email?: string } }) {
+  if (process.env.PARTNER_ENTRY_ENABLED !== 'true') redirect('/');
+
   const email = searchParams.email ?? '';
   return (
     <main className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center px-6 text-center">
