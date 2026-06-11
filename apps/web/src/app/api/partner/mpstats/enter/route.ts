@@ -46,6 +46,13 @@ export async function GET(request: Request): Promise<Response> {
     const existingUser = existing[0] ?? null;
 
     // --- Trusted branch (dormant): filled in Task 6 ---
+    if (trusted) {
+      const userId = existingUser ? existingUser.id : await createPartnerUser(admin, email, name, /* pendingVerify */ false);
+      if (!userId) return NextResponse.redirect(new URL('/login?error=partner_entry', origin));
+      await upsertPartnerProfile(userId, name, phone);
+      void firePartnerEntryLead(userId, { email, name, phone, moduleCode: moduleCode || undefined });
+      return establishSession(admin, email, target, origin);
+    }
 
     // --- Untrusted, existing user: filled in Task 7 ---
     if (existingUser) {

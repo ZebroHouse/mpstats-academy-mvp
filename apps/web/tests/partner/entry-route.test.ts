@@ -1,5 +1,8 @@
 // apps/web/tests/partner/entry-route.test.ts
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { createHmac } from 'node:crypto';
+const signEntry = (f: { email: string; phone?: string; name?: string; moduleCode?: string; exp: number }) =>
+  createHmac('sha256', 'secret').update([f.email, f.phone ?? '', f.name ?? '', f.moduleCode ?? '', String(f.exp)].join('|')).digest('hex');
 
 const h = vi.hoisted(() => ({
   admin: { auth: { admin: { createUser: vi.fn(), generateLink: vi.fn() }, verifyOtp: vi.fn() } },
@@ -66,5 +69,25 @@ describe('GET /api/partner/mpstats/enter', () => {
   it('falls back to catalog when module_code has no lesson', async () => {
     const res = await GET(req('email=new@x.com&module_code=uzum'));
     expect(res.headers.get('location')).toBe('https://platform.test/mpstats-tools');
+  });
+
+  it('trusted new user: creates user, sets session, redirects to lesson (no email)', async () => {
+    h.prisma.lesson.findFirst.mockResolvedValue({ id: 'lesson-9' });
+    const exp = Math.floor(Date.now() / 1000) + 60;
+    const sig = signEntry({ email: 'new@x.com', name: 'Ivan', moduleCode: 'auto_bidder', exp });
+    const res = await GET(req(`email=new@x.com&name=Ivan&module_code=auto_bidder&exp=${exp}&sig=${sig}`));
+    expect(h.admin.auth.admin.createUser).toHaveBeenCalledWith(expect.objectContaining({ email: 'new@x.com', email_confirm: true }));
+    expect(h.admin.auth.verifyOtp).toHaveBeenCalledWith({ token_hash: 'tok123', type: 'magiclink' });
+    expect(res.headers.get('location')).toBe('https://platform.test/mpstats-tools/lesson-9');
+  });
+
+  it('trusted existing user: no createUser, sets session, redirects to lesson', async () => {
+    h.prisma.$queryRaw.mockResolvedValue([{ id: 'old-uid', email: 'old@x.com' }]);
+    h.prisma.lesson.findFirst.mockResolvedValue({ id: 'lesson-9' });
+    const exp = Math.floor(Date.now() / 1000) + 60;
+    const sig = signEntry({ email: 'old@x.com', moduleCode: 'auto_bidder', exp });
+    const res = await GET(req(`email=old@x.com&module_code=auto_bidder&exp=${exp}&sig=${sig}`));
+    expect(h.admin.auth.admin.createUser).not.toHaveBeenCalled();
+    expect(res.headers.get('location')).toBe('https://platform.test/mpstats-tools/lesson-9');
   });
 });
