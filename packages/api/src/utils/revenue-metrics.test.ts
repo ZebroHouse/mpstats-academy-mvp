@@ -102,4 +102,32 @@ describe('groupRevenueByDay', () => {
     expect(day.amount).toBe(4980);
     expect(r.total).toBe(4980);
   });
+
+  it('zero-fills the full window so an empty period renders a flat line, not a blank chart', () => {
+    const now = new Date('2026-06-15T00:00:00Z');
+    const r = groupRevenueByDay([], { days: 30, now });
+    expect(r.byDay).toHaveLength(31);                       // now-30 .. now inclusive
+    expect(r.byDay.every((d) => d.amount === 0)).toBe(true);
+    expect(r.byDay[0].date).toBe('2026-05-16');
+    expect(r.byDay[r.byDay.length - 1].date).toBe('2026-06-15');
+    expect(r.total).toBe(0);
+  });
+
+  it('keeps a payment on its day inside a zero-filled window (e.g. a 15.05 payment shows on 90d)', () => {
+    const now = new Date('2026-06-15T00:00:00Z');
+    const r = groupRevenueByDay(
+      [pay({ paidAt: new Date('2026-05-15T06:34:00Z'), amount: 2990 })],
+      { days: 90, now },
+    );
+    const day = r.byDay.find((d) => d.date === '2026-05-15')!;
+    expect(day.amount).toBe(2990);
+    expect(r.total).toBe(2990);
+    expect(r.byDay.filter((d) => d.amount > 0)).toHaveLength(1); // every other day present but zero
+  });
+
+  it('without a window, returns only days that have payments (back-compat)', () => {
+    const r = groupRevenueByDay([pay({ paidAt: new Date('2026-06-05T10:00:00Z'), amount: 2990 })]);
+    expect(r.byDay).toHaveLength(1);
+    expect(r.byDay[0]).toMatchObject({ date: '2026-06-05', amount: 2990 });
+  });
 });

@@ -367,7 +367,8 @@ export const adminAnalyticsRouter = router({
         });
         // paidAt is nullable in schema but COMPLETED rows have it; filter defensively.
         const rows = payments.filter((p) => p.paidAt != null);
-        return groupRevenueByDay(rows as never);
+        // Pass the window so an empty period renders a flat zero line, not a blank chart.
+        return groupRevenueByDay(rows as never, { days: input.days, now: new Date() });
       } catch (error) {
         handleDatabaseError(error);
       }
