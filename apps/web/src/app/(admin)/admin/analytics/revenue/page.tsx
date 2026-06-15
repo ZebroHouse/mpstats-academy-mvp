@@ -20,7 +20,9 @@ const rub = (n: number) => `${n.toLocaleString('ru-RU')} ₽`;
 const fmtDate = (d: string) => { const p = d.split('-'); return `${p[2]}.${p[1]}.${p[0]}`; };
 
 export default function AnalyticsRevenuePage() {
-  const [days, setDays] = useState(30);
+  // Default 90d: payments are sparse, a 30d window can land entirely after the
+  // last payment and read as "broken". 90d surfaces recent-but->30d-old cash-in.
+  const [days, setDays] = useState(90);
   const overview = trpc.admin.analytics.getRevenueOverview.useQuery();
   const renewals = trpc.admin.analytics.getUpcomingRenewals.useQuery({ days });
   const actual = trpc.admin.analytics.getActualRevenue.useQuery({ days });
