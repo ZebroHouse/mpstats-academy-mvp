@@ -1,5 +1,13 @@
 import type { Metadata } from 'next';
-import { Logo } from '@/components/shared/Logo';
+import { Onest } from 'next/font/google';
+import { V8Header } from '@/components/v8/V8Header';
+import { V8Footer } from '@/components/v8/V8Footer';
+
+const onest = Onest({
+  subsets: ['latin', 'cyrillic'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
   title: 'Регистрация',
@@ -13,23 +21,13 @@ export default function RegisterLayout({
   children: React.ReactNode;
 }) {
   return (
-    <div className="min-h-screen flex flex-col bg-mp-gray-50">
-      {/* Header */}
-      <header className="border-b border-mp-gray-200 bg-white">
-        <div className="container mx-auto px-4 h-16 flex items-center">
-          <Logo size="md" />
-        </div>
-      </header>
-
-      {/* Content — full width (no max-w-md centering) */}
-      <main className="flex-1 flex items-center py-8 lg:py-0">
-        <div className="w-full">{children}</div>
-      </main>
-
-      {/* Footer */}
-      <footer className="py-4 text-center text-caption text-mp-gray-500 bg-white border-t border-mp-gray-200">
-        &copy; 2025 MPSTATS Academy
-      </footer>
+    <div className={`${onest.className} min-h-screen bg-[#0F172A] text-white`}>
+      {/* Marketing header (transparent over the dark canvas, white logo). */}
+      <V8Header />
+      {/* pt offsets the fixed header height (h-[64px] sm:h-[72px]). */}
+      <main className="pt-[64px] sm:pt-[72px]">{children}</main>
+      {/* Marketing footer; wrapperBg dark matches the dark canvas above it. */}
+      <V8Footer wrapperBg="dark" />
     </div>
   );
 }
