@@ -146,9 +146,12 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
+  // Form floats as a white card, centred on the dark register/login canvas.
   return (
-    <Suspense fallback={<div className="animate-pulse text-mp-gray-400">Загрузка...</div>}>
-      <LoginForm />
-    </Suspense>
+    <div className="mx-auto flex min-h-[68vh] w-full max-w-md flex-col justify-center px-4 py-12 lg:py-16">
+      <Suspense fallback={<div className="animate-pulse text-white/40">Загрузка...</div>}>
+        <LoginForm />
+      </Suspense>
+    </div>
   );
 }
