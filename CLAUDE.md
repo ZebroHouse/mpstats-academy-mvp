@@ -57,6 +57,7 @@ Sibling project `D:/GpT_docs/Ai_MP_manager/` запустил `prisma db push --
 | v1.14 Инструменты MPSTATS | Shipped 2026-06-08 (Phase 62 — бесплатный партнёрский курс `/mpstats-tools`, env-gated, изолирован от диагностики) |
 | v1.15 Аналитика 2.0 | Shipped 2026-06-09 (Phase 63 — раздел `/admin/analytics` разведён на 4 таба Обзор/Выручка/Воронка/Контент; Выручка (MRR рекуррент-only, ARPU, сплит, продления, приход), Воронка (конверсия рег→диагностика→оплата, точный trial→paid, отток, атрибуция); `UserProfile.isTest` + исключение тест-юзеров; release `90b6192`) |
 | v1.16 Бесшовный вход из MPSTATS | Shipped **dark** 2026-06-11 (Phase 64 — публичная ручка `/api/partner/mpstats/enter` → авто-сессия в курс `07_instruments`; untrusted (новый email→авто-создание+сессия, существующий→кука/magic-link), HMAC trusted-ветка dormant; combined «finish setup» баннер (подтверди почту + задай пароль); merge `60e77b6`. Гейт `PARTNER_ENTRY_ENABLED` НЕ задан на проде → инертна до go-live) |
+| v1.17 Cohesive entry pages | Shipped 2026-06-16 (Phase 65 — `/register` + `/login` выведены из `(auth)` в свои тёмные лейауты, переиспользующие маркет-дизайн: `V8Header`+`V8Footer`+Onest+`#0F172A`. /register = сплит форма+промо (4 плашки-тезиса + цена), /login = форма по центру; формы не тронуты. + гайдлайн дизайн-системы. merge `62e69e3`) |
 
 **Remaining work:**
 1. Phase 33-03: CQ Dashboard Setup (на стороне CQ команды).
@@ -107,7 +108,22 @@ Archive directory `D:/GpT_docs/MPSTATS ACADEMY ADAPTIVE LEARNING/MAAL-phase55/` 
 
 **Внимание (исторический lesson):** CP хранит `amount` на своей стороне на момент создания подписки. При смене цен отменять старые ACTIVE подписки чтобы автосписания пошли по новым тарифам.
 
-## Last Session (2026-06-11) — Phase 64 «Бесшовный вход из MPSTATS» shipped DARK to prod
+## Last Session (2026-06-16) — Phase 65 «Cohesive dark /register + /login» shipped to prod
+
+**Merge `62e69e3` (`--no-ff` `phase-65-register-split-layout` → master) + prod deploy `maal-web-1`.** Обе входные страницы переоформлены в цельный тёмный маркет-стиль.
+
+**Что на проде:**
+- `/register` и `/login` выведены из центрированной `(auth)`-группы (`git mv`) в **собственные тёмные лейауты, переиспользующие маркетинговый дизайн** (а не перерисовывающие): `V8Header` (прозрачный над тёмным, белый wordmark-лого, нав, синяя pill, white-on-scroll) + `V8Footer` (`#0a0f1e`, `rounded-t-[40px]`, `wrapperBg="dark"`) + шрифт **Onest** через `next/font` на обёртке + фон `#0F172A`, форма — белая парящая карта.
+- `/register` — сплит: форма слева (col1 row-span-2 self-center), справа промо = заголовок (`RegisterValueTeaser`) + 4 плашки-тезиса + полоса цены (`RegisterValueStats`); мобайл order заголовок→форма→тезисы. `RegisterValuePanel` удалён.
+- `/login` — форма центрирована на тёмной канве (`min-h-[68vh]`), без промо.
+- **Формы не тронуты** (реальный `react-international-phone`, Яндекс, согласия, реф-баннер по `?ref=`). `/forgot-password` и прочие `(auth)`-страницы остались на старом светлом лейауте.
+- Создан гайдлайн дизайн-системы `docs/superpowers/specs/2026-06-16-marketing-design-system.md` (токены/тайпскейл/кнопки/карточки/V8Header/V8Footer/motion + чек-лист переиспользования).
+
+**Урок:** первая итерация регистрации собрана в отрыве от маркет-стиля (плоская синяя панель, самопал-лого, белый хедер) → owner забраковал. Пивот: переиспользовать `V8*`-компоненты + Onest. Gotchas: внешний `<svg><use>` без `viewBox`=300px (ломал лого/мобайл в превью); стейл `.next/types/app/(auth)/...` после `git mv` валит `tsc` (TS2307) — удалить стейл-типы. **Шрифт:** root layout грузит Inter, маркет-страницы ставят Onest по-странично — вход обязан явно ставить Onest.
+
+**Tests:** web 244/244, typecheck 6/6. Staging-прогон (`--no-cache`+content-check) перед прод. **Откат:** `git revert -m 1 62e69e3` + редеплой. Память: `project_phase65_entry_pages_redesign.md`. Ветка `phase-65-register-split-layout` смержена (можно удалять). На VPS staging-дерево возвращено на master (был на phase-65).
+
+## Previous Session (2026-06-11) — Phase 64 «Бесшовный вход из MPSTATS» shipped DARK to prod
 
 **Merge `60e77b6` (PR #18, `--no-ff` → master) + prod deploy `maal-web-1`. Эндпоинт ТЁМНЫЙ** (флаг `PARTNER_ENTRY_ENABLED` не задан на проде → ручка отдаёт redirect на `/`, юзеров не создаёт). Полный цикл: brainstorm → спек → план → 10 TDD-задач субагентами + ревью → staging UAT → 4 UX-доработки по фидбэку.
 
