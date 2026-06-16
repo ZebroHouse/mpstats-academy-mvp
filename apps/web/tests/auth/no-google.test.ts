@@ -4,8 +4,10 @@ import * as path from 'path';
 
 const SRC_DIR = path.resolve(__dirname, '../../src');
 const LOGIN_PAGE = path.join(SRC_DIR, 'app/(auth)/login/page.tsx');
-const REGISTER_PAGE = path.join(SRC_DIR, 'app/(auth)/register/page.tsx');
-const REGISTER_FORM = path.join(SRC_DIR, 'app/(auth)/register/register-form.tsx');
+// Phase 65: /register moved out of the centered (auth) group into its own
+// full-width split layout at app/register/.
+const REGISTER_PAGE = path.join(SRC_DIR, 'app/register/page.tsx');
+const REGISTER_FORM = path.join(SRC_DIR, 'app/register/register-form.tsx');
 const ACTIONS_FILE = path.join(SRC_DIR, 'lib/auth/actions.ts');
 const LANDING_PAGE = path.join(SRC_DIR, 'app/page.tsx');
 
