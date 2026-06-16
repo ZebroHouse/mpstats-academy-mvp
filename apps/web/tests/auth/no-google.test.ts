@@ -3,7 +3,9 @@ import * as fs from 'fs';
 import * as path from 'path';
 
 const SRC_DIR = path.resolve(__dirname, '../../src');
-const LOGIN_PAGE = path.join(SRC_DIR, 'app/(auth)/login/page.tsx');
+// Phase 65: /login moved out of the centered (auth) group into its own
+// full-width dark layout at app/login/ (same as /register).
+const LOGIN_PAGE = path.join(SRC_DIR, 'app/login/page.tsx');
 // Phase 65: /register moved out of the centered (auth) group into its own
 // full-width split layout at app/register/.
 const REGISTER_PAGE = path.join(SRC_DIR, 'app/register/page.tsx');
