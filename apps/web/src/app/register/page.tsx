@@ -36,10 +36,10 @@ export default async function RegisterPage({
   const refCode = resolveRefCode(searchParams.ref, cookieRef);
 
   return (
-    <div className="container mx-auto px-4 py-8 lg:py-12">
-      <div className="grid gap-6 lg:grid-cols-[minmax(0,440px)_minmax(0,1fr)] lg:gap-10 lg:items-stretch">
+    <div className="mx-auto w-full max-w-[1080px] px-4 py-8 lg:py-12">
+      <div className="grid gap-5 lg:grid-cols-[minmax(0,400px)_minmax(0,1fr)] lg:gap-6 lg:items-stretch">
         {/* LEFT: (mobile teaser when no ref) + form + (mobile stats) */}
-        <div className="flex flex-col gap-6">
+        <div className="flex flex-col gap-5">
           {/* On mobile, when a referral is present the form's own
               "🎁 +N дней" banner is the most relevant context, so the
               generic teaser is suppressed to avoid stacking two blocks. */}
