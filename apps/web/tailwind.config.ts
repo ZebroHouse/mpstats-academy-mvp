@@ -114,8 +114,9 @@ const config: Config = {
       },
       // Typography
       fontFamily: {
-        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
-        heading: ['Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        // v2 reskin: Onest (brand font from marketing) with Inter fallback.
+        sans: ['var(--font-onest)', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
+        heading: ['var(--font-onest)', 'Inter', 'system-ui', '-apple-system', 'sans-serif'],
       },
       fontSize: {
         // Display sizes
