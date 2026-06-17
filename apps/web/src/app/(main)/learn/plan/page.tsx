@@ -6,6 +6,7 @@ import { Wrench } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { DarkIsland, DarkIslandStat } from '@/components/ui/dark-island';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -178,54 +179,64 @@ export default function PlanPage() {
       <LearningTabs />
 
       {/* ── Page header ─────────────────────────────────────────────────── */}
-      <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 animate-slide-up">
-        <div>
+      {planIsEmpty ? (
+        <div className="animate-slide-up">
           <h1 className="text-display-sm text-mp-gray-900">Персональный план</h1>
           <p className="text-body text-mp-gray-500 mt-1">
             Программа на основе вашей диагностики
           </p>
         </div>
-        {!planIsEmpty && (
-          <div className="flex flex-wrap gap-2">
-            {firstUnfinishedLesson && (
-              <Link href={`/learn/${firstUnfinishedLesson.id}`}>
-                <Button size="sm">
-                  <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                  </svg>
+      ) : (
+        <DarkIsland
+          className="animate-slide-up"
+          eyebrow="Обучение"
+          title="Персональный план"
+          subtitle="Программа на основе вашей диагностики"
+          aside={
+            visibleTotal > 0 ? (
+              <DarkIslandStat value={`${visibleCompleted}/${visibleTotal}`} label="уроков завершено" />
+            ) : undefined
+          }
+          actions={
+            <>
+              {firstUnfinishedLesson && (
+                <Link
+                  href={`/learn/${firstUnfinishedLesson.id}`}
+                  className="inline-flex items-center justify-center rounded-full h-11 px-6 text-[15px] font-medium text-white bg-mp-blue-500 hover:bg-mp-blue-600 transition-colors"
+                >
                   Продолжить с того места
-                </Button>
-              </Link>
-            )}
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="outline" size="sm" disabled={rebuildTrackMutation.isPending}>
-                  <svg className="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                  </svg>
-                  Обновить план
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Обновить план по диагностике?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Соберём план заново на основе вашей последней диагностики. Удалённые вручную
-                    уроки могут вернуться.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Отмена</AlertDialogCancel>
-                  <AlertDialogAction onClick={() => rebuildTrackMutation.mutate()}>
+                </Link>
+              )}
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <button
+                    type="button"
+                    disabled={rebuildTrackMutation.isPending}
+                    className="inline-flex items-center justify-center rounded-full h-11 px-6 text-[15px] font-medium text-white border border-white/30 bg-transparent hover:bg-white/10 transition-colors disabled:opacity-50"
+                  >
                     Обновить план
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
-        )}
-      </div>
+                  </button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Обновить план по диагностике?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Соберём план заново на основе вашей последней диагностики. Удалённые вручную
+                      уроки могут вернуться.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Отмена</AlertDialogCancel>
+                    <AlertDialogAction onClick={() => rebuildTrackMutation.mutate()}>
+                      Обновить план
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </>
+          }
+        />
+      )}
 
       {/* ── Empty state: «Плана пока нет» ───────────────────────────────── */}
       {planIsEmpty ? (
