@@ -99,6 +99,7 @@ export function StyleguideClient() {
             <a href="#tokens" className="rounded-full bg-white/10 px-4 py-1.5 hover:bg-white/20 transition-colors">Токены</a>
             <a href="#marketing" className="rounded-full bg-white/10 px-4 py-1.5 hover:bg-white/20 transition-colors">Маркетинг (dark)</a>
             <a href="#product" className="rounded-full bg-white/10 px-4 py-1.5 hover:bg-white/20 transition-colors">Продукт (light)</a>
+            <a href="/styleguide/v2" className="rounded-full bg-mp-blue-500 px-4 py-1.5 hover:bg-mp-blue-600 transition-colors">→ v2 (предложение)</a>
           </nav>
         </div>
       </header>
