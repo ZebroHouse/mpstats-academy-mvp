@@ -10,6 +10,11 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
+// Force per-request evaluation: the env gate is a RUNTIME flag. Without this the
+// page is statically prerendered at build time (where STYLEGUIDE_ENABLED is
+// unset) and the resulting 404 gets baked in, ignoring the runtime env.
+export const dynamic = 'force-dynamic';
+
 export default function StyleguidePage() {
   if (!isStyleguideEnabled()) {
     notFound();
