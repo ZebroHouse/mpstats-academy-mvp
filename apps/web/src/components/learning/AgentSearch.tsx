@@ -113,8 +113,10 @@ export function AgentSearch({ scope, size = 'default' }: { scope: Scope; size?: 
         className={cn(
           'flex items-center bg-white',
           isHero
-            ? 'h-14 rounded-2xl border border-mp-gray-200 shadow-mp-card pr-1.5 transition-shadow focus-within:ring-4 focus-within:ring-white/25'
-            : 'h-12 rounded-lg border border-mp-gray-200 transition-shadow focus-within:ring-2 focus-within:ring-mp-blue-500/20',
+            // Opaque white outline on focus — a translucent white over the navy
+            // island blends to a cool blue-grey (reads as "blue"), so use solid white.
+            ? 'h-14 rounded-2xl border border-mp-gray-200 shadow-mp-card pr-1.5 transition-all focus-within:border-white focus-within:ring-2 focus-within:ring-white'
+            : 'h-12 rounded-lg border border-mp-gray-200 transition-all focus-within:ring-2 focus-within:ring-mp-blue-500/20',
         )}
       >
         <input
