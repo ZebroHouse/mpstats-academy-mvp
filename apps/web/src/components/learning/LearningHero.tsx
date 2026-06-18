@@ -24,11 +24,11 @@ interface LearningHeroProps {
 export function LearningHero({ scope, headline, subline, children }: LearningHeroProps) {
   return (
     <section
-      className="rounded-3xl px-5 py-7 md:px-10 md:py-9 animate-slide-up text-white"
+      className="rounded-3xl px-5 py-7 md:px-10 md:py-9 animate-slide-up"
       style={{ backgroundColor: '#0F172A' }}
       aria-label={scope === 'solutions' ? 'Поиск решений' : 'Поиск по базе знаний'}
     >
-      <h1 className="text-[26px] sm:text-[32px] font-bold leading-tight tracking-tight">{headline}</h1>
+      <h1 className="text-[26px] sm:text-[32px] font-bold leading-tight tracking-tight text-white">{headline}</h1>
       {subline && <p className="text-white/60 text-[15px] sm:text-[16px] mt-2">{subline}</p>}
       <div data-tour="learn-search" className="mt-5">
         {children}

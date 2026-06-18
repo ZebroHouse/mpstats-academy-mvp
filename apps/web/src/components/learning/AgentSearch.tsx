@@ -107,19 +107,19 @@ export function AgentSearch({ scope, size = 'default' }: { scope: Scope; size?: 
   const isPending = pending || (scope === 'solutions' && resolveMutation.isPending);
 
   return (
-    <div className="space-y-3">
+    <div className="space-y-3 text-mp-gray-900">
       <form
         onSubmit={(e) => { e.preventDefault(); submit(query); }}
         className={cn(
           'flex items-center bg-white',
           isHero
-            ? 'h-14 rounded-2xl border border-mp-gray-200 shadow-mp-card pr-1.5 transition-colors focus-within:border-mp-blue-400 focus-within:ring-4 focus-within:ring-mp-blue-500/15'
-            : 'h-12 rounded-lg border border-mp-gray-200 transition-colors focus-within:border-mp-blue-400 focus-within:ring-4 focus-within:ring-mp-blue-500/15',
+            ? 'h-14 rounded-2xl border border-mp-gray-200 shadow-mp-card pr-1.5 transition-shadow focus-within:ring-4 focus-within:ring-white/25'
+            : 'h-12 rounded-lg border border-mp-gray-200 transition-shadow focus-within:ring-2 focus-within:ring-mp-blue-500/20',
         )}
       >
         <input
           className={cn(
-            'flex-1 h-full bg-transparent px-4 placeholder:text-mp-gray-400 focus:outline-none',
+            'flex-1 h-full bg-transparent px-4 text-mp-gray-900 placeholder:text-mp-gray-400 focus:outline-none',
             isHero && 'text-body',
           )}
           placeholder={PLACEHOLDER[scope]}
@@ -150,14 +150,14 @@ export function AgentSearch({ scope, size = 'default' }: { scope: Scope; size?: 
 
       {/* ── Solutions scope render (intent.resolve) ─────────────────────── */}
       {scope === 'solutions' && !isPending && result?.mode === 'clarify' && (
-        <div className="rounded-lg border p-4 space-y-3">
+        <div className="rounded-xl border border-mp-gray-200 bg-white p-4 space-y-3">
           <p className="font-medium">{result.question}</p>
           <div className="flex flex-wrap gap-2">
             {result.options.map((o) => (
               <button
                 key={o.label}
                 onClick={() => pickOption(o.intent)}
-                className="px-3 py-1.5 rounded-full bg-mp-gray-100 hover:bg-mp-gray-200 text-sm"
+                className="px-3 py-1.5 rounded-full bg-mp-gray-100 hover:bg-mp-gray-200 text-mp-gray-700 text-sm"
               >
                 {o.label}
               </button>
@@ -167,7 +167,7 @@ export function AgentSearch({ scope, size = 'default' }: { scope: Scope; size?: 
       )}
 
       {scope === 'solutions' && !isPending && result?.mode === 'recommend' && (
-        <div className="space-y-3">
+        <div className="space-y-3 rounded-xl border border-mp-gray-200 bg-white p-4">
           <p className="text-mp-gray-800">{result.answer}</p>
           {result.jobs.map((j) => (
             <div key={j.jobId} className="rounded-lg border p-4 flex items-start justify-between gap-4">
@@ -190,7 +190,7 @@ export function AgentSearch({ scope, size = 'default' }: { scope: Scope; size?: 
       )}
 
       {scope === 'solutions' && !isPending && result?.mode === 'fallback' && (
-        <div className="rounded-lg border p-4 space-y-2">
+        <div className="rounded-xl border border-mp-gray-200 bg-white p-4 space-y-2">
           <p>{result.answer}</p>
           {result.lessons.length > 0 && (
             <ul className="mt-2 space-y-1 text-sm text-mp-gray-700 list-disc pl-5">
@@ -206,18 +206,18 @@ export function AgentSearch({ scope, size = 'default' }: { scope: Scope; size?: 
       )}
 
       {scope === 'solutions' && !isPending && result?.mode === 'empty' && (
-        <p className="text-mp-gray-600 text-sm">Ничего не нашли</p>
+        <p className="text-white/70 text-sm">Ничего не нашли</p>
       )}
 
       {/* ── Library scope render (ai.searchLessons + material.listForUser) ── */}
       {scope === 'library' && !isPending && libResult && (
         libResult.lessons.length === 0 && libResult.materials.length === 0 ? (
-          <p className="text-mp-gray-600 text-sm">Ничего не нашли</p>
+          <p className="text-white/70 text-sm">Ничего не нашли</p>
         ) : (
           <div className="space-y-6">
             {libResult.lessons.length > 0 && (
               <section className="space-y-3">
-                <h3 className="text-body-sm font-semibold text-mp-gray-700">Уроки</h3>
+                <h3 className="text-body-sm font-semibold text-white/80">Уроки</h3>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {libResult.lessons.map((l) => (
                     <LessonResultCard key={l.id} lesson={l} />
@@ -227,7 +227,7 @@ export function AgentSearch({ scope, size = 'default' }: { scope: Scope; size?: 
             )}
             {libResult.materials.length > 0 && (
               <section className="space-y-3">
-                <h3 className="text-body-sm font-semibold text-mp-gray-700">Материалы</h3>
+                <h3 className="text-body-sm font-semibold text-white/80">Материалы</h3>
                 <div className="grid gap-3 sm:grid-cols-2">
                   {libResult.materials.map((m) => (
                     <MaterialCard key={m.id} {...m} />
