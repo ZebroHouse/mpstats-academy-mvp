@@ -120,6 +120,9 @@ export function AgentSearch({ scope, size = 'default' }: { scope: Scope; size?: 
         )}
       >
         <input
+          // data-no-ring suppresses the global *:focus-visible blue ring
+          // (globals.css) — the form's focus-within white ring is the indicator.
+          data-no-ring
           className={cn(
             'flex-1 h-full bg-transparent px-4 text-mp-gray-900 placeholder:text-mp-gray-400 focus:outline-none',
             isHero && 'text-body',
