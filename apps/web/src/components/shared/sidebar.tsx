@@ -128,7 +128,9 @@ export function Sidebar({ partnerEnabled = false }: { partnerEnabled?: boolean }
       {/* Logo */}
       <div className="h-16 flex items-center px-4 border-b border-mp-gray-200">
         <Link href="/dashboard" className="flex items-center">
-          <Logo size="sm" showText={false} />
+          {/* href="" so Logo renders just the mark (no inner <a>) — the wrapping
+              Link is the anchor. Avoids nested <a> → hydration error. */}
+          <Logo size="sm" showText={false} href="" />
           <span className="ml-2 text-heading-sm text-mp-gray-900 font-semibold">Academy</span>
         </Link>
       </div>

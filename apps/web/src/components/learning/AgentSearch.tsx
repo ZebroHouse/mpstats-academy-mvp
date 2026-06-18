@@ -113,8 +113,8 @@ export function AgentSearch({ scope, size = 'default' }: { scope: Scope; size?: 
         className={cn(
           'flex items-center bg-white',
           isHero
-            ? 'h-14 rounded-xl border border-mp-gray-200 shadow-mp-card pr-1.5 focus-within:ring-2 focus-within:ring-mp-blue-500'
-            : 'h-12 rounded-lg border border-mp-gray-200',
+            ? 'h-14 rounded-2xl border border-mp-gray-200 shadow-mp-card pr-1.5 transition-colors focus-within:border-mp-blue-400 focus-within:ring-4 focus-within:ring-mp-blue-500/15'
+            : 'h-12 rounded-lg border border-mp-gray-200 transition-colors focus-within:border-mp-blue-400 focus-within:ring-4 focus-within:ring-mp-blue-500/15',
         )}
       >
         <input
