@@ -93,7 +93,7 @@ const supportNavItem: NavItem = {
 
 const billingNavItem: NavItem = {
   title: 'Тарифы',
-  href: '/pricing',
+  href: '/billing',
   icon: (
     <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M7 15h.01M11 15h2M7 15a1 1 0 100-2 1 1 0 000 2zM3 6a2 2 0 012-2h14a2 2 0 012 2v12a2 2 0 01-2 2H5a2 2 0 01-2-2V6z" />
