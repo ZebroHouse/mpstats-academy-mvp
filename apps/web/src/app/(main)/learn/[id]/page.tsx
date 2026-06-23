@@ -14,6 +14,7 @@ import { LockOverlay } from '@/components/learning/LockOverlay';
 import { PaywallBanner } from '@/components/learning/PaywallBanner';
 import { CollapsibleSummary } from '@/components/learning/CollapsibleSummary';
 import { LessonMaterials } from '@/components/learning/LessonMaterials';
+import { LessonBodyRenderer } from '@/components/learning/LessonBodyRenderer';
 import { trpc } from '@/lib/trpc/client';
 import { reachGoal } from '@/lib/analytics/metrika';
 import { METRIKA_GOALS } from '@/lib/analytics/constants';
@@ -490,6 +491,7 @@ export default function LessonPage() {
     onSuccess: () => {
       // Invalidate caches so "Уроков пройдено" counter and lesson status refresh
       completedRef.current = true;
+      toast.success('Урок завершён');
       utils.learning.getLesson.invalidate({ lessonId });
       utils.learning.getRecommendedPath.invalidate();
       utils.learning.getPath.invalidate();
@@ -670,28 +672,45 @@ export default function LessonPage() {
         <div className="lg:col-span-2 space-y-4">
           {/* Non-blocking diagnostic hint (dismissible) */}
           {hasDiagnostic === false && <DiagnosticGateBanner />}
-          {/* Video player */}
-          <Card data-tour="lesson-video" id="video-player" className="overflow-hidden shadow-mp-card">
-            <VideoPlayer
-              ref={playerRef}
-              videoId={lesson.videoId}
-              onTimeUpdate={handleTimeUpdate}
-              onEnded={() => {
-                // Force-flush a 100% checkpoint when player emits Ended
-                // (handles cases where the last few seconds round to 88-89%)
-                if (lastDurationRef.current > 0) {
-                  lastPositionRef.current = lastDurationRef.current;
-                  saveWatchProgressRef.current.mutate({
-                    lessonId,
-                    position: lastDurationRef.current,
-                    duration: lastDurationRef.current,
-                  });
-                }
-              }}
-              initialTime={hasSearchTimecode ? searchTimecode : watchProgress?.lastPosition}
-              durationSeconds={lesson.duration ? lesson.duration * 60 : undefined}
-            />
-          </Card>
+          {/* Lesson content — video player or text body (Phase B) */}
+          {lesson.contentType === 'VIDEO' ? (
+            <Card data-tour="lesson-video" id="video-player" className="overflow-hidden shadow-mp-card">
+              <VideoPlayer
+                ref={playerRef}
+                videoId={lesson.videoId}
+                onTimeUpdate={handleTimeUpdate}
+                onEnded={() => {
+                  // Force-flush a 100% checkpoint when player emits Ended
+                  // (handles cases where the last few seconds round to 88-89%)
+                  if (lastDurationRef.current > 0) {
+                    lastPositionRef.current = lastDurationRef.current;
+                    saveWatchProgressRef.current.mutate({
+                      lessonId,
+                      position: lastDurationRef.current,
+                      duration: lastDurationRef.current,
+                    });
+                  }
+                }}
+                initialTime={hasSearchTimecode ? searchTimecode : watchProgress?.lastPosition}
+                durationSeconds={lesson.duration ? lesson.duration * 60 : undefined}
+              />
+            </Card>
+          ) : (
+            <Card className="overflow-hidden shadow-mp-card">
+              <CardContent className="p-6">
+                <LessonBodyRenderer doc={lesson.body as never} />
+                <div className="mt-8 flex justify-center">
+                  <Button
+                    size="lg"
+                    disabled={completeLesson.isPending || lesson.status === 'COMPLETED'}
+                    onClick={() => completeLesson.mutate({ lessonId })}
+                  >
+                    {lesson.status === 'COMPLETED' ? 'Урок завершён ✓' : 'Завершить урок'}
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Diagnostic hint (only for lessons in Errors section) */}
           {lessonHints.length > 0 && (
