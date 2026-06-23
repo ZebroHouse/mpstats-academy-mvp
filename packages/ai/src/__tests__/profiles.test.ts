@@ -13,9 +13,9 @@ vi.mock('../retrieval', async () => {
 import { retrieve, PROFILES } from '../profiles';
 
 describe('retrieve()', () => {
-  it('PROFILES.academy-lesson exists with frame + audio source types', () => {
+  it('PROFILES.academy-lesson exists with audio + frame + text source types', () => {
     const p = PROFILES['academy-lesson'];
-    expect(p.sourceTypes).toEqual(['academy_audio', 'academy_video_frame']);
+    expect(p.sourceTypes).toEqual(['academy_audio', 'academy_video_frame', 'academy_text']);
     expect(p.trustTiers).toEqual([1]);
     expect(p.maxResults).toBe(8);
   });
@@ -25,7 +25,7 @@ describe('retrieve()', () => {
     expect(searchChunksMock).toHaveBeenCalledWith(
       expect.objectContaining({
         query: 'тест',
-        sourceTypes: ['academy_audio', 'academy_video_frame'],
+        sourceTypes: ['academy_audio', 'academy_video_frame', 'academy_text'],
         trustTiers: [1],
         limit: 8,
         threshold: 0.5,

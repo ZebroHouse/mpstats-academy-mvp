@@ -1,4 +1,10 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+
+// text-index.ts imports embeddings (→ server-only) for indexLessonText. These pure-function
+// tests don't touch embedding, so neutralize the transitive server-only/embeddings load.
+vi.mock('server-only', () => ({}));
+vi.mock('../embeddings', () => ({ embedQuery: vi.fn() }));
+
 import { extractPlainText, chunkText } from '../text-index';
 
 describe('extractPlainText', () => {
