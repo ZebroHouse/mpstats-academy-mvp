@@ -19,6 +19,11 @@ import { createClient } from '@supabase/supabase-js';
 import { adminAnalyticsRouter } from './admin-analytics';
 import { indexLessonText } from '@mpstats/ai';
 import type { SkillCategory } from '@mpstats/shared';
+import {
+  LESSON_IMAGE_ALLOWED_MIME_TYPES,
+  LESSON_IMAGE_MAX_FILE_SIZE,
+  LESSON_IMAGE_STORAGE_BUCKET,
+} from '@mpstats/shared';
 
 // Lazy-initialized Supabase admin client (service role) for email lookups
 let supabaseAdmin: ReturnType<typeof createClient> | null = null;
@@ -42,6 +47,39 @@ const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 export const adminRouter = router({
   // Analytics sub-router (getAnalytics, getActiveUserStats, getWatchStats)
   analytics: adminAnalyticsRouter,
+
+  /**
+   * Signed upload URL for an image embedded in a lesson body (TipTap).
+   * Uploads land in the PUBLIC `lesson-images` bucket — we return both the
+   * signed PUT URL and the resulting public object URL for embedding.
+   */
+  requestLessonImageUploadUrl: adminProcedure
+    .input(
+      z.object({
+        filename: z.string().min(1).max(200),
+        mimeType: z.enum(
+          LESSON_IMAGE_ALLOWED_MIME_TYPES as unknown as [string, ...string[]],
+        ),
+        fileSize: z.number().int().positive().max(LESSON_IMAGE_MAX_FILE_SIZE),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const sb = getSupabaseAdmin();
+      const tmpId = randomUUID();
+      const safeName = input.filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const storagePath = `${tmpId}/${safeName}`;
+      const { data, error } = await sb.storage
+        .from(LESSON_IMAGE_STORAGE_BUCKET)
+        .createSignedUploadUrl(storagePath);
+      if (error || !data) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: error?.message ?? 'upload url failed',
+        });
+      }
+      const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${LESSON_IMAGE_STORAGE_BUCKET}/${storagePath}`;
+      return { uploadUrl: data.signedUrl, publicUrl };
+    }),
 
   /**
    * Dashboard stats: total users, completed diagnostics, total lessons, recent registrations (7d).
