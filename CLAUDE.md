@@ -58,6 +58,7 @@ Sibling project `D:/GpT_docs/Ai_MP_manager/` запустил `prisma db push --
 | v1.15 Аналитика 2.0 | Shipped 2026-06-09 (Phase 63 — раздел `/admin/analytics` разведён на 4 таба Обзор/Выручка/Воронка/Контент; Выручка (MRR рекуррент-only, ARPU, сплит, продления, приход), Воронка (конверсия рег→диагностика→оплата, точный trial→paid, отток, атрибуция); `UserProfile.isTest` + исключение тест-юзеров; release `90b6192`) |
 | v1.16 Бесшовный вход из MPSTATS | Shipped **dark** 2026-06-11 (Phase 64 — публичная ручка `/api/partner/mpstats/enter` → авто-сессия в курс `07_instruments`; untrusted (новый email→авто-создание+сессия, существующий→кука/magic-link), HMAC trusted-ветка dormant; combined «finish setup» баннер (подтверди почту + задай пароль); merge `60e77b6`. Гейт `PARTNER_ENTRY_ENABLED` НЕ задан на проде → инертна до go-live) |
 | v1.17 Cohesive entry pages | Shipped 2026-06-16 (Phase 65 — `/register` + `/login` выведены из `(auth)` в свои тёмные лейауты, переиспользующие маркет-дизайн: `V8Header`+`V8Footer`+Onest+`#0F172A`. /register = сплит форма+промо (4 плашки-тезиса + цена), /login = форма по центру; формы не тронуты. + гайдлайн дизайн-системы. merge `62e69e3`) |
+| v1.18 Design System v2 reskin | Shipped 2026-06-23 (branded-light — продукт сведён к маркет-облику, остаётся светлым: Onest везде, meet-in-middle радиусы, примитивы `DarkIsland`/`BentoCard`, дисциплина палитры. Per-section treatment выбран owner'ом после 3-way визуального сравнения baseline/deep/middle: Избранное+Карточка задачи+Инструменты MPSTATS → deep, Диагностика интро+результаты → middle, остальное baseline. Visual-only. merge `932f597`) |
 
 **Remaining work:**
 1. Phase 33-03: CQ Dashboard Setup (на стороне CQ команды).
@@ -108,7 +109,23 @@ Archive directory `D:/GpT_docs/MPSTATS ACADEMY ADAPTIVE LEARNING/MAAL-phase55/` 
 
 **Внимание (исторический lesson):** CP хранит `amount` на своей стороне на момент создания подписки. При смене цен отменять старые ACTIVE подписки чтобы автосписания пошли по новым тарифам.
 
-## Last Session (2026-06-16) — Phase 65 «Cohesive dark /register + /login» shipped to prod
+## Last Session (2026-06-23) — Design System v2 «branded-light» рескин продукта shipped to prod
+
+**Merge `932f597` (`--no-ff` `design-system-v2-reskin` → master) + prod deploy `maal-web-1`.** Продукт сведён к маркетинговому облику, **остаётся светлым** (Onest везде, meet-in-middle радиусы, тёмные острова для глубины, дисциплина палитры). Спек `docs/design-system/v2-product-alignment-spec.md`, гайдлайн `docs/design-system/{README,tokens,dark,light}.md`.
+
+**Метод (ключевой паттерн):** owner не мог выбрать глубину в абстракции → собрали **3 локальных билда бок-о-бок** для визуального выбора: baseline (:3000), DEEP (worktree, :3100 — тёмные `DarkIsland`-шапки + `BentoCard` + тёмный сайдбар) и MIDDLE (worktree, :3101 — светлые soft-tint карты + крупная Onest-типошкала + синий active-pill). Два варианта сверстаны параллельными `coder`-субагентами (посекционные коммиты). Owner дал вердикт по каждому разделу → cherry-pick по файлам.
+
+**Что на проде (вердикты owner):**
+- **deep** (тёмные острова): Избранное `/learn/favorites`, Карточка задачи `/learn/job/[slug]`, Инструменты MPSTATS `/mpstats-tools` (+ зелёный `#17BF50` MPSTATS-нод).
+- **middle** (светлые, приглушённая палитра): Диагностика интро `/diagnostic` + результаты `/diagnostic/results`.
+- **baseline (как есть):** сайдбар/моб.меню, профиль, рефералка, история, уведомления, плеер, прохождение диагностики.
+- Глобально (раньше, на этой же ветке): Onest+радиусы+примитивы `DarkIsland`/`BentoCard` + dashboard/`/learn/plan`/search-island/`/billing`.
+
+**Visual-only:** без схемы/миграций/изменений данных/auth. Прод-флаг `PARTNER_COURSES_ENABLED:"true"` уже стоял → mpstats deep виден. Деплой: staging (`--no-cache web` + base64-content-check бандла, т.к. кириллица в SSH→docker grep мангается) → ОК owner → прод (`--no-cache web` + recreate + content-check + smoke 200). Откат: `git revert -m 1 932f597` + редеплой. typecheck зелёный, web 247.
+
+**Готчи:** Windows `git worktree remove` падает на файл-локе (worktree разрегистрируется, папка остаётся → добивать `cmd //c rd /s /q` + `git worktree prune`); на ветке висели чужие uncommitted-файлы контент-инжест-инстанса (merge делал в отдельном чистом worktree, чтобы не попали в релиз). Память: `~/.claude/projects/.../memory/project_design_system_v2_reskin_shipped.md`.
+
+## Previous Session (2026-06-16) — Phase 65 «Cohesive dark /register + /login» shipped to prod
 
 **Merge `62e69e3` (`--no-ff` `phase-65-register-split-layout` → master) + prod deploy `maal-web-1`.** Обе входные страницы переоформлены в цельный тёмный маркет-стиль.
 
