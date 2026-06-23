@@ -173,6 +173,10 @@ model Lesson {
   // Add new keys carefully; this column is JSONB so structure is application-enforced.
   metadata Json?
 
+  contentType   LessonContentType   @default(VIDEO)
+  contentStatus LessonContentStatus @default(PUBLISHED)
+  body          Json? // TipTap document for TEXT/INTERACTIVE lessons
+
   // Persistent cache for AI-generated lesson summary. In-memory cache resets
   // on deploy and gets blown out by browsing many lessons; persisting means
   // most lesson visits are DB hits and never reach OpenRouter / rate limits.
@@ -195,6 +199,17 @@ enum LessonStatus {
   NOT_STARTED
   IN_PROGRESS
   COMPLETED
+}
+
+enum LessonContentType {
+  VIDEO
+  TEXT
+  INTERACTIVE
+}
+
+enum LessonContentStatus {
+  DRAFT
+  PUBLISHED
 }
 
 model LessonProgress {

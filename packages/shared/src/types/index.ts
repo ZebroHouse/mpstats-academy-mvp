@@ -343,6 +343,38 @@ export const MATERIAL_MAX_FILE_SIZE = 25 * 1024 * 1024; // 25 MB (D-12)
 export const MATERIAL_SIGNED_URL_TTL = 3600; // 1 hour (D-10)
 export const MATERIAL_STORAGE_BUCKET = 'lesson-materials';
 
+// ============== LESSON CONTENT (TEXT / INTERACTIVE) ==============
+
+export const LessonContentType = {
+  VIDEO: 'VIDEO',
+  TEXT: 'TEXT',
+  INTERACTIVE: 'INTERACTIVE',
+} as const;
+export type LessonContentType =
+  (typeof LessonContentType)[keyof typeof LessonContentType];
+
+export const LESSON_CONTENT_TYPE_LABELS: Record<LessonContentType, string> = {
+  VIDEO: 'Видео',
+  TEXT: 'Текст',
+  INTERACTIVE: 'Интерактивный',
+};
+
+export const LessonContentStatus = {
+  DRAFT: 'DRAFT',
+  PUBLISHED: 'PUBLISHED',
+} as const;
+export type LessonContentStatus =
+  (typeof LessonContentStatus)[keyof typeof LessonContentStatus];
+
+export const LESSON_IMAGE_ALLOWED_MIME_TYPES = [
+  'image/png',
+  'image/jpeg',
+  'image/webp',
+  'image/gif',
+] as const;
+export const LESSON_IMAGE_MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+export const LESSON_IMAGE_STORAGE_BUCKET = 'lesson-images';
+
 // ============== LIBRARY REDESIGN (Phase 57): JOB CATALOG ==============
 
 export type JobMarketplace = 'WB' | 'OZON' | 'BOTH';
