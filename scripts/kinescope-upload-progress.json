@@ -1,6 +1,6 @@
 {
   "startedAt": "2026-02-18T10:26:44.172Z",
-  "lastUpdated": "2026-06-05T13:43:10.991Z",
+  "lastUpdated": "2026-06-22T15:47:38.459Z",
   "uploaded": [
     {
       "courseId": "01_analytics",
@@ -3251,332 +3251,452 @@
       "uploadedAt": "2026-06-05T13:31:44.100Z"
     },
     {
-      "lessonId": "07_instruments_m14_price_management_001",
-      "videoId": "fc5061c4-1602-43ce-a086-60db576a68c9",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 27.5,
+      "lessonId": "07_instruments_m14_price_management_001",
+      "videoId": "fc5061c4-1602-43ce-a086-60db576a68c9",
       "uploadedAt": "2026-06-05T13:32:10.712Z"
     },
     {
-      "lessonId": "07_instruments_m01_bidder_004",
-      "videoId": "d105790b-2459-4927-aed6-b58356875c8c",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 31.1,
+      "lessonId": "07_instruments_m01_bidder_004",
+      "videoId": "d105790b-2459-4927-aed6-b58356875c8c",
       "uploadedAt": "2026-06-05T13:32:18.315Z"
     },
     {
-      "lessonId": "07_instruments_m01_bidder_003",
-      "videoId": "076fe489-8ee0-47b4-864d-a0aa6d092b9e",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 33.9,
+      "lessonId": "07_instruments_m01_bidder_003",
+      "videoId": "076fe489-8ee0-47b4-864d-a0aa6d092b9e",
       "uploadedAt": "2026-06-05T13:32:26.052Z"
     },
     {
-      "lessonId": "07_instruments_m03_va_ozon_005",
-      "videoId": "12ea6dbe-aab6-4fb7-a70b-c61db18af5ca",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 39.8,
+      "lessonId": "07_instruments_m03_va_ozon_005",
+      "videoId": "12ea6dbe-aab6-4fb7-a70b-c61db18af5ca",
       "uploadedAt": "2026-06-05T13:32:33.909Z"
     },
     {
-      "lessonId": "07_instruments_m08_ym_groups_001",
-      "videoId": "f8450d6e-ff3b-493b-b9a2-ce70e808e7cf",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 52.7,
+      "lessonId": "07_instruments_m08_ym_groups_001",
+      "videoId": "f8450d6e-ff3b-493b-b9a2-ce70e808e7cf",
       "uploadedAt": "2026-06-05T13:32:42.234Z"
     },
     {
-      "lessonId": "07_instruments_m02_va_wb_003",
-      "videoId": "6af67d1c-8829-4211-9146-670ce1990af6",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 63,
+      "lessonId": "07_instruments_m02_va_wb_003",
+      "videoId": "6af67d1c-8829-4211-9146-670ce1990af6",
       "uploadedAt": "2026-06-05T13:32:50.941Z"
     },
     {
-      "lessonId": "07_instruments_m02_va_wb_007",
-      "videoId": "db0b493a-c8df-409f-bc12-58a702568f39",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 63.6,
+      "lessonId": "07_instruments_m02_va_wb_007",
+      "videoId": "db0b493a-c8df-409f-bc12-58a702568f39",
       "uploadedAt": "2026-06-05T13:32:59.966Z"
     },
     {
-      "lessonId": "07_instruments_m05_seo_003",
-      "videoId": "9c6e5a5a-5ee8-472b-89d0-13bbe9892904",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 65,
+      "lessonId": "07_instruments_m05_seo_003",
+      "videoId": "9c6e5a5a-5ee8-472b-89d0-13bbe9892904",
       "uploadedAt": "2026-06-05T13:33:07.952Z"
     },
     {
-      "lessonId": "07_instruments_m05_seo_004",
-      "videoId": "180f4831-24c7-4ece-82b0-0c5280db75f7",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 80.5,
+      "lessonId": "07_instruments_m05_seo_004",
+      "videoId": "180f4831-24c7-4ece-82b0-0c5280db75f7",
       "uploadedAt": "2026-06-05T13:33:16.701Z"
     },
     {
-      "lessonId": "07_instruments_m04_cabinet_wb_004",
-      "videoId": "2f725e68-bbf5-4842-bc75-c03d6ff3ac0c",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 84.4,
+      "lessonId": "07_instruments_m04_cabinet_wb_004",
+      "videoId": "2f725e68-bbf5-4842-bc75-c03d6ff3ac0c",
       "uploadedAt": "2026-06-05T13:33:25.472Z"
     },
     {
-      "lessonId": "07_instruments_m04_cabinet_wb_001",
-      "videoId": "89afcfa5-7f19-4626-b397-a15c85786016",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 102.2,
+      "lessonId": "07_instruments_m04_cabinet_wb_001",
+      "videoId": "89afcfa5-7f19-4626-b397-a15c85786016",
       "uploadedAt": "2026-06-05T13:33:34.765Z"
     },
     {
-      "lessonId": "07_instruments_m05_seo_002",
-      "videoId": "e35a5a2d-c801-4909-9832-aec6e548fa83",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 103.5,
+      "lessonId": "07_instruments_m05_seo_002",
+      "videoId": "e35a5a2d-c801-4909-9832-aec6e548fa83",
       "uploadedAt": "2026-06-05T13:33:43.522Z"
     },
     {
-      "lessonId": "07_instruments_m01_bidder_002",
-      "videoId": "c5787ccf-90e8-42fe-9efc-46f8669768e4",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 106.4,
+      "lessonId": "07_instruments_m01_bidder_002",
+      "videoId": "c5787ccf-90e8-42fe-9efc-46f8669768e4",
       "uploadedAt": "2026-06-05T13:33:53.342Z"
     },
     {
-      "lessonId": "07_instruments_m05_seo_005",
-      "videoId": "ac662456-9f4d-43e6-acb1-1310908ccb07",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 107.5,
+      "lessonId": "07_instruments_m05_seo_005",
+      "videoId": "ac662456-9f4d-43e6-acb1-1310908ccb07",
       "uploadedAt": "2026-06-05T13:34:02.263Z"
     },
     {
-      "lessonId": "07_instruments_m03_va_ozon_006",
-      "videoId": "e3afadb8-d281-412c-bdce-756b1e2ae270",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 112.3,
+      "lessonId": "07_instruments_m03_va_ozon_006",
+      "videoId": "e3afadb8-d281-412c-bdce-756b1e2ae270",
       "uploadedAt": "2026-06-05T13:34:11.920Z"
     },
     {
-      "lessonId": "07_instruments_m02_va_wb_005",
-      "videoId": "043f7942-0581-4523-aed3-0897bd1f2cc6",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 122.6,
+      "lessonId": "07_instruments_m02_va_wb_005",
+      "videoId": "043f7942-0581-4523-aed3-0897bd1f2cc6",
       "uploadedAt": "2026-06-05T13:34:21.634Z"
     },
     {
-      "lessonId": "07_instruments_m13_repricer_wb_001",
-      "videoId": "554540ba-74b6-4262-bfdc-4dae8836703a",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 165.6,
+      "lessonId": "07_instruments_m13_repricer_wb_001",
+      "videoId": "554540ba-74b6-4262-bfdc-4dae8836703a",
       "uploadedAt": "2026-06-05T13:34:35.012Z"
     },
     {
-      "lessonId": "07_instruments_m03_va_ozon_004",
-      "videoId": "c8558589-4e13-46d2-a510-bc240a98f7f6",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 173.4,
+      "lessonId": "07_instruments_m03_va_ozon_004",
+      "videoId": "c8558589-4e13-46d2-a510-bc240a98f7f6",
       "uploadedAt": "2026-06-05T13:34:50.850Z"
     },
     {
-      "lessonId": "07_instruments_m15_photo_editor_001",
-      "videoId": "62b03c98-5f3f-4fc3-a30a-b01b765a7dd0",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 176.6,
+      "lessonId": "07_instruments_m15_photo_editor_001",
+      "videoId": "62b03c98-5f3f-4fc3-a30a-b01b765a7dd0",
       "uploadedAt": "2026-06-05T13:35:05.652Z"
     },
     {
-      "lessonId": "07_instruments_m05_seo_009",
-      "videoId": "ff49fba3-b020-4c51-a4fa-a9dd6cd2da9b",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 181,
+      "lessonId": "07_instruments_m05_seo_009",
+      "videoId": "ff49fba3-b020-4c51-a4fa-a9dd6cd2da9b",
       "uploadedAt": "2026-06-05T13:35:19.013Z"
     },
     {
-      "lessonId": "07_instruments_m06_autoresponses_001",
-      "videoId": "de04d7e9-3db6-4921-bed2-a77df647f62a",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 186.5,
+      "lessonId": "07_instruments_m06_autoresponses_001",
+      "videoId": "de04d7e9-3db6-4921-bed2-a77df647f62a",
       "uploadedAt": "2026-06-05T13:35:34.320Z"
     },
     {
-      "lessonId": "07_instruments_m04_cabinet_wb_003",
-      "videoId": "db1e55c4-abf5-4d5d-9862-0343c08dd91d",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 195,
+      "lessonId": "07_instruments_m04_cabinet_wb_003",
+      "videoId": "db1e55c4-abf5-4d5d-9862-0343c08dd91d",
       "uploadedAt": "2026-06-05T13:35:48.319Z"
     },
     {
-      "lessonId": "07_instruments_m09_my_cards_001",
-      "videoId": "fa099107-2782-46b4-9b96-43e6e1d818fd",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 208.1,
+      "lessonId": "07_instruments_m09_my_cards_001",
+      "videoId": "fa099107-2782-46b4-9b96-43e6e1d818fd",
       "uploadedAt": "2026-06-05T13:36:03.665Z"
     },
     {
-      "lessonId": "07_instruments_m04_cabinet_wb_005",
-      "videoId": "9ee1b772-f122-449b-a960-d08215e2590e",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 221.4,
+      "lessonId": "07_instruments_m04_cabinet_wb_005",
+      "videoId": "9ee1b772-f122-449b-a960-d08215e2590e",
       "uploadedAt": "2026-06-05T13:36:19.809Z"
     },
     {
-      "lessonId": "07_instruments_m04_cabinet_wb_002",
-      "videoId": "410e4de9-9c9e-4093-9cf3-964ce04a2239",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 233.4,
+      "lessonId": "07_instruments_m04_cabinet_wb_002",
+      "videoId": "410e4de9-9c9e-4093-9cf3-964ce04a2239",
       "uploadedAt": "2026-06-05T13:36:37.009Z"
     },
     {
-      "lessonId": "07_instruments_m05_seo_001",
-      "videoId": "f69b2169-53c5-4708-a440-e2e3c15e1ac2",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 238.7,
+      "lessonId": "07_instruments_m05_seo_001",
+      "videoId": "f69b2169-53c5-4708-a440-e2e3c15e1ac2",
       "uploadedAt": "2026-06-05T13:36:53.946Z"
     },
     {
-      "lessonId": "07_instruments_m11_ruka_na_pulse_001",
-      "videoId": "0f094177-3df8-432f-b3c2-fe1d465b26f6",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 248.5,
+      "lessonId": "07_instruments_m11_ruka_na_pulse_001",
+      "videoId": "0f094177-3df8-432f-b3c2-fe1d465b26f6",
       "uploadedAt": "2026-06-05T13:37:12.432Z"
     },
     {
-      "lessonId": "07_instruments_m03_va_ozon_002",
-      "videoId": "2f23677c-b98b-4643-8769-7983873364b0",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 250.1,
+      "lessonId": "07_instruments_m03_va_ozon_002",
+      "videoId": "2f23677c-b98b-4643-8769-7983873364b0",
       "uploadedAt": "2026-06-05T13:37:29.645Z"
     },
     {
-      "lessonId": "07_instruments_m02_va_wb_004",
-      "videoId": "005b4c82-70d9-42c3-9ab6-0206e36395dd",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 255,
+      "lessonId": "07_instruments_m02_va_wb_004",
+      "videoId": "005b4c82-70d9-42c3-9ab6-0206e36395dd",
       "uploadedAt": "2026-06-05T13:37:47.998Z"
     },
     {
-      "lessonId": "07_instruments_m05_seo_007",
-      "videoId": "c6f2005a-2fef-42b3-b5ea-cab89fc7c52a",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 256.8,
+      "lessonId": "07_instruments_m05_seo_007",
+      "videoId": "c6f2005a-2fef-42b3-b5ea-cab89fc7c52a",
       "uploadedAt": "2026-06-05T13:38:06.891Z"
     },
     {
-      "lessonId": "07_instruments_m03_va_ozon_003",
-      "videoId": "c7e37309-931e-44c2-927d-b2f380d9c674",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 269.3,
+      "lessonId": "07_instruments_m03_va_ozon_003",
+      "videoId": "c7e37309-931e-44c2-927d-b2f380d9c674",
       "uploadedAt": "2026-06-05T13:38:25.100Z"
     },
     {
-      "lessonId": "07_instruments_m02_va_wb_002",
-      "videoId": "23b0e827-4c0f-4b42-97d1-00baafb85b6b",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 279,
+      "lessonId": "07_instruments_m02_va_wb_002",
+      "videoId": "23b0e827-4c0f-4b42-97d1-00baafb85b6b",
       "uploadedAt": "2026-06-05T13:38:43.957Z"
     },
     {
-      "lessonId": "07_instruments_m03_va_ozon_007",
-      "videoId": "3200dc93-308d-484a-86f6-66744d3ed1d8",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 289.5,
+      "lessonId": "07_instruments_m03_va_ozon_007",
+      "videoId": "3200dc93-308d-484a-86f6-66744d3ed1d8",
       "uploadedAt": "2026-06-05T13:39:05.615Z"
     },
     {
-      "lessonId": "07_instruments_m07_external_ads_001",
-      "videoId": "8e6f5170-6621-498f-a5f2-7985cd7249e1",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 328.5,
+      "lessonId": "07_instruments_m07_external_ads_001",
+      "videoId": "8e6f5170-6621-498f-a5f2-7985cd7249e1",
       "uploadedAt": "2026-06-05T13:39:28.576Z"
     },
     {
-      "lessonId": "07_instruments_m03_va_ozon_001",
-      "videoId": "d5fc1719-9860-4451-b7d4-4f80a412c453",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 344.4,
+      "lessonId": "07_instruments_m03_va_ozon_001",
+      "videoId": "d5fc1719-9860-4451-b7d4-4f80a412c453",
       "uploadedAt": "2026-06-05T13:39:51.489Z"
     },
     {
-      "lessonId": "07_instruments_m02_va_wb_006",
-      "videoId": "8e1b0217-3d30-4fe8-88f9-d4d98ab650e7",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 423.2,
+      "lessonId": "07_instruments_m02_va_wb_006",
+      "videoId": "8e1b0217-3d30-4fe8-88f9-d4d98ab650e7",
       "uploadedAt": "2026-06-05T13:40:18.919Z"
     },
     {
-      "lessonId": "07_instruments_m02_va_wb_001",
-      "videoId": "5972a72a-2513-4833-a392-eaf685dd38b4",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 439.4,
+      "lessonId": "07_instruments_m02_va_wb_001",
+      "videoId": "5972a72a-2513-4833-a392-eaf685dd38b4",
       "uploadedAt": "2026-06-05T13:40:47.205Z"
     },
     {
-      "lessonId": "07_instruments_m10_plugin_001",
-      "videoId": "b07b423d-f2af-4207-9e08-ef3320c774a2",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 466.8,
+      "lessonId": "07_instruments_m10_plugin_001",
+      "videoId": "b07b423d-f2af-4207-9e08-ef3320c774a2",
       "uploadedAt": "2026-06-05T13:41:19.371Z"
     },
     {
-      "lessonId": "07_instruments_m05_seo_006",
-      "videoId": "8fdb7c74-4f20-4269-868e-ae3de15f5998",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 538.7,
+      "lessonId": "07_instruments_m05_seo_006",
+      "videoId": "8fdb7c74-4f20-4269-868e-ae3de15f5998",
       "uploadedAt": "2026-06-05T13:41:54.948Z"
     },
     {
-      "lessonId": "07_instruments_m01_bidder_001",
-      "videoId": "c4a27025-8afb-4989-9ba7-95f564067925",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 552.5,
+      "lessonId": "07_instruments_m01_bidder_001",
+      "videoId": "c4a27025-8afb-4989-9ba7-95f564067925",
       "uploadedAt": "2026-06-05T13:42:31.911Z"
     },
     {
-      "lessonId": "07_instruments_m05_seo_008",
-      "videoId": "cb6d60b0-4557-4d68-bcac-ac0522408f96",
       "courseId": "07_instruments",
       "folderId": "a1c43064-e68b-41bf-93f0-65feeb87ef70",
       "sizeMB": 560.5,
+      "lessonId": "07_instruments_m05_seo_008",
+      "videoId": "cb6d60b0-4557-4d68-bcac-ac0522408f96",
       "uploadedAt": "2026-06-05T13:43:10.991Z"
+    },
+    {
+      "lessonId": "skill_analytics_assortment_005",
+      "videoId": "e4d6757d-0229-4e6b-bbbf-fa49002ddc77",
+      "courseId": "01_analytics",
+      "folderId": "71777756-e93a-4484-87eb-570c7588640f",
+      "sizeMB": 170,
+      "uploadedAt": "2026-06-22T15:41:45.117Z"
+    },
+    {
+      "lessonId": "skill_analytics_assortment_003",
+      "videoId": "fad19551-0b5a-4134-b01a-5a751efa748b",
+      "courseId": "01_analytics",
+      "folderId": "71777756-e93a-4484-87eb-570c7588640f",
+      "sizeMB": 178,
+      "uploadedAt": "2026-06-22T15:41:58.925Z"
+    },
+    {
+      "lessonId": "skill_analytics_card_scanning_001",
+      "videoId": "46254772-3b7b-4108-893a-e7e0d8e43a0a",
+      "courseId": "01_analytics",
+      "folderId": "71777756-e93a-4484-87eb-570c7588640f",
+      "sizeMB": 200,
+      "uploadedAt": "2026-06-22T15:42:12.793Z"
+    },
+    {
+      "lessonId": "skill_analytics_product_lifecycle_001",
+      "videoId": "7f98fb71-07f2-4369-add0-08b24b8a119f",
+      "courseId": "01_analytics",
+      "folderId": "71777756-e93a-4484-87eb-570c7588640f",
+      "sizeMB": 223,
+      "uploadedAt": "2026-06-22T15:42:27.905Z"
+    },
+    {
+      "lessonId": "skill_operations_logistics_002",
+      "videoId": "4c169650-cacd-444e-93e3-172b54af9972",
+      "courseId": "01_analytics",
+      "folderId": "71777756-e93a-4484-87eb-570c7588640f",
+      "sizeMB": 227,
+      "uploadedAt": "2026-06-22T15:42:43.626Z"
+    },
+    {
+      "lessonId": "skill_finance_pl_economics_001",
+      "videoId": "7ba427e0-3a4b-4df2-abc5-d3d042397801",
+      "courseId": "01_analytics",
+      "folderId": "71777756-e93a-4484-87eb-570c7588640f",
+      "sizeMB": 243,
+      "uploadedAt": "2026-06-22T15:42:59.931Z"
+    },
+    {
+      "lessonId": "skill_analytics_turnover_001",
+      "videoId": "0c028edb-b471-482f-a561-711b39d9c879",
+      "courseId": "01_analytics",
+      "folderId": "71777756-e93a-4484-87eb-570c7588640f",
+      "sizeMB": 299,
+      "uploadedAt": "2026-06-22T15:43:18.410Z"
+    },
+    {
+      "lessonId": "skill_analytics_assortment_006",
+      "videoId": "052867f1-4c79-40a6-b404-855127589066",
+      "courseId": "01_analytics",
+      "folderId": "71777756-e93a-4484-87eb-570c7588640f",
+      "sizeMB": 328,
+      "uploadedAt": "2026-06-22T15:43:39.305Z"
+    },
+    {
+      "lessonId": "skill_analytics_card_scanning_002",
+      "videoId": "d2024e95-92dc-4d77-944e-ce734cf96bd4",
+      "courseId": "01_analytics",
+      "folderId": "71777756-e93a-4484-87eb-570c7588640f",
+      "sizeMB": 345,
+      "uploadedAt": "2026-06-22T15:44:02.194Z"
+    },
+    {
+      "lessonId": "skill_finance_pl_economics_002",
+      "videoId": "14238871-4be5-4b17-b63a-a1f3fd0ea70d",
+      "courseId": "01_analytics",
+      "folderId": "71777756-e93a-4484-87eb-570c7588640f",
+      "sizeMB": 365,
+      "uploadedAt": "2026-06-22T15:44:26.107Z"
+    },
+    {
+      "lessonId": "skill_operations_logistics_001",
+      "videoId": "27cf507f-bfb0-4fac-b831-0967ef26bbfb",
+      "courseId": "01_analytics",
+      "folderId": "71777756-e93a-4484-87eb-570c7588640f",
+      "sizeMB": 478,
+      "uploadedAt": "2026-06-22T15:44:57.341Z"
+    },
+    {
+      "lessonId": "skill_operations_supply_001",
+      "videoId": "82f7b93c-b2d8-4c9b-abcf-63417738790e",
+      "courseId": "01_analytics",
+      "folderId": "71777756-e93a-4484-87eb-570c7588640f",
+      "sizeMB": 598,
+      "uploadedAt": "2026-06-22T15:45:39.598Z"
+    },
+    {
+      "lessonId": "skill_operations_geography_002",
+      "videoId": "6d411757-091f-48f5-aa4a-99e70e1016d5",
+      "courseId": "01_analytics",
+      "folderId": "71777756-e93a-4484-87eb-570c7588640f",
+      "sizeMB": 619,
+      "uploadedAt": "2026-06-22T15:46:18.551Z"
+    },
+    {
+      "lessonId": "skill_operations_geography_001",
+      "videoId": "92910f9e-dbc4-4a65-92f5-3f90fe0a2dae",
+      "courseId": "01_analytics",
+      "folderId": "71777756-e93a-4484-87eb-570c7588640f",
+      "sizeMB": 626,
+      "uploadedAt": "2026-06-22T15:46:57.659Z"
+    },
+    {
+      "lessonId": "skill_analytics_assortment_004",
+      "videoId": "2f43c389-f4f8-4454-a9a9-a682fe9cff18",
+      "courseId": "01_analytics",
+      "folderId": "71777756-e93a-4484-87eb-570c7588640f",
+      "sizeMB": 630,
+      "uploadedAt": "2026-06-22T15:47:38.459Z"
     }
   ],
   "failed": [
