@@ -108,6 +108,8 @@ export interface LessonWithProgress extends Lesson {
   locked?: boolean;
   topics?: string[];           // Phase 30: canonical topic tags
   skillCategories?: string[];  // Phase 30: multi-category tags
+  contentType?: LessonContentType;  // TEXT/INTERACTIVE lessons
+  body?: unknown;                    // TipTap document, gated behind `locked`
 }
 
 // ============== AI / RAG ==============

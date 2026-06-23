@@ -491,6 +491,7 @@ export const learningRouter = router({
         // Hidden lesson = not found. Hidden course is OK for library/skill lessons
         // (they have video and content but aren't shown as course cards).
         if (!lesson || lesson.isHidden) return null;
+        if (lesson.contentStatus === 'DRAFT') return null; // drafts: admin-only via getLessonForEdit
 
         const access = await checkLessonAccess(ctx.user.id, { order: lesson.order, courseId: lesson.courseId }, ctx.prisma);
         const locked = !access.hasAccess;
@@ -523,6 +524,8 @@ export const learningRouter = router({
             status: lesson.progress[0]?.status || 'NOT_STARTED',
             watchedPercent: lesson.progress[0]?.watchedPercent || 0,
             locked,
+            contentType: lesson.contentType,
+            body: locked ? null : (lesson.body ?? null),
           } satisfies LessonWithProgress,
           course: { id: lesson.course.id, title: lesson.course.title, slug: lesson.course.slug },
           nextLesson: nextLessonNav,
