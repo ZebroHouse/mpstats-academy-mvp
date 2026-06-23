@@ -8,6 +8,7 @@
  *   getComments, toggleCommentVisibility, getNewCommentsCount
  */
 
+import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { router, adminProcedure, superadminProcedure } from '../trpc';
@@ -681,6 +682,42 @@ export const adminRouter = router({
       } catch (error) {
         handleDatabaseError(error);
       }
+    }),
+
+  /**
+   * Create a DRAFT text/interactive lesson at the end of a course.
+   * Admin-created lessons have no manifest, so we mint a synthetic id.
+   * Drafts are hidden from students + RAG until published.
+   */
+  createLesson: adminProcedure
+    .input(
+      z.object({
+        courseId: z.string().min(1),
+        title: z.string().min(1).max(300),
+        contentType: z.enum(['TEXT', 'INTERACTIVE']),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const agg = await ctx.prisma.lesson.aggregate({
+        where: { courseId: input.courseId },
+        _max: { order: true },
+      });
+      const nextOrder = (agg._max.order ?? 0) + 1;
+      const id = `${input.courseId}_text_${randomUUID()}`;
+
+      const created = await ctx.prisma.lesson.create({
+        data: {
+          id,
+          courseId: input.courseId,
+          title: input.title,
+          contentType: input.contentType,
+          contentStatus: 'DRAFT',
+          isHidden: true, // drafts are hidden from students + RAG until publish
+          order: nextOrder,
+          skillCategory: 'ANALYTICS', // default; methodologist refines later
+        },
+      });
+      return { id: created.id };
     }),
 
   /**
