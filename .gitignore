@@ -91,3 +91,13 @@ scripts/backup/cron.log
 
 # Local git worktrees (created by sub-agent workflows)
 .claude/worktrees/
+
+# Tooling / ephemeral artifacts (2026-06-23 hygiene) — regeneratable, never commit
+.superpowers/
+.tmp-slide/
+.playwright-mcp/
+.claude/scheduled_tasks.lock
+screenshots/
+download.html
+scripts/vision-ingest/results/test*.md
+scripts/vision-ingest/results/test-headless-*.md
