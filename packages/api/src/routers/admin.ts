@@ -721,6 +721,49 @@ export const adminRouter = router({
     }),
 
   /**
+   * Load a single lesson's editable fields for the admin text/interactive editor.
+   */
+  getLessonForEdit: adminProcedure
+    .input(z.object({ lessonId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const lesson = await ctx.prisma.lesson.findUnique({
+        where: { id: input.lessonId },
+        select: {
+          id: true,
+          title: true,
+          courseId: true,
+          contentType: true,
+          contentStatus: true,
+          body: true,
+        },
+      });
+      if (!lesson) throw new TRPCError({ code: 'NOT_FOUND' });
+      return lesson;
+    }),
+
+  /**
+   * Save lesson draft content (title + TipTap body).
+   * Plain save: never publishes (contentStatus untouched), never indexes.
+   * Publishing is a separate procedure.
+   */
+  updateLessonBody: adminProcedure
+    .input(
+      z.object({
+        lessonId: z.string(),
+        title: z.string().min(1).max(300),
+        body: z.any(), // TipTap JSON document
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const updated = await ctx.prisma.lesson.update({
+        where: { id: input.lessonId },
+        data: { title: input.title, body: input.body },
+        select: { id: true },
+      });
+      return updated;
+    }),
+
+  /**
    * Update lesson display order.
    */
   updateLessonOrder: adminProcedure
