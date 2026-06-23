@@ -12,7 +12,7 @@ dotenv.config({ path: path.resolve(__dirname, '../../.env') });
 export interface ProposalJob {
   slug: string; title: string; description: string; outcomes: string[];
   axes: string[]; skillBlocks: string[]; marketplace: 'WB' | 'OZON' | 'BOTH';
-  displayOrder: number; lessonIds: string[];
+  displayOrder: number; lessonIds: string[]; isPublished?: boolean;
 }
 
 export function buildJobUpsert(job: ProposalJob) {
@@ -20,7 +20,7 @@ export function buildJobUpsert(job: ProposalJob) {
   const base = {
     title: job.title, description: job.description, outcomes: job.outcomes,
     axes: job.axes, skillBlocks: job.skillBlocks, marketplace: job.marketplace,
-    displayOrder: job.displayOrder, isPublished: true,
+    displayOrder: job.displayOrder, isPublished: job.isPublished ?? true,
   };
   return {
     where: { slug: job.slug },
