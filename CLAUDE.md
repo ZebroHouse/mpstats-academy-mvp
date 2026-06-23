@@ -59,9 +59,11 @@ Sibling project `D:/GpT_docs/Ai_MP_manager/` запустил `prisma db push --
 | v1.16 Бесшовный вход из MPSTATS | Shipped **dark** 2026-06-11 (Phase 64 — публичная ручка `/api/partner/mpstats/enter` → авто-сессия в курс `07_instruments`; untrusted (новый email→авто-создание+сессия, существующий→кука/magic-link), HMAC trusted-ветка dormant; combined «finish setup» баннер (подтверди почту + задай пароль); merge `60e77b6`. Гейт `PARTNER_ENTRY_ENABLED` НЕ задан на проде → инертна до go-live) |
 | v1.17 Cohesive entry pages | Shipped 2026-06-16 (Phase 65 — `/register` + `/login` выведены из `(auth)` в свои тёмные лейауты, переиспользующие маркет-дизайн: `V8Header`+`V8Footer`+Onest+`#0F172A`. /register = сплит форма+промо (4 плашки-тезиса + цена), /login = форма по центру; формы не тронуты. + гайдлайн дизайн-системы. merge `62e69e3`) |
 | v1.18 Design System v2 reskin | Shipped 2026-06-23 (branded-light — продукт сведён к маркет-облику, остаётся светлым: Onest везде, meet-in-middle радиусы, примитивы `DarkIsland`/`BentoCard`, дисциплина палитры. Per-section treatment выбран owner'ом после 3-way визуального сравнения baseline/deep/middle: Избранное+Карточка задачи+Инструменты MPSTATS → deep, Диагностика интро+результаты → middle, остальное baseline. Visual-only. merge `932f597`) |
+| v1.19 Ads playbooks remap | Shipped 2026-06-23 (рекламные плейбуки переразбиты под структуру методологов из Google-листа «Решения задач» (стр.4–29): 17 задач — 14 published + 3 draft + 2 старых дубля unpublish, ось MARKETING, аддитивно. Заодно срезан методологический суффикс `\| Блок, N` в 116 названиях уроков. Чистая правка данных prod-Supabase без деплоя. merge `ee1ff2f`) |
 
 **Remaining work:**
 1. Phase 33-03: CQ Dashboard Setup (на стороне CQ команды).
+2. Ads playbooks — внешние долги от методологов (1 урок дозаписать, 3 пустые задачи, Ozon-версии 9 задач). Раскладка по `scripts/job-mapping/results/ADS-PLAYBOOKS-DEBT.md`, когда уроки придут скопом.
 
 _Done since 2026-05-22: Phase 57 polish (PR #9 hidden-lesson auto-sync) + Track B (PR #10) + admin-analytics fix (PR #11) + Phase 58 (PR #12, 2026-05-28) + Phase 60 base (PR #13, 2026-05-28) + Phase 60 register-banner hotfix (PR #14, 2026-05-28) + Phase 59 v2 static-deck diagnostic (PR #16, 2026-06-01) + Обучение 2.0 release (Phase 61 + 61.1 + DAU/WAU/MAU, master `4145a68`, 2026-06-05)._
 
@@ -109,7 +111,19 @@ Archive directory `D:/GpT_docs/MPSTATS ACADEMY ADAPTIVE LEARNING/MAAL-phase55/` 
 
 **Внимание (исторический lesson):** CP хранит `amount` на своей стороне на момент создания подписки. При смене цен отменять старые ACTIVE подписки чтобы автосписания пошли по новым тарифам.
 
-## Last Session (2026-06-23) — Design System v2 «branded-light» рескин продукта shipped to prod
+## Last Session (2026-06-23) — Ads playbooks remap под методологов + чистка названий уроков shipped to prod
+
+**Merge `ee1ff2f` (`--no-ff` `feature/ads-playbooks-remap` → master, запушено).** Методологи переразбили блок «Реклама» в Google-листе «Решения задач» (`1xs0TkCrvu4...`, gid=70389265, **строки 4–29**) на **17 задач/плейбуков**. Пересобрали раздел «решения под задачу» (`Job`/`JobLesson`, ось MARKETING). **Аддитивно** (решение owner): нейронка/визуал/контент/аналитика/Ozon-плейбуки НЕ трогали — обновим, когда методологи доготовят те блоки.
+
+**Что на проде (чистая правка данных в shared prod-Supabase, БЕЗ схемы/кода/деплоя):**
+- **14 published** WB-плейбуков (уроки + AI-эмбеддинги) + **3 draft** (`isPublished=false`: выкупы/защита бренда/юр-риски, скрыты) + **2 старых дубля сняты с публикации** (`provesti-analiz-i-optimizaciyu-reklamnyh-kampaniy-na-wildber`, `nastroit-i-optimizirovat-reklamnye-kampanii-s-ispolzovaniem-`). Published-джоб 29→41. Уроки сматчены на курс `02_ads`; axes/skillBlocks выведены из самих уроков.
+- **Чистка названий:** срезан методологический суффикс `Название \| Блок-источник, N` (артефакт skill-batch ingest, торчал в UI) — **116 уроков по всем курсам**. Защищены **4** (суффикс = единственный различитель: FBO/FBS на Ozon, «Ищем категории») + 2 легитимных `\|` не тронуты. Rollback-снапшот `scripts/job-mapping/results/title-cleanup-snapshot.json`.
+
+**Скрипты (idempotent):** `scripts/seed/seed-ads-playbooks.ts` (upsert + unpublish ретайра, `--dry-run`, pre-flight на lessonId), `scripts/seed/strip-lesson-title-suffix.ts` (`--apply`), `seed-jobs.ts` (`buildJobUpsert` теперь уважает per-job `isPublished`). Вход сида: `results/JOB-PROPOSAL-ads.json`. Запуск: `NODE_OPTIONS=--dns-result-order=ipv4first npx tsx ...`; **`embed-jobs.ts` требует `--conditions=react-server`** (обход `server-only` при запуске вне Next через tsx).
+
+**Долги** (внешние, от методологов) — `scripts/job-mapping/results/ADS-PLAYBOOKS-DEBT.md`: 1 урок дозаписать («Чистка неэффективных запросов»), 3 пустые задачи, Ozon-версии 9 задач, опечатки в листе. **Процедура раскладки, когда уроки придут скопом** — в доке. Память: `project_ads_playbooks_remap.md`.
+
+## Previous Session (2026-06-23) — Design System v2 «branded-light» рескин продукта shipped to prod
 
 **Merge `932f597` (`--no-ff` `design-system-v2-reskin` → master) + prod deploy `maal-web-1`.** Продукт сведён к маркетинговому облику, **остаётся светлым** (Onest везде, meet-in-middle радиусы, тёмные острова для глубины, дисциплина палитры). Спек `docs/design-system/v2-product-alignment-spec.md`, гайдлайн `docs/design-system/{README,tokens,dark,light}.md`.
 
