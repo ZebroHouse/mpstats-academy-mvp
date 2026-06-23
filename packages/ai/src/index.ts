@@ -14,6 +14,9 @@ export type { ModelType } from './openrouter';
 // Embedding service
 export { embedQuery, embedBatch, EMBEDDING_DIMS } from './embeddings';
 
+// Text/interactive lesson indexing
+export { extractPlainText, chunkText, indexLessonText } from './text-index';
+
 // Retrieval service
 export { searchChunks, getChunksForLesson, formatTimecode } from './retrieval';
 export type { ChunkSearchResult, SearchOptions } from './retrieval';
