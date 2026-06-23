@@ -1,0 +1,144 @@
+{
+  "generated": "batch-17-06-26",
+  "matched": [
+    {
+      "filePath": "E:/Academy Courses/skills/analytics/assortment/003_abc_analysis_theory.mp4",
+      "lessonId": "skill_analytics_assortment_003",
+      "title": "Суть и технология ABC-анализа",
+      "courseId": "01_analytics",
+      "fileExists": true,
+      "fileSizeMB": 178,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:/Academy Courses/skills/analytics/assortment/004_abc_analysis_practice.mp4",
+      "lessonId": "skill_analytics_assortment_004",
+      "title": "Практика ABC-анализа",
+      "courseId": "01_analytics",
+      "fileExists": true,
+      "fileSizeMB": 630,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:/Academy Courses/skills/analytics/assortment/005_xyz_focus_products.mp4",
+      "lessonId": "skill_analytics_assortment_005",
+      "title": "XYZ — как выбрать фокусные товары",
+      "courseId": "01_analytics",
+      "fileExists": true,
+      "fileSizeMB": 170,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:/Academy Courses/skills/analytics/assortment/006_xyz_analysis_practice.mp4",
+      "lessonId": "skill_analytics_assortment_006",
+      "title": "Практика XYZ-анализа",
+      "courseId": "01_analytics",
+      "fileExists": true,
+      "fileSizeMB": 328,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:/Academy Courses/skills/analytics/product_lifecycle/001_lifecycle_practice.mp4",
+      "lessonId": "skill_analytics_product_lifecycle_001",
+      "title": "ЖЦП — Практика",
+      "courseId": "01_analytics",
+      "fileExists": true,
+      "fileSizeMB": 223,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:/Academy Courses/skills/analytics/turnover/001_turnover.mp4",
+      "lessonId": "skill_analytics_turnover_001",
+      "title": "Оборачиваемость",
+      "courseId": "01_analytics",
+      "fileExists": true,
+      "fileSizeMB": 299,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:/Academy Courses/skills/analytics/card_scanning/001_diagonal_scanning_theory.mp4",
+      "lessonId": "skill_analytics_card_scanning_001",
+      "title": "Диагональное сканирование карточек — Теория",
+      "courseId": "01_analytics",
+      "fileExists": true,
+      "fileSizeMB": 200,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:/Academy Courses/skills/analytics/card_scanning/002_diagonal_scanning_practice.mp4",
+      "lessonId": "skill_analytics_card_scanning_002",
+      "title": "Диагональное сканирование карточек — Практика",
+      "courseId": "01_analytics",
+      "fileExists": true,
+      "fileSizeMB": 345,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:/Academy Courses/skills/finance/pl_economics/001_pl_structure_wb.mp4",
+      "lessonId": "skill_finance_pl_economics_001",
+      "title": "Структура доходов и расходов на WB — как читать P&L",
+      "courseId": "01_analytics",
+      "fileExists": true,
+      "fileSizeMB": 243,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:/Academy Courses/skills/finance/pl_economics/002_pl_pidata.mp4",
+      "lessonId": "skill_finance_pl_economics_002",
+      "title": "Как считать P&L в сервисе Pi-Data",
+      "courseId": "01_analytics",
+      "fileExists": true,
+      "fileSizeMB": 365,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:/Academy Courses/skills/operations/supply/001_supply_strategy.mp4",
+      "lessonId": "skill_operations_supply_001",
+      "title": "Стратегия поставок. Поставка и обеление бизнеса",
+      "courseId": "01_analytics",
+      "fileExists": true,
+      "fileSizeMB": 598,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:/Academy Courses/skills/operations/logistics/001_logistics_ozon.mp4",
+      "lessonId": "skill_operations_logistics_001",
+      "title": "Как работает логистика OZON",
+      "courseId": "01_analytics",
+      "fileExists": true,
+      "fileSizeMB": 478,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:/Academy Courses/skills/operations/logistics/002_logistics_wildberries.mp4",
+      "lessonId": "skill_operations_logistics_002",
+      "title": "Как работает логистика Wildberries",
+      "courseId": "01_analytics",
+      "fileExists": true,
+      "fileSizeMB": 227,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:/Academy Courses/skills/operations/geography/001_geography_ozon.mp4",
+      "lessonId": "skill_operations_geography_001",
+      "title": "География заказов на OZON",
+      "courseId": "01_analytics",
+      "fileExists": true,
+      "fileSizeMB": 626,
+      "extension": ".mp4"
+    },
+    {
+      "filePath": "E:/Academy Courses/skills/operations/geography/002_geography_wildberries.mp4",
+      "lessonId": "skill_operations_geography_002",
+      "title": "География заказов на Wildberries",
+      "courseId": "01_analytics",
+      "fileExists": true,
+      "fileSizeMB": 619,
+      "extension": ".mp4"
+    }
+  ],
+  "stats": {
+    "total": 15,
+    "matched": 15
+  }
+}

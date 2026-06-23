@@ -4,6 +4,21 @@ description: Detailed session notes for all MAAL development sessions (phases 1-
 type: project
 ---
 
+## Session (2026-06-22) — Batch 17.06.26 «analytics» Phase B ingest (15 уроков LIVE)
+
+**Пачка новых навыковых уроков 17.06.26 залита и видима на проде в курсе `01_analytics`.** Phase A (транскрипт→чанки→embeddings→Supabase) сделана ранее в репо `E:/Academy Courses`; эта сессия — Phase B в MAAL. Полный handoff: `E:/Academy Courses/.claude/handoffs/2026-06-22-batch-17-06-26-analytics.md`. Durable-факты пайплайна: `~/.claude/projects/.../memory/project_skill_lesson_ingest_pipeline.md`.
+
+1. **Классификация** (`scripts/skill-mapping/skill-mapper.ts discover+classify --resume`): 78 уроков (15 пачки + 63 ранее не классифицированных хвоста), 0 ошибок. `classification.json` → 496.
+2. **Хвост из 63 разобран:** все имели Lesson-запись + видео; 21 реальный академический урок получил `skillBlocks`. **42 урока `07_instruments` (партнёрка) осознанно не трогали** — изоляция через `Course.partnerKey`, не через skillBlocks.
+3. **Seed** (`scripts/seed/seed-skill-lessons.ts`): 15 уроков созданы, блоки на 454 урока всего.
+4. **Решение владельца:** все 15 (analytics+finance+ops) → `01_analytics` (#109–123, в хвост), «так хотели методологи». `skillCategory` оставлены точными (ANALYTICS 8/FINANCE 2/OPERATIONS 5). Контейнеры `skill_finance`/`skill_operations` заведены, но пусты (staging).
+5. **Kinescope:** 15 видео (5.4 ГБ) → папка `01_analytics` (`71777756...`), `videoId`/`videoUrl` проставлены, 0 ошибок. Map: `scripts/kinescope-video-map-batch-17-06-26.json`.
+6. **`isHidden` снят** → уроки живые. Верификация прод-БД зелёная (123 урока, 0 дублей `order`, партнёрка 0 skillBlocks).
+
+**Доработан `seed-skill-lessons.ts` (uncommitted в рабочем дереве, лежит на ветке `design-system-v2-reskin` — вынести на профильную ветку):** `AXIS_TO_CATEGORY`/`AXIS_TO_COURSE` на все 5 осей + throw на неизвестную (был молчаливый фолбэк finance/ops→skill_marketing+ANALYTICS), 2 контейнера, контейнер-уникальный `order` (rename_map order по блоку ломал `@@unique([courseId,order])`), мигрированные уроки не трогаются, partner-skip в Step 3, фикс Json-null count.
+
+**Осталось (не моё):** (1) плейбуки — `JobLesson` строится из ручного `lessonIds` в `JOB-PROPOSAL.validated.json`, 15 уроков туда не попадут без контент-команды; (2) закоммитить фиксы seed-скрипта; (3) спот-чек воспроизведения 1–2 уроков; (4) судьба папки-источника. **Готча:** локальные tsx→Supabase падали из-за битого IPv6 на ПК → `NODE_OPTIONS='--dns-result-order=ipv4first'` (тот же баг давал «зависание» прода в браузере локально; прод здоров).
+
 ## Session 22 (2026-04-30, session 2) — Phase 52 Content Triggers
 
 **Phase 52 — Content Triggers. Закодено в master, ждёт staging deploy.**

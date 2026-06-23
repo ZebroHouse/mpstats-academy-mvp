@@ -2,8 +2,8 @@
   "phase": "classification",
   "model": "openai/gpt-4.1-nano",
   "taxonomy_timestamp": "2026-04-21T19:25:00.000Z",
-  "timestamp": "2026-04-22T07:07:40.979Z",
-  "total_lessons": 418,
+  "timestamp": "2026-06-22T13:25:59.069Z",
+  "total_lessons": 496,
   "lessons": [
     {
       "lesson_id": "01_analytics_m00_bonus_autobidder_001",
@@ -1608,6 +1608,16 @@
       "confidence": "high"
     },
     {
+      "lesson_id": "03_ai_m01_intro_016",
+      "title": "Контентная воронка: Что → Зачем → Как",
+      "skill_blocks": [
+        "CONTENT/copywriting",
+        "CONTENT/video_content",
+        "CONTENT/neural_content"
+      ],
+      "confidence": "high"
+    },
+    {
       "lesson_id": "03_ai_m02_neuroanalytics_001",
       "title": "Сбор данных о конкурентах для нейросети | Как найти слабые места конкурентов, 1",
       "skill_blocks": [
@@ -1912,6 +1922,14 @@
         "CONTENT/copywriting"
       ],
       "confidence": "medium"
+    },
+    {
+      "lesson_id": "03_ai_m04_neurovideo_008",
+      "title": "Как получить доступ к Photoshop со скидкой",
+      "skill_blocks": [
+        "CONTENT/neural_content"
+      ],
+      "confidence": "high"
     },
     {
       "lesson_id": "03_ai_m04_neurovideo_009",
@@ -3703,6 +3721,34 @@
       "confidence": "low"
     },
     {
+      "lesson_id": "06_express_c04_product_choice_m01_start_002",
+      "title": "Навигация внутри курса",
+      "skill_blocks": [
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/market_trends",
+        "ANALYTICS/product_metrics"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "06_express_c04_product_choice_m01_start_003",
+      "title": "Видеоуроки",
+      "skill_blocks": [
+        "ANALYTICS/competitor_analysis"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "06_express_c04_product_choice_m01_start_004",
+      "title": "Материалы и внешние ссылки",
+      "skill_blocks": [
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/data_tools",
+        "CONTENT/neural_content"
+      ],
+      "confidence": "high"
+    },
+    {
       "lesson_id": "06_express_c04_product_choice_m01_start_005",
       "title": "Типичные ошибки при выборе товара",
       "skill_blocks": [
@@ -3919,6 +3965,414 @@
       "confidence": "high"
     },
     {
+      "lesson_id": "07_instruments_m01_bidder_001",
+      "title": "Биддер. Полный обзор",
+      "skill_blocks": [
+        "MARKETING/autobidder"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m01_bidder_002",
+      "title": "Журнал продвижения",
+      "skill_blocks": [
+        "MARKETING/ad_strategy",
+        "ANALYTICS/sales_funnel",
+        "CONTENT/neural_analytics"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m01_bidder_003",
+      "title": "Проверка рекламных позиций",
+      "skill_blocks": [
+        "MARKETING/ad_strategy",
+        "MARKETING/ad_campaign_setup",
+        "MARKETING/ad_optimization"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m01_bidder_004",
+      "title": "Пульс рекламы",
+      "skill_blocks": [
+        "ANALYTICS/sales_funnel",
+        "ANALYTICS/data_tools"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m02_va_wb_001",
+      "title": "Категории",
+      "skill_blocks": [
+        "ANALYTICS/assortment_management",
+        "ANALYTICS/market_trends",
+        "ANALYTICS/product_metrics"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m02_va_wb_002",
+      "title": "Группы",
+      "skill_blocks": [
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/assortment_management",
+        "ANALYTICS/target_audience"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m02_va_wb_003",
+      "title": "Товары в поиске",
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/market_trends",
+        "ANALYTICS/target_audience"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m02_va_wb_004",
+      "title": "Поиск по SKU",
+      "skill_blocks": [
+        "ANALYTICS/target_audience",
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/assortment_management"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m02_va_wb_005",
+      "title": "Анализ характеристик SKU",
+      "skill_blocks": [
+        "ANALYTICS/product_niche_selection",
+        "ANALYTICS/assortment_management",
+        "ANALYTICS/target_audience"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m02_va_wb_006",
+      "title": "Продавцы",
+      "skill_blocks": [
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/target_audience",
+        "CONTENT/reviews_management"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "lesson_id": "07_instruments_m02_va_wb_007",
+      "title": "Анализ отзывов",
+      "skill_blocks": [
+        "ANALYTICS/target_audience",
+        "ANALYTICS/market_trends"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m03_va_ozon_001",
+      "title": "Выбор ниши",
+      "skill_blocks": [
+        "ANALYTICS/assortment_management",
+        "ANALYTICS/market_trends",
+        "ANALYTICS/product_metrics"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m03_va_ozon_002",
+      "title": "Категории",
+      "skill_blocks": [
+        "ANALYTICS/product_niche_selection",
+        "ANALYTICS/assortment_management",
+        "ANALYTICS/market_trends"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m03_va_ozon_003",
+      "title": "Группы",
+      "skill_blocks": [
+        "ANALYTICS/assortment_management",
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/target_audience"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m03_va_ozon_004",
+      "title": "Поиск по SKU",
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/product_niche_selection",
+        "ANALYTICS/market_trends"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m03_va_ozon_005",
+      "title": "Анализ характеристик SKU",
+      "skill_blocks": [
+        "ANALYTICS/product_niche_selection",
+        "ANALYTICS/target_audience",
+        "CONTENT/copywriting"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m03_va_ozon_006",
+      "title": "Бренды",
+      "skill_blocks": [
+        "ANALYTICS/assortment_management",
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/target_audience"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m03_va_ozon_007",
+      "title": "Продавцы",
+      "skill_blocks": [
+        "ANALYTICS/assortment_management",
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/target_audience"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m04_cabinet_wb_001",
+      "title": "Кабинет Wildberries. Обзор",
+      "skill_blocks": [
+        "ANALYTICS/market_trends",
+        "OPERATIONS/platform_tools",
+        "MARKETING/ad_strategy"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m04_cabinet_wb_002",
+      "title": "Сводка",
+      "skill_blocks": [
+        "ANALYTICS/sales_funnel",
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/target_audience"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m04_cabinet_wb_003",
+      "title": "Продажи и заказы",
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/sales_funnel",
+        "ANALYTICS/assortment_management"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m04_cabinet_wb_004",
+      "title": "Загрузка себестоимости",
+      "skill_blocks": [
+        "OPERATIONS/inventory_management",
+        "OPERATIONS/process_automation",
+        "ANALYTICS/product_metrics"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m04_cabinet_wb_005",
+      "title": "Расчёт поставки",
+      "skill_blocks": [
+        "ANALYTICS/assortment_management",
+        "ANALYTICS/product_metrics",
+        "OPERATIONS/process_automation"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m05_seo_001",
+      "title": "Вступление и результаты поиска (SERP)",
+      "skill_blocks": [
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/market_trends",
+        "ANALYTICS/product_metrics"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m05_seo_002",
+      "title": "Расширение запросов",
+      "skill_blocks": [
+        "MARKETING/seo_optimization"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m05_seo_003",
+      "title": "Поиск кластеров",
+      "skill_blocks": [],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m05_seo_004",
+      "title": "Проверка группы запросов",
+      "skill_blocks": [
+        "ANALYTICS/target_audience",
+        "ANALYTICS/market_trends",
+        "ANALYTICS/product_niche_selection"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m05_seo_005",
+      "title": "Мониторинг позиций",
+      "skill_blocks": [
+        "ANALYTICS/target_audience",
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/market_trends"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "lesson_id": "07_instruments_m05_seo_006",
+      "title": "Проверка карточки товара",
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/target_audience",
+        "MARKETING/seo_optimization"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m05_seo_007",
+      "title": "Товары",
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "OPERATIONS/platform_tools",
+        "ANALYTICS/assortment_management"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m05_seo_008",
+      "title": "Бренды",
+      "skill_blocks": [
+        "ANALYTICS/target_audience",
+        "ANALYTICS/market_trends",
+        "ANALYTICS/product_metrics"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m05_seo_009",
+      "title": "AI-инструменты",
+      "skill_blocks": [
+        "CONTENT/neural_content",
+        "CONTENT/neural_analytics",
+        "CONTENT/copywriting"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m06_autoresponses_001",
+      "title": "Автоответы",
+      "skill_blocks": [
+        "MARKETING/autobidder",
+        "CONTENT/copywriting",
+        "ANALYTICS/target_audience"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "lesson_id": "07_instruments_m07_external_ads_001",
+      "title": "Внешняя реклама",
+      "skill_blocks": [
+        "MARKETING/external_advertising"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m08_ym_groups_001",
+      "title": "Группы Яндекс Маркет",
+      "skill_blocks": [
+        "ANALYTICS/assortment_management",
+        "ANALYTICS/market_trends",
+        "ANALYTICS/product_metrics"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m09_my_cards_001",
+      "title": "Мои карточки",
+      "skill_blocks": [
+        "CONTENT/neural_content",
+        "CONTENT/neural_analytics",
+        "CONTENT/copywriting"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m10_plugin_001",
+      "title": "Плагин",
+      "skill_blocks": [
+        "ANALYTICS/market_trends",
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/target_audience"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m11_ruka_na_pulse_001",
+      "title": "Рука на Пульсе (РнП)",
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/target_audience",
+        "ANALYTICS/sales_funnel"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "lesson_id": "07_instruments_m12_repricer_ozon_001",
+      "title": "Репрайсер Ozon",
+      "skill_blocks": [
+        "ANALYTICS/product_niche_selection",
+        "MARKETING/ad_strategy",
+        "OPERATIONS/ozon_specifics"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "lesson_id": "07_instruments_m13_repricer_wb_001",
+      "title": "Репрайсер Wildberries",
+      "skill_blocks": [
+        "MARKETING/autobidder",
+        "OPERATIONS/process_automation",
+        "ANALYTICS/product_metrics"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "lesson_id": "07_instruments_m14_price_management_001",
+      "title": "Управление ценой и скидками",
+      "skill_blocks": [
+        "FINANCE/pricing",
+        "OPERATIONS/process_automation",
+        "MARKETING/ad_strategy"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "07_instruments_m15_photo_editor_001",
+      "title": "Фоторедактор",
+      "skill_blocks": [
+        "CONTENT/neural_content",
+        "CONTENT/neural_analytics",
+        "CONTENT/video_content"
+      ],
+      "confidence": "medium"
+    },
+    {
       "lesson_id": "skill_analytics_assortment_001",
       "title": null,
       "skill_blocks": [
@@ -3933,6 +4387,92 @@
       "title": null,
       "skill_blocks": [
         "ANALYTICS/assortment_management"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_analytics_assortment_003",
+      "title": null,
+      "skill_blocks": [
+        "ANALYTICS/assortment_management"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_analytics_assortment_004",
+      "title": null,
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/assortment_management",
+        "ANALYTICS/product_niche_selection"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_analytics_assortment_005",
+      "title": null,
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/assortment_management",
+        "ANALYTICS/market_trends"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_analytics_assortment_006",
+      "title": null,
+      "skill_blocks": [
+        "ANALYTICS/assortment_management"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_analytics_card_scanning_001",
+      "title": null,
+      "skill_blocks": [
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/assortment_management",
+        "ANALYTICS/target_audience"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_analytics_card_scanning_002",
+      "title": null,
+      "skill_blocks": [
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/product_metrics",
+        "CONTENT/reviews_management"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_analytics_category_selection_002",
+      "title": "Практика анализа категории для действующей товарной матрицы | Критерии отбора категорий товара, 2",
+      "skill_blocks": [
+        "ANALYTICS/market_trends",
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/target_audience"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_analytics_category_selection_003",
+      "title": "Поиск новой категории. Определяем свои вводные",
+      "skill_blocks": [
+        "ANALYTICS/target_audience",
+        "FINANCE/business_planning",
+        "OPERATIONS/inventory_management"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "lesson_id": "skill_analytics_category_selection_004",
+      "title": "Ищем потенциально интересные категории| Критерии отбора категорий товара, 4",
+      "skill_blocks": [
+        "ANALYTICS/market_trends",
+        "ANALYTICS/product_niche_selection",
+        "ANALYTICS/target_audience"
       ],
       "confidence": "high"
     },
@@ -3977,6 +4517,145 @@
       "confidence": "high"
     },
     {
+      "lesson_id": "skill_analytics_internal_analytics_001",
+      "title": "Внутренняя аналитика Wildberries",
+      "skill_blocks": [
+        "ANALYTICS/market_trends",
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/assortment_management"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_analytics_internal_analytics_002",
+      "title": "Внутренняя аналитика OZON",
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/target_audience",
+        "ANALYTICS/market_trends"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_analytics_product_card_improvement_001",
+      "title": "Что убивает продажи фокусных товаров | Как улучшить карточку фокусного товара, 1",
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/market_trends",
+        "ANALYTICS/target_audience"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_analytics_product_card_improvement_002",
+      "title": "Как улучшить карточку фокусного товара | Как улучшить карточку фокусного товара, 2",
+      "skill_blocks": [
+        "ANALYTICS/product_niche_selection",
+        "MARKETING/ad_campaign_setup",
+        "ANALYTICS/target_audience"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_analytics_product_card_improvement_003",
+      "title": "Практика — аудит карточки товара по чек-листу | Как улучшить карточку фокусного товара, 3",
+      "skill_blocks": [
+        "CONTENT/reviews_management",
+        "CONTENT/video_content",
+        "CONTENT/copywriting"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_analytics_product_lifecycle_001",
+      "title": null,
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/market_trends",
+        "ANALYTICS/assortment_management"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_analytics_promo_analysis_002",
+      "title": "Инструменты MPSTATS для анализа акций | Анализ условий акций, 2",
+      "skill_blocks": [
+        "ANALYTICS/market_trends",
+        "MARKETING/ad_strategy",
+        "ANALYTICS/product_niche_selection"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_analytics_promo_analysis_003",
+      "title": "Разбор таблицы для анализа акций | Анализ условий акций, 3",
+      "skill_blocks": [
+        "ANALYTICS/product_niche_selection",
+        "ANALYTICS/target_audience",
+        "ANALYTICS/product_metrics"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_analytics_sales_forecast_001",
+      "title": "План продаж | Прогноз сезонности, трендов, спроса, 1",
+      "skill_blocks": [
+        "ANALYTICS/market_trends",
+        "ANALYTICS/assortment_management",
+        "ANALYTICS/product_metrics"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_analytics_sales_forecast_002",
+      "title": "Как работать с таблицей «План продаж» | Прогноз сезонности, трендов, спроса, 2",
+      "skill_blocks": [
+        "ANALYTICS/market_trends",
+        "ANALYTICS/product_niche_selection",
+        "ANALYTICS/target_audience"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_analytics_strategic_planning_001",
+      "title": "Что нужно для создания стратегии бизнеса на МП | Стратегическое планирование, 1",
+      "skill_blocks": [
+        "ANALYTICS/target_audience",
+        "ANALYTICS/market_trends"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "lesson_id": "skill_analytics_strategic_planning_002",
+      "title": "Выбор стратегии ведения бизнеса на МП | Стратегическое планирование, 2",
+      "skill_blocks": [
+        "ANALYTICS/product_niche_selection",
+        "ANALYTICS/market_trends",
+        "ANALYTICS/target_audience"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_analytics_strategic_planning_003",
+      "title": "Построение стратегии бизнеса на МП | Стратегическое планирование, 3",
+      "skill_blocks": [
+        "ANALYTICS/market_trends",
+        "ANALYTICS/competitor_analysis",
+        "FINANCE/business_planning"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_analytics_strategic_planning_004",
+      "title": "Декомпозиция стратегии бизнеса на МП и контроль реализации | Стратегическое планирование, 4",
+      "skill_blocks": [
+        "ANALYTICS/target_audience",
+        "ANALYTICS/market_trends",
+        "ANALYTICS/assortment_management"
+      ],
+      "confidence": "medium"
+    },
+    {
       "lesson_id": "skill_analytics_target_audience_001",
       "title": null,
       "skill_blocks": [
@@ -4012,6 +4691,34 @@
         "ANALYTICS/target_audience",
         "ANALYTICS/product_niche_selection",
         "ANALYTICS/assortment_management"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_analytics_turnover_001",
+      "title": null,
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/assortment_management",
+        "ANALYTICS/market_trends"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_finance_pl_economics_001",
+      "title": null,
+      "skill_blocks": [
+        "FINANCE/unit_economics"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_finance_pl_economics_002",
+      "title": null,
+      "skill_blocks": [
+        "FINANCE/unit_economics",
+        "FINANCE/cost_management",
+        "FINANCE/business_planning"
       ],
       "confidence": "high"
     },
@@ -4074,6 +4781,51 @@
       "title": null,
       "skill_blocks": [
         "MARKETING/seo_optimization"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_operations_geography_001",
+      "title": null,
+      "skill_blocks": [
+        "OPERATIONS/ozon_specifics",
+        "OPERATIONS/inventory_management",
+        "OPERATIONS/logistics_fbo_fbs"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_operations_geography_002",
+      "title": null,
+      "skill_blocks": [
+        "ANALYTICS/target_audience",
+        "OPERATIONS/ozon_specifics",
+        "OPERATIONS/logistics_fbo_fbs"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_operations_logistics_001",
+      "title": null,
+      "skill_blocks": [
+        "OPERATIONS/logistics_fbo_fbs"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_operations_logistics_002",
+      "title": null,
+      "skill_blocks": [
+        "OPERATIONS/logistics_fbo_fbs"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "skill_operations_supply_001",
+      "title": null,
+      "skill_blocks": [
+        "OPERATIONS/inventory_management",
+        "OPERATIONS/ozon_specifics"
       ],
       "confidence": "high"
     }
