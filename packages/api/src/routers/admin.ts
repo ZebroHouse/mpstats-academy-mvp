@@ -17,6 +17,7 @@ import { refreshBankForCategory } from '../utils/question-bank';
 import { resolveIncludeHidden, canToggleHidden, type AdminRole } from '../utils/visibility';
 import { createClient } from '@supabase/supabase-js';
 import { adminAnalyticsRouter } from './admin-analytics';
+import { indexLessonText } from '@mpstats/ai';
 import type { SkillCategory } from '@mpstats/shared';
 
 // Lazy-initialized Supabase admin client (service role) for email lookups
@@ -761,6 +762,37 @@ export const adminRouter = router({
         select: { id: true },
       });
       return updated;
+    }),
+
+  /**
+   * Publish a draft lesson: index its body into content_chunk FIRST, then flip
+   * contentStatus to PUBLISHED + isHidden=false. If indexing throws, abort —
+   * we never publish unindexed content (students/RAG would see an empty lesson).
+   */
+  publishLesson: adminProcedure
+    .input(z.object({ lessonId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const lesson = await ctx.prisma.lesson.findUnique({
+        where: { id: input.lessonId },
+        select: { id: true, body: true, skillCategory: true },
+      });
+      if (!lesson) throw new TRPCError({ code: 'NOT_FOUND' });
+
+      // Index first; if it fails, abort — never publish unindexed content.
+      const { chunks } = await indexLessonText({
+        prisma: ctx.prisma,
+        lessonId: lesson.id,
+        skillCategory: lesson.skillCategory ?? null,
+        doc: lesson.body as never,
+      });
+
+      const updated = await ctx.prisma.lesson.update({
+        where: { id: lesson.id },
+        data: { contentStatus: 'PUBLISHED', isHidden: false },
+        select: { id: true, contentStatus: true },
+      });
+
+      return { id: updated.id, contentStatus: updated.contentStatus, chunks };
     }),
 
   /**
