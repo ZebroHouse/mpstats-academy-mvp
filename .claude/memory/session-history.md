@@ -4,6 +4,20 @@ description: Detailed session notes for all MAAL development sessions (phases 1-
 type: project
 ---
 
+## Session (2026-06-23) — Git hygiene cleanup (repo → одна ветка master)
+
+**Навели порядок в гите после релиза дизайн-системы (master `bd340b1`).** Repo разросся ветками/worktree/стэшами от параллельных инстансов и зашипленных фаз. Итог — чистый repo: одна ветка `master`, 0 worktree (кроме main), 0 стэшей.
+
+1. **Зависшую работу контент-инжеста** (batch 17.06.26, лежала uncommitted на чужой ветке `design-system-v2-reskin`) перенёс на `chore/skill-lesson-ingest-batch-17-06-26` от `origin/master` и закоммитил (`9ed85c3`): фикс `seed-skill-lessons.ts` + переклассификация (496) + map батча + session-note. Committed-база файлов идентична на обеих ветках → перенос без конфликтов.
+2. **`.gitignore`** дополнен эфемерным мусором (`chore/gitignore-tooling-artifacts`, `08aca29`): `.superpowers/`, `.tmp-slide/`, `.playwright-mcp/`, `screenshots/`, `download.html`, `scheduled_tasks.lock`, vision-ingest `test*.md`. Реальные доки (Track B planы/спека, handoffs, lesson-order snapshot) НЕ игнорируются.
+3. **Удалено:** 27 локальных + 26 remote веток (зашипленное/superseded), 4 worktree, 4 стэша (`git stash clear`), 23 осиротевшие `agent-*` worktree-папки с диска.
+4. **Обе chore-ветки смержены в master** (`--no-ff`, merge `2488d2f`) и удалены (local+remote). master запушен.
+
+**Гочи (детали → память `feedback_git_hygiene_cleanup.md`):**
+- Squash-merged ветки (`track-b` PR#10, `phase-60-banner` PR#14, sprint-2c/3-prep) git видит как `--no-merged` — до-squash коммиты не предки master. Сверять со записями проекта (PR#/hash), не только `git branch --merged`.
+- `git branch -d` (safe) для merged; `-D` для влитых-в-HEAD-но-не-в-upstream (`phase-56-entry-flow`).
+- **Windows long-path:** agent-worktree папки в `.claude/worktrees/` не удаляются ни cmd rd, ни robocopy, ни .NET `Directory.Delete('\\?\…')` (файлы с недопустимыми Linux-именами + пути >260). Работает `npx rimraf` — но exit 2 + удаление с задержкой (проверять `ls`, не exit-код).
+
 ## Session (2026-06-22) — Batch 17.06.26 «analytics» Phase B ingest (15 уроков LIVE)
 
 **Пачка новых навыковых уроков 17.06.26 залита и видима на проде в курсе `01_analytics`.** Phase A (транскрипт→чанки→embeddings→Supabase) сделана ранее в репо `E:/Academy Courses`; эта сессия — Phase B в MAAL. Полный handoff: `E:/Academy Courses/.claude/handoffs/2026-06-22-batch-17-06-26-analytics.md`. Durable-факты пайплайна: `~/.claude/projects/.../memory/project_skill_lesson_ingest_pipeline.md`.
