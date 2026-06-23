@@ -229,12 +229,18 @@ export default function DesignNewV8CoursesPage() {
             <span className="font-bold text-[#121212]">2 990 &#8381;/мес</span>
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
-            <button className="w-full sm:w-auto px-8 h-[52px] sm:h-[62px] rounded-full text-sm font-semibold border-2 border-[#121212] text-[#121212] hover:bg-[#121212] hover:text-white transition-colors">
+            <Link
+              href="/pricing"
+              className="w-full sm:w-auto px-8 h-[52px] sm:h-[62px] inline-flex items-center justify-center rounded-full text-sm font-semibold border-2 border-[#121212] text-[#121212] hover:bg-[#121212] hover:text-white transition-colors"
+            >
               Выбрать курс
-            </button>
-            <button className="w-full sm:w-auto px-8 h-[52px] sm:h-[62px] rounded-full text-sm font-semibold bg-[#2C4FF8] text-white hover:bg-[#1D39C1] transition-colors">
+            </Link>
+            <Link
+              href="/pricing"
+              className="w-full sm:w-auto px-8 h-[52px] sm:h-[62px] inline-flex items-center justify-center rounded-full text-sm font-semibold bg-[#2C4FF8] text-white hover:bg-[#1D39C1] transition-colors"
+            >
               Полный доступ
-            </button>
+            </Link>
           </div>
         </div>
       </section>
@@ -248,9 +254,12 @@ export default function DesignNewV8CoursesPage() {
           <p className="mt-4 text-base sm:text-lg text-white/60 max-w-[520px] mx-auto">
             Пройдите AI-диагностику и получите рекомендации по темам и урокам
           </p>
-          <button className="mt-8 px-8 h-[52px] sm:h-[62px] rounded-full text-base font-semibold bg-[#2C4FF8] text-white hover:bg-[#1D39C1] transition-colors">
+          <Link
+            href="/diagnostic"
+            className="mt-8 px-8 h-[52px] sm:h-[62px] inline-flex items-center justify-center rounded-full text-base font-semibold bg-[#2C4FF8] text-white hover:bg-[#1D39C1] transition-colors"
+          >
             Пройти диагностику
-          </button>
+          </Link>
         </div>
       </section>
 
