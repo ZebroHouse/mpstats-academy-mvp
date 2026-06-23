@@ -7,6 +7,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LearningTabs } from '@/components/learning/LearningTabs';
 import { FavoriteButton } from '@/components/learning/FavoriteButton';
+import { DarkIsland, DarkIslandStat } from '@/components/ui/dark-island';
 import type { inferRouterOutputs } from '@trpc/server';
 import type { AppRouter } from '@mpstats/api';
 import { trpc } from '@/lib/trpc/client';
@@ -49,12 +50,16 @@ export default function FavoritesPage() {
     <div className="space-y-6 animate-fade-in">
       <LearningTabs />
 
-      <div className="animate-slide-up">
-        <h1 className="text-display-sm text-mp-gray-900">Избранное</h1>
-        <p className="text-body text-mp-gray-500 mt-1">
-          Сохранённые уроки, решения и материалы
-        </p>
-      </div>
+      <DarkIsland
+        className="animate-slide-up"
+        title="Избранное"
+        subtitle="Сохранённые уроки, решения и материалы"
+        aside={
+          items.length > 0 ? (
+            <DarkIslandStat value={items.length} label="в избранном" />
+          ) : undefined
+        }
+      />
 
       {/* ── Type-filter chip row ─────────────────────────────────────────── */}
       <div className="flex flex-wrap gap-2">

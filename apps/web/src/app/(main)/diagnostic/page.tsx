@@ -39,8 +39,8 @@ const SKILL_CATEGORIES = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
       </svg>
     ),
-    bgColor: 'bg-mp-pink-100',
-    textColor: 'text-mp-pink-600',
+    bgColor: 'bg-mp-gray-100',
+    textColor: 'text-mp-gray-600',
     description: 'Карточки товаров, фото, видео',
   },
   {
@@ -50,8 +50,8 @@ const SKILL_CATEGORIES = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
       </svg>
     ),
-    bgColor: 'bg-orange-100',
-    textColor: 'text-orange-600',
+    bgColor: 'bg-mp-blue-50',
+    textColor: 'text-mp-blue-500',
     description: 'Логистика, склад, FBO/FBS',
   },
   {
@@ -61,8 +61,8 @@ const SKILL_CATEGORIES = [
         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
     ),
-    bgColor: 'bg-yellow-100',
-    textColor: 'text-yellow-600',
+    bgColor: 'bg-mp-green-100',
+    textColor: 'text-mp-green-600',
     description: 'Unit-экономика, маржа, ROI',
   },
 ];
@@ -133,7 +133,7 @@ export default function DiagnosticPage() {
       {/* Header */}
       <div className="text-center animate-slide-up">
         <Badge variant="analytics" className="mb-4">AI-тестирование</Badge>
-        <h1 className="text-display-sm text-mp-gray-900">
+        <h1 className="font-sans text-3xl sm:text-4xl font-bold tracking-tight text-mp-gray-900">
           {hasPriorResult ? 'Пройти диагностику ещё раз?' : 'Диагностика навыков'}
         </h1>
         <p className="text-body text-mp-gray-500 mt-3 max-w-2xl mx-auto">
@@ -210,8 +210,8 @@ export default function DiagnosticPage() {
       {/* CTA — hidden for repeat users (Перепройти live в DiagnosticSummary) */}
       {!hasPriorResult && (
       <Card variant="gradient" className="shadow-mp-lg animate-slide-up" style={{ animationDelay: '200ms' }}>
-        <CardContent className="py-10 text-center">
-          <h2 className="text-heading-xl text-mp-gray-900 mb-2">
+        <CardContent className="py-12 text-center">
+          <h2 className="font-sans text-2xl sm:text-3xl font-bold tracking-tight text-mp-gray-900 mb-2">
             Готовы узнать свой уровень?
           </h2>
           <p className="text-body text-mp-gray-500 mb-6">
@@ -221,7 +221,7 @@ export default function DiagnosticPage() {
             size="lg"
             onClick={handleStart}
             disabled={isStarting}
-            className="px-10 shadow-mp-md"
+            className="shadow-mp-md"
           >
             {isStarting ? (
               <div className="flex items-center gap-2">
