@@ -3,6 +3,7 @@
 import { useState, useCallback } from 'react';
 import { trpc } from '@/lib/trpc/client';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   ChevronDown,
   ChevronUp,
@@ -11,8 +12,10 @@ import {
   Database,
   Eye,
   EyeOff,
+  Plus,
 } from 'lucide-react';
 import { HideConfirmDialog } from './HideConfirmDialog';
+import { CreateLessonDialog } from './CreateLessonDialog';
 
 type Role = 'USER' | 'ADMIN' | 'SUPERADMIN';
 
@@ -247,6 +250,9 @@ function CourseAccordion({
 
   // Phase 52: notify subscribers on unhide
   const [notifyOnUnhide, setNotifyOnUnhide] = useState(false);
+
+  // Create-lesson dialog state
+  const [createOpen, setCreateOpen] = useState(false);
 
   // --- Lesson order handlers ---
   const handleLessonOrderClick = useCallback((lessonId: string, currentOrder: number) => {
@@ -608,6 +614,13 @@ function CourseAccordion({
               No lessons in this course
             </div>
           )}
+
+          <div className="border-t border-mp-gray-100 p-3 bg-mp-gray-50">
+            <Button variant="outline" size="sm" className="w-full" onClick={() => setCreateOpen(true)}>
+              <Plus className="w-4 h-4 mr-1" /> Создать урок
+            </Button>
+          </div>
+          {createOpen && <CreateLessonDialog courseId={course.id} onClose={() => setCreateOpen(false)} />}
         </div>
       )}
 
