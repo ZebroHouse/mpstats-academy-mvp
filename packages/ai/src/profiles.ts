@@ -13,7 +13,9 @@ export interface RetrievalProfile {
 export const PROFILES = {
   'academy-lesson': {
     name: 'academy-lesson',
-    sourceTypes: ['academy_audio', 'academy_video_frame'],
+    // academy_text = text/interactive lesson bodies indexed on publish (Phase A).
+    // Without it the chat returns zero context for text lessons.
+    sourceTypes: ['academy_audio', 'academy_video_frame', 'academy_text'],
     trustTiers: [1],
     maxResults: 8,
     threshold: 0.5,

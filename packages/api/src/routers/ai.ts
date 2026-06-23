@@ -188,8 +188,9 @@ export const aiRouter = router({
         lessonId,
         limit,
         threshold,
-        // Academy-only scope: exclude external sources (e.g. LagerPro tier=2)
-        sourceTypes: ['academy_audio', 'academy_video_frame'],
+        // Academy-only scope: exclude external sources (e.g. LagerPro tier=2).
+        // academy_text = published text/interactive lesson bodies (Phase A).
+        sourceTypes: ['academy_audio', 'academy_video_frame', 'academy_text'],
         trustTiers: [1],
       });
 
@@ -229,7 +230,8 @@ export const aiRouter = router({
           query: q,
           limit: 30,
           threshold: 0.5,
-          sourceTypes: ['academy_audio', 'academy_video_frame'],
+          // academy_text = published text/interactive lessons surface in /learn search too.
+          sourceTypes: ['academy_audio', 'academy_video_frame', 'academy_text'],
           trustTiers: [1],
         }),
         ctx.prisma.lesson.findMany({
