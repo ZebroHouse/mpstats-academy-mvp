@@ -1,0 +1,530 @@
+{
+  "generatedFrom": "Решения задач / Реклама (rows 4-29)",
+  "jobs": [
+    {
+      "slug": "snizit-drr-i-ostanovit-sliv-byudzheta",
+      "title": "Снизить ДРР и остановить слив бюджета",
+      "description": "Понять, почему реклама тратит деньги и не дает управляемой прибыли",
+      "outcomes": [
+        "Посчитать допустимый ДРР по юнит-экономике",
+        "Найти кампании, которые сливают бюджет",
+        "Оставить только окупаемые рекламные связки"
+      ],
+      "axes": [
+        "FINANCE",
+        "ANALYTICS",
+        "OPERATIONS",
+        "MARKETING"
+      ],
+      "skillBlocks": [
+        "FINANCE/unit_economics",
+        "ANALYTICS/sales_funnel",
+        "ANALYTICS/product_metrics",
+        "OPERATIONS/ozon_specifics",
+        "ANALYTICS/product_niche_selection"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 0,
+      "isPublished": true,
+      "lessonIds": [
+        "02_ads_m04_ads_economics_002",
+        "02_ads_m04_ads_economics_003",
+        "02_ads_m04_ads_economics_004",
+        "02_ads_m04_ads_economics_005",
+        "02_ads_m04_ads_economics_006",
+        "02_ads_m04_ads_economics_007",
+        "02_ads_m04_ads_economics_009",
+        "02_ads_m04_ads_economics_010",
+        "02_ads_m04_ads_economics_011",
+        "02_ads_m07_optimization_001",
+        "02_ads_m07_optimization_002",
+        "02_ads_m07_optimization_004"
+      ]
+    },
+    {
+      "slug": "pochistit-zaprosy-i-ostavit-rabochiy-trafik",
+      "title": "Почистить запросы и оставить рабочий трафик",
+      "description": "Найти причину, почему реклама не крутится или запрос не бустится.",
+      "outcomes": [
+        "Отличить нерабочий запрос от запроса с низкими показами",
+        "Убрать ключи, которые тратят бюджет без заказов",
+        "Вернуть запросы, которые снова начали приносить трафик"
+      ],
+      "axes": [
+        "MARKETING",
+        "ANALYTICS",
+        "OPERATIONS"
+      ],
+      "skillBlocks": [
+        "MARKETING/ad_strategy",
+        "MARKETING/ad_optimization",
+        "ANALYTICS/assortment_management",
+        "OPERATIONS/process_automation",
+        "ANALYTICS/sales_funnel"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 1,
+      "isPublished": true,
+      "lessonIds": [
+        "02_ads_m05_tools_001",
+        "02_ads_m05_tools_002",
+        "02_ads_m05_tools_003",
+        "02_ads_m05_tools_005",
+        "02_ads_m05_tools_006",
+        "02_ads_m06_strategies_009",
+        "02_ads_m07_optimization_001",
+        "02_ads_m07_optimization_003",
+        "02_ads_m07_optimization_004"
+      ]
+    },
+    {
+      "slug": "vybrat-format-reklamy-wb-pod-zadachu",
+      "title": "Выбрать формат рекламы WB под задачу",
+      "description": "Разобраться, какой формат рекламы использовать и как не конфликтовать кампаниям",
+      "outcomes": [
+        "Понять разницу между единой и ручной ставкой и полками",
+        "Выбрать формат рекламы под текущую задачу",
+        "Не давать кампаниям конфликтовать между собой"
+      ],
+      "axes": [
+        "MARKETING",
+        "OPERATIONS",
+        "ANALYTICS",
+        "CONTENT"
+      ],
+      "skillBlocks": [
+        "MARKETING/ad_strategy",
+        "MARKETING/ad_optimization",
+        "OPERATIONS/process_automation",
+        "ANALYTICS/assortment_management",
+        "CONTENT/reviews_management"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 2,
+      "isPublished": true,
+      "lessonIds": [
+        "02_ads_m05_tools_001",
+        "02_ads_m05_tools_002",
+        "02_ads_m05_tools_003",
+        "02_ads_m05_tools_005",
+        "02_ads_m05_tools_006",
+        "02_ads_m05_tools_007"
+      ]
+    },
+    {
+      "slug": "razdelit-rk-po-sku-i-fokusnym-tovaram",
+      "title": "Разделить РК по SKU и фокусным товарам",
+      "description": "Разделить рекламу так, чтобы видеть результат по каждому SKU",
+      "outcomes": [
+        "Разделить рекламные кампании по SKU и фокусным товарам",
+        "Видеть расход и заказы по каждому артикулу",
+        "Не давать слабым SKU съедать бюджет локомотива"
+      ],
+      "axes": [
+        "MARKETING",
+        "OPERATIONS",
+        "ANALYTICS"
+      ],
+      "skillBlocks": [
+        "MARKETING/ad_strategy",
+        "OPERATIONS/process_automation",
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/data_tools",
+        "OPERATIONS/ozon_specifics"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 3,
+      "isPublished": true,
+      "lessonIds": [
+        "02_ads_m04_ads_economics_002",
+        "02_ads_m04_ads_economics_010",
+        "02_ads_m06_strategies_002",
+        "02_ads_m06_strategies_006",
+        "02_ads_m06_strategies_007",
+        "02_ads_m07_optimization_002",
+        "02_ads_m07_optimization_005"
+      ]
+    },
+    {
+      "slug": "nastroit-ezhednevnyy-kontrol-reklamy-i-pribyli",
+      "title": "Настроить ежедневный контроль рекламы и прибыли",
+      "description": "Настроить ежедневный контроль карточек, рекламы и прибыли",
+      "outcomes": [
+        "Собрать минимальный набор ежедневных показателей",
+        "Принимать решения по ставкам, бюджету и запросам по цифрам",
+        "Держать ДРР и прибыль под контролем"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "MARKETING"
+      ],
+      "skillBlocks": [
+        "ANALYTICS/sales_funnel",
+        "ANALYTICS/target_audience",
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/data_tools",
+        "MARKETING/ad_strategy"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 4,
+      "isPublished": true,
+      "lessonIds": [
+        "02_ads_m07_optimization_001",
+        "02_ads_m07_optimization_002",
+        "02_ads_m07_optimization_003",
+        "02_ads_m07_optimization_004",
+        "02_ads_m07_optimization_005"
+      ]
+    },
+    {
+      "slug": "podgotovit-kartochku-k-reklame",
+      "title": "Подготовить карточку к рекламе",
+      "description": "Подготовить слабую карточку к рекламе",
+      "outcomes": [
+        "Довести карточку до готовности к рекламе",
+        "Усилить первый экран, SEO, отзывы и цену",
+        "Не выключать рекламу, а параллельно дорабатывать карточку"
+      ],
+      "axes": [
+        "MARKETING",
+        "ANALYTICS"
+      ],
+      "skillBlocks": [
+        "MARKETING/seo_optimization",
+        "ANALYTICS/target_audience",
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/product_niche_selection"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 5,
+      "isPublished": true,
+      "lessonIds": [
+        "02_ads_m06_strategies_001",
+        "skill_marketing_seo_optimization_002",
+        "skill_marketing_seo_optimization_004",
+        "02_ads_m01_prep_003",
+        "skill_marketing_seo_optimization_003",
+        "02_ads_m01_prep_005",
+        "02_ads_m01_prep_004"
+      ]
+    },
+    {
+      "slug": "ponyat-pochemu-kliki-i-korziny-est-a-zakazov-net",
+      "title": "Понять, почему клики и корзины есть, а заказов нет",
+      "description": "Найти провал в воронке между кликом, корзиной и заказом",
+      "outcomes": [
+        "Найти, на каком шаге воронки теряются заказы",
+        "Проверить цену, отзывы, доставку и понятность карточки",
+        "Поднять конверсию из клика в заказ"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "CONTENT",
+        "MARKETING"
+      ],
+      "skillBlocks": [
+        "ANALYTICS/sales_funnel",
+        "CONTENT/neural_content",
+        "ANALYTICS/target_audience",
+        "ANALYTICS/product_metrics",
+        "MARKETING/ad_strategy"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 6,
+      "isPublished": true,
+      "lessonIds": [
+        "02_ads_m03_visual_ctr_005",
+        "02_ads_m01_prep_003",
+        "02_ads_m07_optimization_003",
+        "02_ads_m03_visual_ctr_007",
+        "02_ads_m03_visual_ctr_008",
+        "02_ads_m03_visual_ctr_009"
+      ]
+    },
+    {
+      "slug": "protestirovat-glavnoe-foto-cherez-a-b-test",
+      "title": "Протестировать главное фото через A/B-тест",
+      "description": "Проверить главное фото и не менять визуал наугад",
+      "outcomes": [
+        "Подготовить и провести A/B-тест главного фото",
+        "Сравнить варианты по CTR и конверсии",
+        "Выбрать фото, которое реально приносит больше заказов"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "CONTENT",
+        "MARKETING"
+      ],
+      "skillBlocks": [
+        "ANALYTICS/sales_funnel",
+        "CONTENT/neural_content",
+        "CONTENT/reviews_management",
+        "CONTENT/copywriting",
+        "ANALYTICS/product_metrics"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 7,
+      "isPublished": true,
+      "lessonIds": [
+        "02_ads_m03_visual_ctr_005",
+        "02_ads_m03_visual_ctr_003",
+        "02_ads_m03_visual_ctr_007",
+        "02_ads_m03_visual_ctr_008",
+        "02_ads_m03_visual_ctr_009"
+      ]
+    },
+    {
+      "slug": "sobrat-seo-yadro-i-proverit-indeksaciyu",
+      "title": "Собрать SEO-ядро и проверить индексацию",
+      "description": "Собрать SEO и проверить индексацию карточки",
+      "outcomes": [
+        "Собрать SEO-ядро для карточки",
+        "Проверить индексацию и релевантность запросов",
+        "Понять, как карточка попадает в выдачу"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "MARKETING"
+      ],
+      "skillBlocks": [
+        "ANALYTICS/product_niche_selection",
+        "MARKETING/seo_optimization",
+        "ANALYTICS/target_audience",
+        "MARKETING/ad_strategy",
+        "ANALYTICS/assortment_management"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 8,
+      "isPublished": true,
+      "lessonIds": [
+        "skill_marketing_seo_optimization_001",
+        "02_ads_m02_top_001",
+        "02_ads_m02_top_002",
+        "02_ads_m02_top_003",
+        "02_ads_m05_tools_001",
+        "02_ads_m06_strategies_001",
+        "02_ads_m06_strategies_002"
+      ]
+    },
+    {
+      "slug": "obnovit-kartochku-bez-poteri-poziciy",
+      "title": "Обновить карточку без потери позиций",
+      "description": "Изменить карточку без обвала рабочих позиций",
+      "outcomes": [
+        "Обновить карточку и удержать позиции в топе",
+        "Безопасно вносить изменения без потери трафика",
+        "Масштабировать карточку-локомотив"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "MARKETING"
+      ],
+      "skillBlocks": [
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/target_audience",
+        "MARKETING/card_conversion",
+        "ANALYTICS/market_trends",
+        "MARKETING/ad_strategy"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 9,
+      "isPublished": true,
+      "lessonIds": [
+        "02_ads_m02_top_004",
+        "02_ads_m02_top_006",
+        "02_ads_m02_top_007",
+        "02_ads_m06_strategies_006",
+        "02_ads_m06_strategies_007",
+        "02_ads_m06_strategies_009",
+        "02_ads_m03_visual_ctr_007",
+        "02_ads_m07_optimization_005"
+      ]
+    },
+    {
+      "slug": "perezapustit-kartochku-posle-prostoya",
+      "title": "Перезапустить карточку после простоя",
+      "description": "Решить, восстанавливать старую карточку или запускать новую",
+      "outcomes": [
+        "Перезапустить карточку после простоя",
+        "Разобраться с неликвидом и склейками",
+        "Заново разогнать продажи по проверенной стратегии"
+      ],
+      "axes": [
+        "MARKETING",
+        "ANALYTICS",
+        "CONTENT"
+      ],
+      "skillBlocks": [
+        "MARKETING/ad_strategy",
+        "ANALYTICS/sales_funnel",
+        "CONTENT/reviews_management",
+        "ANALYTICS/competitor_analysis",
+        "CONTENT/neural_content"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 10,
+      "isPublished": true,
+      "lessonIds": [
+        "02_ads_m03_visual_ctr_005",
+        "02_ads_m06_strategies_009",
+        "02_ads_m06_strategies_014",
+        "02_ads_m06_strategies_004",
+        "02_ads_m07_optimization_003",
+        "02_ads_m06_strategies_002"
+      ]
+    },
+    {
+      "slug": "zapustit-novyy-tovar",
+      "title": "Запустить новый товар",
+      "description": "Запустить новый товар без ожидания, что карточка сама наберет отзывы",
+      "outcomes": [
+        "Подготовить и вывести новый товар в продажу",
+        "Выбрать стратегию ставок для старта",
+        "Оценить эффективность рекламы новинки и вовремя сменить тактику"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "MARKETING",
+        "OPERATIONS"
+      ],
+      "skillBlocks": [
+        "ANALYTICS/product_niche_selection",
+        "MARKETING/ad_strategy",
+        "ANALYTICS/target_audience",
+        "MARKETING/seo_optimization",
+        "OPERATIONS/ozon_specifics"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 11,
+      "isPublished": true,
+      "lessonIds": [
+        "02_ads_m06_strategies_001",
+        "02_ads_m06_strategies_002",
+        "02_ads_m06_strategies_003",
+        "02_ads_m06_strategies_004",
+        "02_ads_m02_top_001",
+        "02_ads_m02_top_002",
+        "02_ads_m02_top_003"
+      ]
+    },
+    {
+      "slug": "ponyat-vydachu-i-rost-poziciy",
+      "title": "Понять выдачу и рост позиций",
+      "description": "Понять, как карточка попадает в выдачу и что влияет на позиции",
+      "outcomes": [
+        "Понять, почему карточка не показывается в выдаче",
+        "Разобраться, как устроен рост позиций",
+        "Связать SEO и рекламу для подъема в выдаче"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "MARKETING"
+      ],
+      "skillBlocks": [
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/competitor_analysis",
+        "MARKETING/ad_strategy",
+        "MARKETING/seo_optimization",
+        "ANALYTICS/sales_funnel"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 12,
+      "isPublished": true,
+      "lessonIds": [
+        "02_ads_m01_prep_001",
+        "skill_marketing_seo_optimization_001",
+        "02_ads_m07_optimization_001",
+        "02_ads_m07_optimization_002",
+        "skill_marketing_seo_optimization_004",
+        "02_ads_m01_prep_004",
+        "02_ads_m05_tools_005"
+      ]
+    },
+    {
+      "slug": "ispolzovat-vykupy",
+      "title": "Использовать выкупы",
+      "description": "Понять, когда выкупы и отзывы оправданы",
+      "outcomes": [
+        "Понять роль выкупов в продвижении",
+        "Использовать выкупы без рисков"
+      ],
+      "axes": [
+        "MARKETING"
+      ],
+      "skillBlocks": [],
+      "marketplace": "WB",
+      "displayOrder": 13,
+      "isPublished": false,
+      "lessonIds": []
+    },
+    {
+      "slug": "podklyuchit-vneshniy-trafik-bez-sliva-byudzheta",
+      "title": "Подключить внешний трафик без слива бюджета",
+      "description": "Решить, когда подключать внешний трафик и медийку, а когда рано",
+      "outcomes": [
+        "Подключить внешний трафик без слива бюджета",
+        "Выбрать форматы работы с блогерами и WB-Медиа",
+        "Оценить окупаемость внешнего трафика"
+      ],
+      "axes": [
+        "MARKETING",
+        "FINANCE",
+        "ANALYTICS"
+      ],
+      "skillBlocks": [
+        "MARKETING/influencer_marketing",
+        "FINANCE/unit_economics",
+        "FINANCE/ad_budgeting",
+        "ANALYTICS/sales_funnel",
+        "MARKETING/external_advertising"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 14,
+      "isPublished": true,
+      "lessonIds": [
+        "02_ads_m04_ads_economics_011",
+        "02_ads_m05_tools_007",
+        "02_ads_m00_bonus_ai_external_004"
+      ]
+    },
+    {
+      "slug": "zaschitit-kartochku-i-brend-ot-kopirovaniya",
+      "title": "Защитить карточку и бренд от копирования",
+      "description": "Защитить контент, бренд и доверие карточки",
+      "outcomes": [
+        "Защитить карточку и бренд от копирования",
+        "Реагировать на копии и недобросовестных конкурентов"
+      ],
+      "axes": [
+        "MARKETING"
+      ],
+      "skillBlocks": [],
+      "marketplace": "BOTH",
+      "displayOrder": 15,
+      "isPublished": false,
+      "lessonIds": []
+    },
+    {
+      "slug": "upravlyat-yuridicheskimi-i-operacionnymi-riskami",
+      "title": "Управлять юридическими и операционными рисками",
+      "description": "Разобраться с юридическими, налоговыми и операционными рисками",
+      "outcomes": [
+        "Управлять юридическими и операционными рисками магазина",
+        "Снизить риски блокировок и штрафов"
+      ],
+      "axes": [
+        "MARKETING"
+      ],
+      "skillBlocks": [],
+      "marketplace": "WB",
+      "displayOrder": 16,
+      "isPublished": false,
+      "lessonIds": []
+    }
+  ],
+  "retire": [
+    "provesti-analiz-i-optimizaciyu-reklamnyh-kampaniy-na-wildber",
+    "nastroit-i-optimizirovat-reklamnye-kampanii-s-ispolzovaniem-"
+  ]
+}
