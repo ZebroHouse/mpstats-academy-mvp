@@ -82,10 +82,8 @@ export async function indexLessonText(args: IndexArgs): Promise<{ chunks: number
     const embedding = await embedQuery(content);
     const vectorLiteral = `[${embedding.join(',')}]`;
     const chunkId = `${lessonId}_text_chunk_${String(i).padStart(3, '0')}`;
-    const skillSql = skillCategory ? `$6::"SkillCategory"` : `NULL`;
-    const params: unknown[] = [
-      chunkId, lessonId, content, vectorLiteral, content.length,
-    ];
+    const skillSql = skillCategory ? `$5::"SkillCategory"` : `NULL`;
+    const params: unknown[] = [chunkId, lessonId, content, vectorLiteral];
     if (skillCategory) params.push(skillCategory);
 
     await prisma.$executeRawUnsafe(
@@ -93,7 +91,7 @@ export async function indexLessonText(args: IndexArgs): Promise<{ chunks: number
          (id, lesson_id, content, embedding, timecode_start, timecode_end,
           token_count, source_type, trust_tier, ${skillCategory ? 'skill_category, ' : ''}created_at)
        VALUES
-         ($1, $2, $3, $4::vector(1536), 0, 0, $5, '${TEXT_SOURCE_TYPE}', 1, ${skillCategory ? skillSql + ', ' : ''}now())
+         ($1, $2, $3, $4::vector(1536), 0, 0, NULL, '${TEXT_SOURCE_TYPE}', 1, ${skillCategory ? skillSql + ', ' : ''}now())
        ON CONFLICT (id) DO UPDATE SET
          content = EXCLUDED.content,
          embedding = EXCLUDED.embedding,
