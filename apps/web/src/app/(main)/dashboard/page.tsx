@@ -4,6 +4,8 @@ import Link from 'next/link';
 import { CalendarCheck, Search, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { DarkIsland, DarkIslandStat } from '@/components/ui/dark-island';
+import { BentoCard } from '@/components/ui/bento-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { SkillRadarChart } from '@/components/charts/RadarChart';
 import { LessonCard } from '@/components/learning/LessonCard';
@@ -47,32 +49,28 @@ const ACTIVITY_ICONS: Record<string, JSX.Element> = {
   ),
 };
 
-// 3 accent entry cards (D-08, UI-SPEC §3). plan→soft-blue, library→soft-green,
-// solutions→gradient.
+// 3 bento entry cards (v2 reskin). plan→blue, library→gray, solutions→dark.
 const ENTRY_CARDS = [
   {
     href: '/learn/plan',
-    variant: 'soft-blue' as const,
+    tone: 'blue' as const,
     icon: CalendarCheck,
-    iconBg: 'bg-mp-blue-200 text-mp-blue-600',
     title: 'Продолжить мой план',
     sub: 'Персональный план на основе диагностики',
     dataTour: 'dashboard-learn-cta',
   },
   {
     href: '/learn/library',
-    variant: 'soft-green' as const,
+    tone: 'gray' as const,
     icon: Search,
-    iconBg: 'bg-mp-green-200 text-mp-green-600',
     title: 'Найти быстрый ответ',
     sub: 'Поиск по урокам и материалам',
     dataTour: undefined,
   },
   {
     href: '/learn/solutions',
-    variant: 'gradient' as const,
+    tone: 'dark' as const,
     icon: Target,
-    iconBg: 'bg-white/70 text-mp-blue-600',
     title: 'Решить задачу',
     sub: 'Инструкции под конкретную задачу',
     dataTour: undefined,
@@ -157,64 +155,46 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      {/* Welcome */}
-      <div className="animate-slide-up" style={{ animationDelay: '0ms' }}>
-        <h1 className="text-display-sm text-mp-gray-900">
-          Привет, {name}!
-        </h1>
-        <p className="text-body text-mp-gray-500 mt-1">
-          Добро пожаловать в MPSTATS Academy
-        </p>
-      </div>
-
-      {/* 3 accent entry cards (D-08) — lead the dashboard above condensed stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 animate-slide-up" style={{ animationDelay: '50ms' }}>
-        {ENTRY_CARDS.map(({ href, variant, icon: Icon, iconBg, title, sub, dataTour }) => (
-          <Link key={href} href={href}>
-            <Card variant={variant} interactive className="h-full p-6" data-tour={dataTour}>
-              <div className={`w-12 h-12 rounded-xl flex items-center justify-center mb-3 ${iconBg}`}>
-                <Icon className="w-6 h-6" />
-              </div>
-              <h2 className="text-heading-lg text-mp-gray-900">{title}</h2>
-              <p className="text-body-sm text-mp-gray-600 mt-1">{sub}</p>
-            </Card>
-          </Link>
-        ))}
-      </div>
-
-      {/* Condensed stats strip (D-08) — all-zero new users get a hint, not dead zeros */}
+      {/* Hero — DarkIsland (v2): greeting + plan CTA + learning stats */}
       {(() => {
         const lessons = dashboard?.stats.totalLessonsCompleted || 0;
         const watch = dashboard?.stats.totalWatchTime || 0;
         const streak = dashboard?.stats.currentStreak || 0;
         const completion = dashboard?.completionPercent || 0;
         const allZero = lessons === 0 && watch === 0 && streak === 0 && completion === 0;
-
-        if (allZero) {
-          return (
-            <p className="text-body-sm text-mp-gray-500 animate-slide-up" style={{ animationDelay: '75ms' }}>
-              Начните с диагностики — и здесь появится ваша статистика обучения.
-            </p>
-          );
-        }
-
         return (
-          <div className="flex flex-wrap gap-x-6 gap-y-2 text-body-sm animate-slide-up" style={{ animationDelay: '75ms' }}>
-            <span className="text-mp-gray-500">
-              Уроков пройдено: <span className="font-semibold text-mp-gray-900">{lessons}</span>
-            </span>
-            <span className="text-mp-gray-500">
-              Время обучения: <span className="font-semibold text-mp-blue-600">{watch} мин</span>
-            </span>
-            <span className="text-mp-gray-500">
-              Дней подряд: <span className="font-semibold text-mp-green-600">{streak}</span>
-            </span>
-            <span className="text-mp-gray-500">
-              Прогресс курса: <span className="font-semibold text-mp-pink-600">{completion}%</span>
-            </span>
-          </div>
+          <DarkIsland
+            className="animate-slide-up"
+            eyebrow="MPSTATS Academy"
+            title={`Привет, ${name}!`}
+            subtitle={
+              allZero
+                ? 'Начните с диагностики — соберём персональный план, и здесь появится ваша статистика.'
+                : 'Продолжайте обучение — ваш персональный план ждёт.'
+            }
+            cta={{
+              label: allZero ? 'Пройти диагностику →' : 'К моему плану →',
+              href: allZero ? '/diagnostic' : '/learn/plan',
+            }}
+            aside={
+              allZero ? undefined : (
+                <div className="flex gap-8">
+                  <DarkIslandStat value={lessons} label="уроков пройдено" />
+                  <DarkIslandStat value={watch} label="минут обучения" />
+                  <DarkIslandStat value={streak} label="дней подряд" />
+                </div>
+              )
+            }
+          />
         );
       })()}
+
+      {/* 3 bento entry cards (v2) */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 animate-slide-up" style={{ animationDelay: '50ms' }}>
+        {ENTRY_CARDS.map(({ href, tone, icon, title, sub, dataTour }) => (
+          <BentoCard key={href} href={href} tone={tone} icon={icon} title={title} sub={sub} dataTour={dataTour} />
+        ))}
+      </div>
 
       <div className="grid lg:grid-cols-3 gap-6 animate-slide-up" style={{ animationDelay: '100ms' }}>
         {/* Left column */}

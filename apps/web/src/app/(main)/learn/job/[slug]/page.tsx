@@ -7,6 +7,7 @@ import { ChevronRight } from 'lucide-react';
 import { trpc } from '@/lib/trpc/client';
 import { Button } from '@/components/ui/button';
 import { FavoriteButton } from '@/components/learning/FavoriteButton';
+import { DarkIsland, DarkIslandStat } from '@/components/ui/dark-island';
 
 export default function JobPage() {
   const { slug } = useParams<{ slug: string }>();
@@ -31,30 +32,22 @@ export default function JobPage() {
         <Link href="/learn" className="hover:text-mp-gray-600">Каталог</Link> · {job.title}
       </div>
 
-      <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
-        <div>
-          {job.marketplace === 'BOTH' && (
-            <span className="text-caption font-bold px-2 py-0.5 rounded bg-purple-100 text-purple-700">WB + Ozon</span>
-          )}
-          <h1 className="text-display-sm text-mp-gray-900 mt-2">{job.title}</h1>
-          <p className="text-body text-mp-gray-500 mt-1 max-w-2xl">{job.description}</p>
-          <p className="text-body-sm text-mp-gray-400 mt-2">
-            {job.lessonCount} уроков · прогресс {job.completedLessons}/{job.lessonCount}
-          </p>
-        </div>
-        <div className="flex flex-col gap-2 shrink-0">
-          {nextLesson && (
-            <Link href={`/learn/${nextLesson.id}`}>
-              <Button className="w-full">Продолжить задачу →</Button>
-            </Link>
-          )}
-          <FavoriteButton
-            itemType="JOB"
-            itemId={job.id}
-            initialFavorited={favorited}
-            className="self-start"
-          />
-        </div>
+      <DarkIsland
+        className="animate-slide-up"
+        eyebrow={job.marketplace === 'BOTH' ? 'WB + Ozon' : undefined}
+        title={job.title}
+        subtitle={job.description}
+        cta={nextLesson ? { label: 'Продолжить задачу →', href: `/learn/${nextLesson.id}` } : undefined}
+        aside={<DarkIslandStat value={`${pct}%`} label={`${job.completedLessons}/${job.lessonCount} уроков`} />}
+      />
+
+      <div className="flex items-center gap-3">
+        <FavoriteButton
+          itemType="JOB"
+          itemId={job.id}
+          initialFavorited={favorited}
+        />
+        <span className="text-body-sm text-mp-gray-500">Добавить задачу в избранное</span>
       </div>
 
       <div className="h-2 bg-mp-gray-200 rounded-full overflow-hidden">

@@ -3,7 +3,8 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const cardVariants = cva(
-  'rounded-xl border text-card-foreground transition-all duration-200',
+  // v2 reskin: softer corners (rounded-2xl) closer to marketing cards.
+  'rounded-2xl border text-card-foreground transition-all duration-200',
   {
     variants: {
       variant: {

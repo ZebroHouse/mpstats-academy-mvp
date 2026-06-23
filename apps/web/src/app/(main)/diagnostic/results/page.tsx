@@ -99,7 +99,7 @@ export default function DiagnosticResultsPage() {
     );
   }
 
-  const scoreColor = results.accuracy >= 70 ? 'text-mp-green-500' : results.accuracy >= 50 ? 'text-yellow-500' : 'text-red-500';
+  const scoreColor = results.accuracy >= 70 ? 'text-mp-green-500' : results.accuracy >= 50 ? 'text-mp-blue-500' : 'text-mp-pink-500';
 
   return (
     <div className="max-w-4xl mx-auto space-y-6">
@@ -110,7 +110,7 @@ export default function DiagnosticResultsPage() {
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
-        <h1 className="text-display-sm text-mp-gray-900">Диагностика завершена!</h1>
+        <h1 className="font-sans text-3xl sm:text-4xl font-bold tracking-tight text-mp-gray-900">Диагностика завершена!</h1>
         <p className="text-body text-mp-gray-500 mt-2">
           Вы ответили на {results.totalQuestions} вопросов
         </p>
@@ -190,7 +190,7 @@ export default function DiagnosticResultsPage() {
               .map((gap) => (
                 <div
                   key={gap.category}
-                  className="flex flex-wrap items-center gap-2 sm:gap-0 sm:justify-between p-4 border border-mp-gray-200 rounded-xl hover:bg-mp-gray-50 transition-colors"
+                  className="flex flex-wrap items-center gap-2 sm:gap-0 sm:justify-between p-4 border border-mp-gray-200 rounded-2xl hover:bg-mp-gray-50 transition-colors"
                 >
                   <div className="flex items-center gap-4">
                     <div className="text-center">
@@ -253,7 +253,7 @@ export default function DiagnosticResultsPage() {
         <CardContent className="py-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div>
-              <h3 className="text-heading-xl text-mp-gray-900">
+              <h3 className="font-sans text-2xl sm:text-3xl font-bold tracking-tight text-mp-gray-900">
                 Готов персональный план обучения
               </h3>
               <p className="text-body text-mp-gray-500 mt-1">

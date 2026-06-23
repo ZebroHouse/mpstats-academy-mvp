@@ -3,7 +3,8 @@ import { cva, type VariantProps } from 'class-variance-authority';
 import { cn } from '@/lib/utils';
 
 const inputVariants = cva(
-  'flex w-full rounded-lg border bg-white px-4 py-2.5 text-body text-mp-gray-900 transition-all duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-mp-gray-400 focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-mp-gray-50 disabled:opacity-50',
+  // v2 reskin: rounded-xl inputs to match softer card/button corners.
+  'flex w-full rounded-xl border bg-white px-4 py-2.5 text-body text-mp-gray-900 transition-all duration-200 file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-mp-gray-400 focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-mp-gray-50 disabled:opacity-50',
   {
     variants: {
       variant: {

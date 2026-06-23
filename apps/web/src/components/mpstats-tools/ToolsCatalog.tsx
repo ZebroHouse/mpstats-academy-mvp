@@ -6,7 +6,11 @@ import { ChevronDown, ChevronRight, Play, Wrench } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LogoIcon } from '@/components/shared/Logo';
+import { DarkIsland } from '@/components/ui/dark-island';
 import { trpc } from '@/lib/trpc/client';
+
+// MPSTATS partner brand accent (green play-mark).
+const MPSTATS_GREEN = '#17BF50';
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -75,13 +79,22 @@ export function ToolsCatalog({ notFound = false }: { notFound?: boolean }) {
 
   return (
     <div className="space-y-6 animate-fade-in">
-      {/* ── Page header ─────────────────────────────────────────────────── */}
-      <div className="animate-slide-up">
-        <h1 className="text-display-sm text-mp-gray-900">Инструменты MPSTATS</h1>
-        <p className="text-body text-mp-gray-500 mt-1">
-          Бесплатные обучающие материалы по сервисам MPSTATS — открыты всем.
-        </p>
-      </div>
+      {/* ── Page header — DarkIsland (v2) with green MPSTATS brand accent ─── */}
+      <DarkIsland
+        className="animate-slide-up"
+        eyebrow="Партнёрский курс"
+        title="Инструменты MPSTATS"
+        subtitle="Бесплатные обучающие материалы по сервисам MPSTATS — открыты всем."
+        aside={
+          <span
+            className="inline-flex items-center gap-2 rounded-full px-4 py-2 text-[14px] font-medium text-white"
+            style={{ backgroundColor: MPSTATS_GREEN }}
+          >
+            <LogoIcon size={18} primaryColor="#FFFFFF" />
+            MPSTATS
+          </span>
+        }
+      />
 
       {/* ── Deep-link miss notice (non-blocking) ────────────────────────── */}
       {notFound && (
@@ -118,7 +131,7 @@ export function ToolsCatalog({ notFound = false }: { notFound?: boolean }) {
                   href={`/mpstats-tools/${lesson.id}`}
                   className="group flex items-center gap-3 bg-white border border-mp-gray-200 rounded-xl p-4 shadow-mp-card hover:shadow-mp-card-hover transition-shadow"
                 >
-                  <LogoIcon size={20} primaryColor="#17BF50" className="shrink-0" />
+                  <LogoIcon size={20} primaryColor={MPSTATS_GREEN} className="shrink-0" />
                   <div className="min-w-0 flex-1">
                     <div className="text-body font-semibold text-mp-gray-900 leading-snug line-clamp-2">
                       {group.title}
@@ -143,7 +156,7 @@ export function ToolsCatalog({ notFound = false }: { notFound?: boolean }) {
                   onClick={() => setOpen((s) => ({ ...s, [group.title]: !s[group.title] }))}
                   className="w-full flex items-center gap-3 p-4 text-left hover:bg-mp-gray-50 transition-colors"
                 >
-                  <LogoIcon size={20} primaryColor="#17BF50" className="shrink-0" />
+                  <LogoIcon size={20} primaryColor={MPSTATS_GREEN} className="shrink-0" />
                   <div className="min-w-0 flex-1">
                     <div className="text-body font-semibold text-mp-gray-900 leading-snug line-clamp-2">
                       {group.title}

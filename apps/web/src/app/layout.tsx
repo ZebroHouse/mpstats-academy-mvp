@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
+import { Onest } from 'next/font/google';
 import '@/styles/globals.css';
 import { TRPCProvider } from '@/lib/trpc/provider';
 import { LandingThemeProvider } from '@/components/shared/ThemeProvider';
@@ -9,7 +9,13 @@ import { CookieConsent } from '@/components/shared/CookieConsent';
 import { KbdOverlay } from '@/components/shared/KbdOverlay';
 import { StagingBanner } from '@/components/shared/StagingBanner';
 
-const inter = Inter({ subsets: ['latin', 'cyrillic'] });
+// v2 reskin: product on Onest (brand font), wired to Tailwind via --font-onest.
+const onest = Onest({
+  subsets: ['latin', 'cyrillic'],
+  weight: ['400', '500', '600', '700'],
+  display: 'swap',
+  variable: '--font-onest',
+});
 
 export const viewport: Viewport = {
   width: 'device-width',
@@ -69,7 +75,7 @@ export default function RootLayout({
           }}
         />
       </head>
-      <body className={inter.className}>
+      <body className={`${onest.variable} font-sans`}>
         <StagingBanner />
         <LandingThemeProvider>
           <TRPCProvider>{children}</TRPCProvider>

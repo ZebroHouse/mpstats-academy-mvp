@@ -221,7 +221,7 @@ function LibraryPageInner() {
                 'px-3 py-1.5 rounded-lg text-body-sm font-medium transition-colors',
                 catalogFilter === chip.value
                   ? 'bg-mp-blue-500 text-white'
-                  : 'bg-white/70 border border-mp-gray-200 text-mp-gray-700 hover:bg-white',
+                  : 'bg-white/10 border border-white/20 text-white/80 hover:bg-white/20',
               )}
             >
               {chip.label}

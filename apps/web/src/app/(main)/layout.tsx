@@ -40,6 +40,8 @@ export default async function MainLayout({
   // (PKCE cookie missing in mobile mail-client browser, /resend without redirect_to,
   // etc.). The promo lives in user_metadata.pending_promo from signup time —
   // bounce them to /pricing?promo= until they activate (or buy a subscription).
+  // NOTE: target stays /pricing (OUTSIDE this (main) layout) — redirecting to the
+  // in-product /billing would loop, since this guard re-runs on every (main) page.
   const pendingPromo = user.user_metadata?.pending_promo;
   if (typeof pendingPromo === 'string' && pendingPromo.length > 0) {
     const activeSub = await prisma.subscription.findFirst({
