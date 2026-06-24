@@ -11,13 +11,14 @@ import { LinkPopoverButton } from './LinkPopoverButton';
 type Props = { editor: Editor; onInsertImage: () => void };
 
 export function LessonEditorToolbar({ editor, onInsertImage }: Props) {
-  const btn = (label: string, active: boolean, onClick: () => void, Icon: React.ElementType) => (
+  const btn = (label: string, active: boolean, onClick: () => void, Icon: React.ElementType, disabled = false) => (
     <Button
       type="button"
       size="sm"
       variant={active ? 'secondary' : 'ghost'}
       aria-label={label}
       title={label}
+      disabled={disabled}
       onClick={onClick}
     >
       <Icon className="w-4 h-4" />
@@ -39,7 +40,7 @@ export function LessonEditorToolbar({ editor, onInsertImage }: Props) {
       {btn('Разделитель', false, () => editor.chain().focus().setHorizontalRule().run(), Minus)}
       <span className="mx-1 w-px h-5 bg-mp-gray-200" />
       {btn('Картинка', false, onInsertImage, ImageIcon)}
-      {btn('Таблица', false, () => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(), TableIcon)}
+      {btn('Таблица', false, () => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(), TableIcon, editor.isActive('table'))}
       <LinkPopoverButton editor={editor} />
     </div>
   );

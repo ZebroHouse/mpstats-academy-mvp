@@ -7,6 +7,7 @@ import { trpc } from '@/lib/trpc/client';
 import { toast } from 'sonner';
 import { lessonEditorExtensions, EMPTY_DOC } from './extensions';
 import { LessonEditorToolbar } from './LessonEditorToolbar';
+import { TableToolbar } from './TableToolbar';
 
 type Props = {
   initialBody: JSONContent | null;
@@ -57,6 +58,7 @@ export function LessonEditor({ initialBody, onChange }: Props) {
   return (
     <div className="border border-mp-gray-200 rounded-xl overflow-hidden bg-white">
       <LessonEditorToolbar editor={editor} onInsertImage={() => fileInputRef.current?.click()} />
+      <TableToolbar editor={editor} />
       <input
         ref={fileInputRef}
         type="file"
