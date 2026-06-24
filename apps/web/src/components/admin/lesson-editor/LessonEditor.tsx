@@ -78,7 +78,9 @@ export function LessonEditor({ initialBody, onChange }: Props) {
         showMarks ? 'lesson-marks-on' : ''
       }`}
     >
-      <div className="sticky top-0 z-20 bg-white rounded-t-xl border-b border-mp-gray-200">
+      {/* Stick BELOW the admin header (desktop sticky h-16=64px; mobile fixed bar ~72px),
+          otherwise the toolbar pins at top-0 hidden behind the z-40 admin header. */}
+      <div className="sticky top-[72px] md:top-16 z-20 bg-white rounded-t-xl border-b border-mp-gray-200">
         <LessonEditorToolbar
           editor={editor}
           onInsertImage={() => fileInputRef.current?.click()}
