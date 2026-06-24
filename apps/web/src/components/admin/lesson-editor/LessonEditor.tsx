@@ -2,7 +2,7 @@
 
 import { useEditor, EditorContent } from '@tiptap/react';
 import type { JSONContent } from '@tiptap/react';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc/client';
 import { toast } from 'sonner';
 import { lessonEditorExtensions, EMPTY_DOC } from './extensions';
@@ -17,6 +17,7 @@ type Props = {
 
 export function LessonEditor({ initialBody, onChange }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [showMarks, setShowMarks] = useState(false);
   const requestUpload = trpc.admin.requestLessonImageUploadUrl.useMutation();
 
   const editor = useEditor({
@@ -57,8 +58,17 @@ export function LessonEditor({ initialBody, onChange }: Props) {
   if (!editor) return null;
 
   return (
-    <div className="border border-mp-gray-200 rounded-xl overflow-hidden bg-white">
-      <LessonEditorToolbar editor={editor} onInsertImage={() => fileInputRef.current?.click()} />
+    <div
+      className={`border border-mp-gray-200 rounded-xl overflow-hidden bg-white ${
+        showMarks ? 'lesson-marks-on' : ''
+      }`}
+    >
+      <LessonEditorToolbar
+        editor={editor}
+        onInsertImage={() => fileInputRef.current?.click()}
+        showMarks={showMarks}
+        onToggleMarks={() => setShowMarks((v) => !v)}
+      />
       <TableToolbar editor={editor} />
       <ImageToolbar editor={editor} />
       <input

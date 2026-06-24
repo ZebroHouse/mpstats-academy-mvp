@@ -510,4 +510,26 @@ html, body {
   }
   .lesson-content strong { @apply font-semibold; }
   .lesson-content em { @apply italic; }
+
+  /* Formatting-marks overlay — toggled in the editor only (never the student view) */
+  .lesson-marks-on .lesson-content p,
+  .lesson-marks-on .lesson-content h1,
+  .lesson-marks-on .lesson-content h2,
+  .lesson-marks-on .lesson-content h3,
+  .lesson-marks-on .lesson-content li,
+  .lesson-marks-on .lesson-content blockquote {
+    @apply outline-dashed outline-1 outline-offset-2;
+    outline-color: rgba(44, 79, 248, 0.25); /* mp-blue-500 @ 25% */
+  }
+  .lesson-marks-on .lesson-content p::after,
+  .lesson-marks-on .lesson-content h1::after,
+  .lesson-marks-on .lesson-content h2::after,
+  .lesson-marks-on .lesson-content h3::after {
+    content: '¶';
+    @apply text-mp-blue-500/40 ml-1 select-none;
+  }
+  .lesson-marks-on .lesson-content br {
+    /* show a visible glyph for Shift+Enter line breaks (best effort) */
+    @apply after:content-['↵'] after:text-mp-blue-500/40 after:select-none;
+  }
 }

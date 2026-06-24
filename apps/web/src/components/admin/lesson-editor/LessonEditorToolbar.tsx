@@ -4,13 +4,18 @@ import type { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
 import {
   Bold, Italic, Heading1, Heading2, Heading3, List, ListOrdered,
-  Image as ImageIcon, Table as TableIcon, Quote, Minus,
+  Image as ImageIcon, Table as TableIcon, Quote, Minus, Pilcrow,
 } from 'lucide-react';
 import { LinkPopoverButton } from './LinkPopoverButton';
 
-type Props = { editor: Editor; onInsertImage: () => void };
+type Props = {
+  editor: Editor;
+  onInsertImage: () => void;
+  showMarks?: boolean;
+  onToggleMarks?: () => void;
+};
 
-export function LessonEditorToolbar({ editor, onInsertImage }: Props) {
+export function LessonEditorToolbar({ editor, onInsertImage, showMarks, onToggleMarks }: Props) {
   const btn = (label: string, active: boolean, onClick: () => void, Icon: React.ElementType, disabled = false) => (
     <Button
       type="button"
@@ -42,6 +47,21 @@ export function LessonEditorToolbar({ editor, onInsertImage }: Props) {
       {btn('Картинка', false, onInsertImage, ImageIcon)}
       {btn('Таблица', false, () => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(), TableIcon, editor.isActive('table'))}
       <LinkPopoverButton editor={editor} />
+      {onToggleMarks && (
+        <>
+          <span className="mx-1 w-px h-5 bg-mp-gray-200" />
+          <Button
+            type="button"
+            size="sm"
+            variant={showMarks ? 'secondary' : 'ghost'}
+            aria-label="Показать форматирование"
+            title="Показать форматирование"
+            onClick={onToggleMarks}
+          >
+            <Pilcrow className="w-4 h-4" />
+          </Button>
+        </>
+      )}
     </div>
   );
 }
