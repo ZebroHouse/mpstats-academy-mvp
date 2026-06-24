@@ -2,9 +2,15 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Prevent horizontal overflow on mobile */
+/* Prevent horizontal overflow on mobile.
+   Use `clip` (not `hidden`): `overflow-x: hidden` turns body into a scroll
+   container that itself doesn't scroll (the document does), which silently
+   BREAKS `position: sticky` for descendants (sticky toolbars, headers). `clip`
+   clips the same way but does NOT establish a scroll container, so sticky works.
+   `hidden` kept as a fallback for browsers without `clip` support (Safari <16). */
 html, body {
   overflow-x: hidden;
+  overflow-x: clip;
   max-width: 100vw;
 }
 
