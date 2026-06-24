@@ -44,6 +44,27 @@ function getSupabaseAdmin() {
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
+const LESSON_IMAGES_PATH_MARKER = '/lesson-images/';
+
+/**
+ * Walk a TipTap document and collect the storage object paths of every embedded
+ * image hosted in the `lesson-images` bucket (the part of the src after
+ * `/lesson-images/`). Pure + exported so it can be unit-tested in isolation.
+ */
+export function extractLessonImagePaths(body: unknown): string[] {
+  const paths: string[] = [];
+  const walk = (n: any) => {
+    if (!n || typeof n !== 'object') return;
+    if (n.type === 'image' && typeof n.attrs?.src === 'string') {
+      const i = n.attrs.src.indexOf(LESSON_IMAGES_PATH_MARKER);
+      if (i >= 0) paths.push(n.attrs.src.slice(i + LESSON_IMAGES_PATH_MARKER.length));
+    }
+    if (Array.isArray(n.content)) n.content.forEach(walk);
+  };
+  walk(body);
+  return paths;
+}
+
 export const adminRouter = router({
   // Analytics sub-router (getAnalytics, getActiveUserStats, getWatchStats)
   analytics: adminAnalyticsRouter,
@@ -437,6 +458,8 @@ export const adminRouter = router({
             duration: true,
             isHidden: true,
             hiddenAt: true,
+            contentType: true,
+            contentStatus: true,
           },
         });
         return lessons;
@@ -831,6 +854,50 @@ export const adminRouter = router({
       });
 
       return { id: updated.id, contentStatus: updated.contentStatus, chunks };
+    }),
+
+  /**
+   * Hard-delete a text/interactive lesson: its content_chunk rows, any embedded
+   * images in the `lesson-images` bucket (best-effort), and the lesson row
+   * (FK cascades LessonProgress + JobLesson).
+   *
+   * VIDEO lessons are protected — they are only ever soft-hidden, never deleted
+   * through this path (496 existing video lessons would otherwise be at risk).
+   */
+  deleteLesson: adminProcedure
+    .input(z.object({ lessonId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const lesson = await ctx.prisma.lesson.findUnique({
+        where: { id: input.lessonId },
+        select: { id: true, contentType: true, body: true },
+      });
+      if (!lesson) throw new TRPCError({ code: 'NOT_FOUND' });
+
+      if (lesson.contentType === 'VIDEO') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Видео-уроки удаляются только скрытием',
+        });
+      }
+
+      await ctx.prisma.contentChunk.deleteMany({ where: { lessonId: lesson.id } });
+
+      // Best-effort: remove embedded images. A storage failure must not abort
+      // the lesson delete — log and continue.
+      const imagePaths = extractLessonImagePaths(lesson.body);
+      if (imagePaths.length > 0) {
+        try {
+          await getSupabaseAdmin()
+            .storage.from(LESSON_IMAGE_STORAGE_BUCKET)
+            .remove(imagePaths);
+        } catch (error) {
+          console.error('[deleteLesson] image cleanup failed', error);
+        }
+      }
+
+      await ctx.prisma.lesson.delete({ where: { id: lesson.id } });
+
+      return { id: lesson.id };
     }),
 
   /**
