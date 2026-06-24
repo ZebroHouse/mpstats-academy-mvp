@@ -10,7 +10,11 @@ import type { Extensions } from '@tiptap/react';
 export const lessonEditorExtensions: Extensions = [
   StarterKit.configure({
     heading: { levels: [1, 2, 3] },
-    link: { openOnClick: false, autolink: true },
+    link: {
+      openOnClick: false,
+      autolink: true,
+      HTMLAttributes: { target: '_blank', rel: 'noopener noreferrer nofollow' },
+    },
   }),
   Image.configure({ inline: false, allowBase64: false }),
   Table.configure({ resizable: false }),

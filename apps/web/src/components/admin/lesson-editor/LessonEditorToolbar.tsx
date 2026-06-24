@@ -4,8 +4,9 @@ import type { Editor } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
 import {
   Bold, Italic, Heading1, Heading2, Heading3, List, ListOrdered,
-  Image as ImageIcon, Table as TableIcon, Quote, Minus, Link as LinkIcon,
+  Image as ImageIcon, Table as TableIcon, Quote, Minus,
 } from 'lucide-react';
+import { LinkPopoverButton } from './LinkPopoverButton';
 
 type Props = { editor: Editor; onInsertImage: () => void };
 
@@ -39,10 +40,7 @@ export function LessonEditorToolbar({ editor, onInsertImage }: Props) {
       <span className="mx-1 w-px h-5 bg-mp-gray-200" />
       {btn('Картинка', false, onInsertImage, ImageIcon)}
       {btn('Таблица', false, () => editor.chain().focus().insertTable({ rows: 3, cols: 3, withHeaderRow: true }).run(), TableIcon)}
-      {btn('Ссылка', editor.isActive('link'), () => {
-        const url = window.prompt('URL ссылки:');
-        if (url) editor.chain().focus().setLink({ href: url }).run();
-      }, LinkIcon)}
+      <LinkPopoverButton editor={editor} />
     </div>
   );
 }
