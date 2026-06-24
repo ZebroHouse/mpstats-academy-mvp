@@ -31,7 +31,7 @@ export function LessonEditorToolbar({ editor, onInsertImage, showMarks, onToggle
   );
 
   return (
-    <div className="flex flex-wrap items-center gap-1 border-b border-mp-gray-200 bg-white p-2 sticky top-0 z-10">
+    <div className="flex flex-wrap items-center gap-1 bg-white p-2">
       {btn('Жирный', editor.isActive('bold'), () => editor.chain().focus().toggleBold().run(), Bold)}
       {btn('Курсив', editor.isActive('italic'), () => editor.chain().focus().toggleItalic().run(), Italic)}
       <span className="mx-1 w-px h-5 bg-mp-gray-200" />

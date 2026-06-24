@@ -498,6 +498,9 @@ html, body {
   .lesson-content img {
     @apply rounded-lg my-4 max-w-full h-auto;
   }
+  .lesson-content img[data-align="center"] { @apply mx-auto block; }
+  .lesson-content img[data-align="left"]   { @apply mr-auto block; }
+  .lesson-content img[data-align="right"]  { @apply ml-auto block; }
   .lesson-content table {
     @apply w-full border-collapse my-4 text-sm;
   }
@@ -507,6 +510,15 @@ html, body {
   }
   .lesson-content th {
     @apply bg-mp-gray-50 font-semibold text-mp-gray-900;
+  }
+  /* Highlight table cells selected via drag (TipTap adds .selectedCell) — for merge UX */
+  .lesson-content .selectedCell {
+    @apply relative;
+  }
+  .lesson-content .selectedCell::after {
+    content: '';
+    @apply absolute inset-0 pointer-events-none;
+    background: rgba(44, 79, 248, 0.15); /* mp-blue-500 @ 15% */
   }
   .lesson-content strong { @apply font-semibold; }
   .lesson-content em { @apply italic; }

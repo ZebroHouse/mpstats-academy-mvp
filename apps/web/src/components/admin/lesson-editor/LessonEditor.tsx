@@ -2,7 +2,7 @@
 
 import { useEditor, EditorContent } from '@tiptap/react';
 import type { JSONContent } from '@tiptap/react';
-import { useRef, useState } from 'react';
+import { useEffect, useReducer, useRef, useState } from 'react';
 import { trpc } from '@/lib/trpc/client';
 import { toast } from 'sonner';
 import { lessonEditorExtensions, EMPTY_DOC } from './extensions';
@@ -29,6 +29,21 @@ export function LessonEditor({ initialBody, onChange }: Props) {
       attributes: { class: 'lesson-content max-w-none focus:outline-none min-h-[400px] p-4' },
     },
   });
+
+  // useEditor doesn't re-render this component on pure selection changes, so the
+  // contextual toolbars (Table/Image) wouldn't react to clicking into a cell/image.
+  // Force a re-render on selection + transaction so all child toolbars re-evaluate isActive.
+  const [, forceRender] = useReducer((x) => x + 1, 0);
+  useEffect(() => {
+    if (!editor) return;
+    const onUpdate = () => forceRender();
+    editor.on('selectionUpdate', onUpdate);
+    editor.on('transaction', onUpdate);
+    return () => {
+      editor.off('selectionUpdate', onUpdate);
+      editor.off('transaction', onUpdate);
+    };
+  }, [editor]);
 
   const handleFile = async (file: File) => {
     try {
@@ -59,18 +74,20 @@ export function LessonEditor({ initialBody, onChange }: Props) {
 
   return (
     <div
-      className={`border border-mp-gray-200 rounded-xl overflow-hidden bg-white ${
+      className={`border border-mp-gray-200 rounded-xl bg-white ${
         showMarks ? 'lesson-marks-on' : ''
       }`}
     >
-      <LessonEditorToolbar
-        editor={editor}
-        onInsertImage={() => fileInputRef.current?.click()}
-        showMarks={showMarks}
-        onToggleMarks={() => setShowMarks((v) => !v)}
-      />
-      <TableToolbar editor={editor} />
-      <ImageToolbar editor={editor} />
+      <div className="sticky top-0 z-20 bg-white rounded-t-xl border-b border-mp-gray-200">
+        <LessonEditorToolbar
+          editor={editor}
+          onInsertImage={() => fileInputRef.current?.click()}
+          showMarks={showMarks}
+          onToggleMarks={() => setShowMarks((v) => !v)}
+        />
+        <TableToolbar editor={editor} />
+        <ImageToolbar editor={editor} />
+      </div>
       <input
         ref={fileInputRef}
         type="file"

@@ -16,6 +16,12 @@ const LessonImage = Image.extend({
         parseHTML: (el) => (el as HTMLElement).style.width || el.getAttribute('width') || null,
         renderHTML: (attrs) => (attrs.width ? { style: `width: ${attrs.width}` } : {}),
       },
+      // Alignment rendered as data-align (not inline style) so it never conflicts with width.
+      align: {
+        default: null,
+        parseHTML: (el) => (el as HTMLElement).getAttribute('data-align') || null,
+        renderHTML: (attrs) => (attrs.align ? { 'data-align': attrs.align } : {}),
+      },
     };
   },
 });

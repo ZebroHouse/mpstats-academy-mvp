@@ -37,7 +37,7 @@ export function TableToolbar({ editor }: Props) {
       {btn('Удалить строку', () => editor.chain().focus().deleteRow().run(), Rows3)}
       <span className="mx-1 w-px h-5 bg-mp-gray-200" />
       {btn('Объединить/разделить ячейки', () => editor.chain().focus().mergeOrSplit().run(), TableCellsMerge)}
-      {btn('Шапка таблицы', () => editor.chain().focus().toggleHeaderRow().run(), Heading)}
+      {btn('Сделать строку заголовком', () => editor.chain().focus().toggleHeaderRow().run(), Heading)}
       <span className="mx-1 w-px h-5 bg-mp-gray-200" />
       {btn('Удалить таблицу', () => editor.chain().focus().deleteTable().run(), Trash2, true)}
     </div>
