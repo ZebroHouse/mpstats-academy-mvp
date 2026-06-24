@@ -60,6 +60,7 @@ Sibling project `D:/GpT_docs/Ai_MP_manager/` запустил `prisma db push --
 | v1.17 Cohesive entry pages | Shipped 2026-06-16 (Phase 65 — `/register` + `/login` выведены из `(auth)` в свои тёмные лейауты, переиспользующие маркет-дизайн: `V8Header`+`V8Footer`+Onest+`#0F172A`. /register = сплит форма+промо (4 плашки-тезиса + цена), /login = форма по центру; формы не тронуты. + гайдлайн дизайн-системы. merge `62e69e3`) |
 | v1.18 Design System v2 reskin | Shipped 2026-06-23 (branded-light — продукт сведён к маркет-облику, остаётся светлым: Onest везде, meet-in-middle радиусы, примитивы `DarkIsland`/`BentoCard`, дисциплина палитры. Per-section treatment выбран owner'ом после 3-way визуального сравнения baseline/deep/middle: Избранное+Карточка задачи+Инструменты MPSTATS → deep, Диагностика интро+результаты → middle, остальное baseline. Visual-only. merge `932f597`) |
 | v1.19 Ads playbooks remap | Shipped 2026-06-23 (рекламные плейбуки переразбиты под структуру методологов из Google-листа «Решения задач» (стр.4–29): 17 задач — 14 published + 3 draft + 2 старых дубля unpublish, ось MARKETING, аддитивно. Заодно срезан методологический суффикс `\| Блок, N` в 116 названиях уроков. Чистая правка данных prod-Supabase без деплоя. merge `ee1ff2f`) |
+| v1.20 Текстовые уроки (Фаза A) | Shipped 2026-06-24 (методолог создаёт текст/интерактив-уроки из админки: TipTap-редактор `/admin/content/lessons/[id]` (заголовки/списки/картинки+ресайз+выравнивание/таблицы+контекст-панель/ссылки-поповер/символы форматирования/предпросмотр), публикация индексирует текст в `content_chunk` (`academy_text`) → AI-чат+поиск видят текст; ученик видит тело + «Завершить»; черновики скрыты; удаление с явным подтверждением. Модель `Lesson.contentType`/`contentStatus`/`body` (аддитивная миграция + публичный bucket `lesson-images` через Mgmt API). Глобальный фикс `position:sticky` (`overflow-x:clip`). merge `5b09617`, prod deploy. Фазы B (интерактив) + C (редактор состава джоб) — pending) |
 
 **Remaining work:**
 1. Phase 33-03: CQ Dashboard Setup (на стороне CQ команды).
@@ -111,7 +112,22 @@ Archive directory `D:/GpT_docs/MPSTATS ACADEMY ADAPTIVE LEARNING/MAAL-phase55/` 
 
 **Внимание (исторический lesson):** CP хранит `amount` на своей стороне на момент создания подписки. При смене цен отменять старые ACTIVE подписки чтобы автосписания пошли по новым тарифам.
 
-## Last Session (2026-06-23) — Ads playbooks remap под методологов + чистка названий уроков shipped to prod
+## Last Session (2026-06-24) — Текстовые уроки (Фаза A) shipped to prod
+
+**Merge `5b09617` (`--no-ff` `feature/text-interactive-lessons` → master) + prod deploy `maal-web-1`.** Полный цикл: brainstorm → спека (`docs/superpowers/specs/2026-06-23-text-interactive-lessons-design.md`, 3 фазы A→B→C) → план (`docs/superpowers/plans/2026-06-23-phase-a-text-lessons.md`) → 17 задач субагентами (TDD + spec/quality ревью) → 2 раунда UAT-правок owner'а → деплой.
+
+**Что на проде:**
+- **Модель:** `Lesson.contentType` {VIDEO/TEXT/INTERACTIVE} + `contentStatus` {DRAFT/PUBLISHED} + `body` (TipTap JSON). Аддитивная миграция `20260623000000_add_lesson_content` + публичный bucket `lesson-images` применены к prod-Supabase **через Mgmt API** (по пути убиты 3 зомби idle-in-tx сессии, висевшие 13 дней и блокировавшие `ALTER TABLE Lesson`).
+- **Админка:** создание урока из `CourseManager` → редактор `/admin/content/lessons/[id]` (TipTap **v3**). Сохранение черновика (без индексации) / публикация (индексирует plain-text тела в `content_chunk` `source_type='academy_text'` → AI-чат+`searchLessons` видят текст). Редактирование/удаление (с явным чекбокс-подтверждением; видео удалять нельзя) из списка и редактора.
+- **Ученик:** рендер тела (read-only TipTap) + «Завершить урок» (реюз `completeLesson`); DRAFT скрыты (`getLesson`→null).
+- **Редактор UX:** scoped-типографика `.lesson-content` (НЕ ставили `@tailwindcss/typography` — есть 2 существующих `prose`-потребителя), предпросмотр черновика, **липкие тулбары**, контекст-панель таблиц (add/del row/col, merge, header), ресайз картинок (пресеты ширины) + выравнивание, ссылки-поповер (+ кликабельны у ученика), символы форматирования (¶).
+- **Глобальный фикс:** `position:sticky` чинился во всём приложении — `html,body { overflow-x: hidden }` → `clip` (hidden делал body нескроллящимся scroll-контейнером, ломая sticky у всех потомков). Диагностировано вживую через браузер.
+
+**Деплой:** staging (`--no-cache web` build + HTTP 200) → ОК → прод (`--no-cache web` build при работающем контейнере → recreate → smoke `/` 200 + `/api/health` 200). Тесты: typecheck 6/6, ai 67/67, api 226/226, web (мои все зелёные; 1 предсущ. флейк `yandex-oauth`). **Откат:** `git revert -m 1 5b09617` + редеплой.
+
+**Осталось:** карусель картинок (бэклог), **Фаза B** (интерактив: гейты + ветвление), **Фаза C** (редактор состава джоб в админке). Ветки `feature/text-interactive-lessons` НЕ удаляли (снесём все 3 фаза-ветки вместе после готовности B+C). Память: `project_phase_a_text_lessons.md`. Хендофф на Фазу B: `.claude/handoffs/`.
+
+## Previous Session (2026-06-23) — Ads playbooks remap под методологов + чистка названий уроков shipped to prod
 
 **Merge `ee1ff2f` (`--no-ff` `feature/ads-playbooks-remap` → master, запушено).** Методологи переразбили блок «Реклама» в Google-листе «Решения задач» (`1xs0TkCrvu4...`, gid=70389265, **строки 4–29**) на **17 задач/плейбуков**. Пересобрали раздел «решения под задачу» (`Job`/`JobLesson`, ось MARKETING). **Аддитивно** (решение owner): нейронка/визуал/контент/аналитика/Ozon-плейбуки НЕ трогали — обновим, когда методологи доготовят те блоки.
 
