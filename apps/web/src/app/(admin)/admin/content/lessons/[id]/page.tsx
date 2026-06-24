@@ -32,6 +32,11 @@ export default function AdminLessonEditorPage() {
   });
 
   const save = trpc.admin.updateLessonBody.useMutation({
+    onSuccess: () => {
+      // Refresh the cached lesson so re-entering the editor shows the saved body
+      // (avoids the stale-cache "I saved but see old content" race).
+      utils.admin.getLessonForEdit.invalidate({ lessonId: id });
+    },
     onError: (e) => toast.error('Ошибка сохранения: ' + e.message),
   });
   const publish = trpc.admin.publishLesson.useMutation({
