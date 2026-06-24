@@ -4,6 +4,22 @@ import Image from '@tiptap/extension-image';
 import { Table, TableRow, TableHeader, TableCell } from '@tiptap/extension-table';
 import type { Extensions } from '@tiptap/react';
 
+// Custom Image node: adds a `width` attribute (rendered as inline style) so editors can
+// resize images via width presets. Node name stays `image`, so setImage + updateAttributes
+// keep working, and the read-only renderer (same extensions) renders the width for students.
+const LessonImage = Image.extend({
+  addAttributes() {
+    return {
+      ...this.parent?.(),
+      width: {
+        default: null,
+        parseHTML: (el) => (el as HTMLElement).style.width || el.getAttribute('width') || null,
+        renderHTML: (attrs) => (attrs.width ? { style: `width: ${attrs.width}` } : {}),
+      },
+    };
+  },
+});
+
 // Single source of truth for block set — used by both editor and read-only renderer.
 // Note: TipTap v3 bundles Link inside StarterKit, so it's configured there (not a
 // separate extension) to avoid a duplicate-extension conflict. Image is not bundled.
@@ -16,7 +32,7 @@ export const lessonEditorExtensions: Extensions = [
       HTMLAttributes: { target: '_blank', rel: 'noopener noreferrer nofollow' },
     },
   }),
-  Image.configure({ inline: false, allowBase64: false }),
+  LessonImage.configure({ inline: false, allowBase64: false }),
   Table.configure({ resizable: false }),
   TableRow,
   TableHeader,
