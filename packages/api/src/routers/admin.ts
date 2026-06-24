@@ -8,6 +8,7 @@
  *   getComments, toggleCommentVisibility, getNewCommentsCount
  */
 
+import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { router, adminProcedure, superadminProcedure } from '../trpc';
@@ -16,7 +17,13 @@ import { refreshBankForCategory } from '../utils/question-bank';
 import { resolveIncludeHidden, canToggleHidden, type AdminRole } from '../utils/visibility';
 import { createClient } from '@supabase/supabase-js';
 import { adminAnalyticsRouter } from './admin-analytics';
+import { indexLessonText } from '@mpstats/ai';
 import type { SkillCategory } from '@mpstats/shared';
+import {
+  LESSON_IMAGE_ALLOWED_MIME_TYPES,
+  LESSON_IMAGE_MAX_FILE_SIZE,
+  LESSON_IMAGE_STORAGE_BUCKET,
+} from '@mpstats/shared';
 
 // Lazy-initialized Supabase admin client (service role) for email lookups
 let supabaseAdmin: ReturnType<typeof createClient> | null = null;
@@ -37,9 +44,63 @@ function getSupabaseAdmin() {
 
 const TWENTY_FOUR_HOURS_MS = 24 * 60 * 60 * 1000;
 
+const LESSON_IMAGES_PATH_MARKER = '/lesson-images/';
+
+/**
+ * Walk a TipTap document and collect the storage object paths of every embedded
+ * image hosted in the `lesson-images` bucket (the part of the src after
+ * `/lesson-images/`). Pure + exported so it can be unit-tested in isolation.
+ */
+export function extractLessonImagePaths(body: unknown): string[] {
+  const paths: string[] = [];
+  const walk = (n: any) => {
+    if (!n || typeof n !== 'object') return;
+    if (n.type === 'image' && typeof n.attrs?.src === 'string') {
+      const i = n.attrs.src.indexOf(LESSON_IMAGES_PATH_MARKER);
+      if (i >= 0) paths.push(n.attrs.src.slice(i + LESSON_IMAGES_PATH_MARKER.length));
+    }
+    if (Array.isArray(n.content)) n.content.forEach(walk);
+  };
+  walk(body);
+  return paths;
+}
+
 export const adminRouter = router({
   // Analytics sub-router (getAnalytics, getActiveUserStats, getWatchStats)
   analytics: adminAnalyticsRouter,
+
+  /**
+   * Signed upload URL for an image embedded in a lesson body (TipTap).
+   * Uploads land in the PUBLIC `lesson-images` bucket — we return both the
+   * signed PUT URL and the resulting public object URL for embedding.
+   */
+  requestLessonImageUploadUrl: adminProcedure
+    .input(
+      z.object({
+        filename: z.string().min(1).max(200),
+        mimeType: z.enum(
+          LESSON_IMAGE_ALLOWED_MIME_TYPES as unknown as [string, ...string[]],
+        ),
+        fileSize: z.number().int().positive().max(LESSON_IMAGE_MAX_FILE_SIZE),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const sb = getSupabaseAdmin();
+      const tmpId = randomUUID();
+      const safeName = input.filename.replace(/[^a-zA-Z0-9._-]/g, '_');
+      const storagePath = `${tmpId}/${safeName}`;
+      const { data, error } = await sb.storage
+        .from(LESSON_IMAGE_STORAGE_BUCKET)
+        .createSignedUploadUrl(storagePath);
+      if (error || !data) {
+        throw new TRPCError({
+          code: 'INTERNAL_SERVER_ERROR',
+          message: error?.message ?? 'upload url failed',
+        });
+      }
+      const publicUrl = `${process.env.NEXT_PUBLIC_SUPABASE_URL}/storage/v1/object/public/${LESSON_IMAGE_STORAGE_BUCKET}/${storagePath}`;
+      return { uploadUrl: data.signedUrl, publicUrl };
+    }),
 
   /**
    * Dashboard stats: total users, completed diagnostics, total lessons, recent registrations (7d).
@@ -397,6 +458,8 @@ export const adminRouter = router({
             duration: true,
             isHidden: true,
             hiddenAt: true,
+            contentType: true,
+            contentStatus: true,
           },
         });
         return lessons;
@@ -681,6 +744,160 @@ export const adminRouter = router({
       } catch (error) {
         handleDatabaseError(error);
       }
+    }),
+
+  /**
+   * Create a DRAFT text/interactive lesson at the end of a course.
+   * Admin-created lessons have no manifest, so we mint a synthetic id.
+   * Drafts are hidden from students + RAG until published.
+   */
+  createLesson: adminProcedure
+    .input(
+      z.object({
+        courseId: z.string().min(1),
+        title: z.string().min(1).max(300),
+        contentType: z.enum(['TEXT', 'INTERACTIVE']),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const agg = await ctx.prisma.lesson.aggregate({
+        where: { courseId: input.courseId },
+        _max: { order: true },
+      });
+      const nextOrder = (agg._max.order ?? 0) + 1;
+      const id = `${input.courseId}_text_${randomUUID()}`;
+
+      const created = await ctx.prisma.lesson.create({
+        data: {
+          id,
+          courseId: input.courseId,
+          title: input.title,
+          contentType: input.contentType,
+          contentStatus: 'DRAFT',
+          isHidden: true, // drafts are hidden from students + RAG until publish
+          order: nextOrder,
+          skillCategory: 'ANALYTICS', // default; methodologist refines later
+        },
+      });
+      return { id: created.id };
+    }),
+
+  /**
+   * Load a single lesson's editable fields for the admin text/interactive editor.
+   */
+  getLessonForEdit: adminProcedure
+    .input(z.object({ lessonId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      const lesson = await ctx.prisma.lesson.findUnique({
+        where: { id: input.lessonId },
+        select: {
+          id: true,
+          title: true,
+          courseId: true,
+          contentType: true,
+          contentStatus: true,
+          body: true,
+        },
+      });
+      if (!lesson) throw new TRPCError({ code: 'NOT_FOUND' });
+      return lesson;
+    }),
+
+  /**
+   * Save lesson draft content (title + TipTap body).
+   * Plain save: never publishes (contentStatus untouched), never indexes.
+   * Publishing is a separate procedure.
+   */
+  updateLessonBody: adminProcedure
+    .input(
+      z.object({
+        lessonId: z.string(),
+        title: z.string().min(1).max(300),
+        body: z.any(), // TipTap JSON document
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const updated = await ctx.prisma.lesson.update({
+        where: { id: input.lessonId },
+        data: { title: input.title, body: input.body },
+        select: { id: true },
+      });
+      return updated;
+    }),
+
+  /**
+   * Publish a draft lesson: index its body into content_chunk FIRST, then flip
+   * contentStatus to PUBLISHED + isHidden=false. If indexing throws, abort —
+   * we never publish unindexed content (students/RAG would see an empty lesson).
+   */
+  publishLesson: adminProcedure
+    .input(z.object({ lessonId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const lesson = await ctx.prisma.lesson.findUnique({
+        where: { id: input.lessonId },
+        select: { id: true, body: true, skillCategory: true },
+      });
+      if (!lesson) throw new TRPCError({ code: 'NOT_FOUND' });
+
+      // Index first; if it fails, abort — never publish unindexed content.
+      const { chunks } = await indexLessonText({
+        prisma: ctx.prisma,
+        lessonId: lesson.id,
+        skillCategory: lesson.skillCategory ?? null,
+        doc: lesson.body as never,
+      });
+
+      const updated = await ctx.prisma.lesson.update({
+        where: { id: lesson.id },
+        data: { contentStatus: 'PUBLISHED', isHidden: false },
+        select: { id: true, contentStatus: true },
+      });
+
+      return { id: updated.id, contentStatus: updated.contentStatus, chunks };
+    }),
+
+  /**
+   * Hard-delete a text/interactive lesson: its content_chunk rows, any embedded
+   * images in the `lesson-images` bucket (best-effort), and the lesson row
+   * (FK cascades LessonProgress + JobLesson).
+   *
+   * VIDEO lessons are protected — they are only ever soft-hidden, never deleted
+   * through this path (496 existing video lessons would otherwise be at risk).
+   */
+  deleteLesson: adminProcedure
+    .input(z.object({ lessonId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      const lesson = await ctx.prisma.lesson.findUnique({
+        where: { id: input.lessonId },
+        select: { id: true, contentType: true, body: true },
+      });
+      if (!lesson) throw new TRPCError({ code: 'NOT_FOUND' });
+
+      if (lesson.contentType === 'VIDEO') {
+        throw new TRPCError({
+          code: 'FORBIDDEN',
+          message: 'Видео-уроки удаляются только скрытием',
+        });
+      }
+
+      await ctx.prisma.contentChunk.deleteMany({ where: { lessonId: lesson.id } });
+
+      // Best-effort: remove embedded images. A storage failure must not abort
+      // the lesson delete — log and continue.
+      const imagePaths = extractLessonImagePaths(lesson.body);
+      if (imagePaths.length > 0) {
+        try {
+          await getSupabaseAdmin()
+            .storage.from(LESSON_IMAGE_STORAGE_BUCKET)
+            .remove(imagePaths);
+        } catch (error) {
+          console.error('[deleteLesson] image cleanup failed', error);
+        }
+      }
+
+      await ctx.prisma.lesson.delete({ where: { id: lesson.id } });
+
+      return { id: lesson.id };
     }),
 
   /**

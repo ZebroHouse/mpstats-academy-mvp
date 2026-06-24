@@ -1,8 +1,11 @@
 'use client';
 
 import { useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
 import { trpc } from '@/lib/trpc/client';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import {
   ChevronDown,
   ChevronUp,
@@ -11,8 +14,13 @@ import {
   Database,
   Eye,
   EyeOff,
+  Plus,
+  PenLine,
+  Trash2,
 } from 'lucide-react';
 import { HideConfirmDialog } from './HideConfirmDialog';
+import { CreateLessonDialog } from './CreateLessonDialog';
+import { DeleteLessonDialog } from './DeleteLessonDialog';
 
 type Role = 'USER' | 'ADMIN' | 'SUPERADMIN';
 
@@ -25,6 +33,8 @@ interface Lesson {
   duration: number | null;
   isHidden: boolean;
   hiddenAt: Date | string | null;
+  contentType: string;
+  contentStatus: string;
 }
 
 interface CourseWithDetails {
@@ -199,6 +209,7 @@ function CourseAccordion({
   includeHidden: boolean;
 }) {
   const utils = trpc.useUtils();
+  const router = useRouter();
   const isSuperadmin = currentUserRole === 'SUPERADMIN';
 
   const courseLessons = trpc.admin.getCourseLessons.useQuery(
@@ -221,6 +232,21 @@ function CourseAccordion({
       utils.admin.getCourses.invalidate();
     },
   });
+  const deleteLesson = trpc.admin.deleteLesson.useMutation({
+    onSuccess: () => {
+      utils.admin.getCourseLessons.invalidate({ courseId: course.id });
+      utils.admin.getCourses.invalidate();
+      toast.success('Урок удалён');
+      setLessonDeleteTarget(null);
+    },
+    onError: (e) => toast.error('Ошибка удаления: ' + e.message),
+  });
+
+  // Lesson delete confirmation state
+  const [lessonDeleteTarget, setLessonDeleteTarget] = useState<{
+    lessonId: string;
+    title: string;
+  } | null>(null);
 
   // Lesson order editing state
   const [editingLessonOrderId, setEditingLessonOrderId] = useState<string | null>(null);
@@ -247,6 +273,9 @@ function CourseAccordion({
 
   // Phase 52: notify subscribers on unhide
   const [notifyOnUnhide, setNotifyOnUnhide] = useState(false);
+
+  // Create-lesson dialog state
+  const [createOpen, setCreateOpen] = useState(false);
 
   // --- Lesson order handlers ---
   const handleLessonOrderClick = useCallback((lessonId: string, currentOrder: number) => {
@@ -564,6 +593,13 @@ function CourseAccordion({
                     </Badge>
                   )}
 
+                  {/* Draft badge (text/interactive lessons not yet published) */}
+                  {lesson.contentStatus === 'DRAFT' && (
+                    <Badge variant="default" size="sm" className="bg-amber-100 text-amber-700 shrink-0">
+                      Черновик
+                    </Badge>
+                  )}
+
                   {/* Skill category badge */}
                   <Badge
                     variant={skillCategoryVariant[lesson.skillCategory] || 'default'}
@@ -577,6 +613,28 @@ function CourseAccordion({
                     <Video className="w-4 h-4 text-mp-green-500 shrink-0" />
                   ) : (
                     <VideoOff className="w-4 h-4 text-mp-gray-300 shrink-0" />
+                  )}
+
+                  {/* Edit + Delete (text/interactive lessons only — never VIDEO) */}
+                  {lesson.contentType !== 'VIDEO' && (
+                    <>
+                      <button
+                        onClick={() => router.push(`/admin/content/lessons/${lesson.id}`)}
+                        className="p-1 rounded transition-colors shrink-0 text-mp-gray-400 hover:bg-mp-blue-50 hover:text-mp-blue-600"
+                        title="Редактировать урок"
+                      >
+                        <PenLine className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() =>
+                          setLessonDeleteTarget({ lessonId: lesson.id, title: lesson.title })
+                        }
+                        className="p-1 rounded transition-colors shrink-0 text-mp-gray-400 hover:bg-red-50 hover:text-red-600"
+                        title="Удалить урок"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </>
                   )}
 
                   {/* Hide/Unhide button */}
@@ -608,6 +666,13 @@ function CourseAccordion({
               No lessons in this course
             </div>
           )}
+
+          <div className="border-t border-mp-gray-100 p-3 bg-mp-gray-50">
+            <Button variant="outline" size="sm" className="w-full" onClick={() => setCreateOpen(true)}>
+              <Plus className="w-4 h-4 mr-1" /> Создать урок
+            </Button>
+          </div>
+          {createOpen && <CreateLessonDialog courseId={course.id} onClose={() => setCreateOpen(false)} />}
         </div>
       )}
 
@@ -634,6 +699,15 @@ function CourseAccordion({
                 }
               : undefined
           }
+        />
+      )}
+
+      {lessonDeleteTarget && (
+        <DeleteLessonDialog
+          lessonTitle={lessonDeleteTarget.title}
+          isDeleting={deleteLesson.isPending}
+          onConfirm={() => deleteLesson.mutate({ lessonId: lessonDeleteTarget.lessonId })}
+          onClose={() => setLessonDeleteTarget(null)}
         />
       )}
     </div>
