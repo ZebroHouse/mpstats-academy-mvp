@@ -684,7 +684,7 @@ export default function DesignNewV8() {
                   ))}
                 </ul>
                 <a
-                  href="#cta"
+                  href="/pricing"
                   className="mt-8 inline-flex items-center justify-center rounded-full h-[52px] sm:h-[56px] text-[15px] font-medium transition-colors"
                   style={{
                     backgroundColor: plan.highlighted ? 'white' : BLUE,
