@@ -5,10 +5,11 @@ import { useParams, useRouter } from 'next/navigation';
 import type { JSONContent } from '@tiptap/react';
 import { trpc } from '@/lib/trpc/client';
 import { LessonEditor } from '@/components/admin/lesson-editor/LessonEditor';
+import { DeleteLessonDialog } from '@/components/admin/DeleteLessonDialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { Loader2, ArrowLeft } from 'lucide-react';
+import { Loader2, ArrowLeft, Trash2 } from 'lucide-react';
 
 export default function AdminLessonEditorPage() {
   const { id } = useParams<{ id: string }>();
@@ -18,6 +19,15 @@ export default function AdminLessonEditorPage() {
   const lessonQuery = trpc.admin.getLessonForEdit.useQuery({ lessonId: id });
   const [title, setTitle] = useState<string | null>(null);
   const [body, setBody] = useState<JSONContent | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+
+  const remove = trpc.admin.deleteLesson.useMutation({
+    onSuccess: () => {
+      toast.success('Урок удалён');
+      router.push('/admin/content');
+    },
+    onError: (e) => toast.error('Ошибка удаления: ' + e.message),
+  });
 
   const save = trpc.admin.updateLessonBody.useMutation({
     onError: (e) => toast.error('Ошибка сохранения: ' + e.message),
@@ -92,7 +102,25 @@ export default function AdminLessonEditorPage() {
               ? 'Опубликовать изменения'
               : 'Опубликовать'}
         </Button>
+
+        <Button
+          variant="ghost"
+          onClick={() => setDeleteOpen(true)}
+          disabled={remove.isPending}
+          className="ml-auto text-red-600 hover:bg-red-50 hover:text-red-700"
+        >
+          <Trash2 className="w-4 h-4 mr-1" /> Удалить урок
+        </Button>
       </div>
+
+      {deleteOpen && (
+        <DeleteLessonDialog
+          lessonTitle={currentTitle}
+          isDeleting={remove.isPending}
+          onConfirm={() => remove.mutate({ lessonId: id })}
+          onClose={() => setDeleteOpen(false)}
+        />
+      )}
     </div>
   );
 }
