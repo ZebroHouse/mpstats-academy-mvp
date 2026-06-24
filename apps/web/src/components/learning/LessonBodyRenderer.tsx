@@ -13,7 +13,7 @@ export function LessonBodyRenderer({ doc }: { doc: JSONContent | null }) {
       content: doc ?? { type: 'doc', content: [] },
       editable: false,
       immediatelyRender: false,
-      editorProps: { attributes: { class: 'prose prose-sm max-w-none' } },
+      editorProps: { attributes: { class: 'lesson-content max-w-none' } },
     },
     [doc],
   );

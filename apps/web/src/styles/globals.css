@@ -452,3 +452,62 @@ html, body {
   background-color: rgb(239 246 255 / 1); /* Tailwind blue-50 / mp-blue-50 */
   transition: background-color 1500ms ease-out;
 }
+
+/* ===== Lesson content typography (scoped) =====
+   Applied ONLY to the lesson editor + read-only renderer via the `.lesson-content`
+   class. Intentionally NOT using `.prose` (no @tailwindcss/typography plugin) to avoid
+   affecting existing prose consumers (LegalPageLayout, PartnerLessonView) or bare
+   product headings. Uses mp-* design tokens. */
+@layer components {
+  .lesson-content {
+    @apply text-mp-gray-800 text-base leading-relaxed;
+  }
+  .lesson-content h1 {
+    @apply text-[1.75rem] font-bold leading-tight text-mp-gray-900 mt-6 mb-3;
+  }
+  .lesson-content h2 {
+    @apply text-2xl font-semibold leading-snug text-mp-gray-900 mt-6 mb-2;
+  }
+  .lesson-content h3 {
+    @apply text-xl font-semibold leading-snug text-mp-gray-900 mt-5 mb-2;
+  }
+  .lesson-content p {
+    @apply my-3;
+  }
+  .lesson-content ul {
+    @apply list-disc pl-6 my-3 space-y-1;
+  }
+  .lesson-content ol {
+    @apply list-decimal pl-6 my-3 space-y-1;
+  }
+  .lesson-content li {
+    @apply leading-relaxed;
+  }
+  .lesson-content li > p {
+    @apply my-0;
+  }
+  .lesson-content blockquote {
+    @apply border-l-4 border-mp-blue-500 pl-4 my-4 italic text-mp-gray-600;
+  }
+  .lesson-content a {
+    @apply text-mp-blue-500 underline underline-offset-2 hover:text-mp-blue-600;
+  }
+  .lesson-content hr {
+    @apply border-0 border-t border-mp-gray-200 my-6;
+  }
+  .lesson-content img {
+    @apply rounded-lg my-4 max-w-full h-auto;
+  }
+  .lesson-content table {
+    @apply w-full border-collapse my-4 text-sm;
+  }
+  .lesson-content th,
+  .lesson-content td {
+    @apply border border-mp-gray-200 px-3 py-2 text-left align-top;
+  }
+  .lesson-content th {
+    @apply bg-mp-gray-50 font-semibold text-mp-gray-900;
+  }
+  .lesson-content strong { @apply font-semibold; }
+  .lesson-content em { @apply italic; }
+}

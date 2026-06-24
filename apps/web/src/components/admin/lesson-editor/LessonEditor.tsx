@@ -23,7 +23,7 @@ export function LessonEditor({ initialBody, onChange }: Props) {
     immediatelyRender: false,
     onUpdate: ({ editor }) => onChange(editor.getJSON()),
     editorProps: {
-      attributes: { class: 'prose prose-sm max-w-none focus:outline-none min-h-[400px] p-4' },
+      attributes: { class: 'lesson-content max-w-none focus:outline-none min-h-[400px] p-4' },
     },
   });
 
