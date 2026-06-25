@@ -3,6 +3,7 @@ import Image from '@tiptap/extension-image';
 // TipTap v3 ships the table extensions as named exports (no default on the main package).
 import { Table, TableRow, TableHeader, TableCell } from '@tiptap/extension-table';
 import type { Extensions } from '@tiptap/react';
+import { RevealGate, Checkpoint, CheckpointOption } from './interactive-nodes';
 
 // Custom Image node: adds a `width` attribute (rendered as inline style) so editors can
 // resize images via width presets. Node name stays `image`, so setImage + updateAttributes
@@ -43,6 +44,9 @@ export const lessonEditorExtensions: Extensions = [
   TableRow,
   TableHeader,
   TableCell,
+  RevealGate,
+  Checkpoint,
+  CheckpointOption,
 ];
 
 export const EMPTY_DOC = { type: 'doc', content: [{ type: 'paragraph' }] };
