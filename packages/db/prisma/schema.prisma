@@ -221,6 +221,7 @@ model LessonProgress {
   lastPosition   Int          @default(0) // seconds into video
   videoDuration  Int          @default(0) // total video duration in seconds
   completedAt    DateTime?
+  progressState  Json? // interactive lessons: reveal position + checkpoint choices (resume + analytics)
 
   path   LearningPath @relation(fields: [pathId], references: [id], onDelete: Cascade)
   lesson Lesson       @relation(fields: [lessonId], references: [id], onDelete: Cascade)
