@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { Prisma } from '@mpstats/db';
 import { TRPCError } from '@trpc/server';
 import { router, protectedProcedure } from '../trpc';
 import { ensureUserProfile } from '../utils/ensure-user-profile';
@@ -526,6 +527,7 @@ export const learningRouter = router({
             locked,
             contentType: lesson.contentType,
             body: locked ? null : (lesson.body ?? null),
+            progressState: locked ? null : ((lesson.progress[0]?.progressState as never) ?? null),
           } satisfies LessonWithProgress,
           course: { id: lesson.course.id, title: lesson.course.title, slug: lesson.course.slug },
           nextLesson: nextLessonNav,
@@ -757,6 +759,70 @@ export const learningRouter = router({
           watchedPercent: progress.watchedPercent,
           lastPosition: progress.lastPosition,
         };
+      } catch (error) {
+        handleDatabaseError(error);
+      }
+    }),
+
+  // Save interactive-lesson reveal state (gate reveals + checkpoint choices).
+  // Mirrors saveWatchProgress: ensures profile + path, upserts LessonProgress.
+  // Never downgrades a COMPLETED lesson; completion is a separate mutation.
+  saveInteractiveProgress: protectedProcedure
+    .input(
+      z.object({
+        lessonId: z.string(),
+        progressState: z.object({
+          version: z.literal(1),
+          revealedGateIds: z.array(z.string().min(1)),
+          checkpointChoices: z.record(z.string().min(1)),
+        }),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        await ensureUserProfile(ctx.prisma, ctx.user);
+        const path = await ctx.prisma.learningPath.upsert({
+          where: { userId: ctx.user.id },
+          update: {},
+          create: { userId: ctx.user.id, lessons: [] },
+        });
+        const existing = await ctx.prisma.lessonProgress.findUnique({
+          where: { pathId_lessonId: { pathId: path.id, lessonId: input.lessonId } },
+          select: { status: true },
+        });
+        const status = existing?.status === 'COMPLETED' ? 'COMPLETED' : 'IN_PROGRESS';
+        await ctx.prisma.lessonProgress.upsert({
+          where: { pathId_lessonId: { pathId: path.id, lessonId: input.lessonId } },
+          update: { progressState: input.progressState, status },
+          create: {
+            pathId: path.id,
+            lessonId: input.lessonId,
+            progressState: input.progressState,
+            status: 'IN_PROGRESS',
+          },
+        });
+        return { ok: true as const };
+      } catch (error) {
+        handleDatabaseError(error);
+      }
+    }),
+
+  // Restart an interactive lesson: wipe saved reveal state so it re-runs from
+  // scratch. Keeps completion status (earned credit is not stripped).
+  resetInteractiveProgress: protectedProcedure
+    .input(z.object({ lessonId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const path = await ctx.prisma.learningPath.findUnique({
+          where: { userId: ctx.user.id },
+          select: { id: true },
+        });
+        if (!path) return { ok: true as const };
+        await ctx.prisma.lessonProgress.updateMany({
+          where: { pathId: path.id, lessonId: input.lessonId },
+          data: { progressState: Prisma.DbNull },
+        });
+        return { ok: true as const };
       } catch (error) {
         handleDatabaseError(error);
       }
