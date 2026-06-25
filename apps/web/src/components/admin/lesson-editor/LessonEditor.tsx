@@ -9,6 +9,7 @@ import { lessonEditorExtensions, EMPTY_DOC } from './extensions';
 import { LessonEditorToolbar } from './LessonEditorToolbar';
 import { TableToolbar } from './TableToolbar';
 import { ImageToolbar } from './ImageToolbar';
+import { InteractiveToolbar } from './InteractiveToolbar';
 
 type Props = {
   initialBody: JSONContent | null;
@@ -89,6 +90,7 @@ export function LessonEditor({ initialBody, onChange }: Props) {
         />
         <TableToolbar editor={editor} />
         <ImageToolbar editor={editor} />
+        <InteractiveToolbar editor={editor} />
       </div>
       <input
         ref={fileInputRef}

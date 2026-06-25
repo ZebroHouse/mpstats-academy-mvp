@@ -4,6 +4,7 @@ import Image from '@tiptap/extension-image';
 import { Table, TableRow, TableHeader, TableCell } from '@tiptap/extension-table';
 import type { Extensions } from '@tiptap/react';
 import { RevealGate, Checkpoint, CheckpointOption } from './interactive-nodes';
+import { SlashCommands } from './slash-menu';
 
 // Custom Image node: adds a `width` attribute (rendered as inline style) so editors can
 // resize images via width presets. Node name stays `image`, so setImage + updateAttributes
@@ -47,6 +48,7 @@ export const lessonEditorExtensions: Extensions = [
   RevealGate,
   Checkpoint,
   CheckpointOption,
+  SlashCommands,
 ];
 
 export const EMPTY_DOC = { type: 'doc', content: [{ type: 'paragraph' }] };
