@@ -15,6 +15,8 @@ import { PaywallBanner } from '@/components/learning/PaywallBanner';
 import { CollapsibleSummary } from '@/components/learning/CollapsibleSummary';
 import { LessonMaterials } from '@/components/learning/LessonMaterials';
 import { LessonBodyRenderer } from '@/components/learning/LessonBodyRenderer';
+import { InteractiveLessonRenderer } from '@/components/learning/InteractiveLessonRenderer';
+import type { InteractiveProgressState } from '@mpstats/shared';
 import { trpc } from '@/lib/trpc/client';
 import { reachGoal } from '@/lib/analytics/metrika';
 import { METRIKA_GOALS } from '@/lib/analytics/constants';
@@ -487,6 +489,15 @@ export default function LessonPage() {
     },
   });
 
+  const [interactiveReachedEnd, setInteractiveReachedEnd] = useState(false);
+  const saveInteractiveProgress = trpc.learning.saveInteractiveProgress.useMutation();
+  const handleInteractiveProgress = useCallback(
+    (progressState: InteractiveProgressState) => {
+      saveInteractiveProgress.mutate({ lessonId, progressState });
+    },
+    [lessonId, saveInteractiveProgress],
+  );
+
   const completeLesson = trpc.learning.completeLesson.useMutation({
     onSuccess: () => {
       // Invalidate caches so "Уроков пройдено" counter and lesson status refresh
@@ -694,6 +705,30 @@ export default function LessonPage() {
                 initialTime={hasSearchTimecode ? searchTimecode : watchProgress?.lastPosition}
                 durationSeconds={lesson.duration ? lesson.duration * 60 : undefined}
               />
+            </Card>
+          ) : lesson.contentType === 'INTERACTIVE' ? (
+            <Card className="overflow-hidden shadow-mp-card">
+              <CardContent className="p-6">
+                <InteractiveLessonRenderer
+                  doc={lesson.body as never}
+                  initialProgressState={(lesson.progressState as InteractiveProgressState | null) ?? null}
+                  onProgress={handleInteractiveProgress}
+                  onReachedEnd={setInteractiveReachedEnd}
+                />
+                <div className="mt-8 flex justify-center">
+                  <Button
+                    size="lg"
+                    disabled={completeLesson.isPending || lesson.status === 'COMPLETED' || !interactiveReachedEnd}
+                    onClick={() => completeLesson.mutate({ lessonId })}
+                  >
+                    {lesson.status === 'COMPLETED'
+                      ? 'Урок завершён ✓'
+                      : interactiveReachedEnd
+                        ? 'Завершить урок'
+                        : 'Пройдите урок до конца'}
+                  </Button>
+                </div>
+              </CardContent>
             </Card>
           ) : (
             <Card className="overflow-hidden shadow-mp-card">
