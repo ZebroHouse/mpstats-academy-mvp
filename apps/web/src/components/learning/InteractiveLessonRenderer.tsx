@@ -16,7 +16,10 @@ interface Handlers {
 // Each reveal item mounts exactly once (React keeps prior items by key), so this
 // CSS animation plays only when a chunk is first revealed — a smooth fade + rise,
 // like content "arriving" rather than popping in. Re-renders don't replay it.
-const REVEAL_ANIM = 'animate-in fade-in slide-in-from-bottom-3 duration-700 ease-out fill-mode-both';
+// `motion-reduce:animate-none` honors the OS "reduce motion" setting (content
+// just appears, no fade/slide) for motion-sensitive users.
+const REVEAL_ANIM =
+  'animate-in fade-in slide-in-from-bottom-3 duration-700 ease-out fill-mode-both motion-reduce:animate-none';
 
 function RenderItem({ item, handlers }: { item: RevealItem; handlers: Handlers }) {
   if (item.kind === 'segment') {
@@ -111,6 +114,26 @@ export function InteractiveLessonRenderer({
     onReachedEnd(plan.complete);
   }, [plan.complete, onReachedEnd]);
 
+  // After a reveal/choice (not on initial mount/resume), gently bring the freshly
+  // revealed frontier into view — the reveal walker always stops at the bottom of
+  // what's shown, so the end sentinel sits right by the new content / next button.
+  const endRef = useRef<HTMLDivElement>(null);
+  const scrollMountRef = useRef(false);
+  useEffect(() => {
+    if (!scrollMountRef.current) {
+      scrollMountRef.current = true;
+      return;
+    }
+    // Small delay lets the new segment's read-only editor render its height first.
+    const t = setTimeout(() => {
+      const reduce =
+        typeof window !== 'undefined' &&
+        window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+      endRef.current?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'end' });
+    }, 120);
+    return () => clearTimeout(t);
+  }, [state]);
+
   return (
     <div className="interactive-lesson lesson-content max-w-none">
       {plan.items.map((item) => (
@@ -118,6 +141,7 @@ export function InteractiveLessonRenderer({
           <RenderItem item={item} handlers={handlers} />
         </Fragment>
       ))}
+      <div ref={endRef} aria-hidden className="h-px" />
     </div>
   );
 }
