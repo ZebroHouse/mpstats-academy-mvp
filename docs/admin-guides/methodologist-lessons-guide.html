@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Текстовые и интерактивные уроки — гайд методолога · MPSTATS Academy</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#FAFAF9; --bg-secondary:#F8FAFC; --card:#FFFFFF; --line:#E6E6EA; --line-soft:#F2F2F4;
+  --ink:#0A0A0B; --ink-2:#40404A; --ink-3:#8A8A96;
+  --indigo:#4F46E5; --indigo-soft:#EEF0FF; --indigo-ink:#3730A3;
+  --green:#059669; --green-soft:#ECFDF5; --red:#DC2626; --red-soft:#FEF2F2;
+  --amber:#D97706; --amber-soft:#FFFBEB; --slate:#475569;
+  --radius-sm:6px; --radius-md:10px; --radius-lg:14px;
+  --shadow-sm:0 1px 2px rgba(10,10,11,0.03);
+  --shadow-card:0 1px 3px rgba(0,0,0,0.1),0 1px 2px rgba(0,0,0,0.06);
+  --shadow-hover:0 4px 12px rgba(0,0,0,0.1),0 2px 4px rgba(0,0,0,0.06);
+  --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-5:20px;--s-6:24px;--s-8:32px;--s-10:40px;--s-12:48px;--s-16:64px;
+  --transition:200ms ease;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;scroll-padding-top:100px}
+body{font-family:'IBM Plex Sans',-apple-system,system-ui,sans-serif;font-size:15px;line-height:1.55;color:var(--ink);background:var(--bg-secondary);-webkit-font-smoothing:antialiased}
+h1,h2,h3,h4{font-family:'DM Sans',sans-serif;font-weight:700;letter-spacing:-0.02em;line-height:1.12;color:var(--ink)}
+h1{font-size:34px}
+h2{font-size:24px;margin-bottom:var(--s-4)}
+h3{font-size:17px;margin:var(--s-5) 0 var(--s-3)}
+h4{font-size:14px;font-weight:600;letter-spacing:0}
+p{color:var(--ink-2);margin-bottom:var(--s-3)}
+strong{color:var(--ink);font-weight:600}
+.mono{font-family:'IBM Plex Mono',monospace}
+code{font-family:'IBM Plex Mono',monospace;font-size:13px;background:var(--line-soft);padding:2px 6px;border-radius:5px;color:var(--indigo-ink)}
+ul,ol{margin:0 0 var(--s-3) var(--s-5);color:var(--ink-2)}
+li{margin-bottom:var(--s-2)}
+a{color:var(--indigo);text-decoration:none}
+a:hover{text-decoration:underline}
+
+/* Header */
+.header{background:var(--card);border-bottom:1px solid var(--line);padding:var(--s-4) var(--s-8);position:sticky;top:0;z-index:100;display:flex;align-items:center;gap:var(--s-4)}
+.brand-mark{width:30px;height:30px;border-radius:8px;background:var(--indigo);color:#fff;font-family:'DM Sans';font-weight:700;font-size:17px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.header .title{font-family:'DM Sans';font-weight:600;font-size:15px;color:var(--ink)}
+.header .sub{font-family:'IBM Plex Mono';font-size:11px;color:var(--ink-3);letter-spacing:.04em}
+.header .ver{margin-left:auto;font-family:'IBM Plex Mono';font-size:11px;color:var(--ink-3);background:var(--indigo-soft);color:var(--indigo);padding:4px 10px;border-radius:20px}
+
+/* Layout */
+.layout{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:250px 1fr;gap:var(--s-8);padding:var(--s-8);min-height:calc(100vh - 64px)}
+.sidebar{position:sticky;top:90px;align-self:start;max-height:calc(100vh - 110px);overflow-y:auto}
+.toc{background:var(--card);border:1px solid var(--line);border-radius:var(--radius-lg);padding:var(--s-4);box-shadow:var(--shadow-sm)}
+.toc-kicker{font-family:'IBM Plex Mono';font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:var(--ink-3);padding:var(--s-2) var(--s-3) var(--s-3)}
+.toc-link{display:flex;align-items:center;gap:var(--s-3);padding:var(--s-2) var(--s-3);border-radius:var(--radius-sm);color:var(--ink-2);font-size:13px;transition:all var(--transition)}
+.toc-link:hover{background:var(--indigo-soft);color:var(--indigo);text-decoration:none}
+.toc-num{display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;border-radius:50%;background:var(--line-soft);color:var(--ink-3);font-family:'IBM Plex Mono';font-size:11px;font-weight:600;flex:0 0 auto}
+.toc-link:hover .toc-num{background:var(--indigo);color:#fff}
+
+.main{display:flex;flex-direction:column;gap:var(--s-6);min-width:0}
+.content-card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow-card);padding:var(--s-8);animation:cardFadeIn .4s ease both}
+.content-card:hover{box-shadow:var(--shadow-hover)}
+@keyframes cardFadeIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+.kicker{font-family:'IBM Plex Mono';font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--indigo);margin-bottom:var(--s-2)}
+
+/* Callouts */
+.note{border-left:3px solid var(--indigo);background:var(--indigo-soft);border-radius:0 10px 10px 0;padding:var(--s-4) var(--s-5);margin:var(--s-4) 0}
+.note p{color:var(--indigo-ink);margin:0}
+.note.warn{border-color:var(--amber);background:var(--amber-soft)}
+.note.warn p{color:#92500a}
+.note.danger{border-color:var(--red);background:var(--red-soft)}
+.note.danger p{color:#9b1c1c}
+.note .lbl{font-family:'IBM Plex Mono';font-size:10px;text-transform:uppercase;letter-spacing:.12em;font-weight:500;display:block;margin-bottom:var(--s-2);opacity:.85}
+
+/* Step list */
+.steps{counter-reset:step;list-style:none;margin:var(--s-3) 0 0;padding:0}
+.steps li{counter-increment:step;position:relative;padding:0 0 var(--s-4) var(--s-8);border-left:1px solid var(--line);margin-left:11px}
+.steps li:last-child{border-left-color:transparent;padding-bottom:0}
+.steps li::before{content:counter(step);position:absolute;left:-11px;top:-2px;width:22px;height:22px;border-radius:50%;background:var(--indigo);color:#fff;font-family:'IBM Plex Mono';font-size:11px;font-weight:600;display:flex;align-items:center;justify-content:center}
+
+/* Pills / chips for toolbar buttons */
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:13px;background:var(--card);border:1px solid var(--line);border-radius:7px;padding:3px 9px;margin:2px 3px 2px 0;box-shadow:var(--shadow-sm);white-space:nowrap}
+.pill.accent{background:var(--indigo-soft);border-color:#c7cdfb;color:var(--indigo-ink)}
+
+/* Table */
+table.data{width:100%;border-collapse:collapse;font-size:13px;margin-top:var(--s-3)}
+table.data th{font-family:'IBM Plex Mono';font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--ink-3);font-weight:500;border-bottom:1px solid var(--line);padding:10px 12px;text-align:left}
+table.data td{padding:10px 12px;border-bottom:1px solid var(--line-soft);color:var(--ink-2);vertical-align:top}
+table.data td strong{color:var(--ink)}
+
+/* Example block */
+.demo{display:flex;flex-wrap:wrap;gap:var(--s-3);margin-top:var(--s-4)}
+.demo a{display:inline-flex;align-items:center;gap:8px;font-family:'DM Sans';font-weight:600;font-size:14px;padding:11px 18px;border-radius:10px;text-decoration:none;transition:all var(--transition)}
+.demo a.primary{background:var(--indigo);color:#fff}
+.demo a.primary:hover{background:#4338ca;box-shadow:var(--shadow-hover);text-decoration:none}
+.demo a.ghost{background:var(--card);border:1px solid var(--line);color:var(--ink)}
+.demo a.ghost:hover{border-color:var(--indigo);color:var(--indigo);text-decoration:none}
+
+.footer{text-align:center;padding:var(--s-8);font-family:'IBM Plex Mono';font-size:11px;color:var(--ink-3)}
+@media (max-width:880px){.layout{grid-template-columns:1fr}.sidebar{display:none}}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="brand-mark">М</div>
+  <div>
+    <div class="title">Текстовые и интерактивные уроки</div>
+    <div class="sub">Гайд методолога · MPSTATS Academy</div>
+  </div>
+  <div class="ver">v1.21 · интерактив</div>
+</div>
+
+<div class="layout">
+  <aside class="sidebar">
+    <nav class="toc">
+      <div class="toc-kicker">Содержание</div>
+      <a class="toc-link" href="#s1"><span class="toc-num">1</span> Что это и где лежит</a>
+      <a class="toc-link" href="#s2"><span class="toc-num">2</span> Создать урок</a>
+      <a class="toc-link" href="#s3"><span class="toc-num">3</span> Редактор: оформление</a>
+      <a class="toc-link" href="#s4"><span class="toc-num">4</span> Гейт «Читать дальше»</a>
+      <a class="toc-link" href="#s5"><span class="toc-num">5</span> Развилка (чекпоинт)</a>
+      <a class="toc-link" href="#s6"><span class="toc-num">6</span> Слэш-меню «/»</a>
+      <a class="toc-link" href="#s7"><span class="toc-num">7</span> Черновик и публикация</a>
+      <a class="toc-link" href="#s8"><span class="toc-num">8</span> Управление уроками</a>
+      <a class="toc-link" href="#s9"><span class="toc-num">9</span> Что видит ученик</a>
+      <a class="toc-link" href="#s10"><span class="toc-num">10</span> Правила безопасности</a>
+      <a class="toc-link" href="#s11"><span class="toc-num">11</span> Живой пример</a>
+    </nav>
+  </aside>
+
+  <main class="main">
+
+    <!-- INTRO -->
+    <section class="content-card" id="s1" style="animation-delay:.02s">
+      <div class="kicker">§ 01 · Обзор</div>
+      <h1>Уроки можно собирать прямо в админке</h1>
+      <p style="font-size:16px;margin-top:var(--s-3)">Раньше урок = только видео. Теперь методолог сам создаёт <strong>текстовые</strong> уроки (статьи с заголовками, списками, картинками, таблицами) и делает их <strong>интерактивными</strong> — с пошаговым раскрытием «читать дальше» и развилками, где ученик выбирает вариант и идёт по своей ветке.</p>
+      <div class="note">
+        <span class="lbl">Главное</span>
+        <p>Отдельного «типа» урока выбирать не нужно. Любой не-видео урок — это текст, в который вы <strong>по желанию</strong> добавляете интерактивные блоки. Не добавили — получился обычный текстовый урок. Добавили гейт или развилку — он стал интерактивным.</p>
+      </div>
+      <h3>Где что лежит</h3>
+      <table class="data">
+        <thead><tr><th>Что</th><th>Где</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Список уроков курса</strong>, создание, порядок, скрытие</td><td>Админка → <strong>Контент / Курсы</strong> → нужный курс (компонент управления уроками)</td></tr>
+          <tr><td><strong>Редактор урока</strong> (текст + интерактив)</td><td><code>/admin/content/lessons/&lt;id&gt;</code> — открывается при создании урока или по клику на урок</td></tr>
+          <tr><td><strong>Глазами ученика</strong></td><td><code>/learn/&lt;id&gt;</code> (только после публикации)</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- CREATE -->
+    <section class="content-card" id="s2" style="animation-delay:.05s">
+      <div class="kicker">§ 02 · Создание</div>
+      <h2>Создать урок</h2>
+      <ol class="steps">
+        <li>В админке откройте нужный <strong>курс</strong> (раздел управления контентом).</li>
+        <li>Нажмите <span class="pill">+ урок</span>. Откроется окно «Создать урок».</li>
+        <li>Введите <strong>название</strong> и нажмите <span class="pill accent">Создать</span>. Выбирать тип не нужно — текст и интерактив добавляются дальше, в редакторе.</li>
+        <li>Вы автоматически попадёте в <strong>редактор</strong> урока. Новый урок создаётся как <strong>черновик</strong> и пока скрыт от учеников.</li>
+      </ol>
+    </section>
+
+    <!-- EDITOR FORMATTING -->
+    <section class="content-card" id="s3" style="animation-delay:.05s">
+      <div class="kicker">§ 03 · Редактор</div>
+      <h2>Оформление текста</h2>
+      <p>Сверху редактора — панель инструментов (она «прилипает» при прокрутке). Базовые блоки:</p>
+      <div style="margin:var(--s-3) 0">
+        <span class="pill"><strong>Ж</strong> жирный</span>
+        <span class="pill"><em>К</em> курсив</span>
+        <span class="pill">H1 · H2 · H3 заголовки</span>
+        <span class="pill">• список</span>
+        <span class="pill">1. нумерованный</span>
+        <span class="pill">❝ цитата</span>
+        <span class="pill">— разделитель</span>
+        <span class="pill">🖼 картинка</span>
+        <span class="pill">▦ таблица</span>
+        <span class="pill">🔗 ссылка</span>
+        <span class="pill">¶ символы форматирования</span>
+      </div>
+      <ul>
+        <li><strong>Картинка</strong> — загружается с компьютера. После вставки выделите её: появится панель с <strong>пресетами ширины</strong> (25 / 50 / 75 / 100%) и <strong>выравниванием</strong> (слева / по центру / справа).</li>
+        <li><strong>Таблица</strong> — при клике внутрь появляется контекст-панель: добавить/удалить строку и столбец, объединить ячейки, сделать строку-заголовок.</li>
+        <li><strong>Ссылка</strong> — выделите текст, нажмите «ссылка», вставьте URL во всплывающее поле.</li>
+        <li><strong>Предпросмотр</strong> — кнопка показывает черновик так, как его увидит ученик, не публикуя.</li>
+      </ul>
+      <div class="note">
+        <span class="lbl">Совет</span>
+        <p>Сохраняйте черновик по ходу работы (кнопка «Сохранить черновик»). Сохранение черновика не делает урок видимым и не трогает поиск/AI-чат.</p>
+      </div>
+    </section>
+
+    <!-- GATE -->
+    <section class="content-card" id="s4" style="animation-delay:.05s">
+      <div class="kicker">§ 04 · Интерактив</div>
+      <h2>Гейт «Читать дальше»</h2>
+      <p>Гейт — это разделитель. Всё, что стоит <strong>после</strong> него, у ученика скрыто, пока он не нажмёт кнопку. Так контент подаётся порциями, как «сообщения», а не стеной текста.</p>
+      <ol class="steps">
+        <li>Поставьте курсор там, где хотите «спрятать продолжение».</li>
+        <li>Нажмите на панели <span class="pill accent">📖 Читать дальше</span> (или наберите «/», см. §6).</li>
+        <li>В появившейся плашке при желании измените <strong>текст кнопки</strong> (например, «Показать решение», «А что дальше?»).</li>
+        <li>Продолжайте писать урок <strong>под</strong> гейтом — это и будет скрытая порция. Можно поставить ещё один гейт ниже — получится несколько шагов раскрытия.</li>
+      </ol>
+      <div class="note">
+        <span class="lbl">Идея подачи</span>
+        <p>Дробите длинный нарратив на короткие куски, каждый за своим гейтом — ученик раскрывает их по одному, с плавной анимацией. Это ощущается живо, как диалог.</p>
+      </div>
+    </section>
+
+    <!-- CHECKPOINT -->
+    <section class="content-card" id="s5" style="animation-delay:.05s">
+      <div class="kicker">§ 05 · Интерактив</div>
+      <h2>Развилка (чекпоинт)</h2>
+      <p>Развилка даёт ученику выбор из нескольких <strong>вариантов</strong>. Под каждым вариантом — своя цепочка блоков (можно со своими гейтами внутри). После ветки поток <strong>возвращается</strong> на общую линию урока.</p>
+      <ol class="steps">
+        <li>Нажмите <span class="pill accent">🔀 Развилка</span>. Появится карточка с двумя вариантами.</li>
+        <li>У каждого варианта впишите <strong>текст кнопки</strong> (то, что выберет ученик) и наполните его блоками прямо внутри карточки — текст, картинки, гейты.</li>
+        <li>Нужно больше вариантов — <span class="pill">+ Вариант</span>. Лишний — <span class="pill">Убрать вариант</span>.</li>
+        <li>Всё, что вы напишете <strong>после</strong> карточки развилки — это общая линия, к которой ученик придёт из любой ветки.</li>
+      </ol>
+      <div class="note warn">
+        <span class="lbl">Правила развилок</span>
+        <p>Ветки <strong>обязаны сходиться</strong> обратно на общую линию (схождение происходит само — по концу ветки). Расходящихся «до конца» финалов нет. <strong>Вкладывать развилку в развилку нельзя</strong> — гейты внутри ветки можно, ещё одну развилку — нет.</p>
+      </div>
+      <h3>Зачем это нужно</h3>
+      <p>Выбор ученика сохраняется — позже по нему можно смотреть, какие варианты выбирают чаще (аналитика выборов копится в данных прохождения).</p>
+    </section>
+
+    <!-- SLASH -->
+    <section class="content-card" id="s6" style="animation-delay:.05s">
+      <div class="kicker">§ 06 · Удобство</div>
+      <h2>Слэш-меню «/»</h2>
+      <p>Не обязательно тянуться к панели: наберите <code>/</code> прямо в тексте — выпадет короткое меню с интерактивными блоками («Читать дальше», «Развилка»). Выбор — стрелками + Enter или мышкой. То же действие, что и кнопки на панели.</p>
+    </section>
+
+    <!-- PUBLISH -->
+    <section class="content-card" id="s7" style="animation-delay:.05s">
+      <div class="kicker">§ 07 · Публикация</div>
+      <h2>Черновик и публикация</h2>
+      <table class="data">
+        <thead><tr><th>Состояние</th><th>Что значит</th></tr></thead>
+        <tbody>
+          <tr><td><strong>Черновик</strong></td><td>Урок <strong>скрыт</strong> от учеников. Можно сколько угодно править, сохранять, смотреть предпросмотр. В поиск и AI-чат не попадает.</td></tr>
+          <tr><td><strong>Опубликован</strong></td><td>Урок <strong>виден</strong> ученикам. При публикации текст урока (включая текст всех веток) <strong>индексируется</strong> — AI-чат и поиск по платформе начинают его «видеть».</td></tr>
+        </tbody>
+      </table>
+      <div class="note">
+        <span class="lbl">Порядок действий</span>
+        <p>Сначала <strong>сохраните черновик</strong>, потом <strong>опубликуйте</strong>. Публикация берёт сохранённое тело урока — если опубликовать до сохранения, в индекс уйдёт старая версия.</p>
+      </div>
+    </section>
+
+    <!-- MANAGE -->
+    <section class="content-card" id="s8" style="animation-delay:.05s">
+      <div class="kicker">§ 08 · Управление</div>
+      <h2>Редактирование, порядок, скрытие, удаление</h2>
+      <ul>
+        <li><strong>Редактировать</strong> — откройте урок из списка курса. Внесли правки → сохраните → при необходимости опубликуйте заново.</li>
+        <li><strong>Порядок уроков</strong> — перетаскиванием в списке курса. Менять порядок безопасно.</li>
+        <li><strong>Скрыть / показать</strong> — переключатель видимости. Скрытый урок исчезает у учеников и из поиска, но не удаляется — можно вернуть.</li>
+        <li><strong>Удалить</strong> — кнопка удаления требует <strong>явного подтверждения</strong> (галочка). Удаляются и сам урок, и его картинки, и его данные в поиске.</li>
+      </ul>
+    </section>
+
+    <!-- STUDENT -->
+    <section class="content-card" id="s9" style="animation-delay:.05s">
+      <div class="kicker">§ 09 · Ученик</div>
+      <h2>Что видит ученик</h2>
+      <ul>
+        <li>Контент раскрывается <strong>по шагам</strong>: видно до первого гейта, клик — следующая порция плавно появляется и подъезжает в зону видимости.</li>
+        <li>На развилке нужно <strong>выбрать вариант</strong> — пока не выбрал, дальше по общей линии не пойдёт. Выбор <strong>фиксируется</strong>.</li>
+        <li>Дошёл до конца — кнопка <strong>«Завершить урок»</strong> становится активной.</li>
+        <li><strong>«Пройти заново»</strong> — кнопка под уроком (на интерактивных уроках) сбрасывает прохождение к началу, чтобы пройти ещё раз и попробовать другие ветки. Отметка «пройдено» при этом не теряется.</li>
+        <li>Текстовый урок без интерактива показывается целиком, «Завершить» доступно сразу.</li>
+      </ul>
+    </section>
+
+    <!-- SAFETY -->
+    <section class="content-card" id="s10" style="animation-delay:.05s">
+      <div class="kicker">§ 10 · Безопасность</div>
+      <h2>Правила безопасности</h2>
+      <div class="note danger">
+        <span class="lbl">Публикация = боевой контент</span>
+        <p>Платформа одна, тестовой копии базы нет. <strong>Публикация сразу делает урок видимым реальным ученикам.</strong> Готовите/экспериментируете — держите урок <strong>черновиком</strong>, публикуйте только готовое.</p>
+      </div>
+      <div class="note danger">
+        <span class="lbl">Удаление необратимо</span>
+        <p>Удалённый урок не восстановить. Если урок просто не нужен сейчас — <strong>скройте</strong> его, а не удаляйте. Видео-уроки удалить нельзя (защита).</p>
+      </div>
+      <div class="note warn">
+        <span class="lbl">Что не кладём в уроки</span>
+        <p>Никаких паролей, токенов, ключей, персональных данных и внутренних ссылок «для своих». Урок виден ученикам и попадает в поиск/AI-чат.</p>
+      </div>
+      <ul style="margin-top:var(--s-4)">
+        <li>Хотите потренироваться «вживую», но без показа ученикам — попросите завести <strong>скрытый курс</strong>: уроки в нём доступны только по прямой ссылке и не висят в каталоге.</li>
+        <li>Развилки всегда сходятся, вложенных развилок нет — это не ограничение «на сегодня», а правило модели: так урок невозможно «сломать» в тупик или петлю.</li>
+        <li>Сомневаетесь — сохраните черновик и покажите коллеге/куратору через предпросмотр перед публикацией.</li>
+      </ul>
+    </section>
+
+    <!-- EXAMPLE -->
+    <section class="content-card" id="s11" style="animation-delay:.05s;border-color:#c7cdfb">
+      <div class="kicker">§ 11 · Пример</div>
+      <h2>Живой пример — урок-история</h2>
+      <p>Готовый интерактивный урок-образец: история про запуск первого товара на Wildberries — с пошаговым раскрытием и тремя развилками. Лежит в <strong>скрытом курсе</strong>, виден только по прямой ссылке. Откройте его <strong>как ученик</strong> (почувствовать подачу) и <strong>в редакторе</strong> (увидеть, как устроены гейты и развилки изнутри).</p>
+      <div class="demo">
+        <a class="primary" href="https://platform.mpstats.academy/learn/skill_analytics_interactive_24291578" target="_blank" rel="noopener">▶ Открыть как ученик</a>
+        <a class="ghost" href="https://platform.mpstats.academy/admin/content/lessons/skill_analytics_interactive_24291578" target="_blank" rel="noopener">✎ Открыть в редакторе</a>
+      </div>
+      <div class="note" style="margin-top:var(--s-5)">
+        <span class="lbl">Как учиться по примеру</span>
+        <p>В редакторе посмотрите: где стоят гейты «Читать дальше», как у развилки заданы варианты и что лежит внутри каждой ветки, как после ветки идёт общая линия. Скопируйте логику в свой урок.</p>
+      </div>
+    </section>
+
+    <div class="footer">MPSTATS Academy · гайд методолога по текстовым и интерактивным урокам · 2026</div>
+  </main>
+</div>
+
+<script>
+// Active-section highlight in the TOC
+const links=[...document.querySelectorAll('.toc-link')];
+const map=new Map(links.map(l=>[l.getAttribute('href').slice(1),l]));
+const io=new IntersectionObserver(es=>{es.forEach(e=>{if(e.isIntersecting){links.forEach(l=>l.style.background='');const a=map.get(e.target.id);if(a){a.style.background='var(--indigo-soft)';a.style.color='var(--indigo)';}}})},{rootMargin:'-40% 0px -55% 0px'});
+document.querySelectorAll('section[id]').forEach(s=>io.observe(s));
+</script>
+</body>
+</html>
