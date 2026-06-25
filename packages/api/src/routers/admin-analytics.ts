@@ -10,12 +10,29 @@
  * procedures will be added here.
  */
 import { z } from 'zod';
+import { TRPCError } from '@trpc/server';
+import { Prisma } from '@mpstats/db';
 import { router, adminProcedure } from '../trpc';
 import { handleDatabaseError } from '../utils/db-errors';
 import { mapActiveUserStats, type ActiveUserDayRow } from '../utils/active-user-stats';
 import { computeRevenueOverview, computeUpcomingRenewals, groupRevenueByDay } from '../utils/revenue-metrics';
 import { deriveTrialConversion } from '../utils/trial-conversion';
 import { computeConversionFunnel, churnRate, type FunnelUserRow } from '../utils/funnel-metrics';
+import { extractCheckpoints, tallyCheckpoints } from '../utils/checkpoint-analytics';
+
+/**
+ * Pulls a valid checkpointChoices map out of a persisted `progressState`.
+ * Returns null for anything malformed (null, wrong type, version !== 1,
+ * missing/non-object checkpointChoices) so callers can skip it.
+ */
+function checkpointChoicesOf(progressState: unknown): Record<string, string> | null {
+  if (typeof progressState !== 'object' || progressState === null) return null;
+  const state = progressState as { version?: unknown; checkpointChoices?: unknown };
+  if (state.version !== 1) return null;
+  const choices = state.checkpointChoices;
+  if (typeof choices !== 'object' || choices === null || Array.isArray(choices)) return null;
+  return choices as Record<string, string>;
+}
 
 export const adminAnalyticsRouter = router({
   /**
@@ -514,6 +531,107 @@ export const adminAnalyticsRouter = router({
           organic: { users: acc.organic.users.size, revenue: acc.organic.revenue },
         };
       } catch (error) {
+        handleDatabaseError(error);
+      }
+    }),
+
+  /**
+   * Lists text/interactive lessons that contain at least one checkpoint, with a
+   * per-lesson count of non-test students who answered any checkpoint. Sorted
+   * by respondentCount desc, then title asc. Powers the checkpoint dashboard's
+   * lesson picker (Phase C).
+   */
+  listInteractiveLessons: adminProcedure.query(async ({ ctx }) => {
+    try {
+      const lessons = await ctx.prisma.lesson.findMany({
+        where: { contentType: { in: ['TEXT', 'INTERACTIVE'] } },
+        select: {
+          id: true,
+          title: true,
+          isHidden: true,
+          body: true,
+          course: { select: { title: true } },
+        },
+      });
+
+      const withCheckpoints = lessons.filter((l) => extractCheckpoints(l.body).length > 0);
+      if (withCheckpoints.length === 0) return [];
+
+      const ids = withCheckpoints.map((l) => l.id);
+      const progress = await ctx.prisma.lessonProgress.findMany({
+        where: { lessonId: { in: ids }, progressState: { not: Prisma.DbNull } },
+        select: {
+          lessonId: true,
+          progressState: true,
+          path: { select: { user: { select: { isTest: true } } } },
+        },
+      });
+
+      // Count non-test respondents (≥1 checkpoint choice) per lesson.
+      const respondents = new Map<string, number>();
+      for (const row of progress) {
+        if (row.path?.user?.isTest === true) continue;
+        const choices = checkpointChoicesOf(row.progressState);
+        if (!choices || Object.keys(choices).length === 0) continue;
+        respondents.set(row.lessonId, (respondents.get(row.lessonId) ?? 0) + 1);
+      }
+
+      return withCheckpoints
+        .map((l) => ({
+          lessonId: l.id,
+          title: l.title,
+          courseTitle: l.course?.title ?? '',
+          isHidden: l.isHidden,
+          respondentCount: respondents.get(l.id) ?? 0,
+        }))
+        .sort((a, b) => b.respondentCount - a.respondentCount || a.title.localeCompare(b.title));
+    } catch (error) {
+      handleDatabaseError(error);
+    }
+  }),
+
+  /**
+   * Per-checkpoint answer distribution for one lesson, excluding test users.
+   * NOT_FOUND if the lesson is missing.
+   */
+  getCheckpointAnalytics: adminProcedure
+    .input(z.object({ lessonId: z.string() }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const lesson = await ctx.prisma.lesson.findUnique({
+          where: { id: input.lessonId },
+          select: { id: true, title: true, body: true, course: { select: { title: true } } },
+        });
+        if (!lesson) {
+          throw new TRPCError({ code: 'NOT_FOUND', message: 'Lesson not found' });
+        }
+
+        const progress = await ctx.prisma.lessonProgress.findMany({
+          where: { lessonId: input.lessonId, progressState: { not: Prisma.DbNull } },
+          select: {
+            progressState: true,
+            path: { select: { user: { select: { isTest: true } } } },
+          },
+        });
+
+        const choiceMaps: Record<string, string>[] = [];
+        for (const row of progress) {
+          if (row.path?.user?.isTest === true) continue;
+          const choices = checkpointChoicesOf(row.progressState);
+          if (!choices) continue;
+          choiceMaps.push(choices);
+        }
+
+        return {
+          lessonId: lesson.id,
+          lessonTitle: lesson.title,
+          courseTitle: lesson.course?.title ?? '',
+          totalRespondents: choiceMaps.length,
+          checkpoints: tallyCheckpoints(lesson.body, choiceMaps),
+        };
+      } catch (error) {
+        // Re-throw intentional tRPC errors (e.g. NOT_FOUND); only DB errors get wrapped.
+        if (error instanceof TRPCError) throw error;
         handleDatabaseError(error);
       }
     }),

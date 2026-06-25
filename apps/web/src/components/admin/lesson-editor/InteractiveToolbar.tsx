@@ -23,6 +23,14 @@ export function InteractiveToolbar({ editor }: { editor: Editor }) {
       >
         🔀 Развилка
       </Button>
+      <Button
+        type="button"
+        size="sm"
+        variant="ghost"
+        onClick={() => editor.chain().focus().insertImageCarousel().run()}
+      >
+        🎞️ Галерея
+      </Button>
     </div>
   );
 }

@@ -19,7 +19,7 @@ declare module '@tiptap/core' {
   }
 }
 
-const idAttr = {
+export const idAttr = {
   default: null as string | null,
   parseHTML: (el: HTMLElement) => el.getAttribute('data-id'),
   renderHTML: (attrs: { id?: string | null }) => (attrs.id ? { 'data-id': attrs.id } : {}),

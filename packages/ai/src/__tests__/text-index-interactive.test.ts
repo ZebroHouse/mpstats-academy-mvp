@@ -39,6 +39,43 @@ describe('extractPlainText — interactive nodes', () => {
     expect(out).toContain('Водолазы работают под водой.');
   });
 
+  it('surfaces each carousel image alt as its own block, skipping empty alts', () => {
+    const doc = {
+      type: 'doc',
+      content: [
+        { type: 'paragraph', content: [{ type: 'text', text: 'Смотри галерею' }] },
+        {
+          type: 'imageCarousel',
+          attrs: {
+            id: 'g1',
+            images: [
+              { src: 'https://x/1.png', alt: 'Дашборд продаж' },
+              { src: 'https://x/2.png', alt: '' },
+              { src: 'https://x/3.png', alt: 'График выручки' },
+            ],
+          },
+        },
+      ],
+    };
+    const lines = extractPlainText(doc).split('\n');
+    expect(lines).toContain('Смотри галерею');
+    expect(lines).toContain('Дашборд продаж');
+    expect(lines).toContain('График выручки');
+    // empty alt is not pushed
+    expect(lines.filter((l) => l === '')).toHaveLength(0);
+  });
+
+  it('treats a malformed images attr as empty (no crash)', () => {
+    const doc = {
+      type: 'doc',
+      content: [
+        { type: 'paragraph', content: [{ type: 'text', text: 'до' }] },
+        { type: 'imageCarousel', attrs: { id: 'g2', images: 'oops' } },
+      ],
+    };
+    expect(extractPlainText(doc)).toBe('до');
+  });
+
   it('ignores revealGate (no extractable text)', () => {
     const doc = {
       type: 'doc',
