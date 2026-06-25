@@ -110,6 +110,7 @@ export interface LessonWithProgress extends Lesson {
   skillCategories?: string[];  // Phase 30: multi-category tags
   contentType?: LessonContentType;  // TEXT/INTERACTIVE lessons
   body?: unknown;                    // TipTap document, gated behind `locked`
+  progressState?: InteractiveProgressState | null; // INTERACTIVE: reveal/choice state
 }
 
 // ============== AI / RAG ==============
@@ -360,6 +361,17 @@ export const LESSON_CONTENT_TYPE_LABELS: Record<LessonContentType, string> = {
   TEXT: 'Текст',
   INTERACTIVE: 'Интерактивный',
 };
+
+/**
+ * Persisted reveal state for an INTERACTIVE lesson. `revealedGateIds` are the
+ * gate node ids the student has clicked through; `checkpointChoices` maps a
+ * checkpoint node id → the chosen option id (fixed once chosen).
+ */
+export interface InteractiveProgressState {
+  version: 1;
+  revealedGateIds: string[];
+  checkpointChoices: Record<string, string>;
+}
 
 export const LessonContentStatus = {
   DRAFT: 'DRAFT',
