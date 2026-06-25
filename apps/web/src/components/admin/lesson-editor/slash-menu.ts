@@ -34,6 +34,10 @@ export const SlashCommands = Extension.create({
               title: '🔀 Развилка (чекпоинт)',
               run: () => editor.chain().focus().insertCheckpoint().run(),
             },
+            {
+              title: '🎞️ Галерея фото',
+              run: () => editor.chain().focus().insertImageCarousel().run(),
+            },
           ];
           const q = query.toLowerCase();
           return all.filter((i) => i.title.toLowerCase().includes(q));

@@ -26,6 +26,14 @@ export function extractPlainText(doc: JSONNode | null | undefined): string {
       const label = (node.attrs.label as string).trim();
       if (label) blocks.push(label);
     }
+    // Surface each carousel image's alt text so gallery captions are searchable.
+    // imageCarousel is an atom node (no `content`), so do it here.
+    if (node.type === 'imageCarousel' && Array.isArray(node.attrs?.images)) {
+      for (const img of node.attrs.images as { alt?: unknown }[]) {
+        const alt = typeof img?.alt === 'string' ? img.alt.trim() : '';
+        if (alt) blocks.push(alt);
+      }
+    }
     let inline = '';
     if (node.content) for (const child of node.content) inline += walk(child);
     if (node.type && BLOCK_TYPES.has(node.type)) {

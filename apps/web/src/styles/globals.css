@@ -550,4 +550,71 @@ html, body {
     /* show a visible glyph for Shift+Enter line breaks (best effort) */
     @apply after:content-['↵'] after:text-mp-blue-500/40 after:select-none;
   }
+
+  /* ===== Image carousel — student (read-only) view ===== */
+  .lesson-content .image-carousel {
+    @apply outline-none;
+  }
+  .lesson-content .image-carousel-stage {
+    @apply relative flex items-center justify-center;
+  }
+  .lesson-content .image-carousel-stage img {
+    @apply rounded-lg max-h-[480px] w-auto mx-auto my-0;
+  }
+  .lesson-content .image-carousel-arrow {
+    @apply absolute top-1/2 -translate-y-1/2 flex h-9 w-9 items-center justify-center
+           rounded-full bg-white/90 text-xl leading-none text-mp-gray-800 shadow
+           hover:bg-white;
+  }
+  .lesson-content .image-carousel-arrow-prev { @apply left-2; }
+  .lesson-content .image-carousel-arrow-next { @apply right-2; }
+  .lesson-content .image-carousel-footer {
+    @apply mt-2 flex items-center justify-center gap-3;
+  }
+  .lesson-content .image-carousel-dots {
+    @apply flex items-center gap-1.5;
+  }
+  .lesson-content .image-carousel-dot {
+    @apply h-2 w-2 rounded-full bg-mp-gray-300;
+  }
+  .lesson-content .image-carousel-dot.is-active {
+    @apply bg-mp-blue-500;
+  }
+  .lesson-content .image-carousel-counter {
+    @apply text-xs text-mp-gray-500;
+  }
+
+  /* ===== Image carousel — authoring (editor) chrome ===== */
+  .lesson-content .image-carousel-editor {
+    @apply rounded-lg border-2 border-dashed border-mp-blue-300 bg-mp-blue-50 p-3;
+  }
+  .lesson-content .image-carousel-editor-head {
+    @apply mb-2 flex items-center justify-between;
+  }
+  .lesson-content .image-carousel-editor-empty {
+    @apply my-2 text-sm text-mp-gray-500;
+  }
+  .lesson-content .image-carousel-thumbs {
+    @apply flex gap-3 overflow-x-auto pb-1;
+  }
+  .lesson-content .image-carousel-thumb {
+    @apply flex w-32 shrink-0 flex-col gap-1.5;
+  }
+  .lesson-content .image-carousel-thumb img {
+    @apply h-20 w-full rounded border border-mp-gray-200 object-cover my-0;
+  }
+  .lesson-content .image-carousel-thumb-alt {
+    @apply w-full rounded border border-mp-gray-200 px-1.5 py-1 text-xs;
+  }
+  .lesson-content .image-carousel-thumb-actions {
+    @apply flex items-center justify-between text-sm text-mp-gray-600;
+  }
+  .lesson-content .image-carousel-thumb-actions button:disabled {
+    @apply opacity-30;
+  }
+  .lesson-content .image-carousel-add {
+    @apply flex h-20 w-32 shrink-0 cursor-pointer items-center justify-center
+           rounded border-2 border-dashed border-mp-gray-300 bg-white text-center
+           text-sm text-mp-gray-500 hover:border-mp-blue-300 hover:text-mp-blue-500;
+  }
 }
