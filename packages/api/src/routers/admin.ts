@@ -17,6 +17,7 @@ import { refreshBankForCategory } from '../utils/question-bank';
 import { resolveIncludeHidden, canToggleHidden, type AdminRole } from '../utils/visibility';
 import { createClient } from '@supabase/supabase-js';
 import { adminAnalyticsRouter } from './admin-analytics';
+import { adminJobsRouter } from './admin-jobs';
 import { indexLessonText } from '@mpstats/ai';
 import type { SkillCategory } from '@mpstats/shared';
 import {
@@ -68,6 +69,9 @@ export function extractLessonImagePaths(body: unknown): string[] {
 export const adminRouter = router({
   // Analytics sub-router (getAnalytics, getActiveUserStats, getWatchStats)
   analytics: adminAnalyticsRouter,
+
+  // Jobs sub-router (Phase C — getJobs, getJobLessons, searchLessons + mutations)
+  job: adminJobsRouter,
 
   /**
    * Signed upload URL for an image embedded in a lesson body (TipTap).
