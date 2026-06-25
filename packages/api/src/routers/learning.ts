@@ -762,6 +762,49 @@ export const learningRouter = router({
       }
     }),
 
+  // Save interactive-lesson reveal state (gate reveals + checkpoint choices).
+  // Mirrors saveWatchProgress: ensures profile + path, upserts LessonProgress.
+  // Never downgrades a COMPLETED lesson; completion is a separate mutation.
+  saveInteractiveProgress: protectedProcedure
+    .input(
+      z.object({
+        lessonId: z.string(),
+        progressState: z.object({
+          version: z.literal(1),
+          revealedGateIds: z.array(z.string()),
+          checkpointChoices: z.record(z.string()),
+        }),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      try {
+        await ensureUserProfile(ctx.prisma, ctx.user);
+        const path = await ctx.prisma.learningPath.upsert({
+          where: { userId: ctx.user.id },
+          update: {},
+          create: { userId: ctx.user.id, lessons: [] },
+        });
+        const existing = await ctx.prisma.lessonProgress.findUnique({
+          where: { pathId_lessonId: { pathId: path.id, lessonId: input.lessonId } },
+          select: { status: true },
+        });
+        const status = existing?.status === 'COMPLETED' ? 'COMPLETED' : 'IN_PROGRESS';
+        await ctx.prisma.lessonProgress.upsert({
+          where: { pathId_lessonId: { pathId: path.id, lessonId: input.lessonId } },
+          update: { progressState: input.progressState, status },
+          create: {
+            pathId: path.id,
+            lessonId: input.lessonId,
+            progressState: input.progressState,
+            status: 'IN_PROGRESS',
+          },
+        });
+        return { ok: true as const };
+      } catch (error) {
+        handleDatabaseError(error);
+      }
+    }),
+
   // Update lesson progress
   updateProgress: protectedProcedure
     .input(
