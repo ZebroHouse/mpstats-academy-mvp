@@ -4,6 +4,7 @@ import { embedQuery } from './embeddings';
 type JSONNode = {
   type?: string;
   text?: string;
+  attrs?: Record<string, unknown>;
   content?: JSONNode[];
 };
 
@@ -19,6 +20,12 @@ export function extractPlainText(doc: JSONNode | null | undefined): string {
 
   const walk = (node: JSONNode): string => {
     if (node.type === 'text') return node.text ?? '';
+    // Surface a checkpoint option's button label as its own block so the
+    // branch answers are searchable / visible to the AI chat.
+    if (node.type === 'checkpointOption' && typeof node.attrs?.label === 'string') {
+      const label = (node.attrs.label as string).trim();
+      if (label) blocks.push(label);
+    }
     let inline = '';
     if (node.content) for (const child of node.content) inline += walk(child);
     if (node.type && BLOCK_TYPES.has(node.type)) {
