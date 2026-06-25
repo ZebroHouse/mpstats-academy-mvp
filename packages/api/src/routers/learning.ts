@@ -526,6 +526,7 @@ export const learningRouter = router({
             locked,
             contentType: lesson.contentType,
             body: locked ? null : (lesson.body ?? null),
+            progressState: locked ? null : ((lesson.progress[0]?.progressState as never) ?? null),
           } satisfies LessonWithProgress,
           course: { id: lesson.course.id, title: lesson.course.title, slug: lesson.course.slug },
           nextLesson: nextLessonNav,
