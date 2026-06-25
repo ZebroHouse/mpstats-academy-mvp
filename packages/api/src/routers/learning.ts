@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { Prisma } from '@mpstats/db';
 import { TRPCError } from '@trpc/server';
 import { router, protectedProcedure } from '../trpc';
 import { ensureUserProfile } from '../utils/ensure-user-profile';
@@ -799,6 +800,27 @@ export const learningRouter = router({
             progressState: input.progressState,
             status: 'IN_PROGRESS',
           },
+        });
+        return { ok: true as const };
+      } catch (error) {
+        handleDatabaseError(error);
+      }
+    }),
+
+  // Restart an interactive lesson: wipe saved reveal state so it re-runs from
+  // scratch. Keeps completion status (earned credit is not stripped).
+  resetInteractiveProgress: protectedProcedure
+    .input(z.object({ lessonId: z.string() }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        const path = await ctx.prisma.learningPath.findUnique({
+          where: { userId: ctx.user.id },
+          select: { id: true },
+        });
+        if (!path) return { ok: true as const };
+        await ctx.prisma.lessonProgress.updateMany({
+          where: { pathId: path.id, lessonId: input.lessonId },
+          data: { progressState: Prisma.DbNull },
         });
         return { ok: true as const };
       } catch (error) {
