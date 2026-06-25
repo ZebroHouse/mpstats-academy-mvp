@@ -14,8 +14,8 @@ import { LockOverlay } from '@/components/learning/LockOverlay';
 import { PaywallBanner } from '@/components/learning/PaywallBanner';
 import { CollapsibleSummary } from '@/components/learning/CollapsibleSummary';
 import { LessonMaterials } from '@/components/learning/LessonMaterials';
-import { LessonBodyRenderer } from '@/components/learning/LessonBodyRenderer';
 import { InteractiveLessonRenderer } from '@/components/learning/InteractiveLessonRenderer';
+import { hasInteractiveBlocks } from '@/components/learning/interactive-reveal';
 import type { InteractiveProgressState } from '@mpstats/shared';
 import { trpc } from '@/lib/trpc/client';
 import { reachGoal } from '@/lib/analytics/metrika';
@@ -502,6 +502,16 @@ export default function LessonPage() {
     [lessonId, saveInteractiveProgress],
   );
 
+  const [interactiveResetNonce, setInteractiveResetNonce] = useState(0);
+  const resetInteractiveProgress = trpc.learning.resetInteractiveProgress.useMutation({
+    onSuccess: () => utils.learning.getLesson.invalidate({ lessonId }),
+  });
+  const handleRestart = useCallback(() => {
+    setInteractiveResetNonce((n) => n + 1);
+    setInteractiveReachedEnd(false);
+    resetInteractiveProgress.mutate({ lessonId });
+  }, [lessonId, resetInteractiveProgress, utils]);
+
   const completeLesson = trpc.learning.completeLesson.useMutation({
     onSuccess: () => {
       // Invalidate caches so "Уроков пройдено" counter and lesson status refresh
@@ -710,16 +720,21 @@ export default function LessonPage() {
                 durationSeconds={lesson.duration ? lesson.duration * 60 : undefined}
               />
             </Card>
-          ) : lesson.contentType === 'INTERACTIVE' ? (
+          ) : (
             <Card className="overflow-hidden shadow-mp-card">
               <CardContent className="p-6">
                 <InteractiveLessonRenderer
+                  key={interactiveResetNonce}
                   doc={lesson.body as never}
-                  initialProgressState={(lesson.progressState as InteractiveProgressState | null) ?? null}
+                  initialProgressState={
+                    interactiveResetNonce > 0
+                      ? null
+                      : ((lesson.progressState as InteractiveProgressState | null) ?? null)
+                  }
                   onProgress={handleInteractiveProgress}
                   onReachedEnd={setInteractiveReachedEnd}
                 />
-                <div className="mt-8 flex justify-center">
+                <div className="mt-8 flex flex-col items-center gap-3">
                   <Button
                     size="lg"
                     disabled={completeLesson.isPending || lesson.status === 'COMPLETED' || !interactiveReachedEnd}
@@ -731,21 +746,16 @@ export default function LessonPage() {
                         ? 'Завершить урок'
                         : 'Пройдите урок до конца'}
                   </Button>
-                </div>
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="overflow-hidden shadow-mp-card">
-              <CardContent className="p-6">
-                <LessonBodyRenderer doc={lesson.body as never} />
-                <div className="mt-8 flex justify-center">
-                  <Button
-                    size="lg"
-                    disabled={completeLesson.isPending || lesson.status === 'COMPLETED'}
-                    onClick={() => completeLesson.mutate({ lessonId })}
-                  >
-                    {lesson.status === 'COMPLETED' ? 'Урок завершён ✓' : 'Завершить урок'}
-                  </Button>
+                  {hasInteractiveBlocks(lesson.body as never) && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={resetInteractiveProgress.isPending}
+                      onClick={handleRestart}
+                    >
+                      ↻ Пройти заново
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>

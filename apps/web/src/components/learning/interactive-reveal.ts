@@ -20,6 +20,14 @@ export interface RevealPlan {
   complete: boolean;
 }
 
+/** True if the doc contains any reveal gate or checkpoint (recursively). */
+export function hasInteractiveBlocks(doc: JSONContent | null | undefined): boolean {
+  if (!doc) return false;
+  const walk = (n: JSONContent): boolean =>
+    n.type === 'revealGate' || n.type === 'checkpoint' || (n.content ?? []).some(walk);
+  return (doc.content ?? []).some(walk);
+}
+
 const INTERACTIVE_TYPES = new Set(['revealGate', 'checkpoint']);
 
 /**

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { buildRevealPlan, type InteractiveProgressState } from '@/components/learning/interactive-reveal';
+import { buildRevealPlan, hasInteractiveBlocks, type InteractiveProgressState } from '@/components/learning/interactive-reveal';
 
 const empty: InteractiveProgressState = { version: 1, revealedGateIds: [], checkpointChoices: {} };
 const p = (text: string) => ({ type: 'paragraph', content: [{ type: 'text', text }] });
@@ -75,5 +75,14 @@ describe('buildRevealPlan', () => {
     const plan2 = buildRevealPlan([cp, p('after')], state2);
     expect(plan2.complete).toBe(true);
     expect(plan2.items.some((i) => i.kind === 'segment' && JSON.stringify(i).includes('after'))).toBe(true);
+  });
+});
+
+describe('hasInteractiveBlocks', () => {
+  it('detects gates / checkpoints, incl. nested, else false', () => {
+    expect(hasInteractiveBlocks({ type: 'doc', content: [p('a'), gate('g1')] })).toBe(true);
+    expect(hasInteractiveBlocks({ type: 'doc', content: [p('a'), checkpoint('cp1', [['o1', 'A']])] })).toBe(true);
+    expect(hasInteractiveBlocks({ type: 'doc', content: [p('a'), p('b')] })).toBe(false);
+    expect(hasInteractiveBlocks(null)).toBe(false);
   });
 });
