@@ -772,8 +772,8 @@ export const learningRouter = router({
         lessonId: z.string(),
         progressState: z.object({
           version: z.literal(1),
-          revealedGateIds: z.array(z.string()),
-          checkpointChoices: z.record(z.string()),
+          revealedGateIds: z.array(z.string().min(1)),
+          checkpointChoices: z.record(z.string().min(1)),
         }),
       }),
     )

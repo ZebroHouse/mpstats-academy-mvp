@@ -490,7 +490,11 @@ export default function LessonPage() {
   });
 
   const [interactiveReachedEnd, setInteractiveReachedEnd] = useState(false);
-  const saveInteractiveProgress = trpc.learning.saveInteractiveProgress.useMutation();
+  const saveInteractiveProgress = trpc.learning.saveInteractiveProgress.useMutation({
+    onError: (err) => {
+      console.warn('[interactive] progress save failed:', err.message);
+    },
+  });
   const handleInteractiveProgress = useCallback(
     (progressState: InteractiveProgressState) => {
       saveInteractiveProgress.mutate({ lessonId, progressState });

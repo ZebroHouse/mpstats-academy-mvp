@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useEffect, useState, Fragment } from 'react';
+import { useEffect, useRef, useState, Fragment } from 'react';
 import type { JSONContent } from '@tiptap/react';
 import { Button } from '@/components/ui/button';
 import { LessonBodyRenderer } from './LessonBodyRenderer';
@@ -66,22 +66,32 @@ export function InteractiveLessonRenderer({
 }) {
   const [state, setState] = useState<InteractiveProgressState>(initialProgressState ?? EMPTY_STATE);
 
-  const update = useCallback(
-    (next: InteractiveProgressState) => {
-      setState(next);
-      onProgress(next);
-    },
-    [onProgress],
-  );
+  // Persist on every real state change (skip the initial mount / resumed state).
+  const onProgressRef = useRef(onProgress);
+  onProgressRef.current = onProgress;
+  const mountedRef = useRef(false);
+  useEffect(() => {
+    if (!mountedRef.current) {
+      mountedRef.current = true;
+      return;
+    }
+    onProgressRef.current(state);
+  }, [state]);
 
   const handlers: Handlers = {
     passGate: (id) => {
-      if (state.revealedGateIds.includes(id)) return;
-      update({ ...state, revealedGateIds: [...state.revealedGateIds, id] });
+      setState((prev) =>
+        prev.revealedGateIds.includes(id)
+          ? prev
+          : { ...prev, revealedGateIds: [...prev.revealedGateIds, id] },
+      );
     },
     chooseOption: (checkpointId, optionId) => {
-      if (state.checkpointChoices[checkpointId]) return; // fixed once chosen
-      update({ ...state, checkpointChoices: { ...state.checkpointChoices, [checkpointId]: optionId } });
+      setState((prev) =>
+        prev.checkpointChoices[checkpointId]
+          ? prev // fixed once chosen
+          : { ...prev, checkpointChoices: { ...prev.checkpointChoices, [checkpointId]: optionId } },
+      );
     },
   };
 
