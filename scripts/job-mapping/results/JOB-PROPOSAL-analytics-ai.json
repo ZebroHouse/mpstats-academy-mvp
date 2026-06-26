@@ -1,0 +1,1329 @@
+{
+  "generatedFrom": "Решения задач: Реклама r4-5, Аналитика r35-69, AI r76-88",
+  "jobs": [
+    {
+      "slug": "sravnit-formaty-reklamy-po-cpo-i-drr",
+      "title": "Сравнить форматы рекламы по CPO и ДРР",
+      "description": "Выбрать формат рекламы и сравнить поиск, полки, CPC и CPM по экономике",
+      "outcomes": [
+        "Сравнить поиск, полки, CPC и CPM по CPO и ДРР",
+        "Выбрать формат рекламы под новинку, локомотив или сезон",
+        "Понять, когда менять ставку и стратегию по цифрам"
+      ],
+      "axes": [
+        "MARKETING",
+        "ANALYTICS"
+      ],
+      "skillBlocks": [
+        "MARKETING/ad_strategy",
+        "MARKETING/ad_optimization",
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/market_trends",
+        "ANALYTICS/sales_funnel"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 100,
+      "isPublished": true,
+      "lessonIds": [
+        "02_ads_m06_strategies_002",
+        "02_ads_m06_strategies_003",
+        "02_ads_m06_strategies_004",
+        "02_ads_m06_strategies_005",
+        "02_ads_m06_strategies_006",
+        "02_ads_m06_strategies_007",
+        "02_ads_m06_strategies_008",
+        "02_ads_m06_strategies_009",
+        "02_ads_m06_strategies_011",
+        "02_ads_m06_strategies_012",
+        "02_ads_m06_strategies_013"
+      ],
+      "_block": "ADS-NEW",
+      "_row": 4,
+      "_gaps": [
+        "НЕТ УРОКА: У вас локомотив: как удержаться на позиции"
+      ]
+    },
+    {
+      "slug": "nayti-pribylnuyu-poziciyu-i-stavku-po-klyuchu",
+      "title": "Найти прибыльную позицию и ставку по ключу",
+      "description": "Найти прибыльную позицию в выдаче и не переплачивать за топ",
+      "outcomes": [
+        "Найти прибыльную позицию в выдаче без переплаты за топ",
+        "Подобрать ставку по ключу через единую и ручную механику",
+        "Спланировать бюджет так, чтобы реклама окупалась"
+      ],
+      "axes": [
+        "MARKETING",
+        "ANALYTICS",
+        "CONTENT"
+      ],
+      "skillBlocks": [
+        "MARKETING/ad_strategy",
+        "MARKETING/ad_optimization",
+        "ANALYTICS/sales_funnel",
+        "CONTENT/reviews_management",
+        "ANALYTICS/competitor_analysis"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 101,
+      "isPublished": true,
+      "lessonIds": [
+        "02_ads_m04_ads_economics_009",
+        "02_ads_m04_ads_economics_010",
+        "02_ads_m04_ads_economics_011",
+        "02_ads_m05_tools_001",
+        "02_ads_m05_tools_002",
+        "02_ads_m05_tools_003",
+        "02_ads_m05_tools_005",
+        "02_ads_m05_tools_006",
+        "02_ads_m06_strategies_002",
+        "02_ads_m06_strategies_003",
+        "02_ads_m06_strategies_004",
+        "02_ads_m06_strategies_005",
+        "02_ads_m06_strategies_006",
+        "02_ads_m06_strategies_007",
+        "02_ads_m06_strategies_008",
+        "02_ads_m06_strategies_009",
+        "02_ads_m06_strategies_011",
+        "02_ads_m06_strategies_012",
+        "02_ads_m06_strategies_013"
+      ],
+      "_block": "ADS-NEW",
+      "_row": 5,
+      "_gaps": [
+        "НЕТ УРОКА: У вас локомотив: как удержаться на позиции"
+      ]
+    },
+    {
+      "slug": "rasschitat-yunit-ekonomiku-i-nayti-prichinu-ubytka-po-sku",
+      "title": "Рассчитать юнит-экономику и найти причину убытка по SKU",
+      "description": "Посчитать юнитку по SKU и понять, где товар теряет деньги",
+      "outcomes": [
+        "Посчитать юнит-экономику по каждому SKU",
+        "Найти, где товар теряет деньги — в цене, расходах или налоге",
+        "Собрать рабочую таблицу юнитки с вашими вводными"
+      ],
+      "axes": [
+        "FINANCE",
+        "ANALYTICS",
+        "OPERATIONS"
+      ],
+      "skillBlocks": [
+        "FINANCE/unit_economics",
+        "FINANCE/cost_management",
+        "ANALYTICS/product_metrics",
+        "OPERATIONS/inventory_management",
+        "ANALYTICS/product_niche_selection"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 102,
+      "isPublished": true,
+      "lessonIds": [
+        "01_analytics_m02_economics_001",
+        "01_analytics_m02_economics_002",
+        "01_analytics_m02_economics_003",
+        "01_analytics_m02_economics_004",
+        "01_analytics_m02_economics_005",
+        "01_analytics_m02_economics_006",
+        "01_analytics_m02_economics_007"
+      ],
+      "_block": "ANALYTICS",
+      "_row": 35,
+      "_gaps": []
+    },
+    {
+      "slug": "snizit-logisticheskie-poteri-i-pereschitat-yunitku-po-faktu",
+      "title": "Снизить логистические потери и пересчитать юнитку по факту",
+      "description": "Найти, где логистика и упаковка ломают прибыль",
+      "outcomes": [
+        "Найти, где логистика и упаковка ломают прибыль",
+        "Пересчитать юнитку по фактическим расходам",
+        "Связать оборачиваемость и географию заказов с маржой"
+      ],
+      "axes": [
+        "FINANCE",
+        "ANALYTICS",
+        "OPERATIONS"
+      ],
+      "skillBlocks": [
+        "FINANCE/unit_economics",
+        "ANALYTICS/product_metrics",
+        "FINANCE/cost_management",
+        "OPERATIONS/inventory_management",
+        "ANALYTICS/product_niche_selection"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 103,
+      "isPublished": true,
+      "lessonIds": [
+        "01_analytics_m02_economics_001",
+        "01_analytics_m02_economics_002",
+        "01_analytics_m02_economics_003",
+        "01_analytics_m02_economics_004",
+        "01_analytics_m02_economics_005",
+        "01_analytics_m02_economics_006",
+        "01_analytics_m02_economics_007",
+        "01_analytics_m02_economics_008",
+        "skill_operations_geography_002"
+      ],
+      "_block": "ANALYTICS",
+      "_row": 37,
+      "_gaps": []
+    },
+    {
+      "slug": "sravnit-fbo-i-fbs-po-pribyli-i-roli-sku",
+      "title": "Сравнить FBO и FBS по прибыли и роли SKU",
+      "description": "Выбрать схему FBO/FBS и не смешивать экономику разных моделей",
+      "outcomes": [
+        "Сравнить FBO и FBS по прибыли для каждого SKU",
+        "Выбрать схему под роль товара, а не смешивать экономику",
+        "Спланировать продажи с учетом логистики Wildberries"
+      ],
+      "axes": [
+        "OPERATIONS",
+        "ANALYTICS"
+      ],
+      "skillBlocks": [
+        "OPERATIONS/logistics_fbo_fbs",
+        "ANALYTICS/target_audience",
+        "ANALYTICS/market_trends",
+        "OPERATIONS/ozon_specifics",
+        "ANALYTICS/assortment_management"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 104,
+      "isPublished": true,
+      "lessonIds": [
+        "skill_operations_logistics_002",
+        "skill_operations_geography_002",
+        "skill_analytics_sales_forecast_001",
+        "skill_analytics_sales_forecast_002"
+      ],
+      "_block": "ANALYTICS",
+      "_row": 39,
+      "_gaps": []
+    },
+    {
+      "slug": "razlozhit-tovar-po-skladam-pod-spros-lokalizaciyu-i-oborachk",
+      "title": "Разложить товар по складам под спрос, локализацию и оборачку",
+      "description": "Рассчитать поставки по складам и удерживать локализацию без кассового разрыва",
+      "outcomes": [
+        "Рассчитать поставки по складам под спрос и локализацию",
+        "Удержать оборачиваемость без кассового разрыва",
+        "Распределить остатки по географии заказов Wildberries"
+      ],
+      "axes": [
+        "OPERATIONS",
+        "ANALYTICS",
+        "FINANCE"
+      ],
+      "skillBlocks": [
+        "OPERATIONS/logistics_fbo_fbs",
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/target_audience",
+        "ANALYTICS/market_trends",
+        "FINANCE/pricing"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 105,
+      "isPublished": true,
+      "lessonIds": [
+        "skill_operations_logistics_002",
+        "01_analytics_m02_economics_008",
+        "skill_operations_geography_002",
+        "skill_analytics_sales_forecast_001",
+        "skill_analytics_sales_forecast_002"
+      ],
+      "_block": "ANALYTICS",
+      "_row": 41,
+      "_gaps": []
+    },
+    {
+      "slug": "povysit-vykup-i-ubrat-prichiny-vozvratov",
+      "title": "Повысить выкуп и убрать причины возвратов",
+      "description": "Повысить выкуп и снизить потери на возвратах",
+      "outcomes": [
+        "Найти причины возвратов через отзывы и вопросы",
+        "Поднять выкуп и снизить потери на возвратах",
+        "Учесть стоимость возвратов в юнит-экономике"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "FINANCE"
+      ],
+      "skillBlocks": [
+        "ANALYTICS/target_audience",
+        "FINANCE/unit_economics",
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/product_niche_selection",
+        "FINANCE/cost_management"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 106,
+      "isPublished": true,
+      "lessonIds": [
+        "skill_analytics_target_audience_001",
+        "skill_analytics_target_audience_002",
+        "skill_analytics_target_audience_003",
+        "skill_analytics_target_audience_004",
+        "01_analytics_m02_economics_001",
+        "01_analytics_m02_economics_002",
+        "01_analytics_m02_economics_003",
+        "01_analytics_m02_economics_004",
+        "01_analytics_m02_economics_005",
+        "01_analytics_m02_economics_006",
+        "01_analytics_m02_economics_007"
+      ],
+      "_block": "ANALYTICS",
+      "_row": 43,
+      "_gaps": [
+        "ДОЗАГРУЗИТЬ: Диагональное сканирование карточек",
+        "ДОЗАГРУЗИТЬ: Работа с таблицей «Распаковка конкурентов»"
+      ]
+    },
+    {
+      "slug": "nastroit-ocifrovku-kabineta-i-ezhednevnyy-kontrol-pokazatele",
+      "title": "Настроить оцифровку кабинета и ежедневный контроль показателей",
+      "description": "Настроить управленческий контроль магазина, чтобы видеть прибыль, рекламу, остатки и отклонения",
+      "outcomes": [
+        "Настроить ежедневный контроль прибыли, рекламы и остатков",
+        "Читать P&L и видеть отклонения по магазину",
+        "Собрать управленческую панель по показателям кабинета"
+      ],
+      "axes": [
+        "FINANCE",
+        "ANALYTICS",
+        "OPERATIONS"
+      ],
+      "skillBlocks": [
+        "FINANCE/unit_economics",
+        "ANALYTICS/data_tools",
+        "OPERATIONS/platform_tools",
+        "OPERATIONS/process_automation",
+        "FINANCE/cost_management"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 107,
+      "isPublished": true,
+      "lessonIds": [
+        "02_ads_m07_optimization_005",
+        "skill_finance_pl_economics_001",
+        "skill_finance_pl_economics_002"
+      ],
+      "_block": "ANALYTICS",
+      "_row": 45,
+      "_gaps": []
+    },
+    {
+      "slug": "diagnostirovat-prosadku-prodazh-po-voronke-i-tochkam-vhoda",
+      "title": "Диагностировать просадку продаж по воронке и точкам входа",
+      "description": "Найти причину просадки продаж через воронку и источники трафика",
+      "outcomes": [
+        "Найти причину просадки продаж по воронке",
+        "Разобрать источники трафика и точки входа в карточку",
+        "Отделить проблему показов от проблемы конверсии"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "MARKETING"
+      ],
+      "skillBlocks": [
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/target_audience",
+        "ANALYTICS/sales_funnel",
+        "ANALYTICS/competitor_analysis",
+        "MARKETING/ad_strategy"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 108,
+      "isPublished": true,
+      "lessonIds": [
+        "02_ads_m01_prep_001",
+        "skill_analytics_focus_products_001",
+        "skill_analytics_focus_products_002",
+        "skill_analytics_focus_products_003",
+        "02_ads_m03_visual_ctr_005",
+        "02_ads_m01_prep_002",
+        "skill_marketing_ad_metrics_001",
+        "skill_operations_geography_002",
+        "01_analytics_m04_product_selection_008"
+      ],
+      "_block": "ANALYTICS",
+      "_row": 47,
+      "_gaps": []
+    },
+    {
+      "slug": "zapustit-novuyu-kartochku-ili-vosstanovit-staruyu-posle-pauz",
+      "title": "Запустить новую карточку или восстановить старую после паузы",
+      "description": "Запустить или реанимировать карточку без слива бюджета",
+      "outcomes": [
+        "Запустить новую карточку без слива бюджета",
+        "Реанимировать карточку после паузы по воронке и ядру",
+        "Собрать SEO-ядро и усилить контент под ранжирование"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "CONTENT"
+      ],
+      "skillBlocks": [
+        "ANALYTICS/target_audience",
+        "ANALYTICS/product_niche_selection",
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/product_metrics",
+        "CONTENT/reviews_management"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 109,
+      "isPublished": true,
+      "lessonIds": [
+        "02_ads_m02_top_001",
+        "02_ads_m02_top_002",
+        "02_ads_m02_top_003",
+        "01_analytics_m04_product_selection_006",
+        "skill_analytics_focus_products_001",
+        "skill_analytics_focus_products_002",
+        "skill_analytics_focus_products_003",
+        "skill_analytics_focus_products_004",
+        "skill_analytics_product_card_improvement_001",
+        "skill_analytics_product_card_improvement_002",
+        "skill_analytics_product_card_improvement_003"
+      ],
+      "_block": "ANALYTICS",
+      "_row": 49,
+      "_gaps": []
+    },
+    {
+      "slug": "podnyat-ctr-i-sdelat-pervyy-slayd-klikabelnym-ispravit-prova",
+      "title": "Поднять CTR и сделать первый слайд кликабельным / Исправить провал между кликом, корзиной и заказом",
+      "description": "Поднять CTR через обложку, мобильную читаемость и визуальную отстройку",
+      "outcomes": [
+        "Поднять CTR через обложку и мобильную читаемость",
+        "Отстроить первый слайд от конкурентов в выдаче",
+        "Найти провал между кликом, корзиной и заказом"
+      ],
+      "axes": [
+        "ANALYTICS"
+      ],
+      "skillBlocks": [
+        "ANALYTICS/target_audience",
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/sales_funnel",
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/product_niche_selection"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 110,
+      "isPublished": true,
+      "lessonIds": [
+        "skill_analytics_focus_products_001",
+        "skill_analytics_focus_products_002",
+        "skill_analytics_focus_products_003",
+        "skill_analytics_focus_products_004",
+        "skill_operations_geography_002"
+      ],
+      "_block": "ANALYTICS",
+      "_row": 51,
+      "_gaps": []
+    },
+    {
+      "slug": "zakryt-barery-pokupki-i-oshibki-ispolzovaniya-v-kartochke",
+      "title": "Закрыть барьеры покупки и ошибки использования в карточке",
+      "description": "Объяснить сложный товар через инструкцию, сценарии и результат применения",
+      "outcomes": [
+        "Закрыть барьеры покупки через смыслы из отзывов",
+        "Объяснить сложный товар сценариями и результатом применения",
+        "Проверить контент через A/B-тесты фото и видео"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "CONTENT"
+      ],
+      "skillBlocks": [
+        "ANALYTICS/target_audience",
+        "CONTENT/neural_content",
+        "CONTENT/copywriting",
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/market_trends"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 111,
+      "isPublished": true,
+      "lessonIds": [
+        "skill_analytics_target_audience_001",
+        "skill_analytics_target_audience_002",
+        "skill_analytics_target_audience_003",
+        "skill_analytics_target_audience_004",
+        "03_ai_m02_neuroanalytics_007",
+        "03_ai_m02_neuroanalytics_008",
+        "03_ai_m02_neuroanalytics_009",
+        "02_ads_m03_visual_ctr_003",
+        "02_ads_m03_visual_ctr_004",
+        "02_ads_m03_visual_ctr_007",
+        "02_ads_m03_visual_ctr_008",
+        "02_ads_m03_visual_ctr_009"
+      ],
+      "_block": "ANALYTICS",
+      "_row": 53,
+      "_gaps": []
+    },
+    {
+      "slug": "ocenit-sezonnyy-spros-i-podgotovitsya-k-piku",
+      "title": "Оценить сезонный спрос и подготовиться к пику",
+      "description": "Подготовить товар, рекламу и остатки к сезону на основе данных",
+      "outcomes": [
+        "Определить сезонность товара по данным спроса",
+        "Подготовить остатки и рекламу к пику продаж",
+        "Выстроить рекламную стратегию под сезонный товар"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "CONTENT"
+      ],
+      "skillBlocks": [
+        "ANALYTICS/market_trends",
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/competitor_analysis",
+        "CONTENT/reviews_management",
+        "CONTENT/neural_content"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 112,
+      "isPublished": true,
+      "lessonIds": [
+        "02_ads_m06_strategies_010",
+        "02_ads_m06_strategies_011",
+        "02_ads_m06_strategies_012",
+        "skill_analytics_sales_forecast_001",
+        "skill_operations_geography_002"
+      ],
+      "_block": "ANALYTICS",
+      "_row": 55,
+      "_gaps": []
+    },
+    {
+      "slug": "proverit-nishu-i-tovar-do-zakupki",
+      "title": "Проверить нишу и товар до закупки",
+      "description": "Оценить нишу, конкурентов и емкость перед запуском или расширением",
+      "outcomes": [
+        "Оценить нишу, конкурентов и емкость до закупки",
+        "Посчитать объем первой партии под бюджет и риски",
+        "Принять решение по нише через таблицу критериев"
+      ],
+      "axes": [
+        "ANALYTICS"
+      ],
+      "skillBlocks": [
+        "ANALYTICS/product_niche_selection",
+        "ANALYTICS/market_trends",
+        "ANALYTICS/target_audience",
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/competitor_analysis"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 113,
+      "isPublished": true,
+      "lessonIds": [
+        "01_analytics_m04_product_selection_001",
+        "01_analytics_m04_product_selection_002",
+        "01_analytics_m04_product_selection_020",
+        "skill_analytics_category_selection_003",
+        "skill_analytics_category_selection_004",
+        "01_analytics_m04_product_selection_005",
+        "01_analytics_m03_competitors_004",
+        "01_analytics_m03_competitors_005",
+        "01_analytics_m04_product_selection_006",
+        "01_analytics_m04_product_selection_022",
+        "01_analytics_m04_product_selection_007",
+        "01_analytics_m04_product_selection_008",
+        "01_analytics_m04_product_selection_009",
+        "01_analytics_m04_product_selection_010",
+        "01_analytics_m04_product_selection_011",
+        "01_analytics_m04_product_selection_012"
+      ],
+      "_block": "ANALYTICS",
+      "_row": 57,
+      "_gaps": []
+    },
+    {
+      "slug": "nayti-pryamyh-konkurentov-i-ne-sravnivat-sebya-so-vsem-rynko",
+      "title": "Найти прямых конкурентов и не сравнивать себя со всем рынком",
+      "description": "Собрать правильную группу конкурентов по цене, назначению, характеристикам и сценарию покупки",
+      "outcomes": [
+        "Собрать группу прямых конкурентов по цене и сценарию покупки",
+        "Провести конкурентный анализ и SWOT с целью",
+        "Перестать сравнивать себя со всем рынком"
+      ],
+      "axes": [
+        "ANALYTICS"
+      ],
+      "skillBlocks": [
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/market_trends",
+        "ANALYTICS/target_audience",
+        "ANALYTICS/product_niche_selection",
+        "ANALYTICS/product_metrics"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 114,
+      "isPublished": true,
+      "lessonIds": [
+        "01_analytics_m03_competitors_001",
+        "01_analytics_m03_competitors_002",
+        "01_analytics_m03_competitors_003",
+        "01_analytics_m03_competitors_006",
+        "01_analytics_m03_competitors_007",
+        "01_analytics_m03_competitors_008",
+        "01_analytics_m03_competitors_009",
+        "01_analytics_m03_competitors_010",
+        "01_analytics_m03_competitors_013",
+        "01_analytics_m04_product_selection_005"
+      ],
+      "_block": "ANALYTICS",
+      "_row": 58,
+      "_gaps": [
+        "ДОЗАГРУЗИТЬ: Как определить цену в период высоких продаж"
+      ]
+    },
+    {
+      "slug": "proverit-akciyu-po-pribyli-mediane-i-realnomu-prirostu",
+      "title": "Проверить акцию по прибыли, медиане и реальному приросту",
+      "description": "Решить, стоит ли участвовать в акции и не сломать цену",
+      "outcomes": [
+        "Проверить акцию по прибыли, медиане и реальному приросту",
+        "Решить, участвовать или нет, и не сломать цену",
+        "Посчитать выгоду акции через таблицу анализа"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "MARKETING"
+      ],
+      "skillBlocks": [
+        "ANALYTICS/product_niche_selection",
+        "ANALYTICS/market_trends",
+        "ANALYTICS/target_audience",
+        "MARKETING/ad_strategy",
+        "ANALYTICS/product_metrics"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 115,
+      "isPublished": true,
+      "lessonIds": [
+        "01_analytics_m02_economics_013",
+        "skill_analytics_promo_analysis_002",
+        "skill_analytics_promo_analysis_003"
+      ],
+      "_block": "ANALYTICS",
+      "_row": 59,
+      "_gaps": [
+        "ДОЗАГРУЗИТЬ: Как определить цену в период высоких продаж",
+        "ДОЗАГРУЗИТЬ: Как участвовать в акциях в сезон Q4"
+      ]
+    },
+    {
+      "slug": "sokratit-matricu-i-ostavit-sku-kotorye-dayut-dengi",
+      "title": "Сократить матрицу и оставить SKU, которые дают деньги",
+      "description": "Разобрать ассортимент и понять, что масштабировать, дорабатывать или выводить",
+      "outcomes": [
+        "Разобрать ассортимент через ABC-анализ",
+        "Оставить SKU, которые дают деньги, и вывести балласт",
+        "Принять решения по матрице: масштабировать, дорабатывать, убрать"
+      ],
+      "axes": [
+        "ANALYTICS"
+      ],
+      "skillBlocks": [
+        "ANALYTICS/assortment_management",
+        "ANALYTICS/product_niche_selection",
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/target_audience",
+        "ANALYTICS/market_trends"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 116,
+      "isPublished": true,
+      "lessonIds": [
+        "skill_analytics_assortment_001",
+        "skill_analytics_assortment_002",
+        "skill_analytics_assortment_003",
+        "skill_analytics_assortment_004",
+        "skill_analytics_internal_analytics_001"
+      ],
+      "_block": "ANALYTICS",
+      "_row": 61,
+      "_gaps": []
+    },
+    {
+      "slug": "splanirovat-zakupku-postavku-i-oborachivaemost-po-scenariyam",
+      "title": "Спланировать закупку, поставку и оборачиваемость по сценариям",
+      "description": "Планировать закупку и остатки без кассового разрыва и перетарки",
+      "outcomes": [
+        "Спланировать закупку и поставку по сценариям спроса",
+        "Удержать оборачиваемость без перетарки и кассового разрыва",
+        "Связать план продаж с сезонностью и географией"
+      ],
+      "axes": [
+        "ANALYTICS"
+      ],
+      "skillBlocks": [
+        "ANALYTICS/market_trends",
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/product_niche_selection",
+        "ANALYTICS/target_audience",
+        "ANALYTICS/assortment_management"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 117,
+      "isPublished": true,
+      "lessonIds": [
+        "skill_analytics_sales_forecast_001",
+        "skill_analytics_sales_forecast_002",
+        "01_analytics_m02_economics_008",
+        "skill_operations_geography_002",
+        "01_analytics_m04_product_selection_008"
+      ],
+      "_block": "ANALYTICS",
+      "_row": 63,
+      "_gaps": []
+    },
+    {
+      "slug": "usilit-doverie-kartochki-cherez-otzyvy-status-i-dokazatelstv",
+      "title": "Усилить доверие карточки через отзывы, статус и доказательства",
+      "description": "Управлять доверием карточки через отзывы, статус и доказательства качества",
+      "outcomes": [
+        "Усилить доверие карточки через отзывы и доказательства качества",
+        "Управлять статусом карточки по воронке и ранжированию",
+        "Собрать смыслы ЦА из отзывов для контента"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "CONTENT"
+      ],
+      "skillBlocks": [
+        "ANALYTICS/target_audience",
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/product_metrics",
+        "CONTENT/reviews_management",
+        "ANALYTICS/market_trends"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 118,
+      "isPublished": true,
+      "lessonIds": [
+        "01_analytics_m04_product_selection_006",
+        "skill_analytics_target_audience_001",
+        "skill_analytics_target_audience_002",
+        "skill_analytics_target_audience_003",
+        "skill_analytics_target_audience_004",
+        "skill_analytics_focus_products_001",
+        "skill_analytics_focus_products_002",
+        "skill_analytics_focus_products_003",
+        "skill_analytics_focus_products_004",
+        "skill_analytics_product_card_improvement_001",
+        "skill_analytics_product_card_improvement_002",
+        "skill_analytics_product_card_improvement_003"
+      ],
+      "_block": "ANALYTICS",
+      "_row": 65,
+      "_gaps": [
+        "НЕТ УРОКА: AB тестир"
+      ]
+    },
+    {
+      "slug": "opredelit-rol-menedzhera-i-kpi-dlya-delegirovaniya",
+      "title": "Определить роль менеджера и KPI для делегирования",
+      "description": "Определить роль менеджера и выстроить контроль команды",
+      "outcomes": [
+        "Определить роль менеджера и зоны ответственности",
+        "Задать KPI и отчетность для делегирования",
+        "Выстроить ритм управления командой по дням и неделям"
+      ],
+      "axes": [
+        "ANALYTICS"
+      ],
+      "skillBlocks": [],
+      "marketplace": "WB",
+      "displayOrder": 119,
+      "isPublished": false,
+      "lessonIds": [],
+      "_block": "ANALYTICS",
+      "_row": 66,
+      "_gaps": [
+        "ДОЗАГРУЗИТЬ: Все эти уроки нужно загрузить, ссылки на видео есть в строках 72-77 таблицы \"Дозагрузка видео\"",
+        "НЕТ УРОКА: Диагностика команды: реальные зоны ответственности и провалы",
+        "НЕТ УРОКА: KPI и отчетность по ролям",
+        "НЕТ УРОКА: Профиль менеджера: задачи, компетенции, тестовое задание",
+        "НЕТ УРОКА: Воронка найма и условия",
+        "НЕТ УРОКА: Адаптация и запуск сотрудников",
+        "НЕТ УРОКА: Ритм управления: день / неделя / месяц"
+      ]
+    },
+    {
+      "slug": "snizit-kassovyy-razryv-i-uchest-stoimost-oborotki",
+      "title": "Снизить кассовый разрыв и учесть стоимость оборотки",
+      "description": "Управлять cash flow, выплатами и стоимостью замороженных денег",
+      "outcomes": [
+        "Управлять cash flow и графиком выплат",
+        "Учесть стоимость замороженных в товаре денег",
+        "Связать P&L, план продаж и юнитку в одну картину"
+      ],
+      "axes": [
+        "FINANCE",
+        "ANALYTICS",
+        "OPERATIONS"
+      ],
+      "skillBlocks": [
+        "FINANCE/unit_economics",
+        "FINANCE/cost_management",
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/product_niche_selection",
+        "OPERATIONS/platform_tools"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 120,
+      "isPublished": true,
+      "lessonIds": [
+        "02_ads_m07_optimization_005",
+        "skill_finance_pl_economics_001",
+        "skill_finance_pl_economics_002",
+        "skill_analytics_sales_forecast_001",
+        "skill_analytics_sales_forecast_002",
+        "01_analytics_m02_economics_001",
+        "01_analytics_m02_economics_002",
+        "01_analytics_m02_economics_003",
+        "01_analytics_m02_economics_004",
+        "01_analytics_m02_economics_005",
+        "01_analytics_m02_economics_006",
+        "01_analytics_m02_economics_007"
+      ],
+      "_block": "ANALYTICS",
+      "_row": 67,
+      "_gaps": []
+    },
+    {
+      "slug": "provesti-a-b-test-kartochki",
+      "title": "Провести A/B-тест карточки",
+      "description": "Проверить чистоту A/B-теста",
+      "outcomes": [
+        "Проверить чистоту A/B-теста карточки",
+        "Протестировать инфографику через Джем и Marpla",
+        "Принять решение по контенту на данных, а не на вкусе"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "CONTENT",
+        "OPERATIONS"
+      ],
+      "skillBlocks": [
+        "ANALYTICS/sales_funnel",
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/target_audience",
+        "CONTENT/copywriting",
+        "OPERATIONS/process_automation"
+      ],
+      "marketplace": "WB",
+      "displayOrder": 121,
+      "isPublished": true,
+      "lessonIds": [
+        "02_ads_m03_visual_ctr_007",
+        "02_ads_m03_visual_ctr_008",
+        "02_ads_m03_visual_ctr_009"
+      ],
+      "_block": "ANALYTICS",
+      "_row": 69,
+      "_gaps": [
+        "ДОЗАГРУЗИТЬ: Как тестировать и обновлять инфографику",
+        "НЕТ УРОКА: Сервис для тестирования карточек от MPSTATS"
+      ]
+    },
+    {
+      "slug": "sozdat-ai-kontent-kartochki-bez-poteri-kachestva-i-doveriya",
+      "title": "Создать AI-контент карточки без потери качества и доверия",
+      "description": "Использовать ИИ для карточки, но проверять результат на реалистичность и соответствие товару",
+      "outcomes": [
+        "Создать визуал карточки через нейросеть быстрее и дешевле",
+        "Написать промты для сцен и моделей в Krea AI и WeShop",
+        "Проверить результат на реалистичность и соответствие товару"
+      ],
+      "axes": [
+        "CONTENT"
+      ],
+      "skillBlocks": [
+        "CONTENT/neural_content",
+        "CONTENT/neural_analytics",
+        "CONTENT/copywriting",
+        "CONTENT/video_content",
+        "CONTENT/product_photography"
+      ],
+      "marketplace": "BOTH",
+      "displayOrder": 122,
+      "isPublished": true,
+      "lessonIds": [
+        "03_ai_m03_visual_001",
+        "03_ai_m03_visual_003",
+        "03_ai_m03_visual_004",
+        "03_ai_m03_visual_002",
+        "03_ai_m03_visual_005",
+        "03_ai_m03_visual_006",
+        "03_ai_m03_visual_007",
+        "03_ai_m03_visual_008"
+      ],
+      "_block": "AI",
+      "_row": 76,
+      "_gaps": []
+    },
+    {
+      "slug": "sdelat-upravlencheskiy-vyvod-iz-analiza-ca-otchetov-i-konkur",
+      "title": "Сделать управленческий вывод из анализа ЦА, отчетов и конкурентов",
+      "description": "Быстро превращать отчеты, конкурентов и аналитику в управленческие решения",
+      "outcomes": [
+        "Превратить отчеты и аналитику в управленческие решения через нейросеть",
+        "Собрать промты для анализа ЦА и конкурентов",
+        "Проверить инсайты искусственного интеллекта перед внедрением"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "CONTENT"
+      ],
+      "skillBlocks": [
+        "ANALYTICS/target_audience",
+        "ANALYTICS/competitor_analysis",
+        "CONTENT/copywriting",
+        "CONTENT/neural_content",
+        "ANALYTICS/market_trends"
+      ],
+      "marketplace": "BOTH",
+      "displayOrder": 123,
+      "isPublished": true,
+      "lessonIds": [
+        "03_ai_m02_neuroanalytics_001",
+        "03_ai_m02_neuroanalytics_002",
+        "03_ai_m02_neuroanalytics_003",
+        "03_ai_m02_neuroanalytics_004",
+        "03_ai_m02_neuroanalytics_005",
+        "03_ai_m02_neuroanalytics_006",
+        "03_ai_m02_neuroanalytics_007",
+        "03_ai_m02_neuroanalytics_008",
+        "03_ai_m02_neuroanalytics_009"
+      ],
+      "_block": "AI",
+      "_row": 77,
+      "_gaps": []
+    },
+    {
+      "slug": "postavit-zadachu-ii-i-proverit-otvet-pered-vnedreniem",
+      "title": "Поставить задачу ИИ и проверить ответ перед внедрением",
+      "description": "Научиться ставить ИИ понятную задачу и проверять ответ перед внедрением в карточку, SEO, рекламу, аналитику, поставки или финансы",
+      "outcomes": [
+        "Ставить искусственному интеллекту понятную задачу через промт",
+        "Проверять ответ нейросети до внедрения в карточку или рекламу",
+        "Дорабатывать промт через контроль качества и валидацию"
+      ],
+      "axes": [
+        "CONTENT",
+        "ANALYTICS"
+      ],
+      "skillBlocks": [
+        "CONTENT/neural_content",
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/target_audience",
+        "CONTENT/copywriting",
+        "CONTENT/neural_analytics"
+      ],
+      "marketplace": "BOTH",
+      "displayOrder": 124,
+      "isPublished": true,
+      "lessonIds": [
+        "03_ai_m01_intro_011",
+        "03_ai_m01_intro_012",
+        "03_ai_m01_intro_015",
+        "03_ai_m02_neuroanalytics_001",
+        "03_ai_m02_neuroanalytics_002",
+        "03_ai_m02_neuroanalytics_003",
+        "03_ai_m06_neuro_ads_008",
+        "03_ai_m09_neuroassistant_001",
+        "03_ai_m08_neurointegrator_003",
+        "03_ai_m09_neuroassistant_003",
+        "03_ai_m09_neuroassistant_004"
+      ],
+      "_block": "AI",
+      "_row": 78,
+      "_gaps": []
+    },
+    {
+      "slug": "peredat-chast-zadach-magazina-ii-bez-poteri-kachestva",
+      "title": "Передать часть задач магазина ИИ без потери качества",
+      "description": "Выбрать рабочий набор ИИ-инструментов под задачи магазина и встроить их в регулярные процессы: аналитику, SEO, визуал, рекламу, отзывы, контент и отчеты",
+      "outcomes": [
+        "Выбрать набор ИИ-инструментов под задачи магазина",
+        "Встроить нейросеть в аналитику, SEO, визуал и отчеты",
+        "Передать рутину искусственному интеллекту без потери качества"
+      ],
+      "axes": [
+        "OPERATIONS",
+        "ANALYTICS",
+        "CONTENT"
+      ],
+      "skillBlocks": [
+        "OPERATIONS/process_automation",
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/product_niche_selection",
+        "CONTENT/neural_content",
+        "ANALYTICS/target_audience"
+      ],
+      "marketplace": "BOTH",
+      "displayOrder": 125,
+      "isPublished": true,
+      "lessonIds": [
+        "03_ai_m01_intro_008",
+        "03_ai_m01_intro_011",
+        "03_ai_m06_neuro_ads_006",
+        "03_ai_m01_intro_009"
+      ],
+      "_block": "AI",
+      "_row": 79,
+      "_gaps": []
+    },
+    {
+      "slug": "sobrat-prodayuschuyu-voronku-kartochki-i-realizovat-ee-v-viz",
+      "title": "Собрать продающую воронку карточки и реализовать ее в визуале",
+      "description": "Собрать карточку как продающую контентную воронку и реализовать ее в визуале: главное фото, инфографика, Rich, CTA, УТП, доказательства, возражения и структура слайдов",
+      "outcomes": [
+        "Собрать карточку как продающую контентную воронку",
+        "Сделать инфографику, баннеры и иконки через нейросеть",
+        "Закрыть возражения и УТП в структуре слайдов"
+      ],
+      "axes": [
+        "CONTENT"
+      ],
+      "skillBlocks": [
+        "CONTENT/neural_content",
+        "CONTENT/neural_analytics",
+        "CONTENT/copywriting",
+        "CONTENT/reviews_management",
+        "CONTENT/video_content"
+      ],
+      "marketplace": "BOTH",
+      "displayOrder": 126,
+      "isPublished": true,
+      "lessonIds": [
+        "03_ai_m01_intro_016",
+        "03_ai_m03_visual_009",
+        "03_ai_m03_visual_010",
+        "03_ai_m03_visual_011",
+        "03_ai_m03_visual_012",
+        "03_ai_m03_visual_013",
+        "03_ai_m03_visual_014",
+        "03_ai_m03_visual_015"
+      ],
+      "_block": "AI",
+      "_row": 80,
+      "_gaps": []
+    },
+    {
+      "slug": "sozdat-video-dlya-kartochki-cherez-ii-ot-scenariya-do-montaz",
+      "title": "Создать видео для карточки через ИИ: от сценария до монтажа",
+      "description": "Создать видео для карточки через ИИ: понять цель ролика, собрать сценарий, разбить его на сцены, сгенерировать фрагменты, склеить ролик и проверить, что видео не искажает товар",
+      "outcomes": [
+        "Собрать сценарий и раскадровку видео через нейросеть",
+        "Сгенерировать сцены в Runway, KlingAI и VEO3",
+        "Склеить ролик в CapCut и проверить, что он не искажает товар"
+      ],
+      "axes": [
+        "CONTENT"
+      ],
+      "skillBlocks": [
+        "CONTENT/neural_content",
+        "CONTENT/copywriting",
+        "CONTENT/video_content",
+        "CONTENT/neural_analytics",
+        "CONTENT/reviews_management"
+      ],
+      "marketplace": "BOTH",
+      "displayOrder": 127,
+      "isPublished": true,
+      "lessonIds": [
+        "03_ai_m04_neurovideo_001",
+        "03_ai_m04_neurovideo_003",
+        "03_ai_m04_neurovideo_004",
+        "03_ai_m04_neurovideo_002",
+        "03_ai_m04_neurovideo_005",
+        "03_ai_m04_neurovideo_009",
+        "03_ai_m04_neurovideo_012",
+        "03_ai_m04_neurovideo_011",
+        "03_ai_m04_neurovideo_010"
+      ],
+      "_block": "AI",
+      "_row": 81,
+      "_gaps": []
+    },
+    {
+      "slug": "sobrat-seo-yadro-i-proverit-pozicii-kartochki",
+      "title": "Собрать SEO-ядро и проверить позиции карточки",
+      "description": "Собрать SEO-ядро для новой или текущей карточки, проверить релевантность ключей, превратить ключи в SEO-описание через ИИ и при необходимости масштабировать процесс на много SKU",
+      "outcomes": [
+        "Собрать SEO-ядро для карточки через нейросеть",
+        "Превратить ключи в SEO-описание ассистентом ChatGPT",
+        "Проверить релевантность запросов и позиции за пару итераций"
+      ],
+      "axes": [
+        "CONTENT",
+        "ANALYTICS"
+      ],
+      "skillBlocks": [
+        "CONTENT/neural_content",
+        "ANALYTICS/product_niche_selection",
+        "ANALYTICS/target_audience",
+        "ANALYTICS/competitor_analysis",
+        "CONTENT/copywriting"
+      ],
+      "marketplace": "BOTH",
+      "displayOrder": 128,
+      "isPublished": true,
+      "lessonIds": [
+        "03_ai_m05_neurotexts_001",
+        "03_ai_m05_neurotexts_002",
+        "03_ai_m05_neurotexts_003",
+        "03_ai_m05_neurotexts_004",
+        "03_ai_m05_neurotexts_005",
+        "03_ai_m05_neurotexts_006"
+      ],
+      "_block": "AI",
+      "_row": 82,
+      "_gaps": []
+    },
+    {
+      "slug": "proanalizirovat-reklamu-cherez-ii-bez-oshibok-po-stavkam",
+      "title": "Проанализировать рекламу через ИИ без ошибок по ставкам",
+      "description": "Использовать ИИ для анализа рекламы, но не передавать ему управление ставками вслепую",
+      "outcomes": [
+        "Анализировать рекламные отчеты Wildberries и Ozon через нейросеть",
+        "Находить просадки по ставкам с ассистентом-маркетологом",
+        "Не отдавать управление ставками искусственному интеллекту вслепую"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "MARKETING"
+      ],
+      "skillBlocks": [
+        "ANALYTICS/product_metrics",
+        "MARKETING/ad_strategy",
+        "ANALYTICS/sales_funnel",
+        "ANALYTICS/target_audience",
+        "ANALYTICS/data_tools"
+      ],
+      "marketplace": "BOTH",
+      "displayOrder": 129,
+      "isPublished": true,
+      "lessonIds": [
+        "03_ai_m06_neuro_ads_002",
+        "03_ai_m06_neuro_ads_005",
+        "03_ai_m06_neuro_ads_003",
+        "03_ai_m06_neuro_ads_004",
+        "03_ai_m06_neuro_ads_001",
+        "03_ai_m06_neuro_ads_006",
+        "03_ai_m06_neuro_ads_007",
+        "03_ai_m06_neuro_ads_008"
+      ],
+      "_block": "AI",
+      "_row": 83,
+      "_gaps": [
+        "НЕТ УРОКА: Оба марккетплейса:"
+      ]
+    },
+    {
+      "slug": "vybrat-nishu-i-tovar-cherez-ii-analiz",
+      "title": "Выбрать нишу и товар через ИИ-анализ",
+      "description": "Выбрать нишу или товар через ИИ и аналитику, а не по ощущению",
+      "outcomes": [
+        "Выбрать нишу и товар через ИИ-анализ, а не по ощущению",
+        "Проверить гипотезы и подниши в аналитике с нейросетью",
+        "Принять решение по спросу через чек-лист и данные"
+      ],
+      "axes": [
+        "ANALYTICS",
+        "CONTENT"
+      ],
+      "skillBlocks": [
+        "ANALYTICS/product_niche_selection",
+        "ANALYTICS/market_trends",
+        "ANALYTICS/target_audience",
+        "ANALYTICS/competitor_analysis",
+        "CONTENT/neural_content"
+      ],
+      "marketplace": "BOTH",
+      "displayOrder": 130,
+      "isPublished": true,
+      "lessonIds": [
+        "03_ai_m07_neuroscout_001",
+        "03_ai_m07_neuroscout_002",
+        "03_ai_m07_neuroscout_003",
+        "03_ai_m07_neuroscout_004",
+        "03_ai_m07_neuroscout_005",
+        "03_ai_m07_neuroscout_006",
+        "03_ai_m07_neuroscout_007",
+        "03_ai_m07_neuroscout_010",
+        "03_ai_m07_neuroscout_012",
+        "03_ai_m07_neuroscout_013",
+        "03_ai_m07_neuroscout_011"
+      ],
+      "_block": "AI",
+      "_row": 84,
+      "_gaps": []
+    },
+    {
+      "slug": "ispolzovat-otzyvy-dlya-usileniya-kartochki-i-reputacii",
+      "title": "Использовать отзывы для усиления карточки и репутации",
+      "description": "Работать с отзывами: восстановить доверие, собрать УТП и настроить ответы через ИИ",
+      "outcomes": [
+        "Восстановить доверие карточки через работу с отзывами",
+        "Настроить ответы и автоответы на отзывы через нейросеть",
+        "Собрать УТП и портрет покупателя из отзывов"
+      ],
+      "axes": [
+        "CONTENT",
+        "MARKETING"
+      ],
+      "skillBlocks": [
+        "CONTENT/neural_content",
+        "CONTENT/neural_analytics",
+        "CONTENT/reviews_management",
+        "MARKETING/influencer_marketing",
+        "CONTENT/copywriting"
+      ],
+      "marketplace": "BOTH",
+      "displayOrder": 131,
+      "isPublished": true,
+      "lessonIds": [
+        "03_ai_m05_neurotexts_007",
+        "03_ai_m05_neurotexts_008",
+        "03_ai_m05_neurotexts_009",
+        "03_ai_m09_neuroassistant_002",
+        "03_ai_m07_neuroscout_008",
+        "03_ai_m07_neuroscout_009"
+      ],
+      "_block": "AI",
+      "_row": 85,
+      "_gaps": []
+    },
+    {
+      "slug": "nastroit-tone-of-voice-brenda",
+      "title": "Настроить Tone of Voice бренда",
+      "description": "Настроить стиль бренда для карточек, отзывов, вопросов, соцсетей и ИИ",
+      "outcomes": [
+        "Настроить Tone of Voice бренда для карточек и отзывов",
+        "Извлечь голос бренда из анализа ЦА через нейросеть",
+        "Держать единый стиль в карточках, вопросах и соцсетях"
+      ],
+      "axes": [
+        "CONTENT",
+        "ANALYTICS"
+      ],
+      "skillBlocks": [
+        "CONTENT/neural_analytics",
+        "CONTENT/neural_content",
+        "CONTENT/copywriting",
+        "ANALYTICS/target_audience",
+        "CONTENT/reviews_management"
+      ],
+      "marketplace": "BOTH",
+      "displayOrder": 132,
+      "isPublished": true,
+      "lessonIds": [
+        "03_ai_m02_neuroanalytics_009",
+        "03_ai_m02_neuroanalytics_004",
+        "03_ai_m02_neuroanalytics_005",
+        "03_ai_m02_neuroanalytics_006",
+        "03_ai_m05_neurotexts_007",
+        "03_ai_m05_neurotexts_008",
+        "03_ai_m05_neurotexts_009",
+        "03_ai_m09_neuroassistant_002"
+      ],
+      "_block": "AI",
+      "_row": 86,
+      "_gaps": []
+    },
+    {
+      "slug": "podgotovit-ishodniki-dlya-ai-kontenta",
+      "title": "Подготовить исходники для AI-контента",
+      "description": "Понять, когда нужны студийные исходники, а когда хватит ИИ",
+      "outcomes": [
+        "Понять, когда нужна студийная съемка, а когда хватит нейросети",
+        "Подготовить фото так, чтобы искусственный интеллект их принял",
+        "Написать промты для сцен и примерки в Krea AI и WeShop"
+      ],
+      "axes": [
+        "CONTENT"
+      ],
+      "skillBlocks": [
+        "CONTENT/neural_content",
+        "CONTENT/neural_analytics",
+        "CONTENT/copywriting",
+        "CONTENT/product_photography"
+      ],
+      "marketplace": "BOTH",
+      "displayOrder": 133,
+      "isPublished": true,
+      "lessonIds": [
+        "03_ai_m03_visual_001",
+        "03_ai_m03_visual_003",
+        "03_ai_m03_visual_004",
+        "03_ai_m03_visual_005"
+      ],
+      "_block": "AI",
+      "_row": 87,
+      "_gaps": []
+    },
+    {
+      "slug": "sobrat-neyroassistenta-pod-zadachu-marketpleysa",
+      "title": "Собрать НейроАссистента под задачу маркетплейса",
+      "description": "Собрать НейроАссистента в ChatGPT под конкретную задачу маркетплейса: определить цель, роль помощника, инструкции, входные данные, ограничения, сценарий работы и проверку результата",
+      "outcomes": [
+        "Собрать НейроАссистента в ChatGPT под задачу маркетплейса",
+        "Прописать роль, инструкции и ограничения помощника",
+        "Проверить результат ассистента перед работой в магазине"
+      ],
+      "axes": [
+        "CONTENT",
+        "ANALYTICS"
+      ],
+      "skillBlocks": [
+        "CONTENT/neural_content",
+        "CONTENT/copywriting",
+        "CONTENT/neural_analytics",
+        "ANALYTICS/target_audience",
+        "ANALYTICS/product_niche_selection"
+      ],
+      "marketplace": "BOTH",
+      "displayOrder": 134,
+      "isPublished": true,
+      "lessonIds": [
+        "03_ai_m08_neurointegrator_001",
+        "03_ai_m08_neurointegrator_002",
+        "03_ai_m08_neurointegrator_003",
+        "03_ai_m08_neurointegrator_006",
+        "03_ai_m08_neurointegrator_005",
+        "03_ai_m08_neurointegrator_004"
+      ],
+      "_block": "AI",
+      "_row": 88,
+      "_gaps": []
+    }
+  ],
+  "retire": [
+    "ponyat-i-ispolzovat-vnutrennyuyu-analitiku-marketpleysov-wil",
+    "vybrat-i-proanalizirovat-nishu-dlya-zapuska-tovara-s-pomosch",
+    "ponyat-i-ispolzovat-analitiku-dlya-prinyatiya-biznes-resheni",
+    "provesti-analiz-i-segmentaciyu-tovarnyh-kategoriy-dlya-rassh",
+    "provesti-detalnyy-konkurentnyy-analiz-i-opredelit-potencial-",
+    "izbezhat-oshibok-i-vybrat-tovar-dlya-zapuska-na-wildberries",
+    "optimizirovat-assortiment-s-pomoschyu-abc-xyz-analiza-na-wil",
+    "provesti-audit-i-uluchshit-kartochku-fokusnogo-tovara-na-wil",
+    "rasschitat-i-analizirovat-yunit-ekonomiku-tovara-na-wildberr",
+    "provesti-strategicheskoe-planirovanie-biznesa-na-marketpleys",
+    "ispolzovat-neyroseti-dlya-analiza-celevoy-auditorii-i-sozdan",
+    "sozdat-i-nastroit-personalnogo-gpt-assistenta-dlya-avtomatiz",
+    "sozdat-i-optimizirovat-prodayuschiy-kontent-dlya-kartochki-t",
+    "provesti-seo-optimizaciyu-kartochki-tovara-na-wildberries",
+    "obespechit-bezopasnyy-dostup-i-oplatu-zarubezhnyh-ai-serviso"
+  ]
+}
