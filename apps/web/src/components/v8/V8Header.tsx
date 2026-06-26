@@ -21,9 +21,11 @@ const NAV_LINKS = [
 interface V8HeaderProps {
   /** Страница начинается с тёмного hero — нав/лого светлые до скролла. По умолчанию true. */
   onDarkHero?: boolean;
+  /** Сдвиг шапки вниз в px (напр. под верхнюю ленту-плашку). По умолчанию 0. */
+  topOffset?: number;
 }
 
-export function V8Header({ onDarkHero = true }: V8HeaderProps) {
+export function V8Header({ onDarkHero = true, topOffset = 0 }: V8HeaderProps) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [isAuthed, setIsAuthed] = useState<boolean | null>(null);
@@ -84,6 +86,7 @@ export function V8Header({ onDarkHero = true }: V8HeaderProps) {
     <nav
       className="fixed top-0 left-0 right-0 z-50 transition-all duration-300"
       style={{
+        top: topOffset,
         backgroundColor: scrolled ? 'rgba(255,255,255,0.98)' : 'transparent',
         borderBottom: scrolled ? '1px solid rgba(18,18,18,0.06)' : '1px solid transparent',
       }}

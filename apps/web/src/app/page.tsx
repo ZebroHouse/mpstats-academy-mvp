@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Onest } from 'next/font/google';
 import { V8Header } from '@/components/v8/V8Header';
 import { V8Footer } from '@/components/v8/V8Footer';
+import { ReferralTopRibbon } from '@/components/referral/ReferralTopRibbon';
 import { Reveal, useReveal } from '@/components/v8/Reveal';
 import { Counter } from '@/components/v8/Counter';
 import { StickyCTA } from '@/components/v8/StickyCTA';
@@ -331,13 +332,18 @@ function ComparisonTableDesktop() {
 
 /* ── Page Component ────────────────────────────────────── */
 
+/** Высота верхней реф-ленты (h-11) — на неё сдвигаем шапку, когда лента видна. */
+const REFERRAL_RIBBON_HEIGHT = 44;
+
 export default function DesignNewV8() {
   const [mouse, setMouse] = useState({ x: 0, y: 0 });
+  const [ribbonVisible, setRibbonVisible] = useState(false);
 
   return (
     <div className={onest.className} style={{ color: TEXT }}>
 
-      <V8Header onDarkHero={true} />
+      <ReferralTopRibbon onVisibilityChange={setRibbonVisible} />
+      <V8Header onDarkHero={true} topOffset={ribbonVisible ? REFERRAL_RIBBON_HEIGHT : 0} />
 
       {/* ── 2. Hero ────────────────────────────────────── */}
       <section
