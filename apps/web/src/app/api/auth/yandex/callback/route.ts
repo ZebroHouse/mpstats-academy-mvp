@@ -7,6 +7,7 @@ import { YandexProvider } from '@/lib/auth/oauth-providers';
 import { getSupabaseAdmin } from '@/lib/auth/supabase-admin';
 import { REFERRAL_COOKIE_NAME, isValidRefCodeShape } from '@/lib/referral/attribution';
 import { issueReferralOnSignup } from '@/lib/referral/issue';
+import { ensureBaseTrial } from '@mpstats/api';
 
 export const dynamic = 'force-dynamic';
 
@@ -210,6 +211,9 @@ export async function GET(request: Request): Promise<Response> {
           console.error('[YandexCallback] referral issue failed:', err);
         });
         response.cookies.delete(REFERRAL_COOKIE_NAME);
+      } else {
+        // No referral code → grant the base auto-trial (idempotent, swallows errors).
+        await ensureBaseTrial(supabaseUserId);
       }
     }
 

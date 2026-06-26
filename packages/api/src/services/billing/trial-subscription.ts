@@ -17,6 +17,9 @@ export interface CreateTrialOpts {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+/** Auto-trial length for referral-less signups (T2). */
+export const BASE_TRIAL_DAYS = 3;
+
 // INVARIANT (Phase 63 analytics): a TRIAL row's `status` is never mutated.
 // Paying creates a SEPARATE Subscription row (see billing.initiatePayment).
 // deriveTrialConversion() relies on this to read the trial cohort historically.
@@ -44,6 +47,28 @@ export async function createTrialSubscription(opts: CreateTrialOpts) {
       currentPeriodEnd: new Date(now.getTime() + opts.durationDays * DAY_MS),
     },
   });
+}
+
+/**
+ * Idempotent base trial for referral-less signups (T2).
+ *
+ * If the user has NO subscription at all, grants a BASE_TRIAL_DAYS PLATFORM
+ * trial. If any subscription already exists (e.g. a referral trial was issued
+ * via issueReferralOnSignup), does nothing. Errors are swallowed and logged —
+ * a failed trial must never break the auth flow.
+ */
+export async function ensureBaseTrial(
+  userId: string,
+  prismaClient?: PrismaClient | any,
+): Promise<void> {
+  const tx = prismaClient ?? defaultPrisma;
+  try {
+    const existing = await tx.subscription.findFirst({ where: { userId } });
+    if (existing) return;
+    await createTrialSubscription({ userId, durationDays: BASE_TRIAL_DAYS, prismaClient: tx });
+  } catch (err) {
+    console.error('[ensureBaseTrial] failed to create base trial:', err);
+  }
 }
 
 export async function extendSubscriptionByDays(opts: {

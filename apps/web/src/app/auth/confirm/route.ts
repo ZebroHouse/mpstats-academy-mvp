@@ -6,6 +6,7 @@ import * as Sentry from '@sentry/nextjs';
 import type { EmailOtpType } from '@supabase/supabase-js';
 import { REFERRAL_COOKIE_NAME, isValidRefCodeShape } from '@/lib/referral/attribution';
 import { issueReferralOnSignup } from '@/lib/referral/issue';
+import { ensureBaseTrial } from '@mpstats/api';
 
 export const dynamic = 'force-dynamic';
 
@@ -71,9 +72,12 @@ export async function GET(request: NextRequest) {
       }
 
       // Referral hook: fire-and-forget, never blocks redirect.
+      // No referral code → grant the base auto-trial (idempotent, swallows errors).
       if (refCode) {
         issueReferralOnSignup({ refCode, friendUserId: user.id })
           .catch(err => console.error('[AuthConfirm] referral issue failed:', err));
+      } else {
+        await ensureBaseTrial(user.id);
       }
 
       // Clear partner_pending_verify flag when a partner auto-created user confirms their email.
