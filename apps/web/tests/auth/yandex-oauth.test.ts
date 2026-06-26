@@ -180,6 +180,15 @@ describe('Yandex OAuth Callback Route', () => {
       },
     }));
 
+    // No refCode in this flow → route calls ensureBaseTrial(newUserId).
+    // Stub it so the base-trial path runs cleanly (real impl needs a prisma
+    // client the test doesn't wire up) and assert it fires for the new user.
+    const ensureBaseTrialSpy = vi.fn().mockResolvedValue(undefined);
+    vi.doMock('@mpstats/api', async (importActual) => ({
+      ...(await importActual<typeof import('@mpstats/api')>()),
+      ensureBaseTrial: ensureBaseTrialSpy,
+    }));
+
     const freshCookieStore = {
       get: vi.fn().mockReturnValue({ value: 'valid-state' }),
       set: vi.fn(),
@@ -204,6 +213,9 @@ describe('Yandex OAuth Callback Route', () => {
     // Phase 45: Yandex users without a phone in user_metadata are routed to
     // /complete-profile (the mocked getUserInfo here has no phone field).
     expect(location).toMatch(/\/complete-profile|\/dashboard|\/learn/);
+
+    // T2: brand-new user without a referral code gets the base auto-trial.
+    expect(ensureBaseTrialSpy).toHaveBeenCalledWith('supabase-uid');
   });
 });
 
