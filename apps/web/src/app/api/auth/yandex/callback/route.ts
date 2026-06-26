@@ -204,7 +204,7 @@ export async function GET(request: Request): Promise<Response> {
     // stale ref cookie are safely skipped. The orchestrator is also idempotent
     // (unique constraint on referredUserId), so a duplicate attempt would no-op.
     if (isNewUser) {
-      const refCookie = (await cookies()).get(REFERRAL_COOKIE_NAME)?.value;
+      const refCookie = cookieStore.get(REFERRAL_COOKIE_NAME)?.value;
       const refCode = refCookie && isValidRefCodeShape(refCookie) ? refCookie : null;
       if (refCode) {
         issueReferralOnSignup({ refCode, friendUserId: supabaseUserId }).catch((err) => {
