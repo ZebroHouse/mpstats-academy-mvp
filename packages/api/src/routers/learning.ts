@@ -4,7 +4,7 @@ import { TRPCError } from '@trpc/server';
 import { router, protectedProcedure } from '../trpc';
 import { ensureUserProfile } from '../utils/ensure-user-profile';
 import { handleDatabaseError } from '../utils/db-errors';
-import { getUserActiveSubscriptions, getUserAdminBypass, isLessonAccessible, checkLessonAccess } from '../utils/access';
+import { getUserActiveSubscriptions, getUserAdminBypass, isLessonAccessible, checkLessonAccess, getFirstJobLessonIds } from '../utils/access';
 import { isFeatureEnabled } from '../utils/feature-flags';
 import { extractLessonIds } from '../utils/lesson-ids';
 import { lessonsToRemoveOnJobRemove } from './learning-jobs-utils';
@@ -45,6 +45,10 @@ export const learningRouter = router({
         getUserAdminBypass(ctx.user.id, ctx.prisma),
       ]);
 
+      const firstJobLessonIds = await getFirstJobLessonIds(
+        ctx.prisma, courses.flatMap((c) => c.lessons.map((l) => l.id)),
+      );
+
       return courses.map((course) => {
         const lessonsWithVideo = course.lessons.filter((l) => l.videoId != null);
         const watchedPercentSum = lessonsWithVideo.reduce((sum, l) => {
@@ -69,7 +73,7 @@ export const learningRouter = router({
         ).length,
         progressPercent,
         lessons: course.lessons.map((l) => {
-          const locked = !isLessonAccessible({ order: l.order, courseId: course.id }, subs, billingEnabled, isAdminBypass);
+          const locked = !isLessonAccessible({ order: l.order, courseId: course.id }, subs, billingEnabled, isAdminBypass, firstJobLessonIds.has(l.id));
           return {
             id: l.id,
             courseId: l.courseId,
@@ -124,6 +128,10 @@ export const learningRouter = router({
           getUserAdminBypass(ctx.user.id, ctx.prisma),
         ]);
 
+        const firstJobLessonIds = await getFirstJobLessonIds(
+          ctx.prisma, course.lessons.map((l) => l.id),
+        );
+
         const lessonsWithVideo = course.lessons.filter((l) => l.videoId != null);
         const watchedPercentSum = lessonsWithVideo.reduce((sum, l) => {
           const percent = l.progress[0]?.watchedPercent || 0;
@@ -147,7 +155,7 @@ export const learningRouter = router({
           ).length,
           progressPercent,
           lessons: course.lessons.map((l) => {
-            const locked = !isLessonAccessible({ order: l.order, courseId: course.id }, subs, billingEnabled, isAdminBypass);
+            const locked = !isLessonAccessible({ order: l.order, courseId: course.id }, subs, billingEnabled, isAdminBypass, firstJobLessonIds.has(l.id));
             return {
               id: l.id,
               courseId: l.courseId,
@@ -197,8 +205,12 @@ export const learningRouter = router({
           orderBy: [{ courseId: 'asc' }, { order: 'asc' }],
         });
 
+        const firstJobLessonIds = await getFirstJobLessonIds(
+          ctx.prisma, allLessons.map((l) => l.id),
+        );
+
         const lessons: LessonWithProgress[] = allLessons.map((l) => {
-          const locked = !isLessonAccessible({ order: l.order, courseId: l.courseId }, subs, billingEnabled, isAdminBypass);
+          const locked = !isLessonAccessible({ order: l.order, courseId: l.courseId }, subs, billingEnabled, isAdminBypass, firstJobLessonIds.has(l.id));
           return {
             id: l.id,
             courseId: l.courseId,
@@ -237,9 +249,13 @@ export const learningRouter = router({
         orderBy: [{ courseId: 'asc' }, { order: 'asc' }],
       });
 
+      const firstJobLessonIds = await getFirstJobLessonIds(
+        ctx.prisma, allLessons.map((l) => l.id),
+      );
+
       const lessons: LessonWithProgress[] = allLessons.map((l) => {
         const progress = progressMap.get(l.id);
-        const locked = !isLessonAccessible({ order: l.order, courseId: l.courseId }, subs, billingEnabled, isAdminBypass);
+        const locked = !isLessonAccessible({ order: l.order, courseId: l.courseId }, subs, billingEnabled, isAdminBypass, firstJobLessonIds.has(l.id));
         return {
           id: l.id,
           courseId: l.courseId,
@@ -290,12 +306,17 @@ export const learningRouter = router({
       ]);
       const hasPlatformSubscription = subs.some((s) => s.plan.type === 'PLATFORM');
 
+      // First-lessons of published jobs are free. buildLessonData runs over lessons
+      // from several sources (added jobs, sectioned path, flat path), so resolve the
+      // full set once and look up by id.
+      const firstJobLessonIds = await getFirstJobLessonIds(ctx.prisma);
+
       // Detect format: old string[] or new SectionedLearningPath
       const parsed = parseLearningPath(path.lessons);
 
       // Helper to build lesson data object from DB lesson
       const buildLessonData = (l: any) => {
-        const locked = !isLessonAccessible({ order: l.order, courseId: l.courseId }, subs, billingEnabled, isAdminBypass);
+        const locked = !isLessonAccessible({ order: l.order, courseId: l.courseId }, subs, billingEnabled, isAdminBypass, firstJobLessonIds.has(l.id));
         return {
           id: l.id,
           courseId: l.courseId,
@@ -494,7 +515,7 @@ export const learningRouter = router({
         if (!lesson || lesson.isHidden) return null;
         if (lesson.contentStatus === 'DRAFT') return null; // drafts: admin-only via getLessonForEdit
 
-        const access = await checkLessonAccess(ctx.user.id, { order: lesson.order, courseId: lesson.courseId }, ctx.prisma);
+        const access = await checkLessonAccess(ctx.user.id, { id: lesson.id, order: lesson.order, courseId: lesson.courseId }, ctx.prisma);
         const locked = !access.hasAccess;
 
         const courseLessons = lesson.course.lessons;
@@ -572,7 +593,7 @@ export const learningRouter = router({
         );
         if (inProgress) {
           const l = inProgress.lesson;
-          const access = await checkLessonAccess(ctx.user.id, { order: l.order, courseId: l.courseId }, ctx.prisma);
+          const access = await checkLessonAccess(ctx.user.id, { id: l.id, order: l.order, courseId: l.courseId }, ctx.prisma);
           const locked = !access.hasAccess;
           return {
             id: l.id,
@@ -603,7 +624,7 @@ export const learningRouter = router({
         });
 
         if (nextLesson) {
-          const access = await checkLessonAccess(ctx.user.id, { order: nextLesson.order, courseId: nextLesson.courseId }, ctx.prisma);
+          const access = await checkLessonAccess(ctx.user.id, { id: nextLesson.id, order: nextLesson.order, courseId: nextLesson.courseId }, ctx.prisma);
           const locked = !access.hasAccess;
           return {
             id: nextLesson.id,
@@ -631,7 +652,7 @@ export const learningRouter = router({
 
       if (!firstLesson) return null;
 
-      const access = await checkLessonAccess(ctx.user.id, { order: firstLesson.order, courseId: firstLesson.courseId }, ctx.prisma);
+      const access = await checkLessonAccess(ctx.user.id, { id: firstLesson.id, order: firstLesson.order, courseId: firstLesson.courseId }, ctx.prisma);
       const locked = !access.hasAccess;
       return {
         id: firstLesson.id,

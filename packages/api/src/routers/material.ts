@@ -512,6 +512,7 @@ export const materialRouter = router({
               const access = await checkLessonAccess(
                 ctx.user.id,
                 {
+                  id: lm.lesson.id,
                   order: lm.lesson.order,
                   courseId: lm.lesson.courseId,
                 },
