@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { Suspense, useState } from 'react';
 import { Onest } from 'next/font/google';
 import { V8Header } from '@/components/v8/V8Header';
 import { V8Footer } from '@/components/v8/V8Footer';
@@ -342,7 +342,10 @@ export default function DesignNewV8() {
   return (
     <div className={onest.className} style={{ color: TEXT }}>
 
-      <ReferralTopRibbon onVisibilityChange={setRibbonVisible} />
+      {/* useSearchParams must sit under a Suspense boundary to avoid prerender bailout in next build. */}
+      <Suspense fallback={null}>
+        <ReferralTopRibbon onVisibilityChange={setRibbonVisible} />
+      </Suspense>
       <V8Header onDarkHero={true} topOffset={ribbonVisible ? REFERRAL_RIBBON_HEIGHT : 0} />
 
       {/* ── 2. Hero ────────────────────────────────────── */}
