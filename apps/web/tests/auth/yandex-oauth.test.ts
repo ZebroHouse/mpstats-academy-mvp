@@ -217,6 +217,102 @@ describe('Yandex OAuth Callback Route', () => {
     // T2: brand-new user without a referral code gets the base auto-trial.
     expect(ensureBaseTrialSpy).toHaveBeenCalledWith('supabase-uid');
   });
+
+  it('returning user (email already exists) signs in without createUser and without error', async () => {
+    // Regression (incident 2026-06-29): the lookup found the existing user, so
+    // the create branch must NOT fire. Previously a case mismatch made the
+    // lookup miss → createUser → "already registered" → auth_callback_error,
+    // permanently locking returning Yandex users out.
+    vi.resetModules();
+
+    vi.doMock('@/lib/auth/oauth-providers', () => ({
+      YandexProvider: vi.fn().mockImplementation(() => ({
+        name: 'yandex',
+        exchangeCode: vi.fn().mockResolvedValue({ accessToken: 'ya-token' }),
+        getUserInfo: vi.fn().mockResolvedValue({
+          id: '17741187',
+          email: 'tr0f@yandex.ru',
+          name: 'Сергей',
+          phone: '+79301141481',
+        }),
+      })),
+    }));
+
+    const createUserSpy = vi.fn();
+    const mockAdmin = {
+      auth: {
+        admin: {
+          listUsers: vi.fn(),
+          createUser: createUserSpy,
+          updateUserById: vi.fn().mockResolvedValue({ error: null }),
+          generateLink: vi.fn().mockResolvedValue({
+            data: { properties: { hashed_token: 'hashed-token-123' } },
+            error: null,
+          }),
+        },
+        verifyOtp: vi.fn().mockResolvedValue({
+          data: {
+            session: { access_token: 'sb-access-token', refresh_token: 'sb-refresh-token' },
+          },
+          error: null,
+        }),
+      },
+    };
+
+    vi.doMock('@/lib/auth/supabase-admin', () => ({
+      getSupabaseAdmin: vi.fn(() => mockAdmin),
+    }));
+
+    vi.doMock('@supabase/ssr', () => ({
+      createServerClient: vi.fn(() => ({
+        auth: { setSession: vi.fn().mockResolvedValue({ data: {}, error: null }) },
+      })),
+    }));
+
+    // Existing user found by the case-insensitive lookup.
+    vi.doMock('@mpstats/db/client', () => ({
+      prisma: {
+        userProfile: {
+          upsert: vi.fn().mockResolvedValue({ phone: '+79301141481' }),
+        },
+        $queryRaw: vi.fn().mockResolvedValue([
+          { id: 'existing-uid', email: 'tr0f@yandex.ru' },
+        ]),
+      },
+    }));
+
+    const ensureBaseTrialSpy = vi.fn().mockResolvedValue(undefined);
+    vi.doMock('@mpstats/api', async (importActual) => ({
+      ...(await importActual<typeof import('@mpstats/api')>()),
+      ensureBaseTrial: ensureBaseTrialSpy,
+    }));
+
+    vi.doMock('next/headers', () => ({
+      cookies: vi.fn(() =>
+        Promise.resolve({
+          get: vi.fn().mockReturnValue({ value: 'valid-state' }),
+          set: vi.fn(),
+          delete: vi.fn(),
+          getAll: vi.fn().mockReturnValue([]),
+        })
+      ),
+    }));
+
+    const { GET } = await import('@/app/api/auth/yandex/callback/route');
+
+    const request = new Request(
+      'https://platform.mpstats.academy/api/auth/yandex/callback?code=valid-code&state=valid-state'
+    );
+    const response = await GET(request);
+
+    const location = response.headers.get('location');
+    expect(location).not.toContain('error=');
+    expect(location).toContain('/dashboard');
+    // The fix: existing user resolved → never hit the create branch.
+    expect(createUserSpy).not.toHaveBeenCalled();
+    // Returning user → base trial NOT re-issued.
+    expect(ensureBaseTrialSpy).not.toHaveBeenCalled();
+  });
 });
 
 describe('signInWithYandex action', () => {

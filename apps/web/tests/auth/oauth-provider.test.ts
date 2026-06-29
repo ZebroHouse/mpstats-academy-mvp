@@ -135,6 +135,24 @@ describe('YandexProvider', () => {
     expect(info.name).toBe('Anna Smirnova');
   });
 
+  it('getUserInfo normalizes email to trimmed lowercase', async () => {
+    // Regression (2026-06-29): Yandex returns default_email with original
+    // casing (e.g. an uppercase letter). GoTrue stores emails lowercased, so a
+    // case-sensitive lookup missed the existing user → createUser → "already
+    // registered" → auth_callback_error → returning Yandex users locked out.
+    vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
+      ok: true,
+      json: () => Promise.resolve({
+        id: '17741187',
+        default_email: '  TR0F@Yandex.RU  ',
+        display_name: 'Сергей',
+      }),
+    }));
+
+    const info = await provider.getUserInfo('token');
+    expect(info.email).toBe('tr0f@yandex.ru');
+  });
+
   it('getUserInfo returns null name when no name fields present', async () => {
     vi.stubGlobal('fetch', vi.fn().mockResolvedValue({
       ok: true,
