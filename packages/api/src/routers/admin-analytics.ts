@@ -19,6 +19,7 @@ import { computeRevenueOverview, computeUpcomingRenewals, groupRevenueByDay } fr
 import { deriveTrialConversion } from '../utils/trial-conversion';
 import { computeConversionFunnel, churnRate, type FunnelUserRow } from '../utils/funnel-metrics';
 import { extractCheckpoints, tallyCheckpoints } from '../utils/checkpoint-analytics';
+import { assembleReferralFunnel } from '../utils/referral-funnel';
 
 /**
  * Pulls a valid checkpointChoices map out of a persisted `progressState`.
@@ -530,6 +531,85 @@ export const adminAnalyticsRouter = router({
           referred: { users: acc.referred.users.size, revenue: acc.referred.revenue },
           organic: { users: acc.organic.users.size, revenue: acc.organic.revenue },
         };
+      } catch (error) {
+        handleDatabaseError(error);
+      }
+    }),
+
+  /**
+   * Per-ambassador-code funnel: Clicks → Registrations → Onboarded → Sales,
+   * with conversion %, plus an aggregate per-day series for charting. Clicks are
+   * counted going-forward only (ReferralCodeClickDay); registrations/sales come
+   * from existing Referral + Payment data. Test users excluded throughout.
+   */
+  getReferralFunnel: adminProcedure
+    .input(z.object({ days: z.number().int().min(1).max(365).default(30) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        // Single UTC calendar-day boundary used for ALL three stages (clicks,
+        // registrations, sales) so the funnel and the per-day series align on the
+        // same days — clicks are stored as @db.Date, the rest as timestamps.
+        const now = new Date();
+        const startDay = new Date(
+          Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - input.days),
+        );
+
+        const codes = await ctx.prisma.referralCode.findMany({
+          where: { codeType: 'AMBASSADOR' },
+          select: { id: true, code: true, label: true, landingTarget: true },
+        });
+        const codeIds = codes.map((c) => c.id);
+
+        const [clickSums, clickDays, referrals, payments] = await Promise.all([
+          ctx.prisma.referralCodeClickDay.groupBy({
+            by: ['codeId'],
+            where: { day: { gte: startDay } },
+            _sum: { count: true },
+          }),
+          ctx.prisma.referralCodeClickDay.groupBy({
+            by: ['day'],
+            where: { day: { gte: startDay } },
+            _sum: { count: true },
+          }),
+          codeIds.length
+            ? ctx.prisma.referral.findMany({
+                where: { codeId: { in: codeIds }, createdAt: { gte: startDay } },
+                select: {
+                  codeId: true,
+                  referredUserId: true,
+                  createdAt: true,
+                  referred: { select: { isTest: true, onboardingCompletedAt: true } },
+                },
+              })
+            : [],
+          ctx.prisma.payment.findMany({
+            where: {
+              status: 'COMPLETED',
+              paidAt: { gte: startDay },
+              subscription: { user: { isTest: false }, plan: { hidden: false } },
+            },
+            select: { paidAt: true, subscription: { select: { userId: true } } },
+          }),
+        ]);
+
+        return assembleReferralFunnel({
+          codes,
+          clicksByCode: clickSums.map((c) => ({ codeId: c.codeId, clicks: c._sum.count ?? 0 })),
+          clicksByDay: clickDays.map((c) => ({
+            day: c.day.toISOString().slice(0, 10),
+            clicks: c._sum.count ?? 0,
+          })),
+          referrals: referrals.map((r) => ({
+            codeId: r.codeId as string,
+            referredUserId: r.referredUserId,
+            createdAt: r.createdAt,
+            isTest: r.referred?.isTest ?? false,
+            onboarded: r.referred?.onboardingCompletedAt != null,
+          })),
+          payments: payments
+            .filter((p) => p.paidAt != null)
+            .map((p) => ({ userId: p.subscription.userId, paidAt: p.paidAt as Date })),
+        });
       } catch (error) {
         handleDatabaseError(error);
       }

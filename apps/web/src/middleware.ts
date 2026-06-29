@@ -1,10 +1,39 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { NextResponse, type NextRequest } from 'next/server';
+import { NextResponse, type NextRequest, type NextFetchEvent } from 'next/server';
 import {
   REFERRAL_COOKIE_NAME,
   REFERRAL_COOKIE_TTL_SECONDS,
   parseRefCodeFromUrl,
 } from '@/lib/referral/attribution';
+
+/**
+ * Record a unique-visit click for an ambassador share link. First-touch only:
+ * fires when there is no ref cookie yet, or the visitor arrived via a different
+ * code — so refreshes / repeat visits with the same code don't inflate the count.
+ * Fire-and-forget via event.waitUntil (middleware runs on the edge → no Prisma;
+ * the /api/internal/ref-click node route does the DB write). Never blocks nav.
+ */
+function recordReferralClick(
+  request: NextRequest,
+  event: NextFetchEvent,
+  refCode: string | null,
+): void {
+  if (!refCode) return;
+  const existing = request.cookies.get(REFERRAL_COOKIE_NAME)?.value;
+  if (existing === refCode) return;
+
+  const secret = process.env.REF_CLICK_SECRET;
+  event.waitUntil(
+    fetch(`${request.nextUrl.origin}/api/internal/ref-click`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(secret ? { 'x-ref-click-secret': secret } : {}),
+      },
+      body: JSON.stringify({ code: refCode }),
+    }).catch(() => {}),
+  );
+}
 
 // Routes that require authentication
 const protectedRoutes = ['/dashboard', '/diagnostic', '/learn', '/profile', '/admin', '/complete-profile', '/welcome'];
@@ -26,8 +55,9 @@ function decorateWithReferral(response: NextResponse, refCode: string | null): N
 // Routes that should redirect to dashboard if already authenticated
 const authRoutes = ['/login', '/register'];
 
-export async function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest, event: NextFetchEvent) {
   const refCode = parseRefCodeFromUrl(request.nextUrl);
+  recordReferralClick(request, event, refCode);
 
   let supabaseResponse = NextResponse.next({
     request,
