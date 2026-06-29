@@ -9,6 +9,7 @@ const TABS = [
   { label: 'Выручка', href: '/admin/analytics/revenue' },
   { label: 'Воронка', href: '/admin/analytics/funnel' },
   { label: 'Рефералы', href: '/admin/analytics/referrals' },
+  { label: 'Клиенты', href: '/admin/analytics/clients' },
   { label: 'Контент', href: '/admin/analytics/content' },
   { label: 'Чекпоинты', href: '/admin/analytics/checkpoints' },
 ] as const;

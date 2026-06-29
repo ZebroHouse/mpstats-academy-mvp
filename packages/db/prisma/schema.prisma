@@ -333,6 +333,19 @@ model PaymentEvent {
   @@index([paymentId])
 }
 
+// Append-only log of "reached the payment widget" (CloudPayments `check` event),
+// for the sales client registry's "opened gateway, didn't pay" stage. Decoupled
+// from Payment so it never touches billing logic. Going-forward only.
+model CheckoutAttempt {
+  id             String   @id @default(cuid())
+  userId         String? // CP AccountId = our UserProfile.id (best-effort)
+  subscriptionId String?
+  createdAt      DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+}
+
 model FeatureFlag {
   key         String   @id // "billing_enabled", "maintenance_mode"
   enabled     Boolean  @default(false)
