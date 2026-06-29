@@ -39,6 +39,8 @@ export interface RegistryInput {
   payments: RegistryPayment[];
   /** userIds that reached the payment widget (CheckoutAttempt). */
   checkoutUserIds: string[];
+  /** Per-user trial end (TRIAL subscription currentPeriodEnd), if any. */
+  trials: Array<{ userId: string; trialEndsAt: Date }>;
 }
 
 export interface RegistryRow {
@@ -47,6 +49,7 @@ export interface RegistryRow {
   name: string;
   phone: string;
   registeredAt: string; // ISO
+  trialEndsAt: string | null; // ISO — TRIAL subscription end
   source: string; // human label: «Амбассадор: X» / «Реферал: Y» / «Органика»
   paymentStatus: PaymentStatusBucket;
   paymentStatusLabel: string;
@@ -67,6 +70,12 @@ export function assembleClientRegistry(input: RegistryInput): RegistryRow[] {
   // duplicates; the Map collapses any legacy dupes to the last entry.
   const sourceByUser = new Map(input.sources.map((s) => [s.referredUserId, s]));
   const checkoutSet = new Set(input.checkoutUserIds);
+  // Latest trial end per user (a user has at most one base trial, but guard dupes).
+  const trialByUser = new Map<string, Date>();
+  for (const t of input.trials) {
+    const cur = trialByUser.get(t.userId);
+    if (!cur || t.trialEndsAt.getTime() > cur.getTime()) trialByUser.set(t.userId, t.trialEndsAt);
+  }
 
   // Group payments by user.
   const payByUser = new Map<string, RegistryPayment[]>();
@@ -114,6 +123,7 @@ export function assembleClientRegistry(input: RegistryInput): RegistryRow[] {
       name: u.name ?? '',
       phone: u.phone ?? '',
       registeredAt: u.createdAt.toISOString(),
+      trialEndsAt: trialByUser.get(u.id)?.toISOString() ?? null,
       source,
       paymentStatus: status,
       paymentStatusLabel: STATUS_LABELS[status],
@@ -129,6 +139,7 @@ const CSV_COLUMNS: Array<{ key: keyof RegistryRow; header: string }> = [
   { key: 'name', header: 'Имя' },
   { key: 'phone', header: 'Телефон' },
   { key: 'registeredAt', header: 'Дата регистрации' },
+  { key: 'trialEndsAt', header: 'Триал до' },
   { key: 'source', header: 'Источник' },
   { key: 'paymentStatusLabel', header: 'Статус оплаты' },
   { key: 'lastPaidAt', header: 'Дата оплаты' },

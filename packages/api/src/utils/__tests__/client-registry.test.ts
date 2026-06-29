@@ -23,6 +23,10 @@ function input(overrides: Partial<RegistryInput> = {}): RegistryInput {
       { userId: 'u3', status: 'PENDING', amount: 1990, paidAt: null, planName: null },
     ],
     checkoutUserIds: ['u4'], // reached widget, no payment row
+    trials: [
+      { userId: 'u1', trialEndsAt: new Date('2026-06-23T08:00:00Z') },
+      { userId: 'u3', trialEndsAt: new Date('2026-06-25T08:00:00Z') },
+    ],
     ...overrides,
   };
 }
@@ -46,6 +50,14 @@ describe('assembleClientRegistry', () => {
     expect(by.u2.lastPaidAmount).toBeNull();
   });
 
+  it('reports trial end date per user (null when no trial)', () => {
+    const by = Object.fromEntries(assembleClientRegistry(input()).map((r) => [r.userId, r]));
+    expect(by.u1.trialEndsAt).toBe('2026-06-23T08:00:00.000Z');
+    expect(by.u3.trialEndsAt).toBe('2026-06-25T08:00:00.000Z');
+    expect(by.u2.trialEndsAt).toBeNull();
+    expect(by.u4.trialEndsAt).toBeNull();
+  });
+
   it('labels acquisition source (ambassador / referral / organic)', () => {
     const by = Object.fromEntries(assembleClientRegistry(input()).map((r) => [r.userId, r]));
     expect(by.u1.source).toBe('Амбассадор: Блогер А');
@@ -64,7 +76,7 @@ describe('toRegistryCsv', () => {
     const csv = toRegistryCsv(assembleClientRegistry(input()));
     expect(csv.startsWith('﻿')).toBe(true);
     const lines = csv.replace('﻿', '').split('\r\n');
-    expect(lines[0]).toBe('Email,Имя,Телефон,Дата регистрации,Источник,Статус оплаты,Дата оплаты,Сумма,Тариф');
+    expect(lines[0]).toBe('Email,Имя,Телефон,Дата регистрации,Триал до,Источник,Статус оплаты,Дата оплаты,Сумма,Тариф');
     expect(lines).toHaveLength(5); // header + 4 users
     expect(lines[1]).toContain('a@x.ru');
     expect(lines[1]).toContain('Оплатил');
