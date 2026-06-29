@@ -18,7 +18,8 @@ import { createClient, type SupabaseClient } from '@supabase/supabase-js';
 import { MaterialType } from '@mpstats/db';
 import { router, protectedProcedure, adminProcedure } from '../trpc';
 import { handleDatabaseError } from '../utils/db-errors';
-import { checkLessonAccess } from '../utils/access';
+import { getFirstJobLessonIds, getUserActiveSubscriptions, getUserAdminBypass, isLessonAccessible } from '../utils/access';
+import { isFeatureEnabled } from '../utils/feature-flags';
 import {
   MATERIAL_TYPE_VALUES,
   MATERIAL_ALLOWED_MIME_TYPES,
@@ -507,21 +508,25 @@ export const materialRouter = router({
               });
             }
 
-            let allowed = false;
-            for (const lm of material.lessons) {
-              const access = await checkLessonAccess(
-                ctx.user.id,
-                {
-                  order: lm.lesson.order,
-                  courseId: lm.lesson.courseId,
-                },
-                ctx.prisma,
-              );
-              if (access.hasAccess) {
-                allowed = true;
-                break;
-              }
-            }
+            // Resolve access inputs once (avoid N+1: checkLessonAccess would
+            // re-query subs/first-job-lessons per attached lesson).
+            const allLessonIds = material.lessons.map((lm) => lm.lesson.id);
+            const [subs, billingEnabled, isAdminBypass, firstJobLessonIds] = await Promise.all([
+              getUserActiveSubscriptions(ctx.user.id, ctx.prisma),
+              isFeatureEnabled('billing_enabled'),
+              getUserAdminBypass(ctx.user.id, ctx.prisma),
+              getFirstJobLessonIds(ctx.prisma, allLessonIds),
+            ]);
+
+            const allowed = material.lessons.some((lm) =>
+              isLessonAccessible(
+                { order: lm.lesson.order, courseId: lm.lesson.courseId },
+                subs,
+                billingEnabled,
+                isAdminBypass,
+                firstJobLessonIds.has(lm.lesson.id),
+              ),
+            );
             if (!allowed) {
               throw new TRPCError({
                 code: 'FORBIDDEN',

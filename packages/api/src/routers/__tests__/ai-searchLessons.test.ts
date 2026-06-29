@@ -37,6 +37,7 @@ vi.mock('../../utils/feature-flags', async (importOriginal) => {
 
 const ctxPrismaStub = {
   lesson: { findMany: mockLessonFindMany },
+  jobLesson: { findMany: vi.fn().mockResolvedValue([]) },
   learningPath: { findUnique: mockPathFindUnique },
   userProfile: {
     findUnique: vi.fn().mockResolvedValue(null),

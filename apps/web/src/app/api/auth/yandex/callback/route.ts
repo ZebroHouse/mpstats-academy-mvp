@@ -7,6 +7,7 @@ import { YandexProvider } from '@/lib/auth/oauth-providers';
 import { getSupabaseAdmin } from '@/lib/auth/supabase-admin';
 import { REFERRAL_COOKIE_NAME, isValidRefCodeShape } from '@/lib/referral/attribution';
 import { issueReferralOnSignup } from '@/lib/referral/issue';
+import { ensureBaseTrial } from '@mpstats/api';
 
 export const dynamic = 'force-dynamic';
 
@@ -203,13 +204,16 @@ export async function GET(request: Request): Promise<Response> {
     // stale ref cookie are safely skipped. The orchestrator is also idempotent
     // (unique constraint on referredUserId), so a duplicate attempt would no-op.
     if (isNewUser) {
-      const refCookie = (await cookies()).get(REFERRAL_COOKIE_NAME)?.value;
+      const refCookie = cookieStore.get(REFERRAL_COOKIE_NAME)?.value;
       const refCode = refCookie && isValidRefCodeShape(refCookie) ? refCookie : null;
       if (refCode) {
         issueReferralOnSignup({ refCode, friendUserId: supabaseUserId }).catch((err) => {
           console.error('[YandexCallback] referral issue failed:', err);
         });
         response.cookies.delete(REFERRAL_COOKIE_NAME);
+      } else {
+        // No referral code → grant the base auto-trial (idempotent, swallows errors).
+        await ensureBaseTrial(supabaseUserId);
       }
     }
 

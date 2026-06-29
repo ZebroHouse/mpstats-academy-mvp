@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { router, protectedProcedure } from '../trpc';
 import { handleDatabaseError } from '../utils/db-errors';
-import { getUserActiveSubscriptions, getUserAdminBypass, isLessonAccessible } from '../utils/access';
+import { getUserActiveSubscriptions, getUserAdminBypass, isLessonAccessible, getFirstJobLessonIds } from '../utils/access';
 import { isFeatureEnabled } from '../utils/feature-flags';
 import { extractLessonIds } from '../utils/lesson-ids';
 import type { JobCatalogAxis, JobDetail, JobMarketplace } from '@mpstats/shared';
@@ -169,6 +169,10 @@ export const jobRouter = router({
         const addedJobs: string[] = Array.isArray(lp?.addedJobs) ? (lp!.addedJobs as string[]) : [];
         const isInTrack = addedJobs.includes(job.id);
 
+        const firstJobLessonIds = await getFirstJobLessonIds(
+          ctx.prisma, job.lessons.map((jl) => jl.lessonId),
+        );
+
         const lessons = job.lessons.map((jl) => {
           const l = jl.lesson;
           return {
@@ -177,6 +181,7 @@ export const jobRouter = router({
             watchedPercent: l.progress[0]?.watchedPercent ?? 0,
             locked: !isLessonAccessible(
               { order: l.order, courseId: l.courseId }, subs, billingEnabled, isAdminBypass,
+              firstJobLessonIds.has(l.id),
             ),
           };
         });

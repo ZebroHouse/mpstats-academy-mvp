@@ -22,7 +22,14 @@ vi.mock('@supabase/supabase-js', () => ({
 }));
 
 vi.mock('../../utils/access', () => ({
-  checkLessonAccess: vi.fn(),
+  getUserActiveSubscriptions: vi.fn().mockResolvedValue([]),
+  getUserAdminBypass: vi.fn().mockResolvedValue(false),
+  getFirstJobLessonIds: vi.fn().mockResolvedValue(new Set()),
+  isLessonAccessible: vi.fn(),
+}));
+
+vi.mock('../../utils/feature-flags', () => ({
+  isFeatureEnabled: vi.fn().mockResolvedValue(true),
 }));
 
 // Нужны env vars иначе getSupabaseAdmin throws
@@ -32,7 +39,7 @@ process.env.SUPABASE_SECRET_KEY =
   process.env.SUPABASE_SECRET_KEY || 'test-service-role-key';
 
 import { materialRouter } from '../material';
-import { checkLessonAccess } from '../../utils/access';
+import { isLessonAccessible } from '../../utils/access';
 
 function makeCtx(overrides: any = {}) {
   return {
@@ -76,10 +83,7 @@ describe('material.getSignedUrl ACL', () => {
       storagePath: 'pdf/m-1/file.pdf',
       lessons: [{ lesson: VISIBLE_LESSON }],
     });
-    (checkLessonAccess as any).mockResolvedValue({
-      hasAccess: false,
-      hasPlatformSubscription: false,
-    });
+    (isLessonAccessible as any).mockReturnValue(false);
 
     const caller = materialRouter.createCaller(ctx);
     await expect(
@@ -95,15 +99,32 @@ describe('material.getSignedUrl ACL', () => {
       storagePath: 'pdf/m-1/file.pdf',
       lessons: [{ lesson: VISIBLE_LESSON }],
     });
-    (checkLessonAccess as any).mockResolvedValue({
-      hasAccess: true,
-      hasPlatformSubscription: true,
-    });
+    (isLessonAccessible as any).mockReturnValue(true);
 
     const caller = materialRouter.createCaller(ctx);
     const result = await caller.getSignedUrl({ materialId: 'm-1' });
     expect(result.signedUrl).toBe('https://signed.example/abc');
     expect(result.expiresIn).toBe(3600);
+  });
+
+  it('returns signed URL when a later attached lesson is accessible (loop + break)', async () => {
+    const ctx = makeCtx();
+    const lockedLesson = { id: 'l-1', order: 5, courseId: 'c-1' };
+    const freeLesson = { id: 'l-2', order: 8, courseId: 'c-2' };
+    ctx.prisma.material.findUnique.mockResolvedValue({
+      id: 'm-1',
+      isHidden: false,
+      storagePath: 'pdf/m-1/file.pdf',
+      lessons: [{ lesson: lockedLesson }, { lesson: freeLesson }],
+    });
+    // First lesson locked, second accessible — access must be granted.
+    (isLessonAccessible as any).mockImplementation(
+      (lesson: { courseId: string }) => lesson.courseId === 'c-2',
+    );
+
+    const caller = materialRouter.createCaller(ctx);
+    const result = await caller.getSignedUrl({ materialId: 'm-1' });
+    expect(result.signedUrl).toBe('https://signed.example/abc');
   });
 
   it('throws BAD_REQUEST for material without storagePath', async () => {

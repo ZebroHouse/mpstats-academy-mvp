@@ -1,8 +1,6 @@
 import type { PrismaClient } from '@mpstats/db';
 import { isFeatureEnabled } from './feature-flags';
 
-const FREE_LESSON_THRESHOLD = 2; // lessons with order <= 2 are free
-
 export interface AccessResult {
   hasAccess: boolean;
   reason: 'free_lesson' | 'platform_subscription' | 'course_subscription' | 'billing_disabled' | 'subscription_required' | 'admin_bypass';
@@ -39,23 +37,70 @@ export async function getUserActiveSubscriptions(
 }
 
 /**
+ * Lessons that are the first (minimum `JobLesson.order`) lesson of at least one
+ * published job. Such a lesson is free everywhere it appears — in a job card,
+ * in its course, and in the player — because being-first is a property of the
+ * lesson, not of the screen it's shown on. On ties at the minimum order, every
+ * lesson at that minimum is included.
+ *
+ * `lessonIds` (optional) narrows the scan to published jobs that contain at
+ * least one of those lessons (perf), then returns only the requested first
+ * lessons. We still load every JobLesson row of each matching job — a single
+ * requested lesson alone can't tell us whether it's the job's minimum.
+ */
+export async function getFirstJobLessonIds(
+  prisma: PrismaClient,
+  lessonIds?: string[],
+): Promise<Set<string>> {
+  if (lessonIds && lessonIds.length === 0) return new Set();
+
+  const jobWhere = lessonIds
+    ? { isPublished: true, lessons: { some: { lessonId: { in: lessonIds } } } }
+    : { isPublished: true };
+
+  const rows = await prisma.jobLesson.findMany({
+    where: { job: jobWhere },
+    select: { jobId: true, lessonId: true, order: true },
+  });
+
+  const minOrderByJob = new Map<string, number>();
+  for (const r of rows) {
+    const cur = minOrderByJob.get(r.jobId);
+    if (cur === undefined || r.order < cur) minOrderByJob.set(r.jobId, r.order);
+  }
+
+  const restrict = lessonIds ? new Set(lessonIds) : null;
+  const firstSet = new Set<string>();
+  for (const r of rows) {
+    if (r.order !== minOrderByJob.get(r.jobId)) continue;
+    if (restrict && !restrict.has(r.lessonId)) continue;
+    firstSet.add(r.lessonId);
+  }
+  return firstSet;
+}
+
+/**
  * Pure synchronous check: can user access this lesson?
  *
  * `isAdminBypass` — pass `true` for users with role ADMIN/SUPERADMIN so they
  * get the same full access as `checkLessonAccess` grants asynchronously.
  * Without this flag, staff-only users would see paywall locks on all non-free
  * lessons from courses they don't personally have subs for.
+ *
+ * `isFirstJobLesson` — pass `true` if the lesson is the first lesson of at least
+ * one published job (see `getFirstJobLessonIds`); such lessons are free.
  */
 export function isLessonAccessible(
   lesson: { order: number; courseId: string; isPartnerFree?: boolean },
   subscriptions: SubscriptionWithPlan[],
   billingEnabled: boolean,
   isAdminBypass = false,
+  isFirstJobLesson = false,
 ): boolean {
   if (!billingEnabled) return true;
   if (isAdminBypass) return true;
   if (lesson.isPartnerFree) return true; // партнёрский курс — полностью бесплатный
-  if (lesson.order <= FREE_LESSON_THRESHOLD) return true;
+  if (isFirstJobLesson) return true; // первый урок опубликованной джобы — бесплатный
   if (subscriptions.some((s) => s.plan.type === 'PLATFORM')) return true;
   if (subscriptions.some((s) => s.plan.type === 'COURSE' && s.courseId === lesson.courseId)) return true;
   return false;
@@ -81,7 +126,7 @@ export async function getUserAdminBypass(
  */
 export async function checkLessonAccess(
   userId: string,
-  lesson: { order: number; courseId: string; isPartnerFree?: boolean },
+  lesson: { id: string; order: number; courseId: string; isPartnerFree?: boolean },
   prisma: PrismaClient,
 ): Promise<AccessResult> {
   const billingEnabled = await isFeatureEnabled('billing_enabled');
@@ -106,7 +151,8 @@ export async function checkLessonAccess(
   const subscriptions = await getUserActiveSubscriptions(userId, prisma);
   const hasPlatformSub = subscriptions.some((s) => s.plan.type === 'PLATFORM');
 
-  if (lesson.order <= FREE_LESSON_THRESHOLD) {
+  const firstSet = await getFirstJobLessonIds(prisma, [lesson.id]);
+  if (firstSet.has(lesson.id)) {
     return { hasAccess: true, reason: 'free_lesson', hasPlatformSubscription: hasPlatformSub };
   }
 

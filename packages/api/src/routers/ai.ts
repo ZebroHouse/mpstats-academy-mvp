@@ -16,7 +16,7 @@ import {
   searchChunks,
   type ChatMessage,
 } from '@mpstats/ai';
-import { getUserActiveSubscriptions, getUserAdminBypass, isLessonAccessible } from '../utils/access';
+import { getUserActiveSubscriptions, getUserAdminBypass, isLessonAccessible, getFirstJobLessonIds } from '../utils/access';
 import { isFeatureEnabled } from '../utils/feature-flags';
 import type { SearchLessonResult, SearchSnippet } from '@mpstats/shared';
 
@@ -327,6 +327,10 @@ export const aiRouter = router({
       const TITLE_FLOOR = 0.8;
       const DESC_FLOOR = 0.65;
 
+      const firstJobLessonIds = await getFirstJobLessonIds(
+        ctx.prisma, lessons.map((l) => l.id),
+      );
+
       const results: SearchLessonResult[] = lessons.map((lesson) => {
         const chunkList = lessonChunksMap.get(lesson.id) || [];
         const isPartner = lesson.course.partnerKey != null;
@@ -335,6 +339,7 @@ export const aiRouter = router({
           subs,
           billingEnabled,
           isAdminBypass,
+          firstJobLessonIds.has(lesson.id),
         );
 
         const snippets: SearchSnippet[] = chunkList.map((c) => ({
