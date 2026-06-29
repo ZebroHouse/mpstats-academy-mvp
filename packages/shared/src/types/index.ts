@@ -415,6 +415,18 @@ export interface JobCatalogAxis {
   jobs: JobSummary[];
 }
 
+export type StorefrontItem =
+  | { kind: 'job'; job: JobSummary }
+  | { kind: 'lesson'; lesson: LessonWithProgress };
+
+export interface StorefrontShelf {
+  shelfKey: string;
+  title: string;
+  marketplace?: JobMarketplace;
+  items: StorefrontItem[]; // capped per shelf (≤12; «start» ≤3)
+  totalCount: number;      // full count before cap → drives «Смотреть все (N)»
+}
+
 export interface JobLessonItem {
   id: string;
   title: string;
