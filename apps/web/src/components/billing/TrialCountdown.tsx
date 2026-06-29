@@ -26,6 +26,10 @@ export function trialDaysPhrase(daysLeft: number): string {
  * Inline trial counter for the app header (T4).
  * Renders only for an active TRIAL subscription whose period hasn't ended;
  * everything else (no sub / ACTIVE / PAST_DUE / CANCELLED / PENDING / loading) → null.
+ *
+ * The whole element is a single link to /pricing, so the pill itself is the
+ * payment path on mobile. The «Продлить» button is a visual cue shown only on
+ * desktop — it's part of the same link, not a separate anchor, to avoid dup CTAs.
  */
 export function TrialCountdown() {
   const { data } = trpc.billing.getSubscription.useQuery();
@@ -40,18 +44,25 @@ export function TrialCountdown() {
   const isUrgent = daysLeft === 1;
 
   return (
-    <div data-testid="trial-countdown" data-urgent={isUrgent} className="flex items-center gap-2">
+    <Link
+      href="/pricing"
+      aria-label="Продлить подписку"
+      data-testid="trial-countdown"
+      data-urgent={isUrgent}
+      className="flex items-center gap-2"
+    >
       <span
         className={cn(
-          'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium',
-          isUrgent ? 'bg-amber-50 text-amber-700' : 'bg-mp-blue-50 text-mp-blue-700',
+          'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium transition-colors',
+          isUrgent
+            ? 'bg-amber-50 text-amber-700 hover:bg-amber-100'
+            : 'bg-mp-blue-50 text-mp-blue-700 hover:bg-mp-blue-100',
         )}
       >
         <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
         <span className="whitespace-nowrap">Триал: {trialDaysPhrase(daysLeft)}</span>
       </span>
-      <Link
-        href="/pricing"
+      <span
         className={cn(
           'hidden sm:inline-flex items-center rounded-full px-3 py-1 text-xs font-medium transition-colors',
           isUrgent
@@ -60,7 +71,7 @@ export function TrialCountdown() {
         )}
       >
         Продлить
-      </Link>
-    </div>
+      </span>
+    </Link>
   );
 }

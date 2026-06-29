@@ -1,10 +1,10 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, cleanup } from '@testing-library/react';
 
-// next/link renders a plain <a> in test env.
+// next/link renders a plain <a> in test env, forwarding all props (data-*, aria-*).
 vi.mock('next/link', () => ({
-  default: ({ href, className, children }: { href: string; className?: string; children: React.ReactNode }) => (
-    <a href={href} className={className}>{children}</a>
+  default: ({ href, children, ...rest }: { href: string; children: React.ReactNode } & Record<string, unknown>) => (
+    <a href={href} {...rest}>{children}</a>
   ),
 }));
 
@@ -63,6 +63,16 @@ describe('TrialCountdown', () => {
     expect(getByText(/Триал: осталось 3 дня/)).toBeDefined();
     const cta = getByRole('link', { name: /Продлить/ });
     expect(cta.getAttribute('href')).toBe('/pricing');
+  });
+
+  it('makes the whole pill a link to /pricing (mobile payment path)', () => {
+    mockSub = { data: { status: 'TRIAL', currentPeriodEnd: daysFromNow(3) } };
+    const { getByTestId } = render(<TrialCountdown />);
+
+    const pill = getByTestId('trial-countdown');
+    expect(pill.tagName).toBe('A');
+    expect(pill.getAttribute('href')).toBe('/pricing');
+    expect(pill.getAttribute('aria-label')).toBe('Продлить подписку');
   });
 
   it('uses the urgent style and singular copy for a 1-day TRIAL', () => {
