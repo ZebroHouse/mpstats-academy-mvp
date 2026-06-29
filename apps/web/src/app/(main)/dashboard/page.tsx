@@ -66,29 +66,25 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <div className="space-y-6 animate-fade-in">
-        <div className="space-y-2">
-          <Skeleton className="h-8 w-48" />
-          <Skeleton className="h-5 w-64" />
-        </div>
-        <div className="grid md:grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map(i => (
-            <Card key={i} className="shadow-mp-card">
-              <CardContent className="py-5">
-                <Skeleton className="h-8 w-16 mb-2" />
-                <Skeleton className="h-4 w-24" />
-              </CardContent>
-            </Card>
+        {/* Hero placeholder */}
+        <Skeleton className="h-44 rounded-2xl" />
+        {/* 3 bento entry card placeholders */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+          {[1, 2, 3].map(i => (
+            <Skeleton key={i} className="h-28 rounded-xl" />
           ))}
         </div>
-        <div className="grid lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            <div className="grid md:grid-cols-2 gap-4">
-              <Skeleton className="h-48 rounded-xl" />
-              <Skeleton className="h-48 rounded-xl" />
+        {/* Shelf-row placeholders */}
+        {[1, 2].map(i => (
+          <div key={i} className="space-y-3">
+            <Skeleton className="h-5 w-40" />
+            <div className="flex gap-4 overflow-hidden">
+              {[1, 2, 3].map(j => (
+                <Skeleton key={j} className="h-36 w-56 shrink-0 rounded-xl" />
+              ))}
             </div>
           </div>
-          <Skeleton className="h-72 rounded-xl" />
-        </div>
+        ))}
       </div>
     );
   }
@@ -194,8 +190,16 @@ export default function DashboardPage() {
       </div>
 
       {/* Zone 2 — Лента полок */}
-      <div className="space-y-8 mt-8">
+      <div className="space-y-8 mt-8 animate-slide-up" style={{ animationDelay: '150ms' }}>
         {storefront.isLoading && <div className="text-body-sm text-mp-gray-500">Загружаем рекомендации…</div>}
+        {storefront.isError && (
+          <div className="text-body-sm text-mp-gray-500">
+            Не удалось загрузить рекомендации.{' '}
+            <button onClick={() => storefront.refetch()} className="text-mp-blue-600 hover:underline">
+              Повторить
+            </button>
+          </div>
+        )}
         {storefront.data?.map((shelf) => <Shelf key={shelf.shelfKey} shelf={shelf} />)}
         {storefront.data && storefront.data.length === 0 && (
           <div className="text-center py-10 text-body-sm text-mp-gray-500">
