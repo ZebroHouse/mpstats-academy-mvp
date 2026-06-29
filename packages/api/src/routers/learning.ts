@@ -90,6 +90,7 @@ export const learningRouter = router({
             locked,
             topics: (l.topics as string[] | null) ?? [],
             skillCategories: (l.skillCategories as string[] | null) ?? [],
+            badges: l.badges,
           };
         }),
       };
@@ -170,6 +171,7 @@ export const learningRouter = router({
               status: l.progress[0]?.status || 'NOT_STARTED',
               watchedPercent: l.progress[0]?.watchedPercent || 0,
               locked,
+              badges: l.badges,
             };
           }),
         };
