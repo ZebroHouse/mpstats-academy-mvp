@@ -5,8 +5,13 @@ vi.mock('../../utils/carrotquest', () => ({
   cqTrackEvent: vi.fn().mockResolvedValue(undefined),
 }));
 
+vi.mock('../../utils/albato-lead', () => ({
+  sendAcademyLead: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { onboardingRouter } from '../onboarding';
 import { cqSetUserProps, cqTrackEvent } from '../../utils/carrotquest';
+import { sendAcademyLead } from '../../utils/albato-lead';
 
 // protectedProcedure middleware fires ctx.prisma.userProfile.findUnique
 // (lastActiveAt debounce); ensureUserProfile calls upsert. Provide minimal
@@ -20,13 +25,24 @@ const ctxPrismaStub = {
         ? Promise.resolve({ lastActiveAt: new Date() })
         : Promise.resolve(null),
     ),
-    update: vi.fn().mockResolvedValue({}),
+    // Atomic first-completion claim. Default count: 1 → first completion.
+    updateMany: vi.fn().mockResolvedValue({ count: 1 }),
+    update: vi.fn().mockResolvedValue({
+      id: 'user-1',
+      name: 'Иван Петров',
+      phone: '+79161234567',
+      yandexId: null,
+      createdAt: new Date('2026-06-29T09:12:00.000Z'),
+    }),
     upsert: vi.fn().mockResolvedValue({}),
   },
+  // Reads scoped inside the first-completion lead block.
+  referral: { findUnique: vi.fn().mockResolvedValue(null) },
+  subscription: { findFirst: vi.fn().mockResolvedValue(null) },
 };
 
 const ctx = {
-  user: { id: 'user-1' },
+  user: { id: 'user-1', email: 'ivan@example.com' },
   prisma: ctxPrismaStub as any,
 };
 
@@ -47,11 +63,18 @@ describe('onboarding.complete', () => {
       goalText: 'хочу выйти на маркетплейсы',
     });
 
+    // onboardingCompletedAt is stamped atomically by updateMany (the first-
+    // completion claim), guarded on the null sentinel + server-session userId.
+    expect(ctxPrismaStub.userProfile.updateMany).toHaveBeenCalledTimes(1);
+    const claimArg = ctxPrismaStub.userProfile.updateMany.mock.calls[0][0];
+    expect(claimArg.where).toEqual({ id: 'user-1', onboardingCompletedAt: null });
+    expect(claimArg.data.onboardingCompletedAt).toBeInstanceOf(Date);
+
+    // The main update persists qualification (on every call), NOT onboardingCompletedAt.
     expect(ctxPrismaStub.userProfile.update).toHaveBeenCalledTimes(1);
     const updateArg = ctxPrismaStub.userProfile.update.mock.calls[0][0];
-    // Write hard-bound to server-session userId, never input.
     expect(updateArg.where).toEqual({ id: 'user-1' });
-    expect(updateArg.data.onboardingCompletedAt).toBeInstanceOf(Date);
+    expect(updateArg.data.onboardingCompletedAt).toBeUndefined();
     expect(updateArg.data.marketplaces).toEqual(['WB', 'OZON']);
     expect(updateArg.data.goals).toEqual(['SALES']);
     expect(updateArg.data.experienceLevel).toBe('BEGINNER');
@@ -98,14 +121,8 @@ describe('onboarding.complete', () => {
   });
 
   it('does NOT fire pa_onboarding_completed when onboarding was already done', async () => {
-    // Profile edit: prior onboardingCompletedAt is already set.
-    ctxPrismaStub.userProfile.findUnique.mockImplementation((args: any) =>
-      args?.select?.lastActiveAt
-        ? Promise.resolve({ lastActiveAt: new Date() })
-        : args?.select?.onboardingCompletedAt
-          ? Promise.resolve({ onboardingCompletedAt: new Date('2026-01-01') })
-          : Promise.resolve(null),
-    );
+    // Profile re-edit: the atomic claim matches no row (already stamped) → count 0.
+    ctxPrismaStub.userProfile.updateMany.mockResolvedValueOnce({ count: 0 });
 
     await caller().complete({ marketplaces: ['OZON'] });
 
@@ -115,6 +132,54 @@ describe('onboarding.complete', () => {
 
   it('still completes when the CarrotQuest call fails', async () => {
     vi.mocked(cqSetUserProps).mockRejectedValueOnce(new Error('CQ down'));
+
+    const result = caller().complete({ marketplaces: ['WB'] });
+
+    await expect(result).resolves.not.toThrow();
+    expect(ctxPrismaStub.userProfile.update).toHaveBeenCalledTimes(1);
+  });
+
+  it('sends the Albato lead once on first completion with contact + qualification', async () => {
+    // Default updateMany stub returns count 1 → wasFirstCompletion is true.
+    ctxPrismaStub.referral.findUnique.mockResolvedValueOnce({ code: 'REF-AB12CD' });
+    ctxPrismaStub.subscription.findFirst.mockResolvedValueOnce({
+      currentPeriodEnd: new Date('2026-07-02T10:00:00.000Z'),
+    });
+
+    await caller().complete({
+      marketplaces: ['WB', 'OZON'],
+      experienceLevel: 'BEGINNER',
+      goals: ['ADS', 'ANALYTICS'],
+      goalText: 'хочу выйти на маркетплейсы',
+    });
+
+    expect(sendAcademyLead).toHaveBeenCalledTimes(1);
+    expect(sendAcademyLead).toHaveBeenCalledWith(
+      expect.objectContaining({
+        userId: 'user-1',
+        email: 'ivan@example.com',
+        name: 'Иван Петров',
+        phone: '+79161234567',
+        referralCode: 'REF-AB12CD',
+        marketplaces: ['WB', 'OZON'],
+        experienceLevel: 'BEGINNER',
+        goals: ['ADS', 'ANALYTICS'],
+        trialEndsAt: new Date('2026-07-02T10:00:00.000Z'),
+      }),
+    );
+  });
+
+  it('does NOT send the Albato lead when onboarding was already done', async () => {
+    // Atomic claim matches no row (already onboarded) → count 0 → no lead.
+    ctxPrismaStub.userProfile.updateMany.mockResolvedValueOnce({ count: 0 });
+
+    await caller().complete({ marketplaces: ['OZON'] });
+
+    expect(sendAcademyLead).not.toHaveBeenCalled();
+  });
+
+  it('still completes when the Albato lead throws', async () => {
+    vi.mocked(sendAcademyLead).mockRejectedValueOnce(new Error('Albato down'));
 
     const result = caller().complete({ marketplaces: ['WB'] });
 
