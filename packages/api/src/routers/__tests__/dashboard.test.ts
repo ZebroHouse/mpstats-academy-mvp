@@ -7,19 +7,20 @@ vi.mock('../../utils/feature-flags', () => ({
 }));
 
 function makeCtx(over: Partial<{
-  goals: string[]; marketplaces: string[];
+  goals: string[]; marketplaces: string[]; role: string | undefined;
   jobs: any[]; badgedLessons: any[]; inProgress: any[];
+  subscriptions: any[]; jobLessons: any[];
 }> = {}) {
-  const o = { goals: [], marketplaces: [], jobs: [], badgedLessons: [], inProgress: [], ...over };
+  const o = { goals: [], marketplaces: [], role: undefined, jobs: [], badgedLessons: [], inProgress: [], subscriptions: [], jobLessons: [], ...over };
   return {
     user: { id: 'user-1' },
     prisma: {
-      userProfile: { findUnique: vi.fn().mockResolvedValue({ goals: o.goals, marketplaces: o.marketplaces, lastActiveAt: new Date() }), update: vi.fn() },
+      userProfile: { findUnique: vi.fn().mockResolvedValue({ goals: o.goals, marketplaces: o.marketplaces, role: o.role, lastActiveAt: new Date() }), update: vi.fn() },
       job: { findMany: vi.fn().mockResolvedValue(o.jobs) },
       lesson: { findMany: vi.fn().mockResolvedValue(o.badgedLessons) },
       lessonProgress: { findMany: vi.fn().mockResolvedValue(o.inProgress) },
-      subscription: { findMany: vi.fn().mockResolvedValue([]) },
-      jobLesson: { findMany: vi.fn().mockResolvedValue([]) }, // used by getFirstJobLessonIds(ctx.prisma)
+      subscription: { findMany: vi.fn().mockResolvedValue(o.subscriptions) },
+      jobLesson: { findMany: vi.fn().mockResolvedValue(o.jobLessons) }, // used by getFirstJobLessonIds(ctx.prisma)
     },
   } as any;
 }
@@ -28,6 +29,13 @@ function lesson(id: string, badges: string[], courseId = '02_ads') {
 }
 function job(slug: string, axes: string[], badges: string[], marketplace = 'WB') {
   return { id: slug, slug, title: slug, description: '', marketplace, axes, badges, lessons: [] };
+}
+// A job carrying one lesson with a COMPLETED progress row (for completedLessons assertions).
+function jobWithCompletedLesson(slug: string, badges: string[]) {
+  return {
+    id: slug, slug, title: slug, description: '', marketplace: 'WB', axes: [], badges,
+    lessons: [{ lesson: { duration: 5, progress: [{ status: 'COMPLETED' }] } }],
+  };
 }
 
 beforeEach(() => vi.clearAllMocks());
@@ -61,5 +69,63 @@ describe('dashboard.getStorefront', () => {
     const res = await dashboardRouter.createCaller(makeCtx({ marketplaces: ['WB', 'OZON'], badgedLessons })).getStorefront();
     expect(res.find((s) => s.shelfKey === 'new-wb')).toBeTruthy();
     expect(res.find((s) => s.shelfKey === 'new-ozon')).toBeTruthy();
+  });
+
+  it('IN_PROGRESS lesson → «Продолжить» shelf with status + watchedPercent', async () => {
+    const inProgress = [{ status: 'IN_PROGRESS', watchedPercent: 42, lesson: lesson('lp1', []) }];
+    const res = await dashboardRouter.createCaller(makeCtx({ inProgress })).getStorefront();
+    const cont = res.find((s) => s.shelfKey === 'continue')!;
+    expect(cont.title).toBe('Продолжить');
+    const item = cont.items[0];
+    expect(item.kind).toBe('lesson');
+    if (item.kind === 'lesson') {
+      expect(item.lesson.status).toBe('IN_PROGRESS');
+      expect(item.lesson.watchedPercent).toBe(42);
+    }
+  });
+
+  it('locked=true when no subs + billing on + not-first-job + not admin', async () => {
+    // makeCtx defaults: subscriptions []=no subs, jobLessons []=empty firstJobLessonIds,
+    // role undefined=not admin; isFeatureEnabled mocked → true (billing on).
+    const badgedLessons = [lesson('l1', ['START'])];
+    const res = await dashboardRouter.createCaller(makeCtx({ badgedLessons })).getStorefront();
+    const start = res.find((s) => s.shelfKey === 'start')!;
+    const item = start.items[0];
+    expect(item.kind).toBe('lesson');
+    if (item.kind === 'lesson') expect(item.lesson.locked).toBe(true);
+  });
+
+  it('completedLessons counts COMPLETED progress rows on a job', async () => {
+    const jobs = [jobWithCompletedLesson('j1', ['START'])];
+    const res = await dashboardRouter.createCaller(makeCtx({ jobs })).getStorefront();
+    const start = res.find((s) => s.shelfKey === 'start')!;
+    const item = start.items.find((i) => i.kind === 'job')!;
+    if (item.kind === 'job') {
+      expect(item.job.lessonCount).toBe(1);
+      expect(item.job.completedLessons).toBe(1);
+    }
+  });
+});
+
+describe('dashboard.getCollection', () => {
+  it('start shelf → full jobs+lessons grouped, no cap', async () => {
+    const badgedLessons = [lesson('l1', ['START']), lesson('l2', ['START']), lesson('l3', ['START']), lesson('l4', ['START'])];
+    const jobs = [job('j1', ['MARKETING'], ['START'])];
+    const res = await dashboardRouter.createCaller(makeCtx({ badgedLessons, jobs })).getCollection({ shelfKey: 'start' });
+    expect(res.lessons).toHaveLength(4); // no 3-cap
+    expect(res.jobs).toHaveLength(1);
+  });
+
+  it('type=lessons → jobs empty', async () => {
+    const badgedLessons = [lesson('l1', ['QUICK'])];
+    const jobs = [job('j1', ['MARKETING'], ['QUICK'])];
+    const res = await dashboardRouter.createCaller(makeCtx({ badgedLessons, jobs })).getCollection({ shelfKey: 'quick', type: 'lessons' });
+    expect(res.jobs).toHaveLength(0);
+    expect(res.lessons).toHaveLength(1);
+  });
+
+  it('unknown shelfKey → empty groups', async () => {
+    const res = await dashboardRouter.createCaller(makeCtx()).getCollection({ shelfKey: 'garbage' });
+    expect(res).toEqual({ jobs: [], lessons: [] });
   });
 });
