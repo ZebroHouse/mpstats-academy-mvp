@@ -149,6 +149,18 @@ export async function POST(request: NextRequest) {
             );
             return NextResponse.json(REJECT);
           }
+          // Log "reached the payment widget" for the sales client registry.
+          // Best-effort + decoupled from billing — must never affect the CP
+          // response or the check outcome.
+          void prisma.checkoutAttempt
+            .create({
+              data: {
+                userId: event.accountId || null,
+                subscriptionId: event.ourSubscriptionId,
+              },
+            })
+            .catch((e) => console.error('[CloudPayments] checkoutAttempt log failed:', e));
+
           const accepted = await handleCheck(
             event.accountId,
             event.ourSubscriptionId,

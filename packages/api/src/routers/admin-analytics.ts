@@ -20,6 +20,7 @@ import { deriveTrialConversion } from '../utils/trial-conversion';
 import { computeConversionFunnel, churnRate, type FunnelUserRow } from '../utils/funnel-metrics';
 import { extractCheckpoints, tallyCheckpoints } from '../utils/checkpoint-analytics';
 import { assembleReferralFunnel } from '../utils/referral-funnel';
+import { fetchClientRegistry } from '../services/sales-registry';
 
 /**
  * Pulls a valid checkpointChoices map out of a persisted `progressState`.
@@ -610,6 +611,30 @@ export const adminAnalyticsRouter = router({
             .filter((p) => p.paidAt != null)
             .map((p) => ({ userId: p.subscription.userId, paidAt: p.paidAt as Date })),
         });
+      } catch (error) {
+        handleDatabaseError(error);
+      }
+    }),
+
+  /**
+   * Sales client registry for a registration-date range: contact, acquisition
+   * source, and payment status per registered user. Powers the «Клиенты» tab and
+   * shares its fetch with the CSV export route. Test users excluded.
+   */
+  getClientRegistry: adminProcedure
+    .input(
+      z.object({ from: z.date().optional(), to: z.date().optional() }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        const to = input.to ?? new Date();
+        const from = input.from ?? new Date(to.getTime() - 30 * 24 * 60 * 60 * 1000);
+        const MAX_DAYS = 366;
+        if ((to.getTime() - from.getTime()) / 86_400_000 > MAX_DAYS) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Диапазон не больше 366 дней' });
+        }
+        const rows = await fetchClientRegistry(ctx.prisma, { from, to });
+        return { rows, total: rows.length };
       } catch (error) {
         handleDatabaseError(error);
       }
