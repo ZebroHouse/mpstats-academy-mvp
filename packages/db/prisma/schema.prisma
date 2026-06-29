@@ -720,3 +720,17 @@ model UserActivityDay {
   @@id([userId, day])
   @@index([day])
 }
+
+// Per-code, per-day unique-visit counter for ambassador/referral share links.
+// Incremented by /api/internal/ref-click on first-touch (deduped by the ref
+// cookie in middleware). codeId matches ReferralCode.id; no FK (mirrors
+// UserActivityDay) — codes are toggled, not deleted.
+model ReferralCodeClickDay {
+  codeId    String
+  day       DateTime @db.Date
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@id([codeId, day])
+  @@index([day])
+}
