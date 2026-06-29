@@ -13,6 +13,7 @@ export interface FilterState {
   duration: string;     // 'ALL' | 'short' | 'medium' | 'long'
   courseId: string;      // 'ALL' | course.id
   marketplace: string;  // 'ALL' | 'WB' | 'OZON'
+  badge: string;         // 'ALL' | 'START' | 'NEW' | 'HOT' | 'QUICK'
 }
 
 export const DEFAULT_FILTERS: FilterState = {
@@ -23,6 +24,7 @@ export const DEFAULT_FILTERS: FilterState = {
   duration: 'ALL',
   courseId: 'ALL',
   marketplace: 'ALL',
+  badge: 'ALL',
 };
 
 interface FilterPanelProps {
@@ -62,7 +64,8 @@ function isNonDefault(filters: FilterState): boolean {
     filters.difficulty !== 'ALL' ||
     filters.duration !== 'ALL' ||
     filters.courseId !== 'ALL' ||
-    filters.marketplace !== 'ALL'
+    filters.marketplace !== 'ALL' ||
+    filters.badge !== 'ALL'
   );
 }
 
@@ -252,6 +255,20 @@ export function FilterPanel({ filters, onFiltersChange, availableTopics, availab
             className="max-w-[220px]"
           />
         )}
+
+        {/* Tag / badge */}
+        <SelectFilter
+          value={filters.badge}
+          onChange={(v) => update({ badge: v })}
+          ariaLabel="Фильтр по тегу"
+          options={[
+            { value: 'ALL', label: 'Тег' },
+            { value: 'START', label: 'Начни отсюда' },
+            { value: 'NEW', label: 'Новое' },
+            { value: 'HOT', label: 'Хит' },
+            { value: 'QUICK', label: '5 мин' },
+          ]}
+        />
       </FilterGroup>
 
       {/* Reset */}
