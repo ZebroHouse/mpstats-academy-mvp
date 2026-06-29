@@ -30,9 +30,11 @@ export async function fetchClientRegistry(
   if (ids.length === 0) return [];
 
   const [emailRows, referrals, payments, checkouts] = await Promise.all([
-    // Email lives in Supabase auth.users, not UserProfile.
+    // Email lives in Supabase auth.users, not UserProfile. auth.users.id is a
+    // uuid; our ids are text params, so compare on id::text (a bare `id IN (...)`
+    // throws "operator does not exist: uuid = text").
     prisma.$queryRaw<Array<{ id: string; email: string | null }>>`
-      SELECT id::text AS id, email FROM auth.users WHERE id IN (${Prisma.join(ids)})
+      SELECT id::text AS id, email FROM auth.users WHERE id::text IN (${Prisma.join(ids)})
     `,
     prisma.referral.findMany({
       where: { referredUserId: { in: ids } },

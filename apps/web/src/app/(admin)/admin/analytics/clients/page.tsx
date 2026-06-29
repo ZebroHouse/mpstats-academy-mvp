@@ -99,7 +99,12 @@ export default function AnalyticsClientsPage() {
               {q.isLoading && (
                 <tr><td colSpan={9} className="p-6"><Skeleton className="h-40 w-full" /></td></tr>
               )}
-              {!q.isLoading && rows.length === 0 && (
+              {!q.isLoading && q.error && (
+                <tr><td colSpan={9} className="p-8 text-center text-red-600">
+                  Ошибка загрузки: {q.error.message}
+                </td></tr>
+              )}
+              {!q.isLoading && !q.error && rows.length === 0 && (
                 <tr><td colSpan={9} className="p-8 text-center text-mp-gray-500">Нет клиентов за период.</td></tr>
               )}
               {rows.map((r) => (
