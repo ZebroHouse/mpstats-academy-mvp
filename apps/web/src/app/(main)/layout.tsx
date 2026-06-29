@@ -11,6 +11,7 @@ import { CarrotQuestIdentify } from '@/components/shared/CarrotQuestIdentify';
 import { TourProvider } from '@/components/shared/TourProvider';
 import { HelpCircleButton } from '@/components/shared/HelpCircleButton';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
+import { TrialCountdown } from '@/components/billing/TrialCountdown';
 import { ReferralBanner } from '@/components/referral/ReferralBanner';
 import { PartnerSetupBanner } from '@/components/partner/PartnerSetupBanner';
 
@@ -107,6 +108,7 @@ export default async function MainLayout({
               <div className="hidden md:block" />
               {/* Help + User nav */}
               <div className="flex items-center gap-2">
+                <TrialCountdown />
                 <NotificationBell />
                 <HelpCircleButton />
                 <UserNav user={{
