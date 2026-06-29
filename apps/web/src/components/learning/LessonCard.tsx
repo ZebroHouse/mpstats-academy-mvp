@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import type { LessonWithProgress } from '@mpstats/shared';
 import { FavoriteButton } from './FavoriteButton';
+import { deriveBadgePills, BADGE_TONE_CLASS } from './badge-utils';
 
 interface LessonCardProps {
   lesson: LessonWithProgress;
@@ -79,6 +80,7 @@ const LOCK_ICON = (
 export function LessonCard({ lesson, showCourse, courseName, isRecommended, locked, inTrack, onToggleTrack, onRemoveFromTrack, favorite }: LessonCardProps) {
   const isLocked = locked ?? lesson.locked;
   const status = STATUS_CONFIG[lesson.status];
+  const badgePills = deriveBadgePills(lesson.badges);
 
   return (
     <Link href={`/learn/${lesson.id}`}>
@@ -104,6 +106,15 @@ export function LessonCard({ lesson, showCourse, courseName, isRecommended, lock
               <h3 className="font-medium text-mp-gray-900 line-clamp-2">
                 {lesson.title}
               </h3>
+
+              {/* Badge pills (NEW / HOT / QUICK) — START is routing-only, never shown */}
+              {badgePills.length > 0 && (
+                <div className="flex gap-1 mt-1">
+                  {badgePills.map((p) => (
+                    <span key={p.key} className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${BADGE_TONE_CLASS[p.tone]}`}>{p.label}</span>
+                  ))}
+                </div>
+              )}
 
               {/* Description */}
               {lesson.description && (

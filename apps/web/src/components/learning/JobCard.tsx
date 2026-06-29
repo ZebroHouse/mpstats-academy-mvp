@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import type { JobSummary } from '@mpstats/shared';
 import { FavoriteButton } from './FavoriteButton';
+import { deriveBadgePills, BADGE_TONE_CLASS } from './badge-utils';
 
 function fmtDuration(min: number): string {
   if (min < 60) return `${min} мин`;
@@ -26,6 +27,7 @@ export function JobCard({
     ? Math.round((job.completedLessons / job.lessonCount) * 100)
     : 0;
   const done = pct === 100;
+  const badgePills = deriveBadgePills(job.badges);
 
   return (
     <Link
@@ -39,6 +41,9 @@ export function JobCard({
         {job.isRecommended && !job.isInTrack && (
           <span className="text-caption font-bold px-2 py-0.5 rounded bg-amber-100 text-amber-700">Рекомендовано диагностикой</span>
         )}
+        {badgePills.map((p) => (
+          <span key={p.key} className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${BADGE_TONE_CLASS[p.tone]}`}>{p.label}</span>
+        ))}
       </div>
       <div className="flex items-start gap-1">
         <h3 className="text-body font-semibold text-mp-gray-900 leading-snug flex-1">{job.title}</h3>
