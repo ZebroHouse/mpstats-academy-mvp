@@ -27,6 +27,7 @@ export function AmbassadorCodeCreateDialog({ open, onOpenChange, onCreated }: Pr
   const [maxUses, setMaxUses] = useState<string>('');
   const [expiresAt, setExpiresAt] = useState<string>('');
   const [code, setCode] = useState<string>('');
+  const [landingTarget, setLandingTarget] = useState<'HOME' | 'REGISTER'>('REGISTER');
 
   const utils = trpc.useUtils();
   const createMutation = trpc.referral.admin.createAmbassadorCode.useMutation({
@@ -39,6 +40,7 @@ export function AmbassadorCodeCreateDialog({ open, onOpenChange, onCreated }: Pr
       setMaxUses('');
       setExpiresAt('');
       setCode('');
+      setLandingTarget('REGISTER');
       onOpenChange(false);
       onCreated?.();
     },
@@ -85,6 +87,7 @@ export function AmbassadorCodeCreateDialog({ open, onOpenChange, onCreated }: Pr
       refereeTrialDays: days,
       maxUses: parsedMaxUses,
       expiresAt: parsedExpiresAt,
+      landingTarget,
       ...(trimmedCode ? { code: trimmedCode } : {}),
     });
   }
@@ -147,6 +150,22 @@ export function AmbassadorCodeCreateDialog({ open, onOpenChange, onCreated }: Pr
               value={expiresAt}
               onChange={(e) => setExpiresAt(e.target.value)}
             />
+          </div>
+          <div>
+            <label className="text-body-sm font-medium text-mp-gray-700 block mb-1">
+              Куда ведёт ссылка
+            </label>
+            <select
+              value={landingTarget}
+              onChange={(e) => setLandingTarget(e.target.value as 'HOME' | 'REGISTER')}
+              className="w-full px-3 py-2 border border-mp-gray-200 rounded-lg text-body-sm bg-white focus:outline-none focus:ring-2 focus:ring-mp-blue-500"
+            >
+              <option value="REGISTER">Страница регистрации (/register)</option>
+              <option value="HOME">Главная страница (/)</option>
+            </select>
+            <p className="text-xs text-mp-gray-500 mt-1">
+              Обе ссылки засчитывают реферал. Главная = маркетинговый прогрев, регистрация = сразу форма.
+            </p>
           </div>
           <div>
             <label className="text-body-sm font-medium text-mp-gray-700 block mb-1">

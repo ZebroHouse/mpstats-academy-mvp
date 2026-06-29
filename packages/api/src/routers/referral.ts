@@ -90,6 +90,9 @@ const adminCodesRouter = router({
               'expiresAt must be in the future',
             ),
           code: z.string().regex(AMB_CODE_SHAPE).optional(),
+          // Where the share link points. Both attribute via the ?ref= cookie
+          // (middleware decorates any URL); this only sets the landing page.
+          landingTarget: z.enum(['HOME', 'REGISTER']).default('REGISTER'),
         })
         .strict(),
     )
@@ -116,6 +119,7 @@ const adminCodesRouter = router({
           code: candidateCode,
           codeType: 'AMBASSADOR',
           label: input.label,
+          landingTarget: input.landingTarget,
           refereeTrialDays: input.refereeTrialDays,
           maxUses: input.maxUses ?? null,
           expiresAt: input.expiresAt ?? null,
@@ -134,6 +138,7 @@ const adminCodesRouter = router({
           maxUses: z.number().int().min(1).nullable().optional(),
           expiresAt: z.date().nullable().optional(),
           isActive: z.boolean().optional(),
+          landingTarget: z.enum(['HOME', 'REGISTER']).optional(),
         })
         .strict(),
     )
@@ -143,6 +148,7 @@ const adminCodesRouter = router({
       if (input.maxUses !== undefined) data.maxUses = input.maxUses;
       if (input.expiresAt !== undefined) data.expiresAt = input.expiresAt;
       if (input.isActive !== undefined) data.isActive = input.isActive;
+      if (input.landingTarget !== undefined) data.landingTarget = input.landingTarget;
 
       try {
         return await prisma.referralCode.update({ where: { id: input.id }, data });

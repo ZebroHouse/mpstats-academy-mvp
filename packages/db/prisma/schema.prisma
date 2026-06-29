@@ -624,6 +624,7 @@ model ReferralCode {
   code             String           @unique
   codeType         ReferralCodeType
   label            String
+  landingTarget    String           @default("REGISTER") // Where the share link points: HOME (/) | REGISTER (/register). Both attribute via ?ref= cookie.
   refereeTrialDays Int
   maxUses          Int?
   currentUses      Int              @default(0)
