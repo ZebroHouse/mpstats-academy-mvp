@@ -14,4 +14,8 @@ describe('filterLessonByState — badge', () => {
   it('badge=HOT + lesson lacks HOT → filtered out', () => {
     expect(filterLessonByState(base, { ...DEFAULT_FILTERS, badge: 'HOT' })).toBe(false);
   });
+  it('badge=NEW + lesson has no badges field → filtered out', () => {
+    const noBadges: any = { skillCategory: 'MARKETING', status: 'NOT_STARTED', duration: 5, topics: [], courseId: '02_ads' };
+    expect(filterLessonByState(noBadges, { ...DEFAULT_FILTERS, badge: 'NEW' })).toBe(false);
+  });
 });

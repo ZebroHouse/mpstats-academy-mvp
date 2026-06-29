@@ -86,7 +86,7 @@ function LibraryPageInner() {
   const filters = useMemo(() => filtersFromSearchParams(searchParams), [searchParams]);
   const setFilters = useCallback((newFilters: FilterState) => {
     const query = filtersToSearchParams(newFilters);
-    router.replace(query ? `${pathname}?${query}` : pathname);
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }, [router, pathname]);
 
   const { data: courses, isLoading, error } = trpc.learning.getCourses.useQuery();
