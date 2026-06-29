@@ -3,6 +3,7 @@ import { router, protectedProcedure } from '../trpc';
 import { ensureUserProfile } from '../utils/ensure-user-profile';
 import { handleDatabaseError } from '../utils/db-errors';
 import { cqSetUserProps, cqTrackEvent } from '../utils/carrotquest';
+import { sendAcademyLead } from '../utils/albato-lead';
 
 // Locked qualification keys (CONTEXT.md Data Model). z.enum whitelists reject
 // tampered keys before they reach the DB (Security V5 / threat T-56-04).
@@ -49,16 +50,22 @@ export const onboardingRouter = router({
       try {
         await ensureUserProfile(ctx.prisma, ctx.user);
 
-        // Capture prior state so the completion event fires only once.
-        const prior = await ctx.prisma.userProfile.findUnique({
-          where: { id: ctx.user.id },
-          select: { onboardingCompletedAt: true },
+        // Atomically claim the first completion: only one concurrent request can
+        // flip onboardingCompletedAt from null → now, so the completion event and
+        // the amoCRM lead fire exactly once even under a double-submit (race-proof,
+        // unlike a read-then-write guard). updateMany never throws on 0 matches, so
+        // a profile re-edit (already onboarded) just claims nothing.
+        const claim = await ctx.prisma.userProfile.updateMany({
+          where: { id: ctx.user.id, onboardingCompletedAt: null },
+          data: { onboardingCompletedAt: new Date() },
         });
-        const wasFirstCompletion = prior?.onboardingCompletedAt == null;
+        const wasFirstCompletion = claim.count === 1;
 
+        // Persist qualification on every call (incl. profile re-edits). onboarding-
+        // CompletedAt is owned by the atomic claim above, so it is not set here.
         const profile = await ctx.prisma.userProfile.update({
           where: { id: ctx.user.id },
-          data: { ...input, onboardingCompletedAt: new Date() },
+          data: { ...input },
         });
 
         // Mirror qualification to CarrotQuest — best-effort, never blocks
@@ -78,6 +85,45 @@ export const onboardingRouter = router({
             '[onboarding.complete] CarrotQuest mirror failed:',
             cqError,
           );
+        }
+
+        // Send the registration lead to amoCRM (via Albato) — best-effort, fires
+        // exactly once (gated on wasFirstCompletion). The unskippable wizard means
+        // every registered user reaches here, so this is the canonical lead event.
+        // Extra reads (referral, trial) are scoped inside this block so they only
+        // run on first completion and a failure never blocks/fails onboarding.
+        if (wasFirstCompletion) {
+          try {
+            const [referral, trialSub] = await Promise.all([
+              ctx.prisma.referral.findUnique({
+                where: { referredUserId: ctx.user.id },
+                select: { code: true },
+              }),
+              ctx.prisma.subscription.findFirst({
+                where: { userId: ctx.user.id, status: 'TRIAL' },
+                orderBy: { currentPeriodEnd: 'desc' },
+                select: { currentPeriodEnd: true },
+              }),
+            ]);
+
+            await sendAcademyLead({
+              userId: ctx.user.id,
+              name: profile.name,
+              phone: profile.phone,
+              email: ctx.user.email ?? null,
+              yandexId: profile.yandexId,
+              referralCode: referral?.code ?? null,
+              marketplaces: input.marketplaces,
+              experienceLevel: input.experienceLevel ?? null,
+              goals: input.goals,
+              goalText: input.goalText ?? null,
+              trialEndsAt: trialSub?.currentPeriodEnd ?? null,
+              registeredAt: profile.createdAt,
+              now: new Date(),
+            });
+          } catch (leadError) {
+            console.error('[onboarding.complete] Albato lead failed:', leadError);
+          }
         }
 
         return profile;
