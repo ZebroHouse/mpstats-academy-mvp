@@ -64,8 +64,9 @@ export function AmbassadorCodesTable() {
     return () => clearTimeout(t);
   }, [searchInput]);
 
-  function handleCopyLink(code: string) {
-    const url = `https://platform.mpstats.academy/register?ref=${code}`;
+  function handleCopyLink(code: string, landingTarget: string) {
+    const path = landingTarget === 'HOME' ? '/' : '/register';
+    const url = `https://platform.mpstats.academy${path}?ref=${code}`;
     navigator.clipboard
       .writeText(url)
       .then(() => toast.success('Ссылка скопирована'))
@@ -107,6 +108,7 @@ export function AmbassadorCodesTable() {
               <tr>
                 <th className="text-left px-4 py-3 font-medium text-mp-gray-700">Код</th>
                 <th className="text-left px-4 py-3 font-medium text-mp-gray-700">Метка</th>
+                <th className="text-left px-4 py-3 font-medium text-mp-gray-700">Ведёт</th>
                 <th className="text-left px-4 py-3 font-medium text-mp-gray-700">Trial, дн</th>
                 <th className="text-left px-4 py-3 font-medium text-mp-gray-700">Использований</th>
                 <th className="text-left px-4 py-3 font-medium text-mp-gray-700">Истекает</th>
@@ -120,14 +122,14 @@ export function AmbassadorCodesTable() {
             <tbody>
               {list.isLoading && (
                 <tr>
-                  <td colSpan={10} className="p-6">
+                  <td colSpan={11} className="p-6">
                     <Skeleton className="h-32 w-full" />
                   </td>
                 </tr>
               )}
               {!list.isLoading && items.length === 0 && (
                 <tr>
-                  <td colSpan={10} className="p-8 text-center text-mp-gray-500">
+                  <td colSpan={11} className="p-8 text-center text-mp-gray-500">
                     <div className="space-y-2">
                       <div>Нет кодов. Создайте первый.</div>
                       <Button onClick={() => setCreateOpen(true)} size="sm">
@@ -142,6 +144,9 @@ export function AmbassadorCodesTable() {
                 <tr key={row.id} className="border-b border-mp-gray-100 hover:bg-mp-gray-50/50">
                   <td className="px-4 py-3 font-mono text-mp-gray-900">{row.code}</td>
                   <td className="px-4 py-3 text-mp-gray-900">{row.label}</td>
+                  <td className="px-4 py-3 text-mp-gray-700 whitespace-nowrap">
+                    {row.landingTarget === 'HOME' ? 'Главная' : 'Регистрация'}
+                  </td>
                   <td className="px-4 py-3 text-mp-gray-700">{row.refereeTrialDays}</td>
                   <td className="px-4 py-3 text-mp-gray-700">
                     {row.currentUses}/{row.maxUses ?? '∞'}
@@ -173,7 +178,7 @@ export function AmbassadorCodesTable() {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => handleCopyLink(row.code)}
+                        onClick={() => handleCopyLink(row.code, row.landingTarget)}
                         title="Скопировать ссылку"
                       >
                         <Copy className="w-3.5 h-3.5" />

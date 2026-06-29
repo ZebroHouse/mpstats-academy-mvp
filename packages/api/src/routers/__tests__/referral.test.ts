@@ -297,6 +297,52 @@ describe('referral.admin.createAmbassadorCode', () => {
     );
   });
 
+  it('persists landingTarget=HOME when provided', async () => {
+    mockReferralCodeFindUnique.mockResolvedValue(null);
+    mockUserFindFirst.mockResolvedValue(null);
+    mockReferralCodeCreate.mockResolvedValue({ id: 'rc2', code: 'AMB-HOME01', landingTarget: 'HOME' });
+
+    await adminCaller().admin.createAmbassadorCode({
+      label: 'Блогер',
+      refereeTrialDays: 14,
+      landingTarget: 'HOME',
+    });
+
+    expect(mockReferralCodeCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ landingTarget: 'HOME' }),
+      }),
+    );
+  });
+
+  it('defaults landingTarget to REGISTER when omitted', async () => {
+    mockReferralCodeFindUnique.mockResolvedValue(null);
+    mockUserFindFirst.mockResolvedValue(null);
+    mockReferralCodeCreate.mockResolvedValue({ id: 'rc3', code: 'AMB-REG001', landingTarget: 'REGISTER' });
+
+    await adminCaller().admin.createAmbassadorCode({
+      label: 'Блогер',
+      refereeTrialDays: 14,
+    });
+
+    expect(mockReferralCodeCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ landingTarget: 'REGISTER' }),
+      }),
+    );
+  });
+
+  it('rejects an invalid landingTarget value via zod', async () => {
+    await expect(
+      adminCaller().admin.createAmbassadorCode({
+        label: 'X',
+        refereeTrialDays: 14,
+        // @ts-expect-error — only HOME | REGISTER allowed
+        landingTarget: 'DASHBOARD',
+      }),
+    ).rejects.toThrow();
+  });
+
   it('rejects refereeTrialDays=0 with zod error', async () => {
     await expect(
       adminCaller().admin.createAmbassadorCode({
@@ -361,6 +407,21 @@ describe('referral.admin.updateAmbassadorCode', () => {
         code: 'AMB-NEW123',
       }),
     ).rejects.toThrow();
+  });
+
+  it('updates landingTarget when provided', async () => {
+    mockReferralCodeUpdate.mockResolvedValue({ id: 'rc1', landingTarget: 'HOME' });
+
+    await adminCaller().admin.updateAmbassadorCode({
+      id: 'clxxxxxxxxxxxxxxxxxxxxxxx',
+      landingTarget: 'HOME',
+    });
+
+    expect(mockReferralCodeUpdate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ landingTarget: 'HOME' }),
+      }),
+    );
   });
 });
 

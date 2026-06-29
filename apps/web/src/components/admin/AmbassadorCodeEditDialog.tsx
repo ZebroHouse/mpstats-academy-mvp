@@ -23,6 +23,7 @@ export interface AmbassadorCodeRow {
   currentUses: number;
   expiresAt: Date | string | null;
   isActive: boolean;
+  landingTarget: 'HOME' | 'REGISTER';
   createdAt: Date | string;
   activations: number;
   paid_conversions: number;
@@ -47,6 +48,7 @@ export function AmbassadorCodeEditDialog({ code, onClose }: Props) {
   const [maxUses, setMaxUses] = useState<string>('');
   const [expiresAt, setExpiresAt] = useState<string>('');
   const [isActive, setIsActive] = useState(true);
+  const [landingTarget, setLandingTarget] = useState<'HOME' | 'REGISTER'>('REGISTER');
 
   const utils = trpc.useUtils();
   const updateMutation = trpc.referral.admin.updateAmbassadorCode.useMutation({
@@ -64,6 +66,7 @@ export function AmbassadorCodeEditDialog({ code, onClose }: Props) {
       setMaxUses(code.maxUses === null ? '' : String(code.maxUses));
       setExpiresAt(toLocalDateTimeInput(code.expiresAt));
       setIsActive(code.isActive);
+      setLandingTarget(code.landingTarget);
     }
   }, [code]);
 
@@ -92,6 +95,7 @@ export function AmbassadorCodeEditDialog({ code, onClose }: Props) {
       maxUses: parsedMaxUses,
       expiresAt: parsedExpiresAt,
       isActive,
+      landingTarget,
     });
   }
 
@@ -163,6 +167,19 @@ export function AmbassadorCodeEditDialog({ code, onClose }: Props) {
                 onChange={(e) => setExpiresAt(e.target.value)}
               />
               <p className="text-xs text-mp-gray-500 mt-1">Пусто = бессрочный.</p>
+            </div>
+            <div>
+              <label className="text-body-sm font-medium text-mp-gray-700 block mb-1">
+                Куда ведёт ссылка
+              </label>
+              <select
+                value={landingTarget}
+                onChange={(e) => setLandingTarget(e.target.value as 'HOME' | 'REGISTER')}
+                className="w-full px-3 py-2 border border-mp-gray-200 rounded-lg text-body-sm bg-white focus:outline-none focus:ring-2 focus:ring-mp-blue-500"
+              >
+                <option value="REGISTER">Страница регистрации (/register)</option>
+                <option value="HOME">Главная страница (/)</option>
+              </select>
             </div>
             <div className="flex items-center gap-2">
               <input
