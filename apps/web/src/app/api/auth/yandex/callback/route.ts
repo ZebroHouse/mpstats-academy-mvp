@@ -50,10 +50,16 @@ export async function GET(request: Request): Promise<Response> {
     // count crossed 50 (incident 2026-04-27, 422 email_exists from createUser).
     const admin = getSupabaseAdmin();
 
+    // Case-insensitive match: GoTrue normalizes (lowercases) stored emails,
+    // and Yandex may return default_email with different casing. A
+    // case-sensitive `=` missed the existing user, so the create branch fired
+    // and 422'd with "already registered", locking returning Yandex users out
+    // (incident 2026-06-29). getUserInfo also lowercases, but lower()-on-both
+    // is the robust, normalization-agnostic comparison.
     const existingRows = await prisma.$queryRaw<Array<{ id: string; email: string }>>`
       SELECT id::text AS id, email
       FROM auth.users
-      WHERE email = ${userInfo.email}
+      WHERE lower(email) = lower(${userInfo.email})
       LIMIT 1
     `;
     const isNewUser = existingRows.length === 0;

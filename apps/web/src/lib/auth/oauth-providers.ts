@@ -90,7 +90,12 @@ export class YandexProvider implements OAuthProvider {
 
     return {
       id: data.id,
-      email: data.default_email,
+      // Normalize to trimmed lowercase: GoTrue stores emails lowercased, so the
+      // callback's user lookup must compare against the same normalized form.
+      // Without this, a Yandex default_email with any uppercase letter misses
+      // the existing user and the createUser path 422s with "already
+      // registered" — locking returning Yandex users out (incident 2026-06-29).
+      email: data.default_email ? String(data.default_email).trim().toLowerCase() : data.default_email,
       name: data.display_name || [data.first_name, data.last_name].filter(Boolean).join(' ') || null,
       phone: data.default_phone?.number || null,
     };
