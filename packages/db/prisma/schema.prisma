@@ -164,6 +164,7 @@ model Lesson {
   skillLevel      Difficulty    @default(MEDIUM)
   skillBlocks     Json? // ["ANALYTICS/competitor_analysis", "FINANCE/pricing"] — skill-block mapping for playbooks
   isHidden        Boolean       @default(false) // soft-hide: excludes lesson from user-facing queries and RAG retrieval
+  badges          String[]      @default([]) // editorial storefront tags: START|NEW|HOT|QUICK
   hiddenBy        String?
   hiddenAt        DateTime?
 
@@ -674,6 +675,7 @@ model Job {
   marketplace  JobMarketplace               @default(WB)
   displayOrder Int                          @default(0) // порядок внутри оси в каталоге
   isPublished  Boolean                      @default(false)
+  badges       String[]                     @default([]) // editorial storefront tags: START|NEW|HOT|QUICK
   createdAt    DateTime                     @default(now())
   updatedAt    DateTime                     @updatedAt
   embedding    Unsupported("vector(1536)")? // intent retrieval via pgvector cosine
