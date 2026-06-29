@@ -23,9 +23,13 @@ export function trialDaysPhrase(daysLeft: number): string {
 }
 
 /**
- * Inline trial counter for the app header (T4).
- * Renders only for an active TRIAL subscription whose period hasn't ended;
- * everything else (no sub / ACTIVE / PAST_DUE / CANCELLED / PENDING / loading) → null.
+ * Inline access counter for the app header (T4).
+ * Renders for a still-valid (currentPeriodEnd > now) subscription that the user
+ * can extend manually:
+ *  - TRIAL → «Триал: …»
+ *  - ACTIVE without cpSubscriptionId (promo / granted access) → «Доступ: …»
+ * Everything else (recurrent ACTIVE / PAST_DUE / CANCELLED / PENDING / no sub /
+ * loading / expired period) → null. Display-only — never touches sub status.
  *
  * The whole element is a single link to /pricing, so the pill itself is the
  * payment path on mobile. The «Продлить» button is a visual cue shown only on
@@ -34,7 +38,11 @@ export function trialDaysPhrase(daysLeft: number): string {
 export function TrialCountdown() {
   const { data } = trpc.billing.getSubscription.useQuery();
 
-  if (!data || data.status !== 'TRIAL') return null;
+  if (!data) return null;
+
+  const isTrial = data.status === 'TRIAL';
+  const isPromoAccess = data.status === 'ACTIVE' && data.cpSubscriptionId == null;
+  if (!isTrial && !isPromoAccess) return null;
 
   const endMs = new Date(data.currentPeriodEnd).getTime();
   const remainingMs = endMs - Date.now();
@@ -42,6 +50,7 @@ export function TrialCountdown() {
 
   const daysLeft = Math.max(1, Math.ceil(remainingMs / MS_PER_DAY));
   const isUrgent = daysLeft === 1;
+  const prefix = isTrial ? 'Триал' : 'Доступ';
 
   return (
     <Link
@@ -60,7 +69,7 @@ export function TrialCountdown() {
         )}
       >
         <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-        <span className="whitespace-nowrap">Триал: {trialDaysPhrase(daysLeft)}</span>
+        <span className="whitespace-nowrap">{prefix}: {trialDaysPhrase(daysLeft)}</span>
       </span>
       <span
         className={cn(

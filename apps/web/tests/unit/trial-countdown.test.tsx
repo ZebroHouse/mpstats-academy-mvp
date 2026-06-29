@@ -9,7 +9,7 @@ vi.mock('next/link', () => ({
 }));
 
 // trpc.billing.getSubscription.useQuery returns whatever the test stages in mockSub.
-type SubData = { status: string; currentPeriodEnd: string } | null;
+type SubData = { status: string; currentPeriodEnd: string; cpSubscriptionId?: string | null } | null;
 let mockSub: { data?: SubData } = {};
 vi.mock('@/lib/trpc/client', () => ({
   trpc: {
@@ -83,8 +83,17 @@ describe('TrialCountdown', () => {
     expect(getByTestId('trial-countdown').getAttribute('data-urgent')).toBe('true');
   });
 
-  it('renders nothing for an ACTIVE subscription', () => {
-    mockSub = { data: { status: 'ACTIVE', currentPeriodEnd: daysFromNow(30) } };
+  it('shows «Доступ: …» for promo ACTIVE access (no cpSubscriptionId)', () => {
+    mockSub = { data: { status: 'ACTIVE', currentPeriodEnd: daysFromNow(5), cpSubscriptionId: null } };
+    const { getByText, getByRole } = render(<TrialCountdown />);
+
+    expect(getByText(/Доступ: осталось 5 дней/)).toBeDefined();
+    const cta = getByRole('link', { name: /Продлить/ });
+    expect(cta.getAttribute('href')).toBe('/pricing');
+  });
+
+  it('renders nothing for a recurrent ACTIVE subscription (cpSubscriptionId set)', () => {
+    mockSub = { data: { status: 'ACTIVE', currentPeriodEnd: daysFromNow(30), cpSubscriptionId: 'sc_x' } };
     const { container } = render(<TrialCountdown />);
     expect(container.innerHTML).toBe('');
   });
