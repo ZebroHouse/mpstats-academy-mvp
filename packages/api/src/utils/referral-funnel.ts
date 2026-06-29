@@ -37,6 +37,8 @@ export interface FunnelInput {
   referrals: FunnelReferral[];
   /** COMPLETED, non-test, non-hidden payments in range. */
   payments: FunnelPayment[];
+  /** Referred userIds that reached the payment widget (CheckoutAttempt) in range. */
+  checkoutUserIds: string[];
 }
 
 export interface FunnelCodeRow {
@@ -47,6 +49,7 @@ export interface FunnelCodeRow {
   clicks: number;
   registrations: number;
   onboarded: number;
+  checkout: number; // reached the payment widget
   sales: number;
   regPerClick: number | null; // null when clicks === 0
   salePerReg: number | null; // null when registrations === 0
@@ -62,7 +65,7 @@ export interface FunnelDay {
 export interface FunnelResult {
   perCode: FunnelCodeRow[];
   series: FunnelDay[];
-  totals: { clicks: number; registrations: number; onboarded: number; sales: number };
+  totals: { clicks: number; registrations: number; onboarded: number; checkout: number; sales: number };
 }
 
 // Buckets a Date into its UTC calendar day (YYYY-MM-DD). Prisma returns UTC
@@ -96,6 +99,15 @@ export function assembleReferralFunnel(input: FunnelInput): FunnelResult {
     salesUsersByCode.get(codeId)!.add(p.userId);
   }
 
+  // Distinct referred users who reached the payment widget, per code (checkout).
+  const checkoutByCode = new Map<string, Set<string>>();
+  for (const userId of input.checkoutUserIds) {
+    const codeId = userToCode.get(userId);
+    if (!codeId) continue;
+    if (!checkoutByCode.has(codeId)) checkoutByCode.set(codeId, new Set());
+    checkoutByCode.get(codeId)!.add(userId);
+  }
+
   // Registrations + onboarded per code (test users excluded).
   const regByCode = new Map<string, number>();
   const onboardedByCode = new Map<string, number>();
@@ -110,6 +122,7 @@ export function assembleReferralFunnel(input: FunnelInput): FunnelResult {
       const clicks = clicksByCode.get(c.id) ?? 0;
       const registrations = regByCode.get(c.id) ?? 0;
       const onboarded = onboardedByCode.get(c.id) ?? 0;
+      const checkout = checkoutByCode.get(c.id)?.size ?? 0;
       const sales = salesUsersByCode.get(c.id)?.size ?? 0;
       return {
         codeId: c.id,
@@ -119,6 +132,7 @@ export function assembleReferralFunnel(input: FunnelInput): FunnelResult {
         clicks,
         registrations,
         onboarded,
+        checkout,
         sales,
         regPerClick: ratio(registrations, clicks),
         salePerReg: ratio(sales, registrations),
@@ -153,9 +167,10 @@ export function assembleReferralFunnel(input: FunnelInput): FunnelResult {
       clicks: acc.clicks + r.clicks,
       registrations: acc.registrations + r.registrations,
       onboarded: acc.onboarded + r.onboarded,
+      checkout: acc.checkout + r.checkout,
       sales: acc.sales + r.sales,
     }),
-    { clicks: 0, registrations: 0, onboarded: 0, sales: 0 },
+    { clicks: 0, registrations: 0, onboarded: 0, checkout: 0, sales: 0 },
   );
 
   return { perCode, series, totals };

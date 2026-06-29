@@ -30,6 +30,7 @@ function input(overrides: Partial<FunnelInput> = {}): FunnelInput {
       { userId: 'u3', paidAt: new Date('2026-06-30T10:00:00Z') },
       { userId: 'uX', paidAt: new Date('2026-06-30T10:00:00Z') }, // not referred → ignored
     ],
+    checkoutUserIds: ['u1', 'u2', 'uX'], // u1→c1, u2→c1, uX not referred → ignored
     ...overrides,
   };
 }
@@ -48,6 +49,14 @@ describe('assembleReferralFunnel', () => {
     expect(c2.clicks).toBe(40);
     expect(c2.registrations).toBe(1); // u3
     expect(c2.sales).toBe(1); // u3
+  });
+
+  it('counts distinct referred users who reached checkout, per code', () => {
+    const r = assembleReferralFunnel(input());
+    const c1 = r.perCode.find((x) => x.codeId === 'c1')!;
+    const c2 = r.perCode.find((x) => x.codeId === 'c2')!;
+    expect(c1.checkout).toBe(2); // u1 + u2 (uX not referred → excluded)
+    expect(c2.checkout).toBe(0); // u3 did not reach checkout
   });
 
   it('excludes test-user referrals from registrations and sales', () => {
@@ -90,7 +99,7 @@ describe('assembleReferralFunnel', () => {
 
   it('aggregates correct totals', () => {
     const r = assembleReferralFunnel(input());
-    expect(r.totals).toEqual({ clicks: 140, registrations: 3, onboarded: 2, sales: 2 });
+    expect(r.totals).toEqual({ clicks: 140, registrations: 3, onboarded: 2, checkout: 2, sales: 2 });
   });
 
   it('keeps codes with zero activity (sorted last)', () => {

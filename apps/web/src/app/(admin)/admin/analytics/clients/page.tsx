@@ -88,6 +88,7 @@ export default function AnalyticsClientsPage() {
                 <th className="text-left px-4 py-3 font-medium text-mp-gray-700">Имя</th>
                 <th className="text-left px-4 py-3 font-medium text-mp-gray-700">Телефон</th>
                 <th className="text-left px-4 py-3 font-medium text-mp-gray-700">Регистрация</th>
+                <th className="text-left px-4 py-3 font-medium text-mp-gray-700">Триал до</th>
                 <th className="text-left px-4 py-3 font-medium text-mp-gray-700">Источник</th>
                 <th className="text-left px-4 py-3 font-medium text-mp-gray-700">Статус оплаты</th>
                 <th className="text-left px-4 py-3 font-medium text-mp-gray-700">Дата оплаты</th>
@@ -97,15 +98,15 @@ export default function AnalyticsClientsPage() {
             </thead>
             <tbody>
               {q.isLoading && (
-                <tr><td colSpan={9} className="p-6"><Skeleton className="h-40 w-full" /></td></tr>
+                <tr><td colSpan={10} className="p-6"><Skeleton className="h-40 w-full" /></td></tr>
               )}
               {!q.isLoading && q.error && (
-                <tr><td colSpan={9} className="p-8 text-center text-red-600">
+                <tr><td colSpan={10} className="p-8 text-center text-red-600">
                   Ошибка загрузки: {q.error.message}
                 </td></tr>
               )}
               {!q.isLoading && !q.error && rows.length === 0 && (
-                <tr><td colSpan={9} className="p-8 text-center text-mp-gray-500">Нет клиентов за период.</td></tr>
+                <tr><td colSpan={10} className="p-8 text-center text-mp-gray-500">Нет клиентов за период.</td></tr>
               )}
               {rows.map((r) => (
                 <tr key={r.userId} className="border-b border-mp-gray-100 hover:bg-mp-gray-50/50">
@@ -113,6 +114,7 @@ export default function AnalyticsClientsPage() {
                   <td className="px-4 py-3 text-mp-gray-900">{r.name || '—'}</td>
                   <td className="px-4 py-3 text-mp-gray-700 whitespace-nowrap">{r.phone || '—'}</td>
                   <td className="px-4 py-3 text-mp-gray-600 whitespace-nowrap">{fmtDateTime(r.registeredAt)}</td>
+                  <td className="px-4 py-3 text-mp-gray-600 whitespace-nowrap">{fmtDateTime(r.trialEndsAt)}</td>
                   <td className="px-4 py-3 text-mp-gray-700">{r.source}</td>
                   <td className="px-4 py-3">
                     <span className={cn('px-2 py-0.5 rounded-full text-xs font-medium whitespace-nowrap', STATUS_STYLES[r.paymentStatus])}>

@@ -561,7 +561,7 @@ export const adminAnalyticsRouter = router({
         });
         const codeIds = codes.map((c) => c.id);
 
-        const [clickSums, clickDays, referrals, payments] = await Promise.all([
+        const [clickSums, clickDays, referrals, payments, checkouts] = await Promise.all([
           ctx.prisma.referralCodeClickDay.groupBy({
             by: ['codeId'],
             where: { day: { gte: startDay } },
@@ -591,6 +591,11 @@ export const adminAnalyticsRouter = router({
             },
             select: { paidAt: true, subscription: { select: { userId: true } } },
           }),
+          ctx.prisma.checkoutAttempt.findMany({
+            where: { createdAt: { gte: startDay }, userId: { not: null } },
+            select: { userId: true },
+            distinct: ['userId'],
+          }),
         ]);
 
         return assembleReferralFunnel({
@@ -610,6 +615,9 @@ export const adminAnalyticsRouter = router({
           payments: payments
             .filter((p) => p.paidAt != null)
             .map((p) => ({ userId: p.subscription.userId, paidAt: p.paidAt as Date })),
+          checkoutUserIds: checkouts
+            .map((c) => c.userId)
+            .filter((u): u is string => !!u),
         });
       } catch (error) {
         handleDatabaseError(error);

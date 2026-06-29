@@ -16,7 +16,7 @@ import { StatCard } from '@/components/admin/StatCard';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { MousePointerClick, UserPlus, ClipboardCheck, CreditCard } from 'lucide-react';
+import { MousePointerClick, UserPlus, ClipboardCheck, Wallet, CreditCard } from 'lucide-react';
 
 const PERIODS = [
   { label: '7d', days: 7 },
@@ -61,10 +61,11 @@ export default function AnalyticsReferralsPage() {
       {q.isLoading ? (
         <Skeleton className="h-24 w-full" />
       ) : d ? (
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
           <StatCard title="Переходы" value={d.totals.clicks} icon={MousePointerClick} color="blue" />
           <StatCard title="Регистрации" value={d.totals.registrations} icon={UserPlus} color="green" />
           <StatCard title="Завершили онбординг" value={d.totals.onboarded} icon={ClipboardCheck} color="gray" />
+          <StatCard title="Открывал оплату" value={d.totals.checkout} icon={Wallet} color="gray" />
           <StatCard title="Продажи" value={d.totals.sales} icon={CreditCard} color="pink" />
         </div>
       ) : null}
@@ -126,6 +127,7 @@ export default function AnalyticsReferralsPage() {
                 <th className="text-right px-4 py-3 font-medium text-mp-gray-700">Регистрации</th>
                 <th className="text-right px-4 py-3 font-medium text-mp-gray-700">Рег/Переход</th>
                 <th className="text-right px-4 py-3 font-medium text-mp-gray-700">Онбординг</th>
+                <th className="text-right px-4 py-3 font-medium text-mp-gray-700">Открывал оплату</th>
                 <th className="text-right px-4 py-3 font-medium text-mp-gray-700">Продажи</th>
                 <th className="text-right px-4 py-3 font-medium text-mp-gray-700">Прод/Рег</th>
               </tr>
@@ -133,14 +135,14 @@ export default function AnalyticsReferralsPage() {
             <tbody>
               {q.isLoading && (
                 <tr>
-                  <td colSpan={9} className="p-6">
+                  <td colSpan={10} className="p-6">
                     <Skeleton className="h-24 w-full" />
                   </td>
                 </tr>
               )}
               {!q.isLoading && d && d.perCode.length === 0 && (
                 <tr>
-                  <td colSpan={9} className="p-8 text-center text-mp-gray-500">
+                  <td colSpan={10} className="p-8 text-center text-mp-gray-500">
                     Нет амбассадорских кодов.
                   </td>
                 </tr>
@@ -156,6 +158,7 @@ export default function AnalyticsReferralsPage() {
                   <td className="px-4 py-3 text-right text-mp-gray-700">{row.registrations}</td>
                   <td className="px-4 py-3 text-right text-mp-gray-500">{pct(row.regPerClick)}</td>
                   <td className="px-4 py-3 text-right text-mp-gray-700">{row.onboarded}</td>
+                  <td className="px-4 py-3 text-right text-mp-gray-700">{row.checkout}</td>
                   <td className="px-4 py-3 text-right font-medium text-mp-gray-900">{row.sales}</td>
                   <td className="px-4 py-3 text-right text-mp-gray-500">{pct(row.salePerReg)}</td>
                 </tr>

@@ -29,7 +29,7 @@ export async function fetchClientRegistry(
   const ids = profiles.map((p) => p.id);
   if (ids.length === 0) return [];
 
-  const [emailRows, referrals, payments, checkouts] = await Promise.all([
+  const [emailRows, referrals, payments, checkouts, trials] = await Promise.all([
     // Email lives in Supabase auth.users, not UserProfile. auth.users.id is a
     // uuid; our ids are text params, so compare on id::text (a bare `id IN (...)`
     // throws "operator does not exist: uuid = text").
@@ -58,6 +58,10 @@ export async function fetchClientRegistry(
       select: { userId: true },
       distinct: ['userId'],
     }),
+    prisma.subscription.findMany({
+      where: { userId: { in: ids }, status: 'TRIAL' },
+      select: { userId: true, currentPeriodEnd: true },
+    }),
   ]);
 
   const emailById = new Map(emailRows.map((r) => [r.id, r.email]));
@@ -85,5 +89,6 @@ export async function fetchClientRegistry(
       planName: p.subscription.plan?.name ?? null,
     })),
     checkoutUserIds: checkouts.map((c) => c.userId).filter((u): u is string => !!u),
+    trials: trials.map((t) => ({ userId: t.userId, trialEndsAt: t.currentPeriodEnd })),
   });
 }
