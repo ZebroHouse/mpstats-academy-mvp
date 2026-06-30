@@ -9,7 +9,7 @@ vi.mock('../../utils/feature-flags', () => ({
 function makeCtx(over: Partial<{
   goals: string[]; marketplaces: string[]; role: string | undefined;
   jobs: any[]; badgedLessons: any[]; inProgress: any[];
-  subscriptions: any[]; jobLessons: any[];
+  subscriptions: any[]; jobLessons: any[]; progressCount: number;
 }> = {}) {
   const o = { goals: [], marketplaces: [], role: undefined, jobs: [], badgedLessons: [], inProgress: [], subscriptions: [], jobLessons: [], ...over };
   return {
@@ -18,7 +18,7 @@ function makeCtx(over: Partial<{
       userProfile: { findUnique: vi.fn().mockResolvedValue({ goals: o.goals, marketplaces: o.marketplaces, role: o.role, lastActiveAt: new Date() }), update: vi.fn() },
       job: { findMany: vi.fn().mockResolvedValue(o.jobs) },
       lesson: { findMany: vi.fn().mockResolvedValue(o.badgedLessons) },
-      lessonProgress: { findMany: vi.fn().mockResolvedValue(o.inProgress) },
+      lessonProgress: { findMany: vi.fn().mockResolvedValue(o.inProgress), count: vi.fn().mockResolvedValue(o.progressCount ?? 0) },
       subscription: { findMany: vi.fn().mockResolvedValue(o.subscriptions) },
       jobLesson: { findMany: vi.fn().mockResolvedValue(o.jobLessons) }, // used by getFirstJobLessonIds(ctx.prisma)
     },
@@ -73,7 +73,7 @@ describe('dashboard.getStorefront', () => {
 
   it('IN_PROGRESS lesson → «Продолжить» shelf with status + watchedPercent', async () => {
     const inProgress = [{ status: 'IN_PROGRESS', watchedPercent: 42, lesson: lesson('lp1', []) }];
-    const res = await dashboardRouter.createCaller(makeCtx({ inProgress })).getStorefront();
+    const res = await dashboardRouter.createCaller(makeCtx({ inProgress, progressCount: 1 })).getStorefront();
     const cont = res.find((s) => s.shelfKey === 'continue')!;
     expect(cont.title).toBe('Продолжить');
     const item = cont.items[0];
@@ -104,6 +104,32 @@ describe('dashboard.getStorefront', () => {
       expect(item.job.lessonCount).toBe(1);
       expect(item.job.completedLessons).toBe(1);
     }
+  });
+
+  it('returning user → continue first, start absent, order continue→goal→hot→new→quick', async () => {
+    const badgedLessons = [
+      lesson('s1', ['START']), lesson('h1', ['HOT']), lesson('q1', ['QUICK']), lesson('n1', ['NEW'], '02_ads'),
+    ];
+    const inProgress = [{ status: 'IN_PROGRESS', watchedPercent: 10, lesson: lesson('lp1', []) }];
+    const res = await dashboardRouter.createCaller(makeCtx({
+      goals: ['ADS'], marketplaces: ['WB'], badgedLessons, inProgress, progressCount: 1,
+    })).getStorefront();
+    const keys = res.map((s) => s.shelfKey);
+    expect(keys).not.toContain('start');
+    expect(keys).toEqual(['continue', 'goal-ads', 'hot', 'new-wb', 'quick']);
+  });
+
+  it('new user → start first, continue absent, order start→goal→hot→new→quick', async () => {
+    const badgedLessons = [
+      lesson('s1', ['START']), lesson('h1', ['HOT']), lesson('q1', ['QUICK']), lesson('n1', ['NEW'], '02_ads'),
+    ];
+    const res = await dashboardRouter.createCaller(makeCtx({
+      goals: ['ADS'], marketplaces: ['WB'], badgedLessons, progressCount: 0,
+    })).getStorefront();
+    const keys = res.map((s) => s.shelfKey);
+    expect(keys).not.toContain('continue');
+    expect(keys[0]).toBe('start');
+    expect(keys).toEqual(['start', 'goal-ads', 'hot', 'new-wb', 'quick']);
   });
 });
 

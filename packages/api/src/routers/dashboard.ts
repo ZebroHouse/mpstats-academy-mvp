@@ -58,7 +58,7 @@ function enrichLesson(l: any, a: AccessCtx): LessonWithProgress {
 
 // Single data-load both procedures share — same queries, one Promise.all.
 async function loadStorefrontData(ctx: any, userId: string) {
-  const [profile, jobsRaw, badgedLessons, inProgressRaw, subs, billingEnabled, firstJobLessonIds] = await Promise.all([
+  const [profile, jobsRaw, badgedLessons, inProgressRaw, progressCount, subs, billingEnabled, firstJobLessonIds] = await Promise.all([
     ctx.prisma.userProfile.findUnique({ where: { id: userId }, select: { goals: true, marketplaces: true, role: true } }),
     ctx.prisma.job.findMany({
       where: { isPublished: true },
@@ -73,6 +73,7 @@ async function loadStorefrontData(ctx: any, userId: string) {
       include: { lesson: { include: { course: { select: { title: true } } } } },
       orderBy: { lesson: { order: 'asc' } },
     }),
+    ctx.prisma.lessonProgress.count({ where: { path: { userId }, status: { in: ['IN_PROGRESS', 'COMPLETED'] } } }),
     getUserActiveSubscriptions(userId, ctx.prisma),
     isFeatureEnabled('billing_enabled'),
     getFirstJobLessonIds(ctx.prisma),
@@ -80,7 +81,7 @@ async function loadStorefrontData(ctx: any, userId: string) {
 
   const isAdminBypass = profile?.role === 'ADMIN' || profile?.role === 'SUPERADMIN';
   const accessCtx: AccessCtx = { subs, billingEnabled, isAdminBypass, firstJobLessonIds };
-  return { profile, jobsRaw, badgedLessons, inProgressRaw, accessCtx };
+  return { profile, jobsRaw, badgedLessons, inProgressRaw, progressCount, accessCtx };
 }
 
 // Map an IN_PROGRESS progress row onto its lesson, carrying status/percent for enrichLesson.
@@ -92,8 +93,9 @@ export const dashboardRouter = router({
   getStorefront: protectedProcedure.query(async ({ ctx }): Promise<StorefrontShelf[]> => {
     try {
       const userId = ctx.user.id;
-      const { profile, jobsRaw, badgedLessons, inProgressRaw, accessCtx } = await loadStorefrontData(ctx, userId);
+      const { profile, jobsRaw, badgedLessons, inProgressRaw, progressCount, accessCtx } = await loadStorefrontData(ctx, userId);
 
+      const isReturning = progressCount > 0;
       const goals = (profile?.goals ?? []) as string[];
       const marketplaces = ((profile?.marketplaces ?? []) as string[]).filter((m) => m === 'WB' || m === 'OZON');
 
@@ -108,21 +110,22 @@ export const dashboardRouter = router({
       const lessonsWithBadge = (b: string) => badgedLessons.filter((l: any) => (l.badges as string[]).includes(b));
       const jobsWithBadge = (b: string) => jobsRaw.filter((j: any) => (j.badges as string[]).includes(b));
 
-      const shelves: (StorefrontShelf | null)[] = [];
+      // Build each shelf independently, then assemble in a user-state-aware order below.
 
-      // 1. Начни отсюда (START, mix, ≤3)
-      shelves.push(cap(
+      // Начни отсюда (START, mix, ≤3) — shown to NEW (cold) users only.
+      const startShelf = cap(
         [...jobsWithBadge('START').map(toJobItem), ...lessonsWithBadge('START').map(toLessonItem)],
         START_CAP, 'start', 'Начни отсюда',
-      ));
+      );
 
-      // 2. Продолжить (IN_PROGRESS lessons)
-      shelves.push(cap(
+      // Продолжить (IN_PROGRESS lessons) — top shelf for returning users.
+      const continueShelf = cap(
         inProgressRaw.map((p: any) => toLessonItem(progressRowToLesson(p))),
         SHELF_CAP, 'continue', 'Продолжить',
-      ));
+      );
 
-      // 3. Под твою задачу: {goal} (one per goal)
+      // Под твою задачу: {goal} (one per goal)
+      const goalShelves: (StorefrontShelf | null)[] = [];
       for (const goal of goals) {
         const axes = GOAL_TO_AXES[goal] ?? [];
         let items: StorefrontItem[];
@@ -134,29 +137,39 @@ export const dashboardRouter = router({
           const axisLessons = badgedLessons.filter((l: any) => axes.includes(l.skillCategory));
           items = [...axisJobs.map(toJobItem), ...axisLessons.map(toLessonItem)];
         }
-        shelves.push(cap(items, SHELF_CAP, goalShelfKey(goal), `Под твою задачу: ${GOAL_LABELS[goal] ?? goal}`));
+        goalShelves.push(cap(items, SHELF_CAP, goalShelfKey(goal), `Под твою задачу: ${GOAL_LABELS[goal] ?? goal}`));
       }
 
-      // 4. Новое на {marketplace} (NEW + marketplace split)
+      // Хит платформы (HOT)
+      const hotShelf = cap([...jobsWithBadge('HOT').map(toJobItem), ...lessonsWithBadge('HOT').map(toLessonItem)], SHELF_CAP, 'hot', 'Хит платформы');
+
+      // Новое на {marketplace} (NEW + marketplace split)
       const newLessons = lessonsWithBadge('NEW');
       const newJobs = jobsWithBadge('NEW');
+      const newShelves: (StorefrontShelf | null)[] = [];
       if (marketplaces.length === 0) {
-        shelves.push(cap([...newJobs.map(toJobItem), ...newLessons.map(toLessonItem)], SHELF_CAP, 'new', 'Новое на платформе'));
+        newShelves.push(cap([...newJobs.map(toJobItem), ...newLessons.map(toLessonItem)], SHELF_CAP, 'new', 'Новое на платформе'));
       } else {
         for (const mp of marketplaces) {
           const items = [
             ...filterByMarketplace(newJobs as any[], mp).map(toJobItem),
             ...newLessons.filter((l: any) => lessonMarketplace(l.courseId) === mp).map(toLessonItem),
           ];
-          shelves.push(cap(items, SHELF_CAP, newShelfKey(mp), `Новое на ${MARKETPLACE_LABELS[mp] ?? mp}`, mp));
+          newShelves.push(cap(items, SHELF_CAP, newShelfKey(mp), `Новое на ${MARKETPLACE_LABELS[mp] ?? mp}`, mp));
         }
       }
 
-      // 5. Быстрые победы (QUICK)
-      shelves.push(cap([...jobsWithBadge('QUICK').map(toJobItem), ...lessonsWithBadge('QUICK').map(toLessonItem)], SHELF_CAP, 'quick', 'Быстрые победы'));
+      // Быстрые победы (QUICK)
+      const quickShelf = cap([...jobsWithBadge('QUICK').map(toJobItem), ...lessonsWithBadge('QUICK').map(toLessonItem)], SHELF_CAP, 'quick', 'Быстрые победы');
 
-      // 6. Хит платформы (HOT)
-      shelves.push(cap([...jobsWithBadge('HOT').map(toJobItem), ...lessonsWithBadge('HOT').map(toLessonItem)], SHELF_CAP, 'hot', 'Хит платформы'));
+      // State-aware assembly: returning → continue first (start hidden); new → start first.
+      const shelves: (StorefrontShelf | null)[] = [
+        isReturning ? continueShelf : startShelf,
+        ...goalShelves,
+        hotShelf,
+        ...newShelves,
+        quickShelf,
+      ];
 
       return shelves.filter((s): s is StorefrontShelf => s !== null);
     } catch (e) {
