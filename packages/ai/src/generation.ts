@@ -209,10 +209,27 @@ export async function generateChatResponse(
   history: ChatMessage[] = []
 ): Promise<GenerationResult> {
   // 1. Search for relevant chunks (threshold 0.5 — lower values cause Supabase free tier to timeout on large result sets)
-  const relevantChunks = await retrieve('academy-lesson', {
+  let relevantChunks = await retrieve('academy-lesson', {
     query: message,
     lessonId,
   });
+
+  // 1b. Lesson-scoped recall fallback. lessonId already constrains the pool to
+  // a single lesson, so the WHOLE lesson is relevant context — the 0.5 floor is
+  // tuned for cross-lesson search and is too strict here. Terse/abbreviated
+  // questions ("опиши анализ ЦА") or transcripts that phrase the topic
+  // differently from the question can score below 0.5 against every chunk,
+  // leaving the context empty and forcing a flat "в этом фрагменте ответа нет".
+  // When the primary pass finds nothing, re-retrieve the lesson's best chunks
+  // with no floor so the assistant always grounds in the lesson. lessonId still
+  // bounds the scan (no free-tier timeout risk) and maxResults caps the tokens.
+  if (relevantChunks.length === 0) {
+    relevantChunks = await retrieve('academy-lesson', {
+      query: message,
+      lessonId,
+      threshold: 0,
+    });
+  }
 
   // 2. Build context with citations
   const context = relevantChunks.length > 0 ? buildContextWithSources(relevantChunks) : '';
