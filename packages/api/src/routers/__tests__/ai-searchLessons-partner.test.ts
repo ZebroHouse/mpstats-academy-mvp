@@ -14,6 +14,7 @@ vi.mock('@mpstats/ai', () => ({
   searchChunks: mockSearchChunks,
   generateLessonSummary: vi.fn(),
   generateChatResponse: vi.fn(),
+  expandSellerQuery: (s: string) => s,
 }));
 
 vi.mock('../../utils/access', async (importOriginal) => {
