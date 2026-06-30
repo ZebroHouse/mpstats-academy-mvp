@@ -119,7 +119,17 @@ Archive directory `D:/GpT_docs/MPSTATS ACADEMY ADAPTIVE LEARNING/MAAL-phase55/` 
 
 **Внимание (исторический lesson):** CP хранит `amount` на своей стороне на момент создания подписки. При смене цен отменять старые ACTIVE подписки чтобы автосписания пошли по новым тарифам.
 
-## Last Session (2026-06-29) — Sales/monetization analytics cluster shipped to prod (next: витрина)
+## Last Session (2026-06-30) — 3 фикса на прод: телефоны лидов, ассистент урока, склонение плашек
+
+Дебаг-сессия по жалобам owner. 3 фикса зашиплены на прод, каждый: изолированный git worktree от master → TDD → staging build-gate (`--no-cache web`) → PR merge → прод `build --no-cache web` + recreate + smoke (internal+public 200). Параллельно в каталоге шёл storefront-агент → работал в worktree-изоляции, общее дерево не дёргал. Детали — в памяти.
+
+- **Телефоны лидов не доходили до amoCRM и в реестр `/admin/analytics/clients`** (PR #19 + Supabase Mgmt API). Email-телефон собирался (required → `auth.users.raw_user_meta_data.phone`), но триггер `handle_new_user` создавал `UserProfile` БЕЗ него, а `ensureUserProfile` (update-ветка) не бэкафиллил → 100% email-юзеров с пустым `UserProfile.phone`; и реестр, и лид `sendAcademyLead` слали пусто. Яндекс не затронут (callback явно upsert'ит phone). Фикс via Mgmt API (без table DDL): `phone` добавлен в `handle_new_user` + бэкафилл 176 строк из метаданных. amoCRM задним числом НЕ дозаполнен (ушедшие лиды). Память `project_email_phone_persistence_fix.md`.
+- **Ассистент в уроке отвечал «в этом фрагменте урока ответа нет» на нормальные вопросы** (PR #20 `5dd806c`). Два корня: (1) порог ретрива 0.5 слишком строг для чата ВНУТРИ урока (`lessonId` уже сужает пул до одного урока) → fallback `threshold:0`, когда первый проход пуст; (2) селлерские аббревиатуры (ЦА, ДРР, CPO, SKU…) ломали эмбеддинг → `expandSellerQuery` (`packages/ai/src/seller-lexicon.ts`, ~30 терминов из глоссария команды `docs/obshchiy_glossariy_sellera_2026.docx`) дописывает расшифровку к ЭМБЕДДИНГ-запросу в чате урока + `searchLessons` + `intent.resolve` (сообщение юзеру/LLM — оригинал). e2e против прод OK. Отложено в задачу сквозного платформенного ассистента: ингест глоссария в RAG (объяснять термины) + разговорные фразы-боли как синонимы. Спек `docs/superpowers/specs/2026-06-30-rag-recall-seller-lexicon-design.md`, память `project_lesson_chat_retrieval_recall_fix.md`.
+- **Склонение «3 дней» вместо «3 дня» на реф-плашках** (PR #21 `73880d2`). Триал стал 3/7/14 дн → захардкоженное «дней» в реф-баннере главной (текст + кнопка «Забрать») и в бабле `/register` врало. Хелпер `pluralizeDays(n)` + generic `pluralRu(n,[one,few,many])` в `apps/web/src/lib/plural.ts`; `TrialCountdown.trialDaysPhrase` отрефакторен на тот же хелпер (DRY, один источник правды). Поправлен тест, зашивавший сам баг («21 дней»→«3 дня»). Переиспользовать хелпер для будущих склонений.
+
+**Откаты:** каждый `git revert -m 1 <merge-commit>` + редеплой. Телефоны — обратимо на уровне функции триггера. Миграций нет (кроме DB-side `CREATE OR REPLACE FUNCTION handle_new_user` — обратимо, таблицы не трогает).
+
+## Previous Session (2026-06-29) — Sales/monetization analytics cluster shipped to prod (next: витрина)
 
 Большая сессия поверх лидов→amoCRM (см. ниже). Зашиплено на прод 5 фич воронки/продаж, каждая ветка→TDD→code-review субагент→staging build-gate→master `--no-ff`→прод `--no-cache web`. Все детали + гочи: память `project_sales_analytics_cluster.md` (+ `project_leads_amocrm.md`).
 
