@@ -2,9 +2,9 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
 import { Logo } from '@/components/shared/Logo';
 import { createClient } from '@/lib/supabase/client';
+import { getMarketingCta } from '@/lib/marketing-cta';
 
 const BLUE = '#2C4FF8';
 const BLUE_HOVER = '#1D39C1';
@@ -30,7 +30,6 @@ export function V8Header({ onDarkHero = true, topOffset = 0 }: V8HeaderProps) {
   const [mobileMenu, setMobileMenu] = useState(false);
   const [isAuthed, setIsAuthed] = useState<boolean | null>(null);
   const [userName, setUserName] = useState<string>('');
-  const pathname = usePathname();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -70,12 +69,12 @@ export function V8Header({ onDarkHero = true, topOffset = 0 }: V8HeaderProps) {
         .join('') || userName.slice(0, 2).toUpperCase()
     : '';
 
-  const ctaHref =
-    isAuthed === true
-      ? '/diagnostic'
-      : pathname === '/skill-test'
-        ? '/register'
-        : '/skill-test';
+  const authed = isAuthed === true;
+  const cta = getMarketingCta(authed);
+  // Authed users keep a direct diagnostic shortcut in the header; guests get the
+  // trust-first primary CTA («Попробовать бесплатно» → /register). The username
+  // link (below) is the "enter the product" path → /dashboard.
+  const headerCta = authed ? cta.diagnostic : cta.primary;
 
   const isLight = onDarkHero && !scrolled;
   const logoVariant = isLight ? 'white' : 'default';
@@ -112,7 +111,7 @@ export function V8Header({ onDarkHero = true, topOffset = 0 }: V8HeaderProps) {
         <div className="hidden md:flex items-center gap-4">
           {isAuthed ? (
             <Link
-              href="/profile"
+              href="/dashboard"
               className="flex items-center gap-2.5 transition-opacity hover:opacity-80"
             >
               <div
@@ -138,13 +137,13 @@ export function V8Header({ onDarkHero = true, topOffset = 0 }: V8HeaderProps) {
             </Link>
           )}
           <Link
-            href={ctaHref}
+            href={headerCta.href}
             className="inline-flex items-center justify-center rounded-full h-[44px] px-6 text-[14px] font-medium text-white transition-colors"
             style={{ backgroundColor: BLUE }}
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = BLUE_HOVER)}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = BLUE)}
           >
-            Пройти диагностику
+            {headerCta.label}
           </Link>
         </div>
 
@@ -188,7 +187,7 @@ export function V8Header({ onDarkHero = true, topOffset = 0 }: V8HeaderProps) {
           </Link>
           {isAuthed ? (
             <Link
-              href="/profile"
+              href="/dashboard"
               className="flex items-center gap-2.5 py-3"
               style={{ color: TEXT }}
               onClick={() => setMobileMenu(false)}
@@ -214,12 +213,12 @@ export function V8Header({ onDarkHero = true, topOffset = 0 }: V8HeaderProps) {
             </Link>
           )}
           <Link
-            href={ctaHref}
+            href={headerCta.href}
             className="mt-2 inline-flex items-center justify-center rounded-full h-[48px] w-full text-[15px] font-medium text-white"
             style={{ backgroundColor: BLUE }}
             onClick={() => setMobileMenu(false)}
           >
-            Пройти диагностику
+            {headerCta.label}
           </Link>
         </div>
       )}

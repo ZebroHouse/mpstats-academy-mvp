@@ -13,6 +13,17 @@ interface StickyCTAProps {
   subtitle?: string;
   /** Scroll Y threshold (px) before bar appears. */
   showAfter?: number;
+  /**
+   * Id of a section whose visibility hides the bar. The landing passes the final
+   * CTA section's id so the bar disappears exactly when that same-message block is
+   * on screen — no overlap with the footer, no duplicate.
+   */
+  hideWhenId?: string;
+}
+
+/** Pure visibility rule: shown once scrolled past, hidden when the final section shows. */
+export function computeStickyVisible(scrolledPast: boolean, finalVisible: boolean): boolean {
+  return scrolledPast && !finalVisible;
 }
 
 export function StickyCTA({
@@ -21,15 +32,32 @@ export function StickyCTA({
   title,
   subtitle,
   showAfter = 700,
+  hideWhenId,
 }: StickyCTAProps) {
-  const [visible, setVisible] = useState(false);
+  const [scrolledPast, setScrolledPast] = useState(false);
+  const [finalVisible, setFinalVisible] = useState(false);
 
   useEffect(() => {
-    const onScroll = () => setVisible(window.scrollY > showAfter);
+    const onScroll = () => setScrolledPast(window.scrollY > showAfter);
     window.addEventListener('scroll', onScroll, { passive: true });
     onScroll();
     return () => window.removeEventListener('scroll', onScroll);
   }, [showAfter]);
+
+  // Hide the bar while the final CTA section (same message) is in view.
+  useEffect(() => {
+    if (!hideWhenId) return;
+    const el = document.getElementById(hideWhenId);
+    if (!el || typeof IntersectionObserver === 'undefined') return;
+    const io = new IntersectionObserver(
+      ([entry]) => setFinalVisible(entry.isIntersecting),
+      { threshold: 0 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, [hideWhenId]);
+
+  const visible = computeStickyVisible(scrolledPast, finalVisible);
 
   return (
     <div
