@@ -6,6 +6,7 @@ import { useSearchParams } from 'next/navigation';
 import { X } from 'lucide-react';
 import { isValidRefCodeShape } from '@/lib/referral/attribution';
 import { trpc } from '@/lib/trpc/client';
+import { pluralizeDays } from '@/lib/plural';
 
 /**
  * Marketing top ribbon shown on the landing page when a visitor arrives via a
@@ -73,14 +74,14 @@ export function ReferralTopRibbon({
     >
       <div className="mx-auto flex h-full max-w-[1160px] items-center gap-3 px-4 sm:px-6 md:px-10 lg:px-0">
         <p className="min-w-0 flex-1 truncate text-[13px] font-medium sm:text-[14px]">
-          🎁 Вам подарили {days} дней полного доступа
+          🎁 Вам подарили {days} {pluralizeDays(days)} полного доступа
           {label ? ` · по приглашению: ${label}` : ''}
         </p>
         <Link
           href={`/register?ref=${code}`}
           className="shrink-0 rounded-full bg-white px-4 py-1.5 text-[13px] font-semibold text-[#2C4FF8] transition-colors hover:bg-white/90"
         >
-          Забрать {days} дней →
+          Забрать {days} {pluralizeDays(days)} →
         </Link>
         <button
           type="button"

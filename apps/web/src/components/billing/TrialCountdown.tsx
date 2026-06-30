@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Clock } from 'lucide-react';
 import { trpc } from '@/lib/trpc/client';
 import { cn } from '@/lib/utils';
+import { pluralizeDays } from '@/lib/plural';
 
 const MS_PER_DAY = 86_400_000;
 
@@ -12,14 +13,9 @@ const MS_PER_DAY = 86_400_000;
  * 1 → «остался 1 день», 2-4 (кроме 12-14) → «осталось N дня», иначе → «осталось N дней».
  */
 export function trialDaysPhrase(daysLeft: number): string {
-  const mod10 = daysLeft % 10;
-  const mod100 = daysLeft % 100;
-
-  if (mod10 === 1 && mod100 !== 11) return `остался ${daysLeft} день`;
-  if (mod10 >= 2 && mod10 <= 4 && (mod100 < 12 || mod100 > 14)) {
-    return `осталось ${daysLeft} дня`;
-  }
-  return `осталось ${daysLeft} дней`;
+  const noun = pluralizeDays(daysLeft);
+  const verb = noun === 'день' ? 'остался' : 'осталось';
+  return `${verb} ${daysLeft} ${noun}`;
 }
 
 /**

@@ -37,6 +37,9 @@ export type { GeneratedQuestion } from './question-schema';
 
 export { retrieve, PROFILES, type ProfileName, type RetrievalProfile, type RetrieveOptions } from './profiles';
 
+// Seller-lexicon query expansion (applied to embedded queries before retrieval)
+export { expandSellerQuery } from './seller-lexicon';
+
 // RAG public wrapper (Stage 5 — REST/MCP consumers)
 export { searchChunksPublic, DEEPLINK_BASE } from './rag-public';
 export type {

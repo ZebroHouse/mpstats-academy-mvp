@@ -14,6 +14,7 @@ import {
   generateLessonSummary,
   generateChatResponse,
   searchChunks,
+  expandSellerQuery,
   type ChatMessage,
 } from '@mpstats/ai';
 import { getUserActiveSubscriptions, getUserAdminBypass, isLessonAccessible, getFirstJobLessonIds } from '../utils/access';
@@ -217,6 +218,10 @@ export const aiRouter = router({
     }))
     .query(async ({ ctx, input }): Promise<{ query: string; results: SearchLessonResult[]; totalChunks: number }> => {
       const q = input.query.trim();
+      // Expand seller shorthand for the vector branch only (embedding). The keyword
+      // `contains` branch below must use the original `q` — expansion text would
+      // break literal title/description matching.
+      const vectorQuery = expandSellerQuery(q);
 
       // Hybrid search: vector (semantic) + keyword (title/description) in parallel.
       // Keyword fallback ensures that simple queries matching lesson titles always
@@ -227,7 +232,7 @@ export const aiRouter = router({
         // would dilute results since Lesson.findMany enrichment filters them
         // out downstream anyway.
         searchChunks({
-          query: q,
+          query: vectorQuery,
           limit: 30,
           threshold: 0.5,
           // academy_text = published text/interactive lessons surface in /learn search too.
