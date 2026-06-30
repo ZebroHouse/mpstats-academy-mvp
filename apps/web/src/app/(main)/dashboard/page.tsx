@@ -1,5 +1,6 @@
 'use client';
 
+import React from 'react';
 import Link from 'next/link';
 import { BarChart3, CalendarCheck, Search, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -10,12 +11,28 @@ import { Shelf } from '@/components/learning/Shelf';
 import { DatabaseError } from '@/components/shared/DatabaseError';
 import { trpc } from '@/lib/trpc/client';
 
-// Compact entry row: icon inline with label. Diagnostic is the 4th button.
-const ENTRY_BUTTONS = [
-  { href: '/learn/plan', icon: CalendarCheck, label: 'Продолжить мой план', dataTour: 'dashboard-learn-cta' },
-  { href: '/learn/library', icon: Search, label: 'Найти быстрый ответ', dataTour: undefined },
-  { href: '/learn/solutions', icon: Target, label: 'Решить задачу', dataTour: undefined },
-  { href: '/diagnostic', icon: BarChart3, label: 'Пройти диагностику', dataTour: 'dashboard-diagnostic-cta' },
+/**
+ * Tone palette reused from BentoCard (bento-card.tsx):
+ *   blue  → #2C4FF8 (brand blue), white text — plan (primary CTA)
+ *   gray  → #f4f4f4 (light fill), dark text  — library (soft, exploratory)
+ *   dark  → #0F172A (navy),       white text  — solutions (authoritative)
+ *   orange→ #ff6b16 (accent),     white text  — diagnostic (action/energy)
+ * Buttons are filled (not white) so they stand out above lesson cards.
+ */
+type EntryTone = 'blue' | 'gray' | 'dark' | 'orange';
+
+const ENTRY_TONE_STYLES: Record<EntryTone, { bg: React.CSSProperties; wrapper: string; iconBg: string; iconColor: string; labelColor: string }> = {
+  blue:   { bg: { backgroundColor: '#2C4FF8' }, wrapper: 'hover:-translate-y-0.5 hover:shadow-md hover:brightness-110', iconBg: 'bg-white/20',          iconColor: 'text-white',      labelColor: 'text-white' },
+  gray:   { bg: { backgroundColor: '#f4f4f4' }, wrapper: 'hover:-translate-y-0.5 hover:shadow-md hover:bg-[#e8e8e8]',   iconBg: 'bg-[#121212]/10',       iconColor: 'text-[#121212]',  labelColor: 'text-[#121212]' },
+  dark:   { bg: { backgroundColor: '#0F172A' }, wrapper: 'hover:-translate-y-0.5 hover:shadow-md hover:brightness-125', iconBg: 'bg-white/15',           iconColor: 'text-white',      labelColor: 'text-white' },
+  orange: { bg: { backgroundColor: '#ff6b16' }, wrapper: 'hover:-translate-y-0.5 hover:shadow-md hover:brightness-110', iconBg: 'bg-white/20',          iconColor: 'text-white',      labelColor: 'text-white' },
+};
+
+const ENTRY_BUTTONS: Array<{ href: string; icon: React.ElementType; label: string; dataTour?: string; tone: EntryTone }> = [
+  { href: '/learn/plan',     icon: CalendarCheck, label: 'Продолжить мой план',  dataTour: 'dashboard-learn-cta',       tone: 'blue' },
+  { href: '/learn/library',  icon: Search,        label: 'Найти быстрый ответ',  dataTour: undefined,                   tone: 'gray' },
+  { href: '/learn/solutions',icon: Target,        label: 'Решить задачу',        dataTour: undefined,                   tone: 'dark' },
+  { href: '/diagnostic',     icon: BarChart3,     label: 'Пройти диагностику',   dataTour: 'dashboard-diagnostic-cta',  tone: 'orange' },
 ];
 
 export default function DashboardPage() {
@@ -118,21 +135,25 @@ export default function DashboardPage() {
         );
       })()}
 
-      {/* Compact entry row — 4 icon-inline buttons (incl. diagnostic) */}
+      {/* Compact entry row — 4 icon-inline buttons (incl. diagnostic), each with own BentoCard tone */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 animate-slide-up" style={{ animationDelay: '50ms' }}>
-        {ENTRY_BUTTONS.map(({ href, icon: Icon, label, dataTour }) => (
-          <Link
-            key={href}
-            href={href}
-            data-tour={dataTour}
-            className="flex items-center gap-3 rounded-2xl border border-mp-gray-200 bg-white px-4 py-4 text-mp-gray-900 transition-all hover:border-mp-blue-300 hover:-translate-y-0.5 hover:shadow-mp-card"
-          >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-mp-blue-50 text-mp-blue-600">
-              <Icon className="h-5 w-5" />
-            </span>
-            <span className="text-body-sm font-semibold leading-tight">{label}</span>
-          </Link>
-        ))}
+        {ENTRY_BUTTONS.map(({ href, icon: Icon, label, dataTour, tone }) => {
+          const t = ENTRY_TONE_STYLES[tone];
+          return (
+            <Link
+              key={href}
+              href={href}
+              data-tour={dataTour}
+              className={`flex items-center gap-3 rounded-2xl px-4 py-4 transition-all ${t.wrapper}`}
+              style={t.bg}
+            >
+              <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${t.iconBg} ${t.iconColor}`}>
+                <Icon className="h-5 w-5" />
+              </span>
+              <span className={`text-body-sm font-semibold leading-tight ${t.labelColor}`}>{label}</span>
+            </Link>
+          );
+        })}
       </div>
 
       {/* Zone 2 — Лента полок */}
