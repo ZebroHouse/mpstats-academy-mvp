@@ -1,6 +1,6 @@
 'use client';
 
-import { Suspense, useState } from 'react';
+import { Suspense, useState, useEffect } from 'react';
 import { Onest } from 'next/font/google';
 import { V8Header } from '@/components/v8/V8Header';
 import { V8Footer } from '@/components/v8/V8Footer';
@@ -8,6 +8,8 @@ import { ReferralTopRibbon } from '@/components/referral/ReferralTopRibbon';
 import { Reveal, useReveal } from '@/components/v8/Reveal';
 import { Counter } from '@/components/v8/Counter';
 import { StickyCTA } from '@/components/v8/StickyCTA';
+import { createClient } from '@/lib/supabase/client';
+import { getMarketingCta } from '@/lib/marketing-cta';
 
 const onest = Onest({
   subsets: ['latin', 'cyrillic'],
@@ -338,6 +340,15 @@ const REFERRAL_RIBBON_HEIGHT = 44;
 export default function DesignNewV8() {
   const [mouse, setMouse] = useState({ x: 0, y: 0 });
   const [ribbonVisible, setRibbonVisible] = useState(false);
+  const [isAuthed, setIsAuthed] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    createClient().auth.getUser().then(({ data }) => setIsAuthed(!!data.user));
+  }, []);
+
+  // Auth-aware marketing CTAs. Renders as guest until auth resolves (the marketing
+  // default), so a guest never flashes a product route.
+  const cta = getMarketingCta(isAuthed === true);
 
   return (
     <div className={onest.className} style={{ color: TEXT }}>
@@ -375,13 +386,13 @@ export default function DesignNewV8() {
             </p>
             <div className="mt-8 sm:mt-10 flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center lg:justify-start">
               <a
-                href="#cta"
+                href={cta.primary.href}
                 className="inline-flex items-center justify-center rounded-full h-[52px] sm:h-[62px] px-8 sm:px-10 text-[15px] sm:text-[16px] font-medium text-white transition-colors"
                 style={{ backgroundColor: BLUE }}
                 onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = BLUE_HOVER)}
                 onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = BLUE)}
               >
-                Пройти диагностику
+                {cta.primary.label}
               </a>
               <a
                 href="#тарифы"
@@ -647,13 +658,13 @@ export default function DesignNewV8() {
             Получите рекомендации по обучению и персональный маршрут развития
           </p>
           <a
-            href="#cta"
+            href={cta.diagnostic.href}
             className="mt-8 inline-flex items-center justify-center rounded-full h-[52px] sm:h-[58px] px-10 sm:px-12 text-[15px] sm:text-[16px] font-medium transition-colors"
             style={{ backgroundColor: 'white', color: BLUE }}
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = '#e8e8e8')}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = 'white')}
           >
-            Пройти диагностику
+            {cta.diagnostic.label}
           </a>
         </div>
       </section>
@@ -738,13 +749,13 @@ export default function DesignNewV8() {
             10 минут — и персональный план готов
           </p>
           <a
-            href="/diagnostic"
+            href={cta.primary.href}
             className="mt-8 sm:mt-10 inline-flex items-center justify-center rounded-full h-[52px] sm:h-[62px] px-10 sm:px-12 text-[15px] sm:text-[16px] font-medium text-white transition-colors"
             style={{ backgroundColor: BLUE }}
             onMouseEnter={(e) => (e.currentTarget.style.backgroundColor = BLUE_HOVER)}
             onMouseLeave={(e) => (e.currentTarget.style.backgroundColor = BLUE)}
           >
-            Пройти диагностику
+            {cta.primary.label}
           </a>
         </div>
       </section>
@@ -752,7 +763,9 @@ export default function DesignNewV8() {
       <V8Footer wrapperBg="dark" />
 
       <StickyCTA
-        href="#cta"
+        href={cta.primary.href}
+        buttonLabel={cta.primary.label}
+        hideWhenId="cta"
         title="Начните с AI-диагностики — это бесплатно"
         subtitle="10 минут — и персональный план готов"
       />
