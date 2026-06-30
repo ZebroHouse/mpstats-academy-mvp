@@ -1,43 +1,21 @@
 'use client';
 
 import Link from 'next/link';
-import { CalendarCheck, Search, Target } from 'lucide-react';
+import { BarChart3, CalendarCheck, Search, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { DarkIsland, DarkIslandStat } from '@/components/ui/dark-island';
-import { BentoCard } from '@/components/ui/bento-card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { LessonCard } from '@/components/learning/LessonCard';
 import { Shelf } from '@/components/learning/Shelf';
 import { DatabaseError } from '@/components/shared/DatabaseError';
 import { trpc } from '@/lib/trpc/client';
 
-// 3 bento entry cards (v2 reskin). plan→blue, library→gray, solutions→dark.
-const ENTRY_CARDS = [
-  {
-    href: '/learn/plan',
-    tone: 'blue' as const,
-    icon: CalendarCheck,
-    title: 'Продолжить мой план',
-    sub: 'Персональный план на основе диагностики',
-    dataTour: 'dashboard-learn-cta',
-  },
-  {
-    href: '/learn/library',
-    tone: 'gray' as const,
-    icon: Search,
-    title: 'Найти быстрый ответ',
-    sub: 'Поиск по урокам и материалам',
-    dataTour: undefined,
-  },
-  {
-    href: '/learn/solutions',
-    tone: 'dark' as const,
-    icon: Target,
-    title: 'Решить задачу',
-    sub: 'Инструкции под конкретную задачу',
-    dataTour: undefined,
-  },
+// Compact entry row: icon inline with label. Diagnostic is the 4th button.
+const ENTRY_BUTTONS = [
+  { href: '/learn/plan', icon: CalendarCheck, label: 'Продолжить мой план', dataTour: 'dashboard-learn-cta' },
+  { href: '/learn/library', icon: Search, label: 'Найти быстрый ответ', dataTour: undefined },
+  { href: '/learn/solutions', icon: Target, label: 'Решить задачу', dataTour: undefined },
+  { href: '/diagnostic', icon: BarChart3, label: 'Пройти диагностику', dataTour: 'dashboard-diagnostic-cta' },
 ];
 
 export default function DashboardPage() {
@@ -66,12 +44,12 @@ export default function DashboardPage() {
   if (isLoading) {
     return (
       <div className="space-y-6 animate-fade-in">
-        {/* Hero placeholder */}
-        <Skeleton className="h-44 rounded-2xl" />
-        {/* 3 bento entry card placeholders */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-          {[1, 2, 3].map(i => (
-            <Skeleton key={i} className="h-28 rounded-xl" />
+        {/* Slim hero placeholder */}
+        <Skeleton className="h-28 rounded-2xl" />
+        {/* 4 compact entry button placeholders */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {[1, 2, 3, 4].map(i => (
+            <Skeleton key={i} className="h-16 rounded-2xl" />
           ))}
         </div>
         {/* Shelf-row placeholders */}
@@ -115,7 +93,7 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      {/* Hero — DarkIsland (v2): greeting + plan CTA + learning stats */}
+      {/* Hero — DarkIsland (v2), slim: greeting + learning stats only */}
       {(() => {
         const lessons = dashboard?.stats.totalLessonsCompleted || 0;
         const watch = dashboard?.stats.totalWatchTime || 0;
@@ -124,18 +102,9 @@ export default function DashboardPage() {
         const allZero = lessons === 0 && watch === 0 && streak === 0 && completion === 0;
         return (
           <DarkIsland
-            className="animate-slide-up"
+            className="animate-slide-up p-5 sm:p-6"
             eyebrow="MPSTATS Academy"
             title={`Привет, ${name}!`}
-            subtitle={
-              allZero
-                ? 'Начните с диагностики — соберём персональный план, и здесь появится ваша статистика.'
-                : 'Продолжайте обучение — ваш персональный план ждёт.'
-            }
-            cta={{
-              label: allZero ? 'Пройти диагностику →' : 'К моему плану →',
-              href: allZero ? '/diagnostic' : '/learn/plan',
-            }}
             aside={
               allZero ? undefined : (
                 <div className="flex gap-8">
@@ -149,44 +118,21 @@ export default function DashboardPage() {
         );
       })()}
 
-      {/* 3 bento entry cards (v2) */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 animate-slide-up" style={{ animationDelay: '50ms' }}>
-        {ENTRY_CARDS.map(({ href, tone, icon, title, sub, dataTour }) => (
-          <BentoCard key={href} href={href} tone={tone} icon={icon} title={title} sub={sub} dataTour={dataTour} />
+      {/* Compact entry row — 4 icon-inline buttons (incl. diagnostic) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 animate-slide-up" style={{ animationDelay: '50ms' }}>
+        {ENTRY_BUTTONS.map(({ href, icon: Icon, label, dataTour }) => (
+          <Link
+            key={href}
+            href={href}
+            data-tour={dataTour}
+            className="flex items-center gap-3 rounded-2xl border border-mp-gray-200 bg-white px-4 py-4 text-mp-gray-900 transition-all hover:border-mp-blue-300 hover:-translate-y-0.5 hover:shadow-mp-card"
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-mp-blue-50 text-mp-blue-600">
+              <Icon className="h-5 w-5" />
+            </span>
+            <span className="text-body-sm font-semibold leading-tight">{label}</span>
+          </Link>
         ))}
-      </div>
-
-      {/* Diagnostic entry + next-lesson — single-column stack above the shelf feed */}
-      <div className="space-y-6 animate-slide-up" style={{ animationDelay: '100ms' }}>
-        {/* Diagnostic entry — container-as-button, consistent with the top D-08 cards.
-            «Продолжить обучение» removed — it duplicated the «Продолжить мой план» entry card above. */}
-        <Link href="/diagnostic">
-          <Card data-tour="dashboard-diagnostic-cta" variant="soft-blue" interactive className="p-6">
-            <div className="flex items-start gap-4">
-              <div className="w-12 h-12 rounded-xl bg-mp-blue-200 text-mp-blue-600 flex items-center justify-center shrink-0">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
-                </svg>
-              </div>
-              <div>
-                <h2 className="text-heading-lg text-mp-gray-900">Пройти диагностику</h2>
-                <p className="text-body-sm text-mp-gray-600 mt-1">Узнайте свой уровень по 5 ключевым навыкам</p>
-              </div>
-            </div>
-          </Card>
-        </Link>
-
-        {/* Next lesson */}
-        {dashboard?.nextLesson && (
-          <Card className="shadow-mp-card">
-            <CardHeader>
-              <CardTitle className="text-heading">Продолжить урок</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <LessonCard lesson={dashboard.nextLesson} />
-            </CardContent>
-          </Card>
-        )}
       </div>
 
       {/* Zone 2 — Лента полок */}
