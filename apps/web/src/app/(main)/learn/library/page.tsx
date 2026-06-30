@@ -11,10 +11,10 @@ import { LearningHero } from '@/components/learning/LearningHero';
 import { MaterialCard, type MaterialCardProps } from '@/components/learning/MaterialCard';
 import { CourseLockBanner } from '@/components/learning/PaywallBanner';
 import { LearningTabs } from '@/components/learning/LearningTabs';
-import type { FilterState } from '@/components/learning/FilterPanel';
+import { FilterPanel, type FilterState } from '@/components/learning/FilterPanel';
+import { filterLessonByState } from '@/components/learning/library-filter';
 import { trpc } from '@/lib/trpc/client';
 import { cn } from '@/lib/utils';
-import type { LessonWithProgress } from '@mpstats/shared';
 
 const INITIAL_LESSONS_SHOWN = 5;
 
@@ -45,6 +45,7 @@ function filtersFromSearchParams(sp: ReturnType<typeof useSearchParams>): Filter
     duration: sp.get('duration') ?? 'ALL',
     courseId: sp.get('courseId') ?? 'ALL',
     marketplace: sp.get('marketplace') ?? 'ALL',
+    badge: sp.get('badge') ?? 'ALL',
   };
 }
 
@@ -57,6 +58,7 @@ function filtersToSearchParams(filters: FilterState): string {
   if (filters.duration !== 'ALL') sp.set('duration', filters.duration);
   if (filters.courseId !== 'ALL') sp.set('courseId', filters.courseId);
   if (filters.marketplace !== 'ALL') sp.set('marketplace', filters.marketplace);
+  if (filters.badge !== 'ALL') sp.set('badge', filters.badge);
   return sp.toString();
 }
 
@@ -82,12 +84,10 @@ function LibraryPageInner() {
   const router = useRouter();
   const pathname = usePathname();
   const filters = useMemo(() => filtersFromSearchParams(searchParams), [searchParams]);
-  // setFilters kept for FilterPanel wiring (61-05 hero/filters); referenced to avoid dead-code.
   const setFilters = useCallback((newFilters: FilterState) => {
     const query = filtersToSearchParams(newFilters);
-    router.replace(query ? `${pathname}?${query}` : pathname);
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
   }, [router, pathname]);
-  void setFilters;
 
   const { data: courses, isLoading, error } = trpc.learning.getCourses.useQuery();
   const { data: recommendedPath } = trpc.learning.getRecommendedPath.useQuery();
@@ -116,32 +116,21 @@ function LibraryPageInner() {
     [favLessons],
   );
 
-  // Unified filter function for courses view
-  const filterLesson = (lesson: LessonWithProgress) => {
-    if (filters.category !== 'ALL' && lesson.skillCategory !== filters.category) return false;
-    if (filters.status !== 'ALL' && lesson.status !== filters.status) return false;
-    if (filters.difficulty !== 'ALL' && (((lesson as unknown) as Record<string, unknown>).skillLevel as string || 'MEDIUM') !== filters.difficulty) return false;
-    if (filters.duration !== 'ALL') {
-      const d = lesson.duration;
-      if (filters.duration === 'short' && d > 10) return false;
-      if (filters.duration === 'medium' && (d <= 10 || d > 30)) return false;
-      if (filters.duration === 'long' && d <= 30) return false;
-    }
-    if (filters.topics.length > 0) {
-      const lt = (((lesson as unknown) as Record<string, unknown>).topics as string[] | undefined) ?? [];
-      if (!filters.topics.some(t => lt.includes(t))) return false;
-    }
-    if (filters.marketplace !== 'ALL') {
-      const courseId = ((lesson as unknown) as Record<string, unknown>).courseId as string || '';
-      if (filters.marketplace === 'OZON') {
-        if (courseId !== '05_ozon') return false;
-      } else {
-        if (courseId === '05_ozon') return false;
-      }
-    }
-    if (filters.courseId !== 'ALL' && ((lesson as unknown) as Record<string, unknown>).courseId !== filters.courseId) return false;
-    return true;
-  };
+  // Filter dropdown options derived from the loaded courses/lessons.
+  const availableCourses = useMemo(
+    () => (courses ?? []).map((c) => ({ id: c.id, title: c.title })),
+    [courses],
+  );
+  const availableTopics = useMemo(() => {
+    const set = new Set<string>();
+    courses?.forEach((c) =>
+      c.lessons.forEach((l) => {
+        const topics = (((l as unknown) as Record<string, unknown>).topics as string[] | undefined) ?? [];
+        topics.forEach((t) => set.add(t));
+      }),
+    );
+    return Array.from(set).sort();
+  }, [courses]);
 
   const toggleCourseExpanded = (courseId: string) => {
     setExpandedCourses((prev) => {
@@ -270,12 +259,22 @@ function LibraryPageInner() {
         </div>
       )}
 
+      {/* Lesson filters (category / status / marketplace / topics / difficulty / duration / tag) */}
+      {!showMaterials && (
+        <FilterPanel
+          filters={filters}
+          onFiltersChange={setFilters}
+          availableTopics={availableTopics}
+          availableCourses={availableCourses}
+        />
+      )}
+
       {/* Courses accordion (default «Уроки» view) */}
       {!showMaterials && (
       <div data-tour="learn-add-to-track" className="space-y-6">
         {courses?.map((course) => {
-          const filteredCourseLessons = course.lessons.filter(lesson => filterLesson(lesson));
-          if (filteredCourseLessons.length === 0 && (filters.category !== 'ALL' || filters.status !== 'ALL' || filters.topics.length > 0 || filters.difficulty !== 'ALL' || filters.duration !== 'ALL' || filters.marketplace !== 'ALL')) {
+          const filteredCourseLessons = course.lessons.filter((l) => filterLessonByState(l, filters));
+          if (filteredCourseLessons.length === 0 && (filters.category !== 'ALL' || filters.status !== 'ALL' || filters.topics.length > 0 || filters.difficulty !== 'ALL' || filters.duration !== 'ALL' || filters.marketplace !== 'ALL' || filters.badge !== 'ALL')) {
             return null; // Hide empty courses when filters are active
           }
 

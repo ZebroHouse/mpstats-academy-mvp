@@ -111,6 +111,7 @@ export interface LessonWithProgress extends Lesson {
   contentType?: LessonContentType;  // TEXT/INTERACTIVE lessons
   body?: unknown;                    // TipTap document, gated behind `locked`
   progressState?: InteractiveProgressState | null; // INTERACTIVE: reveal/choice state
+  badges?: string[];            // editorial storefront tags (START/NEW/HOT/QUICK)
 }
 
 // ============== AI / RAG ==============
@@ -405,12 +406,25 @@ export interface JobSummary {
   completedLessons: number;     // прогресс юзера
   isRecommended: boolean;       // есть уроки из диагностики (errors/deepening/...), не из вручную добавленного плейбука
   isInTrack: boolean;           // юзер добавил весь плейбук через «+ В трек»
+  badges?: string[];            // editorial storefront tags (START/NEW/HOT/QUICK)
 }
 
 export interface JobCatalogAxis {
   axis: string;                 // ANALYTICS | MARKETING | CONTENT | OPERATIONS | FINANCE
   title: string;                // «Аналитика» и т.д.
   jobs: JobSummary[];
+}
+
+export type StorefrontItem =
+  | { kind: 'job'; job: JobSummary }
+  | { kind: 'lesson'; lesson: LessonWithProgress };
+
+export interface StorefrontShelf {
+  shelfKey: string;
+  title: string;
+  marketplace?: JobMarketplace;
+  items: StorefrontItem[]; // capped per shelf (≤12; «start» ≤3)
+  totalCount: number;      // full count before cap → drives «Смотреть все (N)»
 }
 
 export interface JobLessonItem {

@@ -618,3 +618,7 @@ html, body {
            text-sm text-mp-gray-500 hover:border-mp-blue-300 hover:text-mp-blue-500;
   }
 }
+
+/* Hide native scrollbar for shelf carousels while keeping scroll functionality */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
