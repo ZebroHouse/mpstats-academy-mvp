@@ -60,6 +60,21 @@ describe('generateChatResponse — lesson-scoped recall fallback', () => {
     expect(retrieveMock).toHaveBeenCalledTimes(1);
   });
 
+  it('embeds the seller-expanded query for retrieval but sends the original to the LLM', async () => {
+    retrieveMock.mockResolvedValueOnce([chunk('c0')]);
+
+    await generateChatResponse('L', 'опиши анализ ЦА');
+
+    // Retrieval query is expanded so the embedding matches transcript wording.
+    expect(retrieveMock.mock.calls[0][1].query).toBe('опиши анализ ЦА (целевая аудитория)');
+    // The LLM still receives the user's original wording as the question.
+    const sentMessages = createMock.mock.calls[0][0].messages;
+    expect(sentMessages[sentMessages.length - 1]).toMatchObject({
+      role: 'user',
+      content: 'опиши анализ ЦА',
+    });
+  });
+
   it('stays empty (no infinite retry) when the lesson has no chunks at all', async () => {
     retrieveMock.mockResolvedValue([]);
 

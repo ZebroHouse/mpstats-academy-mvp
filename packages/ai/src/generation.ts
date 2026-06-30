@@ -9,6 +9,7 @@
 import { openrouter, MODELS, MODEL_CONFIG } from './openrouter';
 import { getChunksForLesson, formatTimecode, type ChunkSearchResult } from './retrieval';
 import { retrieve } from './profiles';
+import { expandSellerQuery } from './seller-lexicon';
 
 /**
  * Fix transliterated brand names in AI-generated text.
@@ -208,9 +209,15 @@ export async function generateChatResponse(
   message: string,
   history: ChatMessage[] = []
 ): Promise<GenerationResult> {
+  // 0. Expand seller shorthand (ЦА → целевая аудитория, ДРР → доля рекламных
+  // расходов…) so the embedded query carries the canonical wording the transcript
+  // uses. The LLM below still receives the original `message` — it already
+  // understands the abbreviation; expansion only helps vector retrieval.
+  const retrievalQuery = expandSellerQuery(message);
+
   // 1. Search for relevant chunks (threshold 0.5 — lower values cause Supabase free tier to timeout on large result sets)
   let relevantChunks = await retrieve('academy-lesson', {
-    query: message,
+    query: retrievalQuery,
     lessonId,
   });
 
@@ -225,7 +232,7 @@ export async function generateChatResponse(
   // bounds the scan (no free-tier timeout risk) and maxResults caps the tokens.
   if (relevantChunks.length === 0) {
     relevantChunks = await retrieve('academy-lesson', {
-      query: message,
+      query: retrievalQuery,
       lessonId,
       threshold: 0,
     });
