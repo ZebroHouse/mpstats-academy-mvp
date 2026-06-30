@@ -12,6 +12,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { PhoneInput } from '@/components/ui/phone-input';
 import { trpc } from '@/lib/trpc/client';
+import { pluralizeDays } from '@/lib/plural';
 
 export function RegisterForm({ initialRefCode }: { initialRefCode: string | null }) {
   const router = useRouter();
@@ -92,7 +93,7 @@ export function RegisterForm({ initialRefCode }: { initialRefCode: string | null
         {refValidation.data?.valid && (
           <div className="rounded-lg border border-mp-blue-300 bg-mp-blue-50 p-4 mb-4 text-sm">
             <div className="font-semibold text-mp-gray-900">
-              🎁 Тебе подарили {trialDays} дней бесплатного доступа к Платформе
+              🎁 Тебе подарили {trialDays} {pluralizeDays(trialDays)} бесплатного доступа к Платформе
             </div>
             {refValidation.data.referrerName && (
               <div className="text-mp-gray-600 mt-1">

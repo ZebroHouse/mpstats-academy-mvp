@@ -74,13 +74,14 @@ describe('ReferralTopRibbon', () => {
     expect(cta.getAttribute('href')).toBe('/register?ref=REF-ABC123');
   });
 
-  it('renders the ambassador custom day count', () => {
+  it('renders the ambassador custom day count with correct plural declension', () => {
     getMock.mockReturnValue('AMB-XYZ99');
-    mockValidation = { data: { valid: true, referrerName: 'Блогер', trialDays: 21, type: 'ambassador' } };
+    // 3 → «дня» (not the hardcoded «дней» that the bug produced as «3 дней»).
+    mockValidation = { data: { valid: true, referrerName: 'Блогер', trialDays: 3, type: 'ambassador' } };
     const { getByText } = render(<ReferralTopRibbon />);
 
-    expect(getByText(/Вам подарили 21 дней полного доступа/)).toBeDefined();
-    expect(getByText(/Забрать 21 дней/)).toBeDefined();
+    expect(getByText(/Вам подарили 3 дня полного доступа/)).toBeDefined();
+    expect(getByText(/Забрать 3 дня/)).toBeDefined();
   });
 
   it('omits the "по приглашению" tail when referrerName is null', () => {
