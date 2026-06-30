@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { Play } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import type { LessonWithProgress } from '@mpstats/shared';
@@ -97,6 +98,22 @@ export function LessonCard({ lesson, showCourse, courseName, isRecommended, lock
 
             {/* Content */}
             <div className="flex-1 min-w-0">
+              {/* Top row: type pill (left) + editorial badges (right) — never collapses.
+                  START is routing-only, never shown. */}
+              <div className="flex items-center justify-between gap-1.5 mb-1.5 min-h-[22px]">
+                <span className="inline-flex items-center gap-1 text-[11px] font-bold rounded-full px-2.5 py-0.5 bg-[#e8f3ff] text-[#0369a1]">
+                  <Play className="w-3 h-3 fill-current" />
+                  Урок
+                </span>
+                {badgePills.length > 0 && (
+                  <div className="flex gap-1">
+                    {badgePills.map((p) => (
+                      <span key={p.key} className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${BADGE_TONE_CLASS[p.tone]}`}>{p.label}</span>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Course name */}
               {showCourse && courseName && (
                 <div className="text-caption text-mp-gray-500 mb-1">{courseName}</div>
@@ -106,15 +123,6 @@ export function LessonCard({ lesson, showCourse, courseName, isRecommended, lock
               <h3 className="font-medium text-mp-gray-900 line-clamp-2">
                 {lesson.title}
               </h3>
-
-              {/* Badge pills (NEW / HOT / QUICK) — START is routing-only, never shown */}
-              {badgePills.length > 0 && (
-                <div className="flex gap-1 mt-1">
-                  {badgePills.map((p) => (
-                    <span key={p.key} className={`text-[11px] font-semibold px-2 py-0.5 rounded-full ${BADGE_TONE_CLASS[p.tone]}`}>{p.label}</span>
-                  ))}
-                </div>
-              )}
 
               {/* Description */}
               {lesson.description && (
