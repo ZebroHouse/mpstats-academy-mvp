@@ -65,7 +65,7 @@ describe('GET /api/partner/mpstats/enter', () => {
     const res = await GET(req('email=new@x.com&name=Ivan&module_code=auto_bidder'));
     expect(h.admin.auth.admin.createUser).toHaveBeenCalledWith(expect.objectContaining({
       email: 'new@x.com', email_confirm: true,
-      user_metadata: expect.objectContaining({ passwordless: true, partner_pending_verify: true }),
+      user_metadata: expect.objectContaining({ passwordless: true, partner_pending_verify: true, partner_source: 'mpstats' }),
     }));
     expect(h.cq.firePartnerEntryLead).toHaveBeenCalledWith('new-uid', expect.objectContaining({ email: 'new@x.com', moduleCode: 'auto_bidder' }));
     expect(h.admin.auth.verifyOtp).toHaveBeenCalledWith({ token_hash: 'tok123', type: 'magiclink' });
@@ -90,7 +90,7 @@ describe('GET /api/partner/mpstats/enter', () => {
     const exp = Math.floor(Date.now() / 1000) + 60;
     const sig = signEntry({ email: 'new@x.com', name: 'Ivan', moduleCode: 'auto_bidder', exp });
     const res = await GET(req(`email=new@x.com&name=Ivan&module_code=auto_bidder&exp=${exp}&sig=${sig}`));
-    expect(h.admin.auth.admin.createUser).toHaveBeenCalledWith(expect.objectContaining({ email: 'new@x.com', email_confirm: true, user_metadata: expect.objectContaining({ passwordless: true }) }));
+    expect(h.admin.auth.admin.createUser).toHaveBeenCalledWith(expect.objectContaining({ email: 'new@x.com', email_confirm: true, user_metadata: expect.objectContaining({ passwordless: true, partner_source: 'mpstats' }) }));
     expect(h.admin.auth.verifyOtp).toHaveBeenCalledWith({ token_hash: 'tok123', type: 'magiclink' });
     expect(res.headers.get('location')).toBe('https://platform.test/mpstats-tools/lesson-9');
   });
