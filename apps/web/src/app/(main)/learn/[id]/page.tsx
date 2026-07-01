@@ -364,13 +364,9 @@ export default function LessonPage() {
     // D-13: silent no-op fallback если коммент удалён или недоступен
   }, [data?.lesson?.id]);
 
-  // Extract diagnostic hints for this lesson from the errors section
-  const lessonHints = useMemo(() => {
-    if (!recommendedPath?.isSectioned || !recommendedPath.sections) return [];
-    const errorsSection = recommendedPath.sections.find((s: { id: string }) => s.id === 'errors');
-    if (!errorsSection?.hints) return [];
-    return errorsSection.hints.filter((h: { lessonId: string }) => h.lessonId === lessonId);
-  }, [recommendedPath, lessonId]);
+  // Per-lesson diagnostic hints are retired under the v3 axis redesign —
+  // getRecommendedPath no longer carries hints, so this is always empty.
+  const lessonHints = useMemo<never[]>(() => [], []);
 
   // Summary always loads (no longer gated by tab)
   const { data: summaryData, isLoading: summaryLoading, error: summaryError } = trpc.ai.getLessonSummary.useQuery(

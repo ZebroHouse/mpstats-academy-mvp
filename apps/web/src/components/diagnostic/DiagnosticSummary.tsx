@@ -42,14 +42,14 @@ interface Props {
 export function DiagnosticSummary({ skillProfile, onRetake, isRetaking }: Props) {
   const { data: recommendedPath } = trpc.learning.getRecommendedPath.useQuery();
 
-  // Top-3 lessons to "подтянуть" — prefer 'errors' section, fall back to 'deepening' / first available.
-  const weakLessons: { sectionTitle: string; items: any[] } | null = (() => {
-    if (!recommendedPath || !recommendedPath.sections) return null;
-    const sectionPriority = ['errors', 'deepening', 'growth', 'advanced'];
-    for (const sectionId of sectionPriority) {
-      const section = recommendedPath.sections.find((s: { id: string }) => s.id === sectionId);
-      if (section && section.lessons.length > 0) {
-        return { sectionTitle: section.title || sectionId, items: section.lessons.slice(0, 3) };
+  // Top-3 lessons to "подтянуть". v3 sections are axis-based and already sorted
+  // weakest-first — take the first section that has any lessons (error lessons first).
+  const weakLessons = (() => {
+    if (!recommendedPath || !('isAxis' in recommendedPath) || !recommendedPath.isAxis) return null;
+    for (const section of recommendedPath.sections) {
+      const items = [...(section.errorLessons ?? []), ...section.lessons];
+      if (items.length > 0) {
+        return { sectionTitle: section.label, items: items.slice(0, 3) };
       }
     }
     return null;
