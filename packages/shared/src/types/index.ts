@@ -293,13 +293,37 @@ export interface SectionedLearningPath {
   previousSkillProfileId?: string;
 }
 
-/** Parse LearningPath.lessons Json — handles both old string[] and new SectionedLearningPath */
-export function parseLearningPath(lessons: unknown): string[] | SectionedLearningPath {
+// ============== AXIS LEARNING PATH (v3) ==============
+
+export interface AxisLearningPathSection {
+  axis: SkillCategory;
+  label: string;
+  score: number;            // 0-100
+  tier: 'weak' | 'medium' | 'strong';
+  collapsed: boolean;
+  jobIds: string[];
+  lessonIds: string[];
+  errorLessonIds: string[];
+}
+
+export interface AxisLearningPath {
+  version: 3;
+  sections: AxisLearningPathSection[];   // sorted by score asc
+  generatedFromSessionId: string;
+  previousSkillProfileId?: string;
+}
+
+/** Parse LearningPath.lessons Json — old string[], v2 SectionedLearningPath, v3 AxisLearningPath */
+export function parseLearningPath(
+  lessons: unknown,
+): string[] | SectionedLearningPath | AxisLearningPath {
   if (Array.isArray(lessons)) return lessons; // old format: string[]
-  if (typeof lessons === 'object' && lessons !== null && 'version' in lessons && (lessons as any).version === 2) {
-    return lessons as SectionedLearningPath;
+  if (typeof lessons === 'object' && lessons !== null && 'version' in lessons) {
+    const v = (lessons as any).version;
+    if (v === 3) return lessons as AxisLearningPath;
+    if (v === 2) return lessons as SectionedLearningPath;
   }
-  return []; // fallback
+  return []; // fallback — never throw
 }
 
 // ============== KINESCOPE ==============
