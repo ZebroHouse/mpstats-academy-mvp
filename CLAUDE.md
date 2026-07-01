@@ -120,7 +120,17 @@ Archive directory `D:/GpT_docs/MPSTATS ACADEMY ADAPTIVE LEARNING/MAAL-phase55/` 
 
 **Внимание (исторический lesson):** CP хранит `amount` на своей стороне на момент создания подписки. При смене цен отменять старые ACTIVE подписки чтобы автосписания пошли по новым тарифам.
 
-## Last Session (2026-06-30) — Витрина (storefront) на /dashboard shipped to prod
+## Last Session (2026-07-01) — Пересборка CTA главной + go-live партнёрской ручки MPSTATS
+
+Сессия дебага/фич по запросам owner. Всё через изолированные worktree → TDD → staging build-gate → PR merge → прод `build --no-cache web`. Детали — в памяти (`project_landing_cta_rework.md`, `project_partner_entry_golive.md`).
+
+- **Пересборка CTA маркетинг-главной `/`** (PR #23 `37ec228`). Главный CTA «Попробовать бесплатно» (гость→`/register`, authed «Перейти в обучение»→`/dashboard`) в хиро+финале+плавашке; диагностика — вторичный CTA в mid-секции (гость→`/skill-test`, authed→`/diagnostic`); юзернейм `V8Header`→`/dashboard` (было `/profile`); фикс бага плавашки `StickyCTA` (`hideWhenId` + IntersectionObserver — не наезжает на футер/дубль). Хелпер `getMarketingCta(isAuthed)` (`apps/web/src/lib/marketing-cta.ts`). Гоча роутинга: форма `/login` игнорит `?next` (middleware его кладёт) → «сохранение намерения» НЕ работает, поэтому гость на диагностику через `/skill-test`.
+- **Партнёрская ручка `/api/partner/mpstats/enter` (Phase 64) ОТКРЫТА на проде** для тестеров Игоря (инструменты MPSTATS): IP rate-limit (PR #24 `apps/web/src/lib/rate-limit.ts`, 10 req/60s/IP), затем `PARTNER_ENTRY_ENABLED: "true"` в git-версии `docker-compose.yml` (PR #25, runtime env, без пересборки). Работает: новый email→авто-сессия, existing-залогиненный→молча. **Партнёрских НЕ шлём в amoCRM** (PR #26 `572b352`): durable-метка `user_metadata.partner_source='mpstats'` в `createPartnerUser` → `onboarding.complete` пропускает `sendAcademyLead`. Выборка партнёрских: `SELECT ... FROM auth.users WHERE raw_user_meta_data->>'partner_source'='mpstats'`. Живое подтверждение: `elena.zaton@mail.ru` (партнёрская, онбординг прошла, в amoCRM НЕ улетела).
+- **ПЕНДИНГ (внешнее, owner→CQ):** правило CarrotQuest `pa_partner_magic_link` (автописьмо magic-link для existing-НЕ-залогиненных). ТЗ: `docs/partner/carrotquest-magic-link-rule-spec.md`.
+
+**Откаты:** каждый `git revert -m 1 <merge>` + редеплой; ручку выключить = убрать `PARTNER_ENTRY_ENABLED` из compose + `up -d web`.
+
+## Previous Session (2026-06-30) — Витрина (storefront) на /dashboard shipped to prod
 
 **Merge `4bc08b4` (`--no-ff` → master) + prod deploy `maal-web-1`. Задача #3 funnel-roadmap закрыта.** Полный цикл: brainstorm (визуальный компаньон) → спека → план (3 волны, 14 задач) → subagent-driven TDD (имплементер `coder` + spec-ревью + code-quality-ревью на каждую содержательную) → owner local review (`pnpm dev`, читает прод) → 4 UX-доработки (R1–R4) → деплой. Детали + гочи: память `project_storefront_dashboard.md`.
 
