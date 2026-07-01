@@ -15,6 +15,7 @@ import { cqSetUserProps, cqTrackEvent } from '../utils/carrotquest';
 import type { PrismaClient } from '@mpstats/db';
 import {
   parseLearningPath,
+  SKILL_LABELS,
 } from '@mpstats/shared';
 import type {
   DiagnosticResult,
@@ -25,7 +26,18 @@ import type {
   DiagnosticQuestion,
   SectionedLearningPath,
   LearningPathSection,
+  AxisLearningPath,
+  AxisLearningPathSection,
 } from '@mpstats/shared';
+import {
+  scoreToTier,
+  selectAxisLessons,
+  collectErrorLessonsByAxis,
+  applyPlanCaps,
+  PER_AXIS_LESSON_CAP,
+  PLAN_ACTIVE_LESSON_CAP,
+} from '../utils/axis-path';
+import type { JobMatch } from '../utils/job-matcher';
 
 // ============== CONSTANTS ==============
 
@@ -416,6 +428,68 @@ export async function generateSectionedPath(
     sections,
     generatedFromSessionId: sessionId,
   };
+}
+
+const AXIS_ORDER: SkillCategory[] = ['ANALYTICS', 'MARKETING', 'CONTENT', 'OPERATIONS', 'FINANCE'];
+
+/** Build AxisLearningPath v3: one section per canonical axis, score asc. Never touches LessonProgress. */
+export async function generateAxisPath(
+  prisma: PrismaClient,
+  skillProfile: SkillProfile,
+  sessionId: string,
+  answers: Array<{ isCorrect: boolean; sourceData: any }>,
+  recommendedJobs: Array<Pick<JobMatch, 'id' | 'matchedAxes'>>,
+): Promise<AxisLearningPath> {
+  const allLessons = await prisma.lesson.findMany({
+    where: { isHidden: false, course: { isHidden: false, partnerKey: null } },
+    select: { id: true, skillCategory: true, skillCategories: true, skillLevel: true, order: true },
+    orderBy: { order: 'asc' },
+  });
+
+  const lessonAxis = new Map<string, SkillCategory>(allLessons.map((l) => [l.id, l.skillCategory as SkillCategory]));
+  const errorsByAxis = collectErrorLessonsByAxis(answers, lessonAxis);
+
+  const jobsByAxis = new Map<SkillCategory, string[]>();
+  for (const job of recommendedJobs) {
+    const matched = ((job.matchedAxes ?? []) as SkillCategory[]);
+    if (matched.length === 0) continue;
+    const weakest = matched.reduce((best, ax) =>
+      skillProfile[CATEGORY_KEY_MAP[ax]] < skillProfile[CATEGORY_KEY_MAP[best]] ? ax : best);
+    const list = jobsByAxis.get(weakest) ?? [];
+    list.push(job.id);
+    jobsByAxis.set(weakest, list);
+  }
+
+  const usedLessonIds = new Set<string>();
+  const axesByScore = [...AXIS_ORDER].sort((a, b) => skillProfile[CATEGORY_KEY_MAP[a]] - skillProfile[CATEGORY_KEY_MAP[b]]);
+
+  const sections: AxisLearningPathSection[] = [];
+  for (const axis of axesByScore) {
+    const score = skillProfile[CATEGORY_KEY_MAP[axis]];
+    const tier = scoreToTier(score);
+    const errorLessonIds = errorsByAxis.get(axis) ?? [];
+
+    const candidates = allLessons
+      .filter((l) => {
+        if (usedLessonIds.has(l.id)) return false;
+        const cats = (l.skillCategories as string[] | null) ?? [];
+        return l.skillCategory === axis || cats.includes(axis);
+      })
+      .map((l) => ({ id: l.id, isPrimary: l.skillCategory === axis, skillLevel: l.skillLevel as 'EASY'|'MEDIUM'|'HARD', order: l.order }));
+
+    const rankedNonError = selectAxisLessons(tier, candidates, PER_AXIS_LESSON_CAP);
+    const lessonIds = Array.from(new Set([...errorLessonIds, ...rankedNonError]));
+    lessonIds.forEach((id) => usedLessonIds.add(id));
+
+    const jobIds = jobsByAxis.get(axis) ?? [];
+    const collapsed = tier === 'strong' && errorLessonIds.length === 0;
+
+    if (lessonIds.length === 0 && jobIds.length === 0 && errorLessonIds.length === 0) continue;
+
+    sections.push({ axis, label: SKILL_LABELS[axis], score, tier, collapsed, jobIds, lessonIds, errorLessonIds });
+  }
+
+  return { version: 3, sections: applyPlanCaps(sections, PER_AXIS_LESSON_CAP, PLAN_ACTIVE_LESSON_CAP), generatedFromSessionId: sessionId };
 }
 
 // ============== ROUTER ==============
