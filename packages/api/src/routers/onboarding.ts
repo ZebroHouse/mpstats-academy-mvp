@@ -92,7 +92,13 @@ export const onboardingRouter = router({
         // every registered user reaches here, so this is the canonical lead event.
         // Extra reads (referral, trial) are scoped inside this block so they only
         // run on first completion and a failure never blocks/fails onboarding.
-        if (wasFirstCompletion) {
+        //
+        // Partner-origin users (MPSTATS seamless-entry, user_metadata.partner_source
+        // === 'mpstats') are NOT sent to amoCRM — they are partner traffic, not
+        // platform leads. They stay logged on our side: CarrotQuest (pa_partner_entry
+        // + pa_partner_source at entry time) and queryable in auth.users metadata.
+        const isPartnerUser = ctx.user.user_metadata?.partner_source === 'mpstats';
+        if (wasFirstCompletion && !isPartnerUser) {
           try {
             const [referral, trialSub] = await Promise.all([
               ctx.prisma.referral.findUnique({

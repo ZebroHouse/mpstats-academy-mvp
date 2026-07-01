@@ -119,7 +119,10 @@ async function createPartnerUser(
   const created = await admin.auth.admin.createUser({
     email,
     email_confirm: true,
-    user_metadata: { full_name: name ?? '', passwordless: true, ...(pendingVerify ? { partner_pending_verify: true } : {}) },
+    // partner_source is the DURABLE marker (never cleared, unlike partner_pending_verify
+    // / passwordless): it excludes these users from the amoCRM lead in onboarding.complete
+    // and makes them queryable — SELECT ... WHERE raw_user_meta_data->>'partner_source'='mpstats'.
+    user_metadata: { full_name: name ?? '', passwordless: true, partner_source: 'mpstats', ...(pendingVerify ? { partner_pending_verify: true } : {}) },
   });
   if (created.error || !created.data.user) {
     Sentry.captureException(created.error ?? new Error('createUser returned no user'), { tags: { area: 'partner-entry', stage: 'create-user' } });
