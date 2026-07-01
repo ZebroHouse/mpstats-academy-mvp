@@ -256,6 +256,10 @@ const CATEGORY_KEY_MAP: Record<string, keyof SkillProfile> = {
 };
 
 /**
+ * @deprecated Superseded by `generateAxisPath` (AxisLearningPath v3). No longer
+ * called at runtime (completion, rebuild, and legacy-path-rebuild all use
+ * `generateAxisPath` now). Kept only for reference / potential v2 tooling.
+ *
  * Generate a 4-section learning path based on skill profile and diagnostic errors.
  *
  * Sections:
