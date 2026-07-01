@@ -10,7 +10,7 @@ import { extractLessonIds } from '../utils/lesson-ids';
 import { lessonsToRemoveOnJobRemove } from './learning-jobs-utils';
 import { parseLearningPath } from '@mpstats/shared';
 import type { CourseWithProgress, LessonWithProgress, LearningPathSection, SectionedLearningPath, AxisLearningPath, SkillProfile } from '@mpstats/shared';
-import { generateSectionedPath, generateAxisPath } from './diagnostic';
+import { generateAxisPath } from './diagnostic';
 import { getRecommendedJobsFromGaps } from '../utils/job-matcher';
 import { rebuildLegacyLearningPath } from '../utils/legacy-path-rebuild';
 
@@ -1407,11 +1407,6 @@ export const learningRouter = router({
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'No track to rebuild' });
         }
 
-        // Preserve custom section (v2 only — axis v3 paths have no custom section)
-        const customSection = parsed.version === 2
-          ? parsed.sections.find(s => s.id === 'custom')
-          : undefined;
-
         // Find last completed diagnostic session
         const lastSession = await ctx.prisma.diagnosticSession.findFirst({
           where: { userId: ctx.user.id, status: 'COMPLETED' },
@@ -1421,52 +1416,60 @@ export const learningRouter = router({
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'No completed diagnostic to rebuild from' });
         }
 
-        const skillProfile = await ctx.prisma.skillProfile.findUnique({
+        const skillProfileRow = await ctx.prisma.skillProfile.findUnique({
           where: { userId: ctx.user.id },
         });
-        if (!skillProfile) {
+        if (!skillProfileRow) {
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'No skill profile found for last diagnostic' });
         }
+        const skillProfile: SkillProfile = {
+          analytics: skillProfileRow.analytics,
+          marketing: skillProfileRow.marketing,
+          content: skillProfileRow.content,
+          operations: skillProfileRow.operations,
+          finance: skillProfileRow.finance,
+        };
 
         const answers = await ctx.prisma.diagnosticAnswer.findMany({
           where: { sessionId: lastSession.id },
-          select: { isCorrect: true, sourceData: true, skillCategory: true, questionId: true },
+          select: { isCorrect: true, sourceData: true },
         });
 
-        const sessionData = await ctx.prisma.diagnosticSession.findUnique({
-          where: { id: lastSession.id },
-          select: { questions: true },
+        // Recommend jobs first — generateAxisPath attaches them to axes (mirrors
+        // diagnostic completion). Marketplace filter (D-16) is applied inside.
+        const profileForJobs = await ctx.prisma.userProfile.findUnique({
+          where: { id: ctx.user.id },
+          select: { marketplaces: true },
         });
-        const sessionQuestions = (sessionData?.questions as any[]) || [];
+        const recommendedJobs = await getRecommendedJobsFromGaps(ctx.prisma, {
+          skillProfile,
+          userMarketplaces: profileForJobs?.marketplaces ?? [],
+          limit: 3,
+        });
+        const recommendedJobIds = recommendedJobs.map(j => j.id);
 
-        // Regenerate AI sections
-        const newPath = await generateSectionedPath(
+        // Regenerate axis-centric v3 path (same shape as diagnostic completion).
+        const axisPath = await generateAxisPath(
           ctx.prisma,
           skillProfile,
           lastSession.id,
-          answers.map(a => ({
-            isCorrect: a.isCorrect,
-            sourceData: a.sourceData as any,
-            skillCategory: a.skillCategory,
-            questionId: a.questionId,
-          })),
-          sessionQuestions,
+          answers.map(a => ({ isCorrect: a.isCorrect, sourceData: a.sourceData as any })),
+          recommendedJobs.map(j => ({ id: j.id, matchedAxes: j.matchedAxes })),
         );
 
-        // If custom section exists, prepend and exclude its lessons from AI sections
-        if (customSection && customSection.lessonIds.length > 0) {
-          const customIds = new Set(customSection.lessonIds);
-          newPath.sections = newPath.sections.map(s => ({
-            ...s,
-            lessonIds: s.lessonIds.filter(id => !customIds.has(id)),
-          }));
-          newPath.sections = newPath.sections.filter(s => s.lessonIds.length > 0);
-          newPath.sections.unshift(customSection);
-        }
+        // Union-merge addedJobs with new diagnostic recommendations (D-10).
+        const existingAddedJobs = Array.isArray(existingPath.addedJobs)
+          ? (existingPath.addedJobs as string[])
+          : [];
+        const mergedAddedJobs = Array.from(new Set([...existingAddedJobs, ...recommendedJobIds]));
 
         await ctx.prisma.learningPath.update({
           where: { userId: ctx.user.id },
-          data: { lessons: newPath as any, generatedAt: new Date() },
+          data: {
+            lessons: axisPath as any,
+            addedJobs: mergedAddedJobs as any,
+            generatedAt: new Date(),
+          },
         });
 
         return { rebuilt: true };
