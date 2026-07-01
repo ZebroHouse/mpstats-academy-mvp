@@ -90,6 +90,10 @@ export function RecommendedJobsBlock({ jobs }: { jobs: RecommendedJob[] }) {
       <div className="grid gap-4 md:grid-cols-3">
         {jobs.map((job) => {
           const isInTrack = derivedIsInTrack(job.id, job.isInTrack);
+          const axisReason =
+            job.axis && job.axisLabel && typeof job.axisScore === 'number'
+              ? `Закрывает: ${job.axisLabel} — ${job.axisScore}%${job.rank === 1 ? ' (ваша слабейшая зона)' : ''}`
+              : null;
           return (
             <div key={job.id} className="relative">
               <div
@@ -103,6 +107,7 @@ export function RecommendedJobsBlock({ jobs }: { jobs: RecommendedJob[] }) {
                 onAddToTrack={handleSingleAdd}
                 isAddPending={pendingId === job.id || bulkPending}
               />
+              {axisReason && <p className="mt-2 text-body-sm font-medium text-mp-blue-600">{axisReason}</p>}
             </div>
           );
         })}
