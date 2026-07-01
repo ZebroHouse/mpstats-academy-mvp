@@ -22,6 +22,12 @@ services:
       # Partner-courses section («Инструменты MPSTATS») — enabled on prod after owner
       # sign-off (Phase 62). Runtime flag — flip off by removing this line + up -d.
       PARTNER_COURSES_ENABLED: "true"
+      # Partner seamless-entry endpoint (/api/partner/mpstats/enter) — opened for
+      # partner testers 2026-07-01 (owner sign-off). IP rate-limited (PR #24). The
+      # existing-user magic-link email needs the CarrotQuest pa_partner_magic_link
+      # rule (see docs/partner/carrotquest-magic-link-rule-spec.md) — new emails and
+      # already-logged-in users work without it. Flip off = remove this line + up -d.
+      PARTNER_ENTRY_ENABLED: "true"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health"]
