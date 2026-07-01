@@ -24,11 +24,20 @@ export default async function LearnPage() {
 
   const path = await prisma.learningPath.findUnique({
     where: { userId: user.id },
-    select: { lessons: true },
+    select: { lessons: true, addedJobs: true },
   });
 
-  const lessons = path?.lessons;
-  const hasPlan = Array.isArray(lessons) && lessons.length > 0;
+  const raw = path?.lessons as unknown;
+  const addedJobs = path?.addedJobs;
+  const hasArrayLessons = Array.isArray(raw) && raw.length > 0;
+  const hasSectionLessons =
+    !!raw && typeof raw === 'object' &&
+    Array.isArray((raw as { sections?: unknown[] }).sections) &&
+    (raw as { sections: Array<{ lessonIds?: unknown[]; errorLessonIds?: unknown[] }> }).sections.some(
+      (s) => (s.lessonIds?.length ?? 0) > 0 || (s.errorLessonIds?.length ?? 0) > 0,
+    );
+  const hasAddedJobs = Array.isArray(addedJobs) && addedJobs.length > 0;
+  const hasPlan = hasArrayLessons || hasSectionLessons || hasAddedJobs;
 
   redirect(hasPlan ? '/learn/plan' : '/learn/library');
 }
