@@ -21,6 +21,9 @@ export interface StaticQuestion {
   options: [string, string, string, string];
   explanation: string;
   marketplace: 'WB' | 'OZON';
+  // axis-redesign — links wrong answers to specific lessons for "разбор ошибок".
+  sourceLessonIds?: string[];
+  sourceTimecodes?: Array<{ lessonId: string; label: string; start: number; end: number }>;
 }
 
 const WB: StaticQuestion[] = [

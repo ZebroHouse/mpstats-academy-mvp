@@ -9,6 +9,7 @@ import { handleDatabaseError } from '../utils/db-errors';
 // is kept dormant for potential future admin-driven generation but is not called here.
 import { pickDeckForUser } from '../diagnostic/deck-picker';
 import { shuffleOptions } from '../diagnostic/option-shuffler';
+import { toDiagnosticQuestionSource, buildAnswerSourceData } from '../diagnostic/question-source';
 import { getRecommendedJobsFromGaps } from '../utils/job-matcher';
 import { cqSetUserProps, cqTrackEvent } from '../utils/carrotquest';
 import type { PrismaClient } from '@mpstats/db';
@@ -519,6 +520,7 @@ export const diagnosticRouter = router({
             difficulty: levelToDifficulty(q.level),
             skillCategory: q.axis,
             marketplace: q.marketplace,
+            ...toDiagnosticQuestionSource(q),
           } as DiagnosticQuestion;
         });
       } catch (error) {
@@ -693,11 +695,7 @@ export const diagnosticRouter = router({
             difficulty: question.difficulty,
             skillCategory: question.skillCategory,
             // Source tracing (Phase 23) — links wrong answers to specific lessons/timecodes
-            sourceData: question.sourceChunkIds ? {
-              chunkIds: question.sourceChunkIds,
-              lessonIds: question.sourceLessonIds || [],
-              timecodes: question.sourceTimecodes || [],
-            } : undefined,
+            sourceData: buildAnswerSourceData(question) ?? undefined,
           },
         });
 
