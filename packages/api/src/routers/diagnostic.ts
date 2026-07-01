@@ -35,6 +35,7 @@ import {
   applyPlanCaps,
   PER_AXIS_LESSON_CAP,
   PLAN_ACTIVE_LESSON_CAP,
+  pickJobAxisReason,
 } from '../utils/axis-path';
 import type { JobMatch } from '../utils/job-matcher';
 
@@ -950,11 +951,15 @@ export const diagnosticRouter = router({
         const addedJobIds: string[] = Array.isArray(learningPath?.addedJobs)
           ? (learningPath!.addedJobs as string[])
           : [];
-        const recommendedJobs = await getRecommendedJobsFromGaps(ctx.prisma, {
+        const rawRecommendedJobs = await getRecommendedJobsFromGaps(ctx.prisma, {
           skillProfile,
           userMarketplaces: profile?.marketplaces ?? [],
           addedJobIds,
           limit: 3,
+        });
+        const recommendedJobs = rawRecommendedJobs.map((j) => {
+          const reason = pickJobAxisReason(j.matchedAxes as any, skillProfile, CATEGORY_KEY_MAP as any, SKILL_LABELS);
+          return { ...j, axis: reason?.axis, axisLabel: reason?.axisLabel, axisScore: reason?.axisScore };
         });
 
         return {

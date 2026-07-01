@@ -166,6 +166,10 @@ export interface RecommendedJob {
   rank: 1 | 2 | 3;
   score: number;
   matchedAxes: string[];
+  // Axis reason for results screen «Закрывает: {axisLabel} — {axisScore}%».
+  axis?: string;
+  axisLabel?: string;
+  axisScore?: number;
 }
 
 export interface DiagnosticResult {

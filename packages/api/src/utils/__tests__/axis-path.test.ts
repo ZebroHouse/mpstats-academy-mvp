@@ -103,3 +103,19 @@ describe('applyPlanCaps', () => {
     expect(out[1].lessonIds).toHaveLength(5);
   });
 });
+
+import { pickJobAxisReason } from '../axis-path';
+import { SKILL_LABELS } from '@mpstats/shared';
+
+const KEY_MAP = { ANALYTICS: 'analytics', MARKETING: 'marketing', CONTENT: 'content', OPERATIONS: 'operations', FINANCE: 'finance' } as const;
+
+describe('pickJobAxisReason', () => {
+  const profile = { analytics: 33, marketing: 50, content: 100, operations: 0, finance: 67 } as any;
+  it('picks the weakest matched axis with its score + label', () => {
+    expect(pickJobAxisReason(['ANALYTICS', 'OPERATIONS'] as any, profile, KEY_MAP as any, SKILL_LABELS))
+      .toEqual({ axis: 'OPERATIONS', axisLabel: SKILL_LABELS.OPERATIONS, axisScore: 0 });
+  });
+  it('returns null for empty matched axes', () => {
+    expect(pickJobAxisReason([] as any, profile, KEY_MAP as any, SKILL_LABELS)).toBeNull();
+  });
+});

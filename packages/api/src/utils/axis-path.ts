@@ -1,4 +1,4 @@
-import type { AxisLearningPathSection, SkillCategory } from '@mpstats/shared';
+import type { AxisLearningPathSection, SkillCategory, SkillProfile } from '@mpstats/shared';
 
 export type Tier = 'weak' | 'medium' | 'strong';
 
@@ -99,4 +99,17 @@ export function applyPlanCaps(
   }
 
   return capped;
+}
+
+/** Pick the weakest matched axis for a job + its score/label, for the results-screen reason line. */
+export function pickJobAxisReason(
+  matchedAxes: SkillCategory[],
+  skillProfile: SkillProfile,
+  categoryKeyMap: Record<SkillCategory, keyof SkillProfile>,
+  labels: Record<SkillCategory, string>,
+): { axis: SkillCategory; axisLabel: string; axisScore: number } | null {
+  if (!matchedAxes || matchedAxes.length === 0) return null;
+  const weakest = matchedAxes.reduce((best, ax) =>
+    skillProfile[categoryKeyMap[ax]] < skillProfile[categoryKeyMap[best]] ? ax : best);
+  return { axis: weakest, axisLabel: labels[weakest], axisScore: skillProfile[categoryKeyMap[weakest]] };
 }
