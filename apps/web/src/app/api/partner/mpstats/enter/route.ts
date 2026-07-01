@@ -7,8 +7,16 @@ import { createClient } from '@/lib/supabase/server';
 import { resolvePartnerLessonId } from '@/lib/partner/resolve-module';
 import { verifyPartnerSignature } from '@/lib/partner/signature';
 import { firePartnerEntryLead, sendPartnerConfirmEmail } from '@/lib/carrotquest/emails';
+import { createFixedWindowLimiter, clientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
+
+// Per-IP throttle for this public, unauthenticated endpoint. It can create users,
+// mint sessions, and send emails, so cap scripted abuse: 10 requests / 60s / IP.
+// A legit partner user hits it once; a NAT'd office still fits comfortably.
+const PARTNER_ENTRY_LIMIT = 10;
+const PARTNER_ENTRY_WINDOW_MS = 60_000;
+const partnerEntryLimiter = createFixedWindowLimiter(PARTNER_ENTRY_LIMIT, PARTNER_ENTRY_WINDOW_MS);
 
 /**
  * Public entry from the MPSTATS service. NEVER logs the PII query params.
@@ -26,6 +34,11 @@ export async function GET(request: Request): Promise<Response> {
   const home = () => NextResponse.redirect(new URL('/', origin));
 
   if (process.env.PARTNER_COURSES_ENABLED !== 'true' || process.env.PARTNER_ENTRY_ENABLED !== 'true') return home();
+
+  // Rate-limit only once the endpoint is live (above gate returns early while dark).
+  if (!partnerEntryLimiter.check(clientIp(request), Date.now())) {
+    return new NextResponse('Too Many Requests', { status: 429 });
+  }
 
   const email = (url.searchParams.get('email') || '').trim().toLowerCase();
   if (!email) return home();
