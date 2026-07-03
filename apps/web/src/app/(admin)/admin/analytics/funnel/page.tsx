@@ -3,26 +3,20 @@
 import { useState } from 'react';
 import { trpc } from '@/lib/trpc/client';
 import { StatCard } from '@/components/admin/StatCard';
+import { AnalyticsDateRange, presetRange, rangeToBounds } from '@/components/admin/AnalyticsDateRange';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
 import { UserPlus, ClipboardCheck, CreditCard, FlaskConical, TrendingDown, Share2 } from 'lucide-react';
-
-const PERIODS = [
-  { label: '7d', days: 7 },
-  { label: '14d', days: 14 },
-  { label: '30d', days: 30 },
-  { label: '90d', days: 90 },
-] as const;
 
 const rub = (n: number) => `${n.toLocaleString('ru-RU')} ₽`;
 
 export default function AnalyticsFunnelPage() {
-  const [days, setDays] = useState(30);
-  const funnel = trpc.admin.analytics.getConversionFunnel.useQuery({ days });
-  const trial = trpc.admin.analytics.getTrialConversion.useQuery({ days: 90 });
-  const churn = trpc.admin.analytics.getChurn.useQuery({ days });
-  const attr = trpc.admin.analytics.getAttribution.useQuery({ days });
+  const [range, setRange] = useState(presetRange(30));
+  const { from, to } = rangeToBounds(range);
+  const funnel = trpc.admin.analytics.getConversionFunnel.useQuery({ from, to });
+  const trial = trpc.admin.analytics.getTrialConversion.useQuery({ from, to });
+  const churn = trpc.admin.analytics.getChurn.useQuery({ from, to });
+  const attr = trpc.admin.analytics.getAttribution.useQuery({ from, to });
 
   const f = funnel.data;
   const t = trial.data;
@@ -36,20 +30,12 @@ export default function AnalyticsFunnelPage() {
           <h2 className="text-heading-lg font-bold text-mp-gray-900">Воронка</h2>
           <p className="text-body-sm text-mp-gray-500 mt-1">Конверсия, trial→paid, отток, источники (без тестовых)</p>
         </div>
-        <div className="flex items-center gap-1 bg-mp-gray-100 rounded-lg p-1">
-          {PERIODS.map((p) => (
-            <button key={p.days} onClick={() => setDays(p.days)}
-              className={cn('px-3 py-1.5 text-body-sm font-medium rounded-md transition-all duration-200',
-                days === p.days ? 'bg-white text-mp-blue-600 shadow-sm' : 'text-mp-gray-600 hover:text-mp-gray-900')}>
-              {p.label}
-            </button>
-          ))}
-        </div>
+        <AnalyticsDateRange value={range} onChange={setRange} />
       </div>
 
       {/* Conversion funnel */}
       <Card className="p-5">
-        <h4 className="text-body font-semibold text-mp-gray-900 mb-4">Регистрация → диагностика → оплата ({days}д)</h4>
+        <h4 className="text-body font-semibold text-mp-gray-900 mb-4">Регистрация → диагностика → оплата (за период)</h4>
         {funnel.isLoading ? <Skeleton className="h-20 w-full" /> : f ? (
           <div className="grid grid-cols-3 gap-4">
             <StatCard title="Регистрации" value={f.registered} icon={UserPlus} color="blue" />
@@ -63,7 +49,7 @@ export default function AnalyticsFunnelPage() {
 
       {/* Trial → paid */}
       <Card className="p-5">
-        <h4 className="text-body font-semibold text-mp-gray-900 mb-1">Trial → Paid (когорта за 90д)</h4>
+        <h4 className="text-body font-semibold text-mp-gray-900 mb-1">Trial → Paid (когорта за период)</h4>
         <p className="text-xs text-mp-gray-400 mb-4">Конверсия считается по «дозревшим» триалам (триал уже закончился).</p>
         {trial.isLoading ? <Skeleton className="h-20 w-full" /> : t ? (
           <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
@@ -79,7 +65,7 @@ export default function AnalyticsFunnelPage() {
 
       {/* Churn */}
       <Card className="p-5">
-        <h4 className="text-body font-semibold text-mp-gray-900 mb-1">Отток ({days}д)</h4>
+        <h4 className="text-body font-semibold text-mp-gray-900 mb-1">Отток (за период)</h4>
         <p className="text-xs text-mp-gray-400 mb-4">Приблизительно: churn rate = отмены / текущая активная база.</p>
         {churn.isLoading ? <Skeleton className="h-20 w-full" /> : c ? (
           <div className="grid grid-cols-3 gap-4">
@@ -92,7 +78,7 @@ export default function AnalyticsFunnelPage() {
 
       {/* Attribution */}
       <Card className="p-5">
-        <h4 className="text-body font-semibold text-mp-gray-900 mb-4">Источник выручки ({days}д)</h4>
+        <h4 className="text-body font-semibold text-mp-gray-900 mb-4">Источник выручки (за период)</h4>
         {attr.isLoading ? <Skeleton className="h-16 w-full" /> : a ? (
           <table className="w-full text-body-sm">
             <thead><tr className="border-b border-mp-gray-200">

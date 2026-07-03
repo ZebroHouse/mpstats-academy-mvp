@@ -2,19 +2,12 @@
 
 import { useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc/client';
+import { AnalyticsDateRange, presetRange, rangeToBounds } from '@/components/admin/AnalyticsDateRange';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
 import { Download } from 'lucide-react';
-
-function isoDaysAgo(days: number): string {
-  const d = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
-  return d.toISOString().slice(0, 10);
-}
-function today(): string {
-  return new Date().toISOString().slice(0, 10);
-}
 
 const STATUS_STYLES: Record<string, string> = {
   paid: 'bg-green-50 text-green-700',
@@ -31,22 +24,18 @@ function fmtDateTime(iso: string | null): string {
 }
 
 export default function AnalyticsClientsPage() {
-  const [from, setFrom] = useState(isoDaysAgo(30));
-  const [to, setTo] = useState(today());
+  const [range, setRange] = useState(presetRange(30));
   // Which date the window filters on. 'payment' surfaces clients who paid in the
   // window even if they registered earlier (e.g. an SBP one-off from an old signup).
   const [dateField, setDateField] = useState<'registration' | 'payment'>('registration');
 
-  // Inclusive day bounds in UTC.
-  const range = useMemo(
-    () => ({ from: new Date(`${from}T00:00:00.000Z`), to: new Date(`${to}T23:59:59.999Z`) }),
-    [from, to],
-  );
+  // Inclusive Date bounds in UTC.
+  const bounds = useMemo(() => rangeToBounds(range), [range]);
 
-  const q = trpc.admin.analytics.getClientRegistry.useQuery({ ...range, dateField });
+  const q = trpc.admin.analytics.getClientRegistry.useQuery({ ...bounds, dateField });
   const rows = q.data?.rows ?? [];
 
-  const csvHref = `/api/admin/client-registry?from=${encodeURIComponent(range.from.toISOString())}&to=${encodeURIComponent(range.to.toISOString())}&dateField=${dateField}`;
+  const csvHref = `/api/admin/client-registry?from=${encodeURIComponent(bounds.from.toISOString())}&to=${encodeURIComponent(bounds.to.toISOString())}&dateField=${dateField}`;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -72,16 +61,7 @@ export default function AnalyticsClientsPage() {
               ))}
             </div>
           </div>
-          <div>
-            <label className="text-xs text-mp-gray-500 block mb-1">С</label>
-            <input type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)}
-              className="px-3 py-1.5 border border-mp-gray-200 rounded-lg text-body-sm focus:outline-none focus:ring-2 focus:ring-mp-blue-500" />
-          </div>
-          <div>
-            <label className="text-xs text-mp-gray-500 block mb-1">По</label>
-            <input type="date" value={to} min={from} max={today()} onChange={(e) => setTo(e.target.value)}
-              className="px-3 py-1.5 border border-mp-gray-200 rounded-lg text-body-sm focus:outline-none focus:ring-2 focus:ring-mp-blue-500" />
-          </div>
+          <AnalyticsDateRange value={range} onChange={setRange} />
           <Button asChild variant="outline">
             <a href={csvHref} download>
               <Download className="w-4 h-4 mr-1" />

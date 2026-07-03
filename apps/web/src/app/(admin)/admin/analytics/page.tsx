@@ -4,16 +4,9 @@ import { useState } from 'react';
 import { trpc } from '@/lib/trpc/client';
 import { ActivityChart } from '@/components/admin/ActivityChart';
 import { ActiveUsersSection } from '@/components/admin/ActiveUsersSection';
+import { AnalyticsDateRange, presetRange, rangeToBounds, daySpan } from '@/components/admin/AnalyticsDateRange';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
-
-const PERIODS = [
-  { label: '7d', days: 7 },
-  { label: '14d', days: 14 },
-  { label: '30d', days: 30 },
-  { label: '90d', days: 90 },
-] as const;
 
 function SummaryStat({ label, value }: { label: string; value: string | number }) {
   return (
@@ -25,9 +18,11 @@ function SummaryStat({ label, value }: { label: string; value: string | number }
 }
 
 export default function AnalyticsOverviewPage() {
-  const [days, setDays] = useState(7);
-  const analytics = trpc.admin.analytics.getAnalytics.useQuery({ days });
+  const [range, setRange] = useState(presetRange(7));
+  const { from, to } = rangeToBounds(range);
+  const analytics = trpc.admin.analytics.getAnalytics.useQuery({ from, to });
 
+  const days = daySpan(range);
   const userTotal = analytics.data?.userGrowth.reduce((s, d) => s + d.count, 0) ?? 0;
   const activityTotal = analytics.data?.activity.reduce((s, d) => s + d.count, 0) ?? 0;
   const userAvg = days > 0 ? (userTotal / days).toFixed(1) : '0';
@@ -43,22 +38,7 @@ export default function AnalyticsOverviewPage() {
           <h2 className="text-heading-lg font-bold text-mp-gray-900">Обзор</h2>
           <p className="text-body-sm text-mp-gray-500 mt-1">Рост пользователей и активность</p>
         </div>
-        <div className="flex items-center gap-1 bg-mp-gray-100 rounded-lg p-1">
-          {PERIODS.map((p) => (
-            <button
-              key={p.days}
-              onClick={() => setDays(p.days)}
-              className={cn(
-                'px-3 py-1.5 text-body-sm font-medium rounded-md transition-all duration-200',
-                days === p.days
-                  ? 'bg-white text-mp-blue-600 shadow-sm'
-                  : 'text-mp-gray-600 hover:text-mp-gray-900',
-              )}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
+        <AnalyticsDateRange value={range} onChange={setRange} />
       </div>
 
       {/* Summary stats — controlled by the selector directly above */}
@@ -93,13 +73,13 @@ export default function AnalyticsOverviewPage() {
         </div>
       )}
 
-      {/* Active users — DAU/WAU/MAU with its own internal selector */}
+      {/* Active users — DAU/WAU/MAU over the same shared period */}
       <div className="space-y-6 pt-4">
         <div>
           <h3 className="text-heading font-bold text-mp-gray-900">Активные пользователи</h3>
           <p className="text-body-sm text-mp-gray-500 mt-1">DAU / WAU / MAU и липкость аудитории</p>
         </div>
-        <ActiveUsersSection />
+        <ActiveUsersSection from={from} to={to} />
       </div>
     </div>
   );

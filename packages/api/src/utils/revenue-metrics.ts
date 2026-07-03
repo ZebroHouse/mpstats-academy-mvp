@@ -103,17 +103,21 @@ export interface PaymentRow {
 
 export function groupRevenueByDay(
   payments: PaymentRow[],
-  window?: { days: number; now: Date },
+  window?: { from: Date; to: Date },
 ): { byDay: Array<{ date: string; amount: number }>; total: number } {
   const map = new Map<string, number>();
 
-  // Zero-fill every UTC day in [now-days .. now] so an empty period renders a
-  // flat "0" line with a date axis instead of a blank/broken chart. Without a
+  // Zero-fill every UTC day in [from .. to] inclusive so an empty period renders
+  // a flat "0" line with a date axis instead of a blank/broken chart. Without a
   // window we keep the legacy behaviour (only days that have payments).
   if (window) {
-    const cur = new Date(window.now);
-    cur.setUTCDate(cur.getUTCDate() - window.days);
-    while (cur <= window.now) {
+    const cur = new Date(Date.UTC(
+      window.from.getUTCFullYear(),
+      window.from.getUTCMonth(),
+      window.from.getUTCDate(),
+    ));
+    const end = window.to;
+    while (cur.toISOString().split('T')[0] <= end.toISOString().split('T')[0]) {
       map.set(cur.toISOString().split('T')[0], 0);
       cur.setUTCDate(cur.getUTCDate() + 1);
     }
