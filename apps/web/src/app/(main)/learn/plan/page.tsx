@@ -22,71 +22,18 @@ import { LessonCard } from '@/components/learning/LessonCard';
 import { LearningTabs } from '@/components/learning/LearningTabs';
 import { trpc } from '@/lib/trpc/client';
 import type { LessonWithProgress } from '@mpstats/shared';
-
-// ── helpers ──────────────────────────────────────────────────────────────────
-
-function pluralLessons(n: number): string {
-  if (n % 10 === 1 && n % 100 !== 11) return `${n} урок`;
-  if (n % 10 >= 2 && n % 10 <= 4 && (n % 100 < 10 || n % 100 >= 20)) return `${n} урока`;
-  return `${n} уроков`;
-}
-
-// Per-section description — the priority "label" lives ONCE here in the section
-// header (not duplicated as a badge on every lesson card). UAT 04.06.
-const SECTION_DESCRIPTIONS: Record<string, (count: number) => string> = {
-  errors: (n) => `${pluralLessons(n)} по темам, где были ошибки`,
-  deepening: (n) => `${pluralLessons(n)} для слабых навыков`,
-  growth: (n) => `${pluralLessons(n)} для средних навыков`,
-  advanced: (n) => `${pluralLessons(n)} повышенной сложности`,
-};
-
-// Elegant section identity: a colored left-accent + a small icon chip, on a
-// neutral white header — cohesive instead of four loud full-color blocks.
-const SECTION_STYLES: Record<
-  string,
-  { icon: string; accent: string; chip: string; title: string }
-> = {
-  errors: { icon: '!', accent: 'border-l-red-400', chip: 'bg-red-100 text-red-700', title: 'text-red-700' },
-  deepening: { icon: '↓', accent: 'border-l-mp-blue-400', chip: 'bg-mp-blue-100 text-mp-blue-700', title: 'text-mp-blue-700' },
-  growth: { icon: '↑', accent: 'border-l-mp-green-400', chip: 'bg-mp-green-100 text-mp-green-700', title: 'text-mp-green-700' },
-  advanced: { icon: '★', accent: 'border-l-yellow-400', chip: 'bg-yellow-100 text-yellow-700', title: 'text-yellow-700' },
-};
-
-// Diagnostic-only section order (custom intentionally absent — manual additions
-// live in «Избранное», Wave D / 61-07). Order = priority: errors first.
-const DIAGNOSTIC_SECTION_IDS = ['errors', 'deepening', 'growth', 'advanced'];
+import { AXIS_TIER_STYLE, tierBadgeLabel, axisSectionTitle, type AxisTier } from './axis-section';
 
 // ── page ─────────────────────────────────────────────────────────────────────
 
 export default function PlanPage() {
-  // Only «Ошибки» open by default — focuses attention on the highest priority.
-  const [expandedSections, setExpandedSections] = useState<Set<string>>(new Set(['errors']));
+  // null = follow the backend's per-section `collapsed` default (weak/medium open,
+  // strong folded). Once the user toggles anything we track the explicit set.
+  const [expandedAxes, setExpandedAxes] = useState<Set<string> | null>(null);
 
   const { data: recommendedPath, isLoading } = trpc.learning.getRecommendedPath.useQuery();
 
   const utils = trpc.useUtils();
-
-  const removeFromTrackMutation = trpc.learning.removeFromTrack.useMutation({
-    onMutate: async ({ lessonId }) => {
-      await utils.learning.getRecommendedPath.cancel();
-      const prev = utils.learning.getRecommendedPath.getData();
-      utils.learning.getRecommendedPath.setData(undefined, (old: typeof prev) => {
-        if (!old || !old.sections) return old;
-        const sections = old.sections.map((s: any) => ({
-          ...s,
-          lessons: s.lessons.filter((l: any) => l.id !== lessonId),
-        }));
-        return { ...old, sections } as any;
-      });
-      return { prev };
-    },
-    onError: (_err: unknown, _vars: unknown, ctx: any) => {
-      if (ctx?.prev) utils.learning.getRecommendedPath.setData(undefined, ctx.prev);
-      toast.error('Не удалось убрать урок');
-    },
-    onSuccess: () => toast.success('Урок убран из плана'),
-    onSettled: () => utils.learning.getRecommendedPath.invalidate(),
-  });
 
   const rebuildTrackMutation = trpc.learning.rebuildTrack.useMutation({
     onSuccess: () => {
@@ -96,56 +43,53 @@ export default function PlanPage() {
     onError: () => toast.error('Не удалось обновить план'),
   });
 
-  // Diagnostic sections only — the `custom` section (manual additions) is split off
-  // into «Избранное» in Wave D / 61-07 and must NOT surface as part of «план» now.
-  const diagnosticSections = useMemo(() => {
-    if (!recommendedPath?.sections) return [];
-    return (recommendedPath.sections as any[]).filter((s) => DIAGNOSTIC_SECTION_IDS.includes(s.id));
-  }, [recommendedPath]);
-
-  const hasDiagnosticLessons = diagnosticSections.some((s: any) => s.lessons.length > 0);
-
-  // Recommended jobs (Phase 58). Backend returns addedJobs as { id, slug, title,
-  // marketplace, lessons[] }. План shows them as link-cards (no сердечко).
-  const addedJobs = useMemo(
-    () => (recommendedPath?.addedJobs as any[] | undefined) ?? [],
+  // Axis sections — v3 diagnostic-derived plan only. Narrow on the `isAxis`
+  // discriminant so the union stays honest for typecheck.
+  const axisSections = useMemo(
+    () =>
+      recommendedPath && 'isAxis' in recommendedPath && recommendedPath.isAxis
+        ? recommendedPath.sections
+        : [],
     [recommendedPath],
   );
 
-  // Header progress must count ONLY the visible diagnostic sections — NOT
-  // recommendedPath.totalLessons (which still includes the custom/manual section
-  // that now lives in «Избранное»). Otherwise the header (0/33) contradicts the
-  // rendered sections (e.g. 15). UAT 03.06 (tokarev1195).
-  const visibleTotal = useMemo(
-    () => diagnosticSections.reduce((sum: number, s: any) => sum + s.lessons.length, 0),
-    [diagnosticSections],
-  );
-  const visibleCompleted = useMemo(
-    () =>
-      diagnosticSections.reduce(
-        (sum: number, s: any) => sum + s.lessons.filter((l: any) => l.status === 'COMPLETED').length,
-        0,
-      ),
-    [diagnosticSections],
+  const hasDiagnosticLessons = axisSections.some(
+    (s) => s.lessons.length > 0 || s.errorLessons.length > 0,
   );
 
-  const firstUnfinishedLesson = useMemo(() => {
-    const flat = diagnosticSections.flatMap((s: any) => s.lessons as any[]);
-    return (
-      flat.find((l: any) => l.status === 'IN_PROGRESS') ??
-      flat.find((l: any) => l.status === 'NOT_STARTED') ??
-      null
-    );
-  }, [diagnosticSections]);
+  // Which axes are open: user's explicit toggles, else the backend `collapsed` default.
+  const effectiveExpanded = useMemo(() => {
+    if (expandedAxes) return expandedAxes;
+    return new Set(axisSections.filter((s) => !s.collapsed).map((s) => s.axis));
+  }, [expandedAxes, axisSections]);
 
-  const toggleSection = (sectionId: string) => {
-    setExpandedSections((prev) => {
-      const next = new Set(prev);
-      if (next.has(sectionId)) next.delete(sectionId);
-      else next.add(sectionId);
+  const toggleAxis = (axis: string) => {
+    setExpandedAxes(() => {
+      const next = new Set(effectiveExpanded);
+      if (next.has(axis)) next.delete(axis);
+      else next.add(axis);
       return next;
     });
   };
+
+  // Header progress + «Продолжить с того места» count all axis lessons
+  // (error-review lessons first within each axis, matching the render order).
+  const allAxisLessons = useMemo(
+    () => axisSections.flatMap((s) => [...s.errorLessons, ...s.lessons]),
+    [axisSections],
+  );
+  const visibleTotal = allAxisLessons.length;
+  const visibleCompleted = useMemo(
+    () => allAxisLessons.filter((l) => l.status === 'COMPLETED').length,
+    [allAxisLessons],
+  );
+  const firstUnfinishedLesson = useMemo(
+    () =>
+      allAxisLessons.find((l) => l.status === 'IN_PROGRESS') ??
+      allAxisLessons.find((l) => l.status === 'NOT_STARTED') ??
+      null,
+    [allAxisLessons],
+  );
 
   // ── loading ────────────────────────────────────────────────────────────────
 
@@ -163,14 +107,8 @@ export default function PlanPage() {
     );
   }
 
-  // План is "empty" when there is neither diagnostic-built lessons NOR recommended
-  // jobs to show. addedJobs alone keeps the План non-empty (a jobs-only plan).
-  // NOTE: do NOT gate on `isSectioned` here — legacy flat-format paths (no sections)
-  // still carry addedJobs, and gating on isSectioned would hide the «Рекомендованные
-  // задачи» block from those users (WR-01). hasDiagnosticLessons already requires
-  // sections, so flat paths contribute only via addedJobs.
-  const planIsEmpty =
-    !recommendedPath || (!hasDiagnosticLessons && addedJobs.length === 0);
+  // План is "empty" when there are no diagnostic-built axis lessons to show.
+  const planIsEmpty = !recommendedPath || !hasDiagnosticLessons;
 
   // ── render ─────────────────────────────────────────────────────────────────
 
@@ -278,86 +216,44 @@ export default function PlanPage() {
             </div>
           )}
 
-          {/* ── Рекомендованные задачи — карточки-ссылки из addedJobs ──────── */}
-          {addedJobs.length > 0 && (
-            <div className="space-y-3">
-              <h2 className="text-heading font-semibold text-mp-gray-900">
-                Рекомендованные задачи
-              </h2>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                {addedJobs.map((job: any) => {
-                  const lessons = (job.lessons as any[]) ?? [];
-                  const total = lessons.length;
-                  const completed = lessons.filter(
-                    (l: any) => l.status === 'COMPLETED',
-                  ).length;
-                  return (
-                    <Link
-                      key={job.id}
-                      href={`/learn/job/${job.slug}`}
-                      className="flex items-start gap-3 bg-white border border-mp-gray-200 rounded-xl p-4 shadow-mp-card hover:shadow-mp-card-hover transition-shadow"
-                    >
-                      <div className="p-2 rounded-md bg-mp-gray-50 text-mp-gray-500 shrink-0">
-                        <Wrench className="w-5 h-5" />
-                      </div>
-                      <div className="min-w-0">
-                        <div className="text-xs text-mp-gray-500 mb-0.5">Задача</div>
-                        <div className="text-body font-semibold text-mp-gray-900 leading-snug line-clamp-2">
-                          {job.title}
-                        </div>
-                        <div className="text-body-sm text-mp-gray-500 mt-1">
-                          {total} уроков · прогресс {completed}/{total}
-                        </div>
-                      </div>
-                    </Link>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* ── Рекомендованные уроки — секции-аккордеон по приоритету ─────── */}
+          {/* ── План по компетенциям — ось-аккордеон (weak/medium открыты) ── */}
           {hasDiagnosticLessons && (
             <div className="space-y-3">
-              <h2 className="text-heading font-semibold text-mp-gray-900">
-                Рекомендованные уроки
-              </h2>
-              {diagnosticSections
-                .filter((section: any) => section.lessons.length > 0)
-                .map((section: any) => {
-                  const style = SECTION_STYLES[section.id] ?? SECTION_STYLES.growth;
-                  const isOpen = expandedSections.has(section.id);
-                  const completedInSection = (section.lessons as any[]).filter(
-                    (l: { status: string }) => l.status === 'COMPLETED',
+              <h2 className="text-heading font-semibold text-mp-gray-900">Ваш план по компетенциям</h2>
+              {axisSections
+                .filter(
+                  (s) => s.lessons.length > 0 || s.errorLessons.length > 0 || s.jobs.length > 0,
+                )
+                .map((section) => {
+                  const tier = section.tier as AxisTier;
+                  const style = AXIS_TIER_STYLE[tier] ?? AXIS_TIER_STYLE.medium;
+                  const isOpen = effectiveExpanded.has(section.axis);
+                  const errorLessons = section.errorLessons;
+                  const normalLessons = section.lessons;
+                  const jobs = section.jobs;
+                  const allLessons = [...errorLessons, ...normalLessons];
+                  const completedInSection = allLessons.filter(
+                    (l) => l.status === 'COMPLETED',
                   ).length;
 
                   return (
-                    <Card key={section.id} className={`shadow-mp-card overflow-hidden border-l-4 ${style.accent}`}>
+                    <Card key={section.axis} className={`shadow-mp-card overflow-hidden border-l-4 ${style.accent}`}>
                       <button
-                        onClick={() => toggleSection(section.id)}
+                        onClick={() => toggleAxis(section.axis)}
                         aria-expanded={isOpen}
                         className="w-full text-left px-5 py-4 flex items-center justify-between gap-3 hover:bg-mp-gray-50 transition-colors"
                       >
                         <div className="flex items-center gap-3 min-w-0">
-                          <span
-                            className={`inline-flex items-center justify-center w-9 h-9 rounded-xl text-base font-bold shrink-0 ${style.chip}`}
-                          >
-                            {style.icon}
+                          <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full shrink-0 ${style.chip}`}>
+                            {tierBadgeLabel(tier)}
                           </span>
-                          <div className="min-w-0">
-                            <h3 className={`text-heading font-semibold ${style.title}`}>
-                              {section.title}
-                            </h3>
-                            <p className="text-body-sm text-mp-gray-500">
-                              {(SECTION_DESCRIPTIONS[section.id] ?? SECTION_DESCRIPTIONS.growth)(
-                                section.lessons.length,
-                              )}
-                            </p>
-                          </div>
+                          <h3 className={`text-heading font-semibold ${style.title}`}>
+                            {axisSectionTitle(section.label, section.score)}
+                          </h3>
                         </div>
                         <div className="flex items-center gap-3 shrink-0">
                           <span className="text-body-sm font-medium text-mp-gray-500 tabular-nums">
-                            {completedInSection}/{section.lessons.length}
+                            {completedInSection}/{allLessons.length}
                           </span>
                           <svg
                             className={`w-5 h-5 text-mp-gray-400 transition-transform ${isOpen ? 'rotate-180' : ''}`}
@@ -371,28 +267,67 @@ export default function PlanPage() {
                       </button>
 
                       {isOpen && (
-                        <CardContent className="pt-3 pb-4 px-2 sm:px-5 border-t border-mp-gray-100">
-                          <div className="grid gap-2 sm:gap-3">
-                            {(section.lessons as any[]).map((lesson: any, idx: number) => (
-                              <LessonCard
-                                key={lesson.id}
-                                lesson={
-                                  {
-                                    ...lesson,
-                                    title: `${idx + 1}. ${lesson.title}`,
-                                  } as LessonWithProgress
-                                }
-                                showCourse
-                                courseName={
-                                  ((lesson as unknown) as Record<string, unknown>).courseName as string
-                                }
-                                locked={lesson.locked}
-                                onRemoveFromTrack={() =>
-                                  removeFromTrackMutation.mutate({ lessonId: lesson.id })
-                                }
-                              />
-                            ))}
-                          </div>
+                        <CardContent className="pt-3 pb-4 px-2 sm:px-5 border-t border-mp-gray-100 space-y-4">
+                          {errorLessons.length > 0 && (
+                            <div className="space-y-2">
+                              <p className="text-body-sm font-bold text-red-700">⚠ Разбор ошибки</p>
+                              <div className="grid gap-2 sm:gap-3">
+                                {errorLessons.map((lesson, idx) => (
+                                  <LessonCard
+                                    key={lesson.id}
+                                    lesson={{ ...lesson, title: `${idx + 1}. ${lesson.title}` } as LessonWithProgress}
+                                    showCourse
+                                    courseName={(lesson as Record<string, unknown>).courseName as string}
+                                    locked={lesson.locked}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                          {normalLessons.length > 0 && (
+                            <div className="grid gap-2 sm:gap-3">
+                              {normalLessons.map((lesson, idx) => (
+                                <LessonCard
+                                  key={lesson.id}
+                                  lesson={{ ...lesson, title: `${idx + 1}. ${lesson.title}` } as LessonWithProgress}
+                                  showCourse
+                                  courseName={(lesson as Record<string, unknown>).courseName as string}
+                                  locked={lesson.locked}
+                                />
+                              ))}
+                            </div>
+                          )}
+                          {jobs.length > 0 && (
+                            <div className="space-y-2">
+                              <p className="text-body-sm font-semibold text-mp-gray-700">Задачи по этой компетенции</p>
+                              <div className="grid gap-3 sm:grid-cols-2">
+                                {jobs.map((job) => {
+                                  const jl = job.lessons ?? [];
+                                  const done = jl.filter((l) => l.status === 'COMPLETED').length;
+                                  return (
+                                    <Link
+                                      key={job.id}
+                                      href={`/learn/job/${job.slug}`}
+                                      className="flex items-start gap-3 bg-white border border-mp-gray-200 rounded-xl p-4 shadow-mp-card hover:shadow-mp-card-hover transition-shadow"
+                                    >
+                                      <div className="p-2 rounded-md bg-mp-gray-50 text-mp-gray-500 shrink-0">
+                                        <Wrench className="w-5 h-5" />
+                                      </div>
+                                      <div className="min-w-0">
+                                        <div className="text-xs text-mp-gray-500 mb-0.5">Задача</div>
+                                        <div className="text-body font-semibold text-mp-gray-900 leading-snug line-clamp-2">
+                                          {job.title}
+                                        </div>
+                                        <div className="text-body-sm text-mp-gray-500 mt-1">
+                                          {jl.length} уроков · прогресс {done}/{jl.length}
+                                        </div>
+                                      </div>
+                                    </Link>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
                         </CardContent>
                       )}
                     </Card>
@@ -401,27 +336,20 @@ export default function PlanPage() {
             </div>
           )}
 
-          {/* Re-diagnostic CTA when errors section is fully completed */}
-          {diagnosticSections
-            .find((s: { id: string }) => s.id === 'errors')
-            ?.lessons.length > 0 &&
-            diagnosticSections
-              .find((s: { id: string }) => s.id === 'errors')
-              ?.lessons.every((l: { status: string }) => l.status === 'COMPLETED') && (
-              <Card className="shadow-mp-card border-mp-green-200 bg-gradient-to-br from-mp-green-50 to-white">
-                <CardContent className="py-8 text-center">
-                  <h3 className="text-heading text-mp-gray-900 mb-2">
-                    Отлично! Все ошибки проработаны
-                  </h3>
-                  <p className="text-body text-mp-gray-500 mb-4">
-                    Хотите проверить, как вырос ваш уровень? Пройдите диагностику снова!
-                  </p>
-                  <Link href="/diagnostic">
-                    <Button variant="outline">Пройти диагностику снова</Button>
-                  </Link>
-                </CardContent>
-              </Card>
-            )}
+          {/* Re-diagnostic CTA when the whole plan is complete */}
+          {visibleTotal > 0 && visibleCompleted === visibleTotal && (
+            <Card className="shadow-mp-card border-mp-green-200 bg-gradient-to-br from-mp-green-50 to-white">
+              <CardContent className="py-8 text-center">
+                <h3 className="text-heading text-mp-gray-900 mb-2">Отлично! План пройден</h3>
+                <p className="text-body text-mp-gray-500 mb-4">
+                  Хотите проверить, как вырос ваш уровень? Пройдите диагностику снова!
+                </p>
+                <Link href="/diagnostic">
+                  <Button variant="outline">Пройти диагностику снова</Button>
+                </Link>
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
     </div>

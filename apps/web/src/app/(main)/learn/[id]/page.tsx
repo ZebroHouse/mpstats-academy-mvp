@@ -364,13 +364,13 @@ export default function LessonPage() {
     // D-13: silent no-op fallback если коммент удалён или недоступен
   }, [data?.lesson?.id]);
 
-  // Extract diagnostic hints for this lesson from the errors section
-  const lessonHints = useMemo(() => {
-    if (!recommendedPath?.isSectioned || !recommendedPath.sections) return [];
-    const errorsSection = recommendedPath.sections.find((s: { id: string }) => s.id === 'errors');
-    if (!errorsSection?.hints) return [];
-    return errorsSection.hints.filter((h: { lessonId: string }) => h.lessonId === lessonId);
-  }, [recommendedPath, lessonId]);
+  // DORMANT (backlog, owner-decided 2026-07-01): the per-lesson diagnostic hint
+  // (question text + clickable timecodes that seek the video to "where the answer
+  // is") is retired under the v3 axis redesign — getRecommendedPath no longer
+  // carries hints/timecodes. Kept as scaffold on purpose; do NOT delete. Reviving
+  // needs question-level timecodes (deeper RAG chunk match, not lesson-level MAX,
+  // or methodologist timecodes). The DiagnosticHint render below stays guarded.
+  const lessonHints = useMemo<never[]>(() => [], []);
 
   // Summary always loads (no longer gated by tab)
   const { data: summaryData, isLoading: summaryLoading, error: summaryError } = trpc.ai.getLessonSummary.useQuery(
@@ -761,7 +761,8 @@ export default function LessonPage() {
             </Card>
           )}
 
-          {/* Diagnostic hint (only for lessons in Errors section) */}
+          {/* Diagnostic hint — DORMANT scaffold (see lessonHints above); always
+              empty under v3. Kept for the backlogged "seek-to-answer" revival. */}
           {lessonHints.length > 0 && (
             <DiagnosticHint
               lessonId={lessonId}

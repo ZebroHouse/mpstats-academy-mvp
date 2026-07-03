@@ -8,12 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { SkillRadarChart } from '@/components/charts/RadarChart';
-import { LessonCard } from '@/components/learning/LessonCard';
 import { RecommendedJobsBlock } from '@/components/diagnostic/RecommendedJobsBlock';
+import { HowLearningWorks } from '@/components/diagnostic/HowLearningWorks';
+import { ResultsLessonTeaser } from '@/components/diagnostic/ResultsLessonTeaser';
 import { trpc } from '@/lib/trpc/client';
 import { reachGoal } from '@/lib/analytics/metrika';
 import { METRIKA_GOALS } from '@/lib/analytics/constants';
-import type { LessonWithProgress } from '@mpstats/shared';
 
 const PRIORITY_STYLES = {
   HIGH: { badge: 'destructive' as const, label: 'Высокий', tooltip: 'Большой разрыв с целью — рекомендуем начать с этой темы' },
@@ -248,89 +248,32 @@ export default function DiagnosticResultsPage() {
         </CardContent>
       </Card>
 
-      {/* CTA */}
+      {/* Как устроено обучение (spec §6.3) */}
+      <HowLearningWorks />
+
+      {/* С чего начать — задачи с axis-подписью «почему» */}
+      <RecommendedJobsBlock jobs={results.recommendedJobs ?? []} />
+
+      {/* Или начните с отдельного урока — capped teaser (spec §6.5) */}
+      {recommendedPath && 'isAxis' in recommendedPath && recommendedPath.isAxis && (
+        <ResultsLessonTeaser sections={recommendedPath.sections} />
+      )}
+
+      {/* Главный CTA */}
       <Card variant="gradient" className="shadow-mp-lg">
         <CardContent className="py-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div>
-              <h3 className="font-sans text-2xl sm:text-3xl font-bold tracking-tight text-mp-gray-900">
-                Готов персональный план обучения
-              </h3>
-              <p className="text-body text-mp-gray-500 mt-1">
-                {results.recommendedPath.length} уроков для закрытия пробелов в знаниях
-              </p>
+              <h3 className="font-sans text-2xl sm:text-3xl font-bold tracking-tight text-mp-gray-900">Готов персональный план обучения</h3>
+              <p className="text-body text-mp-gray-500 mt-1">План собран по вашим слабым зонам — слабейшие сверху</p>
             </div>
             <div className="flex gap-3">
-              <Link href="/learn">
-                <Button size="lg" className="shadow-mp-md">
-                  Начать обучение
-                </Button>
-              </Link>
-              <Link href="/dashboard">
-                <Button variant="outline" size="lg">
-                  На главную
-                </Button>
-              </Link>
+              <Link href="/learn/plan"><Button size="lg" className="shadow-mp-md">Открыть персональный план →</Button></Link>
+              <Link href="/dashboard"><Button variant="outline" size="lg">На главную</Button></Link>
             </div>
           </div>
         </CardContent>
       </Card>
-
-      {/* Phase 58: top-3 recommended jobs (playbooks) */}
-      <RecommendedJobsBlock jobs={results.recommendedJobs ?? []} />
-
-      {/* Track preview with gating */}
-      {recommendedPath && recommendedPath.lessons.length > 0 && (() => {
-        const showGating = recommendedPath.hasPlatformSubscription === false
-          && recommendedPath.lessons.some(l => l.locked);
-        const visibleCount = showGating ? 3 : recommendedPath.lessons.length;
-        const visibleLessons = recommendedPath.lessons.slice(0, visibleCount);
-        const hiddenLessons = showGating ? recommendedPath.lessons.slice(visibleCount) : [];
-
-        return (
-          <div className="space-y-3">
-            <h3 className="text-heading text-mp-gray-900">Рекомендованные уроки</h3>
-            {visibleLessons.map((lesson, idx) => (
-              <LessonCard
-                key={lesson.id}
-                lesson={{ ...lesson, title: `${idx + 1}. ${lesson.title}` } as LessonWithProgress}
-                showCourse
-                courseName={lesson.courseName}
-                isRecommended
-                locked={lesson.locked}
-              />
-            ))}
-            {hiddenLessons.length > 0 && (
-              <>
-                <div className="blur-sm pointer-events-none select-none space-y-3">
-                  {hiddenLessons.map((lesson, idx) => (
-                    <LessonCard
-                      key={lesson.id}
-                      lesson={{ ...lesson, title: `${visibleCount + idx + 1}. ${lesson.title}` } as LessonWithProgress}
-                      showCourse
-                      courseName={lesson.courseName}
-                      locked
-                    />
-                  ))}
-                </div>
-                <Card className="shadow-mp-card border-mp-blue-200 bg-gradient-to-br from-mp-blue-50 to-white">
-                  <CardContent className="py-8 text-center">
-                    <h3 className="text-heading text-mp-gray-900 mb-2">
-                      Оформите полный доступ для персонального трека обучения
-                    </h3>
-                    <p className="text-body text-mp-gray-500 mb-4">
-                      Ещё {hiddenLessons.length} уроков доступны с полной подпиской
-                    </p>
-                    <Link href="/pricing">
-                      <Button size="lg">Оформить полный доступ</Button>
-                    </Link>
-                  </CardContent>
-                </Card>
-              </>
-            )}
-          </div>
-        );
-      })()}
     </div>
   );
 }

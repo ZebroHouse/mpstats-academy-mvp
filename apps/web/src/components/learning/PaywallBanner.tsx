@@ -16,7 +16,7 @@ export function PaywallBanner({ remainingFreeCount }: PaywallBannerProps) {
             ? `Вам доступно ещё ${remainingFreeCount} бесплатных уроков в этом курсе`
             : 'Все бесплатные уроки просмотрены'}
         </p>
-        <Link href="/pricing">
+        <Link href="/billing">
           <Button variant="outline" size="sm" className="shrink-0">
             Оформить подписку
           </Button>
@@ -39,7 +39,7 @@ export function CourseLockBanner({ lockedCount }: CourseLockBannerProps) {
         <p className="text-body-sm text-mp-gray-700">
           Ещё {lockedCount} уроков доступны по подписке
         </p>
-        <Link href="/pricing" className="text-body-sm text-mp-blue-600 hover:text-mp-blue-700 font-medium shrink-0">
+        <Link href="/billing" className="text-body-sm text-mp-blue-600 hover:text-mp-blue-700 font-medium shrink-0">
           Подробнее
         </Link>
       </div>

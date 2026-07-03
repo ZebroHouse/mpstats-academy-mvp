@@ -9,11 +9,12 @@ import { handleDatabaseError } from '../utils/db-errors';
 // is kept dormant for potential future admin-driven generation but is not called here.
 import { pickDeckForUser } from '../diagnostic/deck-picker';
 import { shuffleOptions } from '../diagnostic/option-shuffler';
+import { toDiagnosticQuestionSource, buildAnswerSourceData } from '../diagnostic/question-source';
 import { getRecommendedJobsFromGaps } from '../utils/job-matcher';
 import { cqSetUserProps, cqTrackEvent } from '../utils/carrotquest';
 import type { PrismaClient } from '@mpstats/db';
 import {
-  parseLearningPath,
+  SKILL_LABELS,
 } from '@mpstats/shared';
 import type {
   DiagnosticResult,
@@ -24,7 +25,19 @@ import type {
   DiagnosticQuestion,
   SectionedLearningPath,
   LearningPathSection,
+  AxisLearningPath,
+  AxisLearningPathSection,
 } from '@mpstats/shared';
+import {
+  scoreToTier,
+  selectAxisLessons,
+  collectErrorLessonsByAxis,
+  applyPlanCaps,
+  PER_AXIS_LESSON_CAP,
+  PLAN_ACTIVE_LESSON_CAP,
+  pickJobAxisReason,
+} from '../utils/axis-path';
+import type { JobMatch } from '../utils/job-matcher';
 
 // ============== CONSTANTS ==============
 
@@ -243,6 +256,10 @@ const CATEGORY_KEY_MAP: Record<string, keyof SkillProfile> = {
 };
 
 /**
+ * @deprecated Superseded by `generateAxisPath` (AxisLearningPath v3). No longer
+ * called at runtime (completion, rebuild, and legacy-path-rebuild all use
+ * `generateAxisPath` now). Kept only for reference / potential v2 tooling.
+ *
  * Generate a 4-section learning path based on skill profile and diagnostic errors.
  *
  * Sections:
@@ -417,6 +434,68 @@ export async function generateSectionedPath(
   };
 }
 
+const AXIS_ORDER: SkillCategory[] = ['ANALYTICS', 'MARKETING', 'CONTENT', 'OPERATIONS', 'FINANCE'];
+
+/** Build AxisLearningPath v3: one section per canonical axis, score asc. Never touches LessonProgress. */
+export async function generateAxisPath(
+  prisma: PrismaClient,
+  skillProfile: SkillProfile,
+  sessionId: string,
+  answers: Array<{ isCorrect: boolean; sourceData: any }>,
+  recommendedJobs: Array<Pick<JobMatch, 'id' | 'matchedAxes'>>,
+): Promise<AxisLearningPath> {
+  const allLessons = await prisma.lesson.findMany({
+    where: { isHidden: false, course: { isHidden: false, partnerKey: null } },
+    select: { id: true, skillCategory: true, skillCategories: true, skillLevel: true, order: true },
+    orderBy: { order: 'asc' },
+  });
+
+  const lessonAxis = new Map<string, SkillCategory>(allLessons.map((l) => [l.id, l.skillCategory as SkillCategory]));
+  const errorsByAxis = collectErrorLessonsByAxis(answers, lessonAxis);
+
+  const jobsByAxis = new Map<SkillCategory, string[]>();
+  for (const job of recommendedJobs) {
+    const matched = ((job.matchedAxes ?? []) as SkillCategory[]);
+    if (matched.length === 0) continue;
+    const weakest = matched.reduce((best, ax) =>
+      skillProfile[CATEGORY_KEY_MAP[ax]] < skillProfile[CATEGORY_KEY_MAP[best]] ? ax : best);
+    const list = jobsByAxis.get(weakest) ?? [];
+    list.push(job.id);
+    jobsByAxis.set(weakest, list);
+  }
+
+  const usedLessonIds = new Set<string>();
+  const axesByScore = [...AXIS_ORDER].sort((a, b) => skillProfile[CATEGORY_KEY_MAP[a]] - skillProfile[CATEGORY_KEY_MAP[b]]);
+
+  const sections: AxisLearningPathSection[] = [];
+  for (const axis of axesByScore) {
+    const score = skillProfile[CATEGORY_KEY_MAP[axis]];
+    const tier = scoreToTier(score);
+    const errorLessonIds = errorsByAxis.get(axis) ?? [];
+
+    const candidates = allLessons
+      .filter((l) => {
+        if (usedLessonIds.has(l.id)) return false;
+        const cats = (l.skillCategories as string[] | null) ?? [];
+        return l.skillCategory === axis || cats.includes(axis);
+      })
+      .map((l) => ({ id: l.id, isPrimary: l.skillCategory === axis, skillLevel: l.skillLevel as 'EASY'|'MEDIUM'|'HARD', order: l.order }));
+
+    const rankedNonError = selectAxisLessons(tier, candidates, PER_AXIS_LESSON_CAP);
+    const lessonIds = Array.from(new Set([...errorLessonIds, ...rankedNonError]));
+    lessonIds.forEach((id) => usedLessonIds.add(id));
+
+    const jobIds = jobsByAxis.get(axis) ?? [];
+    const collapsed = tier === 'strong' && errorLessonIds.length === 0;
+
+    if (lessonIds.length === 0 && jobIds.length === 0 && errorLessonIds.length === 0) continue;
+
+    sections.push({ axis, label: SKILL_LABELS[axis], score, tier, collapsed, jobIds, lessonIds, errorLessonIds });
+  }
+
+  return { version: 3, sections: applyPlanCaps(sections, PER_AXIS_LESSON_CAP, PLAN_ACTIVE_LESSON_CAP), generatedFromSessionId: sessionId };
+}
+
 // ============== ROUTER ==============
 
 export const diagnosticRouter = router({
@@ -519,6 +598,7 @@ export const diagnosticRouter = router({
             difficulty: levelToDifficulty(q.level),
             skillCategory: q.axis,
             marketplace: q.marketplace,
+            ...toDiagnosticQuestionSource(q),
           } as DiagnosticQuestion;
         });
       } catch (error) {
@@ -693,11 +773,7 @@ export const diagnosticRouter = router({
             difficulty: question.difficulty,
             skillCategory: question.skillCategory,
             // Source tracing (Phase 23) — links wrong answers to specific lessons/timecodes
-            sourceData: question.sourceChunkIds ? {
-              chunkIds: question.sourceChunkIds,
-              lessonIds: question.sourceLessonIds || [],
-              timecodes: question.sourceTimecodes || [],
-            } : undefined,
+            sourceData: buildAnswerSourceData(question) ?? undefined,
           },
         });
 
@@ -750,69 +826,7 @@ export const diagnosticRouter = router({
             data: { status: 'COMPLETED', completedAt: new Date() },
           });
 
-          // Generate and persist recommended learning path (sectioned with error tracing)
-          let pathData: any;
-          try {
-            // Fetch all answers with sourceData for section generation
-            const allAnswersWithSource = await ctx.prisma.diagnosticAnswer.findMany({
-              where: { sessionId: input.sessionId },
-              select: { isCorrect: true, sourceData: true, skillCategory: true, questionId: true },
-            });
-
-            // Get question texts from session for hints
-            const sessionData = await ctx.prisma.diagnosticSession.findUnique({
-              where: { id: input.sessionId },
-              select: { questions: true },
-            });
-            const sessionQuestions = (sessionData?.questions as DiagnosticQuestion[] | null) || [];
-
-            pathData = await generateSectionedPath(
-              ctx.prisma,
-              skillProfile,
-              input.sessionId,
-              allAnswersWithSource.map(a => ({
-                isCorrect: a.isCorrect,
-                sourceData: a.sourceData as any,
-                skillCategory: a.skillCategory,
-                questionId: a.questionId,
-              })),
-              sessionQuestions,
-            );
-            console.log('[diagnostic] Sectioned path generated:', JSON.stringify({
-              version: (pathData as any).version,
-              sectionCount: (pathData as any).sections?.length,
-              sections: (pathData as any).sections?.map((s: any) => ({ id: s.id, lessons: s.lessonIds?.length })),
-              skillProfile,
-            }));
-          } catch (err) {
-            console.error('[diagnostic] Sectioned path generation failed, falling back to flat:', err);
-            const flatPath = await generateFullRecommendedPath(ctx.prisma, skillProfile);
-            pathData = flatPath;
-          }
-
-          // Preserve custom section from existing path (Phase 32)
-          const existingPathForCustom = await ctx.prisma.learningPath.findUnique({ where: { userId: ctx.user.id } });
-          if (existingPathForCustom?.lessons) {
-            const existingParsed = parseLearningPath(existingPathForCustom.lessons);
-            if (!Array.isArray(existingParsed) && existingParsed.version === 2) {
-              const customSection = existingParsed.sections.find(s => s.id === 'custom');
-              if (customSection && customSection.lessonIds.length > 0) {
-                if (!Array.isArray(pathData) && 'sections' in pathData) {
-                  // Remove custom lesson IDs from AI sections to prevent duplicates
-                  const customIds = new Set(customSection.lessonIds);
-                  pathData.sections = pathData.sections.map((s: LearningPathSection) => ({
-                    ...s,
-                    lessonIds: s.lessonIds.filter(id => !customIds.has(id)),
-                  }));
-                  // Filter out empty AI sections
-                  pathData.sections = pathData.sections.filter((s: LearningPathSection) => s.lessonIds.length > 0);
-                  // Prepend custom section
-                  pathData.sections.unshift(customSection);
-                }
-              }
-            }
-          }
-
+          // Recommend jobs first — generateAxisPath attaches them to axes.
           // Phase 58 D-10: union-merge addedJobs with new diagnostic recommendations.
           // Marketplace filter (D-16) is applied inside getRecommendedJobsFromGaps.
           const profileForJobs = await ctx.prisma.userProfile.findUnique({
@@ -825,6 +839,25 @@ export const diagnosticRouter = router({
             limit: 3,
           });
           const newRecommendedJobIds = newRecommendedJobs.map(j => j.id);
+
+          // Generate and persist recommended learning path (axis-centric v3 with error tracing)
+          let pathData: any;
+          try {
+            const allAnswersWithSource = await ctx.prisma.diagnosticAnswer.findMany({
+              where: { sessionId: input.sessionId },
+              select: { isCorrect: true, sourceData: true },
+            });
+            pathData = await generateAxisPath(
+              ctx.prisma,
+              skillProfile,
+              input.sessionId,
+              allAnswersWithSource.map((a) => ({ isCorrect: a.isCorrect, sourceData: a.sourceData as any })),
+              newRecommendedJobs.map((j) => ({ id: j.id, matchedAxes: j.matchedAxes })),
+            );
+          } catch (err) {
+            console.error('[diagnostic] Axis path generation failed, falling back to flat:', err);
+            pathData = await generateFullRecommendedPath(ctx.prisma, skillProfile);
+          }
 
           // Co-locate lessons + addedJobs writes inside a single $transaction so a
           // partial failure can never leave LearningPath half-updated (Wave 4 Case C).
@@ -922,11 +955,15 @@ export const diagnosticRouter = router({
         const addedJobIds: string[] = Array.isArray(learningPath?.addedJobs)
           ? (learningPath!.addedJobs as string[])
           : [];
-        const recommendedJobs = await getRecommendedJobsFromGaps(ctx.prisma, {
+        const rawRecommendedJobs = await getRecommendedJobsFromGaps(ctx.prisma, {
           skillProfile,
           userMarketplaces: profile?.marketplaces ?? [],
           addedJobIds,
           limit: 3,
+        });
+        const recommendedJobs = rawRecommendedJobs.map((j) => {
+          const reason = pickJobAxisReason(j.matchedAxes as any, skillProfile, CATEGORY_KEY_MAP as any, SKILL_LABELS);
+          return { ...j, axis: reason?.axis, axisLabel: reason?.axisLabel, axisScore: reason?.axisScore };
         });
 
         return {
