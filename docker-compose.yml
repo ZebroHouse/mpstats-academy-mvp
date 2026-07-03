@@ -9,6 +9,9 @@ services:
         NEXT_PUBLIC_SITE_URL: ${NEXT_PUBLIC_SITE_URL}
         NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID: ${NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID}
         NEXT_PUBLIC_YANDEX_ID: ${NEXT_PUBLIC_YANDEX_ID}
+        # Referral pay-gated (i2) copy. Empty = i1. Set to "true" (+ DB flag
+        # referral_pay_gated=true) to go live with combat-mode referral.
+        NEXT_PUBLIC_REFERRAL_PAY_GATED: ${NEXT_PUBLIC_REFERRAL_PAY_GATED:-}
         SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY}
         OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
         DATABASE_URL: ${DATABASE_URL}
