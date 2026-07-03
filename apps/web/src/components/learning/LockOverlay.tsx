@@ -25,7 +25,7 @@ export function LockOverlay({ lessonTitle }: LockOverlayProps) {
         <p className="text-body text-mp-gray-500 mb-6 max-w-md mx-auto">
           Оформите подписку, чтобы получить доступ к этому и другим урокам
         </p>
-        <Link href="/pricing">
+        <Link href="/billing">
           <Button size="lg">
             Оформить подписку
           </Button>
