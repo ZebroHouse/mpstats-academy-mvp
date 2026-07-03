@@ -14,13 +14,15 @@ const TABS = [
   { label: 'Чекпоинты', href: '/admin/analytics/checkpoints' },
 ] as const;
 
-export function AnalyticsTabs() {
+export function AnalyticsTabs({ role }: { role?: string }) {
   const pathname = usePathname();
+  // SALES only has access to the client registry — show just that tab.
+  const tabs = role === 'SALES' ? TABS.filter((t) => t.href === '/admin/analytics/clients') : TABS;
 
   return (
     <div className="border-b border-mp-gray-200">
       <nav className="flex gap-1 -mb-px overflow-x-auto">
-        {TABS.map((tab) => {
+        {tabs.map((tab) => {
           const isActive =
             tab.href === '/admin/analytics'
               ? pathname === '/admin/analytics'

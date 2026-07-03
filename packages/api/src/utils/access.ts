@@ -108,7 +108,7 @@ export function isLessonAccessible(
 
 /**
  * Fetch role-based admin bypass flag for a user.
- * ADMIN and SUPERADMIN get full access regardless of subscription.
+ * ADMIN, SUPERADMIN and SALES get full access regardless of subscription.
  */
 export async function getUserAdminBypass(
   userId: string,
@@ -118,7 +118,7 @@ export async function getUserAdminBypass(
     where: { id: userId },
     select: { role: true },
   });
-  return profile?.role === 'ADMIN' || profile?.role === 'SUPERADMIN';
+  return profile?.role === 'ADMIN' || profile?.role === 'SUPERADMIN' || profile?.role === 'SALES';
 }
 
 /**
@@ -135,12 +135,12 @@ export async function checkLessonAccess(
     return { hasAccess: true, reason: 'billing_disabled', hasPlatformSubscription: false };
   }
 
-  // Admin/Superadmin bypass — full access regardless of subscription
+  // Admin/Superadmin/Sales bypass — full access regardless of subscription
   const userProfile = await prisma.userProfile.findUnique({
     where: { id: userId },
     select: { role: true },
   });
-  if (userProfile?.role === 'ADMIN' || userProfile?.role === 'SUPERADMIN') {
+  if (userProfile?.role === 'ADMIN' || userProfile?.role === 'SUPERADMIN' || userProfile?.role === 'SALES') {
     return { hasAccess: true, reason: 'admin_bypass', hasPlatformSubscription: false };
   }
 

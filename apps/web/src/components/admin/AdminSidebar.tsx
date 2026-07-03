@@ -90,20 +90,41 @@ const navItems = [
     icon: Settings,
     superadminOnly: true,
   },
+  // SALES-only entry: the sole nav item a Sales user sees. Points straight at the
+  // client registry; every other item is hidden for SALES (and this one is hidden
+  // for full admins, who reach clients via the Analytics tab).
+  {
+    title: 'Клиенты',
+    href: '/admin/analytics/clients',
+    icon: Users,
+    superadminOnly: false,
+    salesOnly: true,
+  },
 ];
 
 function NavLinks({ userRole, pathname, onNavigate }: { userRole: string; pathname: string; onNavigate?: () => void }) {
+  // SALES can't call these admin procedures (data layer denies them) and never
+  // sees the badged items anyway — skip the queries to avoid 60s FORBIDDEN spam.
+  const isSales = userRole === 'SALES';
   const newComments = trpc.admin.getNewCommentsCount.useQuery(undefined, {
     refetchInterval: 60_000,
+    enabled: !isSales,
   });
   const referralCounts = trpc.referral.adminStatusCounts.useQuery(undefined, {
     refetchInterval: 60_000,
+    enabled: !isSales,
   });
 
   return (
     <>
       {navItems
-        .filter((item) => !item.superadminOnly || userRole === 'SUPERADMIN')
+        .filter((item) => {
+          const salesOnly = 'salesOnly' in item && item.salesOnly === true;
+          // SALES sees only its dedicated items; everyone else sees the rest
+          // (with the superadmin filter), never the sales-only duplicates.
+          if (userRole === 'SALES') return salesOnly;
+          return !salesOnly && (!item.superadminOnly || userRole === 'SUPERADMIN');
+        })
         .map((item) => {
           // Exact match for /admin/referrals (so /admin/referrals/codes doesn't
           // also highlight the parent Referrals entry).

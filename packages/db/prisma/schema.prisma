@@ -21,6 +21,7 @@ enum Role {
   USER
   ADMIN
   SUPERADMIN
+  SALES
 }
 
 model UserProfile {

@@ -9,7 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Search } from 'lucide-react';
 
-type Role = 'USER' | 'ADMIN' | 'SUPERADMIN';
+type Role = 'USER' | 'ADMIN' | 'SUPERADMIN' | 'SALES';
 
 export default function UsersPage() {
   const [search, setSearch] = useState('');

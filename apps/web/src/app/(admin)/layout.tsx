@@ -2,6 +2,13 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { prisma } from '@mpstats/db';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
+import { SalesGate } from '@/components/admin/SalesGate';
+
+const ROLE_BADGE: Record<string, string> = {
+  SUPERADMIN: 'Superadmin',
+  SALES: 'Продажи',
+  ADMIN: 'Admin',
+};
 
 export default async function AdminLayout({
   children,
@@ -21,12 +28,14 @@ export default async function AdminLayout({
     select: { role: true },
   });
 
-  if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'SUPERADMIN')) {
+  if (!profile || (profile.role !== 'ADMIN' && profile.role !== 'SUPERADMIN' && profile.role !== 'SALES')) {
     redirect('/dashboard');
   }
 
   return (
     <div className="min-h-screen bg-mp-gray-50">
+      {/* SALES role is pinned to the client-registry page (data layer denies the rest) */}
+      <SalesGate role={profile.role} />
       {/* Admin Sidebar — fixed on desktop */}
       <AdminSidebar userRole={profile.role} />
 
@@ -43,7 +52,7 @@ export default async function AdminLayout({
                 {user.email}
               </span>
               <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-mp-blue-100 text-mp-blue-700">
-                {profile.role === 'SUPERADMIN' ? 'Superadmin' : 'Admin'}
+                {ROLE_BADGE[profile.role] ?? 'Admin'}
               </span>
               <div className="w-8 h-8 rounded-full bg-mp-blue-100 flex items-center justify-center">
                 <span className="text-xs font-medium text-mp-blue-700">
