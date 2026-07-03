@@ -17,12 +17,13 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  vi.unstubAllEnvs();
 });
 
 describe('ReferralBanner', () => {
   it('renders the banner on a normal (main) page with empty localStorage', () => {
     const { getByText } = render(<ReferralBanner />);
-    expect(getByText(/Приведи друга/)).toBeDefined();
+    expect(getByText(/Приглашайте друзей/)).toBeDefined();
     expect(getByText('Пригласить друга')).toBeDefined();
   });
 
@@ -41,7 +42,7 @@ describe('ReferralBanner', () => {
   it('renders the banner again when the dismissal is older than 14 days', () => {
     localStorage.setItem('referralBannerDismissedAt', String(Date.now() - 15 * DAY));
     const { getByText } = render(<ReferralBanner />);
-    expect(getByText(/Приведи друга/)).toBeDefined();
+    expect(getByText(/Приглашайте друзей/)).toBeDefined();
   });
 
   it('hides the banner and stores a timestamp when × is clicked', () => {

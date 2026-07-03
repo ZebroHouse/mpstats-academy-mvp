@@ -11,6 +11,13 @@ import { assembleClientRegistry, type RegistryRow, type RegistrySource } from '.
 export interface RegistryRange {
   from: Date;
   to: Date;
+  /**
+   * Which date the [from, to] window filters on:
+   *  - 'registration' (default): users who registered in the window.
+   *  - 'payment': users who made a COMPLETED payment in the window — surfaces
+   *    recent payers even if they registered long before the window.
+   */
+  dateField?: 'registration' | 'payment';
 }
 
 /** Failsafe cap on rows pulled per export (range is also bounded by callers). */
@@ -20,12 +27,37 @@ export async function fetchClientRegistry(
   prisma: PrismaClient,
   range: RegistryRange,
 ): Promise<RegistryRow[]> {
-  const profiles = await prisma.userProfile.findMany({
-    where: { createdAt: { gte: range.from, lte: range.to }, isTest: false },
-    select: { id: true, name: true, phone: true, createdAt: true },
-    orderBy: { createdAt: 'desc' },
-    take: MAX_REGISTRY_ROWS,
-  });
+  let profiles: Array<{ id: string; name: string | null; phone: string | null; createdAt: Date }>;
+
+  if (range.dateField === 'payment') {
+    // Payers with a COMPLETED payment inside the window (test users excluded).
+    // Payment has no userId scalar — it hangs off Subscription — so dedupe in JS.
+    const payments = await prisma.payment.findMany({
+      where: {
+        status: 'COMPLETED',
+        paidAt: { gte: range.from, lte: range.to },
+        subscription: { user: { isTest: false } },
+      },
+      select: { subscription: { select: { userId: true } } },
+    });
+    const payerIds = [...new Set(payments.map((p) => p.subscription.userId))];
+    profiles = payerIds.length
+      ? await prisma.userProfile.findMany({
+          where: { id: { in: payerIds }, isTest: false },
+          select: { id: true, name: true, phone: true, createdAt: true },
+          orderBy: { createdAt: 'desc' },
+          take: MAX_REGISTRY_ROWS,
+        })
+      : [];
+  } else {
+    profiles = await prisma.userProfile.findMany({
+      where: { createdAt: { gte: range.from, lte: range.to }, isTest: false },
+      select: { id: true, name: true, phone: true, createdAt: true },
+      orderBy: { createdAt: 'desc' },
+      take: MAX_REGISTRY_ROWS,
+    });
+  }
+
   const ids = profiles.map((p) => p.id);
   if (ids.length === 0) return [];
 

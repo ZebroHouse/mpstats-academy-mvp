@@ -41,23 +41,31 @@ export const adminAnalyticsRouter = router({
    * Analytics: user growth and diagnostic activity grouped by day for a given period.
    */
   getAnalytics: adminProcedure
-    .input(z.object({ days: z.number().int().min(1).max(90).default(7) }))
+    .input(z.object({
+      days: z.number().int().min(1).max(90).default(7),
+      from: z.date().optional(),
+      to: z.date().optional(),
+    }))
     .query(async ({ ctx, input }) => {
       try {
-        const startDate = new Date();
-        startDate.setDate(startDate.getDate() - input.days);
+        const to = input.to ?? new Date();
+        const from = input.from ?? new Date(to.getTime() - input.days * 24 * 60 * 60 * 1000);
+        if ((to.getTime() - from.getTime()) / 86_400_000 > 366) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Диапазон не больше 366 дней' });
+        }
 
-        // Generate date range
+        // Generate each UTC calendar day in [from .. to] inclusive.
         const dates: string[] = [];
-        for (let i = 0; i < input.days; i++) {
-          const d = new Date();
-          d.setDate(d.getDate() - input.days + i + 1);
-          dates.push(d.toISOString().split('T')[0]);
+        const cur = new Date(Date.UTC(from.getUTCFullYear(), from.getUTCMonth(), from.getUTCDate()));
+        const endKey = to.toISOString().split('T')[0];
+        while (cur.toISOString().split('T')[0] <= endKey) {
+          dates.push(cur.toISOString().split('T')[0]);
+          cur.setUTCDate(cur.getUTCDate() + 1);
         }
 
         // Query registrations
         const users = await ctx.prisma.userProfile.findMany({
-          where: { createdAt: { gte: startDate } },
+          where: { createdAt: { gte: from, lte: to } },
           select: { createdAt: true },
         });
 
@@ -65,7 +73,7 @@ export const adminAnalyticsRouter = router({
         const diagnostics = await ctx.prisma.diagnosticSession.findMany({
           where: {
             status: 'COMPLETED',
-            completedAt: { gte: startDate },
+            completedAt: { gte: from, lte: to },
           },
           select: { completedAt: true },
         });
@@ -99,6 +107,7 @@ export const adminAnalyticsRouter = router({
 
         return { userGrowth, activity };
       } catch (error) {
+        if (error instanceof TRPCError) throw error;
         handleDatabaseError(error);
       }
     }),
@@ -118,24 +127,29 @@ export const adminAnalyticsRouter = router({
    * but date math is still parameterized.
    */
   getActiveUserStats: adminProcedure
-    .input(z.object({ days: z.number().int().min(1).max(90).default(30) }))
+    .input(z.object({
+      days: z.number().int().min(1).max(90).default(30),
+      from: z.date().optional(),
+      to: z.date().optional(),
+    }))
     .query(async ({ ctx, input }) => {
       try {
-        const days = input.days;
+        const to = input.to ?? new Date();
+        const from = input.from ?? new Date(to.getTime() - input.days * 24 * 60 * 60 * 1000);
+        if ((to.getTime() - from.getTime()) / 86_400_000 > 366) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Диапазон не больше 366 дней' });
+        }
 
-        // generate_series of UTC calendar days for the window, then a rolling
-        // distinct-count per day. $1 = days. End of window = current UTC date.
+        // generate_series of UTC calendar days across [from .. to], then a rolling
+        // distinct-count per day. $1 = from (start day), $2 = to (end day); both
+        // cast ::date so the day math and BETWEEN windows stay in UTC calendar days.
         const rows = await ctx.prisma.$queryRawUnsafe<
           Array<{ date: string; dau: number; wau: number; mau: number }>
         >(
           `
-          WITH bounds AS (
-            SELECT (now() AT TIME ZONE 'UTC')::date AS end_day
-          ),
-          day_series AS (
+          WITH day_series AS (
             SELECT gs::date AS d
-            FROM bounds,
-                 generate_series(end_day - ($1::int - 1), end_day, interval '1 day') AS gs
+            FROM generate_series($1::date, $2::date, interval '1 day') AS gs
           )
           SELECT
             to_char(ds.d, 'YYYY-MM-DD') AS date,
@@ -151,7 +165,8 @@ export const adminAnalyticsRouter = router({
           FROM day_series ds
           ORDER BY ds.d ASC
           `,
-          days,
+          from,
+          to,
         );
 
         // Numeric coercion guard: ::int may surface as number already, but
@@ -165,6 +180,7 @@ export const adminAnalyticsRouter = router({
 
         return mapActiveUserStats(normalized);
       } catch (error) {
+        if (error instanceof TRPCError) throw error;
         handleDatabaseError(error);
       }
     }),
@@ -369,13 +385,20 @@ export const adminAnalyticsRouter = router({
 
   /** Actual cash-in: COMPLETED payments per day within `days`. Excludes test users. */
   getActualRevenue: adminProcedure
-    .input(z.object({ days: z.number().int().min(1).max(90).default(30) }))
+    .input(z.object({
+      days: z.number().int().min(1).max(90).default(30),
+      from: z.date().optional(),
+      to: z.date().optional(),
+    }))
     .query(async ({ ctx, input }) => {
       try {
-        const start = new Date();
-        start.setDate(start.getDate() - input.days);
+        const to = input.to ?? new Date();
+        const from = input.from ?? new Date(to.getTime() - input.days * 24 * 60 * 60 * 1000);
+        if ((to.getTime() - from.getTime()) / 86_400_000 > 366) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Диапазон не больше 366 дней' });
+        }
         const payments = await ctx.prisma.payment.findMany({
-          where: { status: 'COMPLETED', paidAt: { gte: start } },
+          where: { status: 'COMPLETED', paidAt: { gte: from, lte: to } },
           select: {
             paidAt: true,
             amount: true,
@@ -387,22 +410,30 @@ export const adminAnalyticsRouter = router({
         // paidAt is nullable in schema but COMPLETED rows have it; filter defensively.
         const rows = payments.filter((p) => p.paidAt != null);
         // Pass the window so an empty period renders a flat zero line, not a blank chart.
-        return groupRevenueByDay(rows as never, { days: input.days, now: new Date() });
+        return groupRevenueByDay(rows as never, { from, to });
       } catch (error) {
+        if (error instanceof TRPCError) throw error;
         handleDatabaseError(error);
       }
     }),
 
   /** Registration → diagnostic → paid conversion within `days`. Excludes test users. */
   getConversionFunnel: adminProcedure
-    .input(z.object({ days: z.number().int().min(1).max(90).default(30) }))
+    .input(z.object({
+      days: z.number().int().min(1).max(90).default(30),
+      from: z.date().optional(),
+      to: z.date().optional(),
+    }))
     .query(async ({ ctx, input }) => {
       try {
-        const start = new Date();
-        start.setDate(start.getDate() - input.days);
+        const to = input.to ?? new Date();
+        const from = input.from ?? new Date(to.getTime() - input.days * 24 * 60 * 60 * 1000);
+        if ((to.getTime() - from.getTime()) / 86_400_000 > 366) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Диапазон не больше 366 дней' });
+        }
 
         const registered = await ctx.prisma.userProfile.findMany({
-          where: { createdAt: { gte: start }, isTest: false },
+          where: { createdAt: { gte: from, lte: to }, isTest: false },
           select: { id: true },
         });
         const ids = registered.map((u) => u.id);
@@ -428,20 +459,28 @@ export const adminAnalyticsRouter = router({
         }));
         return computeConversionFunnel(rows);
       } catch (error) {
+        if (error instanceof TRPCError) throw error;
         handleDatabaseError(error);
       }
     }),
 
   /** Accurate trial→paid, derived from TRIAL rows + COMPLETED payments. */
   getTrialConversion: adminProcedure
-    .input(z.object({ days: z.number().int().min(1).max(90).default(90) }))
+    .input(z.object({
+      days: z.number().int().min(1).max(90).default(90),
+      from: z.date().optional(),
+      to: z.date().optional(),
+    }))
     .query(async ({ ctx, input }) => {
       try {
-        const start = new Date();
-        start.setDate(start.getDate() - input.days);
+        const to = input.to ?? new Date();
+        const from = input.from ?? new Date(to.getTime() - input.days * 24 * 60 * 60 * 1000);
+        if ((to.getTime() - from.getTime()) / 86_400_000 > 366) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Диапазон не больше 366 дней' });
+        }
 
         const trials = await ctx.prisma.subscription.findMany({
-          where: { status: 'TRIAL', currentPeriodStart: { gte: start } },
+          where: { status: 'TRIAL', currentPeriodStart: { gte: from, lte: to } },
           select: {
             userId: true,
             currentPeriodStart: true,
@@ -476,42 +515,58 @@ export const adminAnalyticsRouter = router({
 
         return deriveTrialConversion(trialRows, paymentRows, new Date());
       } catch (error) {
+        if (error instanceof TRPCError) throw error;
         handleDatabaseError(error);
       }
     }),
 
   /** Churn over `days`: cancellations, current PAST_DUE, approx churn rate. */
   getChurn: adminProcedure
-    .input(z.object({ days: z.number().int().min(1).max(90).default(30) }))
+    .input(z.object({
+      days: z.number().int().min(1).max(90).default(30),
+      from: z.date().optional(),
+      to: z.date().optional(),
+    }))
     .query(async ({ ctx, input }) => {
       try {
+        const to = input.to ?? new Date();
+        const from = input.from ?? new Date(to.getTime() - input.days * 24 * 60 * 60 * 1000);
+        if ((to.getTime() - from.getTime()) / 86_400_000 > 366) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Диапазон не больше 366 дней' });
+        }
         const now = new Date();
-        const start = new Date();
-        start.setDate(start.getDate() - input.days);
         const notTest = { user: { isTest: false }, plan: { hidden: false } };
 
         const [cancelled, pastDue, activeBase] = await Promise.all([
-          ctx.prisma.subscription.count({ where: { status: 'CANCELLED', cancelledAt: { gte: start }, ...notTest } }),
+          ctx.prisma.subscription.count({ where: { status: 'CANCELLED', cancelledAt: { gte: from, lte: to }, ...notTest } }),
           ctx.prisma.subscription.count({ where: { status: 'PAST_DUE', ...notTest } }),
           ctx.prisma.subscription.count({ where: { status: 'ACTIVE', currentPeriodEnd: { gt: now }, ...notTest } }),
         ]);
 
         return { cancelled, pastDue, activeBase, churnRate: churnRate(cancelled, activeBase) };
       } catch (error) {
+        if (error instanceof TRPCError) throw error;
         handleDatabaseError(error);
       }
     }),
 
   /** Revenue source: referred vs organic paying users within `days`. */
   getAttribution: adminProcedure
-    .input(z.object({ days: z.number().int().min(1).max(90).default(30) }))
+    .input(z.object({
+      days: z.number().int().min(1).max(90).default(30),
+      from: z.date().optional(),
+      to: z.date().optional(),
+    }))
     .query(async ({ ctx, input }) => {
       try {
-        const start = new Date();
-        start.setDate(start.getDate() - input.days);
+        const to = input.to ?? new Date();
+        const from = input.from ?? new Date(to.getTime() - input.days * 24 * 60 * 60 * 1000);
+        if ((to.getTime() - from.getTime()) / 86_400_000 > 366) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Диапазон не больше 366 дней' });
+        }
 
         const paidRows = await ctx.prisma.payment.findMany({
-          where: { status: 'COMPLETED', paidAt: { gte: start }, subscription: { user: { isTest: false }, plan: { hidden: false } } },
+          where: { status: 'COMPLETED', paidAt: { gte: from, lte: to }, subscription: { user: { isTest: false }, plan: { hidden: false } } },
           select: { amount: true, subscription: { select: { userId: true } } },
         });
 
@@ -533,6 +588,7 @@ export const adminAnalyticsRouter = router({
           organic: { users: acc.organic.users.size, revenue: acc.organic.revenue },
         };
       } catch (error) {
+        if (error instanceof TRPCError) throw error;
         handleDatabaseError(error);
       }
     }),
@@ -544,16 +600,22 @@ export const adminAnalyticsRouter = router({
    * from existing Referral + Payment data. Test users excluded throughout.
    */
   getReferralFunnel: adminProcedure
-    .input(z.object({ days: z.number().int().min(1).max(365).default(30) }))
+    .input(z.object({
+      days: z.number().int().min(1).max(365).default(30),
+      from: z.date().optional(),
+      to: z.date().optional(),
+    }))
     .query(async ({ ctx, input }) => {
       try {
-        // Single UTC calendar-day boundary used for ALL three stages (clicks,
+        // Single [from .. to] window used for ALL three stages (clicks,
         // registrations, sales) so the funnel and the per-day series align on the
-        // same days — clicks are stored as @db.Date, the rest as timestamps.
-        const now = new Date();
-        const startDay = new Date(
-          Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() - input.days),
-        );
+        // same days — clicks are stored as @db.Date, the rest as timestamps; both
+        // compare fine against Date bounds.
+        const to = input.to ?? new Date();
+        const from = input.from ?? new Date(to.getTime() - input.days * 24 * 60 * 60 * 1000);
+        if ((to.getTime() - from.getTime()) / 86_400_000 > 366) {
+          throw new TRPCError({ code: 'BAD_REQUEST', message: 'Диапазон не больше 366 дней' });
+        }
 
         const codes = await ctx.prisma.referralCode.findMany({
           where: { codeType: 'AMBASSADOR' },
@@ -564,17 +626,17 @@ export const adminAnalyticsRouter = router({
         const [clickSums, clickDays, referrals, payments, checkouts] = await Promise.all([
           ctx.prisma.referralCodeClickDay.groupBy({
             by: ['codeId'],
-            where: { day: { gte: startDay } },
+            where: { day: { gte: from, lte: to } },
             _sum: { count: true },
           }),
           ctx.prisma.referralCodeClickDay.groupBy({
             by: ['day'],
-            where: { day: { gte: startDay } },
+            where: { day: { gte: from, lte: to } },
             _sum: { count: true },
           }),
           codeIds.length
             ? ctx.prisma.referral.findMany({
-                where: { codeId: { in: codeIds }, createdAt: { gte: startDay } },
+                where: { codeId: { in: codeIds }, createdAt: { gte: from, lte: to } },
                 select: {
                   codeId: true,
                   referredUserId: true,
@@ -586,13 +648,13 @@ export const adminAnalyticsRouter = router({
           ctx.prisma.payment.findMany({
             where: {
               status: 'COMPLETED',
-              paidAt: { gte: startDay },
+              paidAt: { gte: from, lte: to },
               subscription: { user: { isTest: false }, plan: { hidden: false } },
             },
             select: { paidAt: true, subscription: { select: { userId: true } } },
           }),
           ctx.prisma.checkoutAttempt.findMany({
-            where: { createdAt: { gte: startDay }, userId: { not: null } },
+            where: { createdAt: { gte: from, lte: to }, userId: { not: null } },
             select: { userId: true },
             distinct: ['userId'],
           }),
@@ -620,6 +682,7 @@ export const adminAnalyticsRouter = router({
             .filter((u): u is string => !!u),
         });
       } catch (error) {
+        if (error instanceof TRPCError) throw error;
         handleDatabaseError(error);
       }
     }),
@@ -631,7 +694,11 @@ export const adminAnalyticsRouter = router({
    */
   getClientRegistry: adminProcedure
     .input(
-      z.object({ from: z.date().optional(), to: z.date().optional() }),
+      z.object({
+        from: z.date().optional(),
+        to: z.date().optional(),
+        dateField: z.enum(['registration', 'payment']).optional(),
+      }),
     )
     .query(async ({ ctx, input }) => {
       try {
@@ -641,7 +708,7 @@ export const adminAnalyticsRouter = router({
         if ((to.getTime() - from.getTime()) / 86_400_000 > MAX_DAYS) {
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'Диапазон не больше 366 дней' });
         }
-        const rows = await fetchClientRegistry(ctx.prisma, { from, to });
+        const rows = await fetchClientRegistry(ctx.prisma, { from, to, dateField: input.dateField });
         return { rows, total: rows.length };
       } catch (error) {
         handleDatabaseError(error);

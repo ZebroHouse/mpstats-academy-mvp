@@ -927,7 +927,10 @@ export default function LessonPage() {
 
         {/* Sidebar — Chat only (no tabs), desktop only */}
         <div className="hidden lg:block space-y-4">
-          <Card data-tour="lesson-chat" className="h-[400px] flex flex-col shadow-mp-card">
+          {/* Height tracks the video: chat sits in the 1/3 column, video spans 2/3;
+              aspect-[6/7] makes the card ≳ the video's height at every desktop width
+              (never shorter), with a 400px floor for narrow lg where the video is short. */}
+          <Card data-tour="lesson-chat" className="aspect-[6/7] min-h-[400px] flex flex-col shadow-mp-card">
             <CardHeader className="pb-2">
               <CardTitle className="text-heading flex items-center gap-2">
                 <svg className="w-5 h-5 text-mp-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">

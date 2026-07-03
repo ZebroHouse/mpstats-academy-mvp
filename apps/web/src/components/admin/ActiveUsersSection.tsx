@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import {
   LineChart,
   Line,
@@ -17,14 +17,6 @@ import { trpc } from '@/lib/trpc/client';
 import { StatCard } from '@/components/admin/StatCard';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
-
-const PERIODS = [
-  { label: '7d', days: 7 },
-  { label: '14d', days: 14 },
-  { label: '30d', days: 30 },
-  { label: '90d', days: 90 },
-] as const;
 
 // Brand palette per task spec.
 const COLOR_DAU = '#2C4FF8'; // mp-blue
@@ -50,9 +42,8 @@ function trendCaption(current: number, previous: number): string | undefined {
   return `${sign}${Math.abs(delta)} за период`;
 }
 
-export function ActiveUsersSection() {
-  const [days, setDays] = useState(30);
-  const stats = trpc.admin.analytics.getActiveUserStats.useQuery({ days });
+export function ActiveUsersSection({ from, to }: { from: Date; to: Date }) {
+  const stats = trpc.admin.analytics.getActiveUserStats.useQuery({ from, to });
 
   const data = stats.data;
 
@@ -116,26 +107,6 @@ export function ActiveUsersSection() {
 
   return (
     <div className="space-y-6">
-      {/* Period selector */}
-      <div className="flex justify-end">
-        <div className="flex items-center gap-1 bg-mp-gray-100 rounded-lg p-1">
-          {PERIODS.map((p) => (
-            <button
-              key={p.days}
-              onClick={() => setDays(p.days)}
-              className={cn(
-                'px-3 py-1.5 text-body-sm font-medium rounded-md transition-all duration-200',
-                days === p.days
-                  ? 'bg-white text-mp-blue-600 shadow-sm'
-                  : 'text-mp-gray-600 hover:text-mp-gray-900',
-              )}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
       {/* Stat cards */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard

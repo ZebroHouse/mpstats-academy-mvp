@@ -104,9 +104,12 @@ describe('groupRevenueByDay', () => {
   });
 
   it('zero-fills the full window so an empty period renders a flat line, not a blank chart', () => {
-    const now = new Date('2026-06-15T00:00:00Z');
-    const r = groupRevenueByDay([], { days: 30, now });
-    expect(r.byDay).toHaveLength(31);                       // now-30 .. now inclusive
+    // 2026-05-16 .. 2026-06-15 inclusive = 31 days.
+    const r = groupRevenueByDay([], {
+      from: new Date('2026-05-16T00:00:00Z'),
+      to: new Date('2026-06-15T23:59:59Z'),
+    });
+    expect(r.byDay).toHaveLength(31);                       // from .. to inclusive
     expect(r.byDay.every((d) => d.amount === 0)).toBe(true);
     expect(r.byDay[0].date).toBe('2026-05-16');
     expect(r.byDay[r.byDay.length - 1].date).toBe('2026-06-15');
@@ -114,10 +117,10 @@ describe('groupRevenueByDay', () => {
   });
 
   it('keeps a payment on its day inside a zero-filled window (e.g. a 15.05 payment shows on 90d)', () => {
-    const now = new Date('2026-06-15T00:00:00Z');
+    // 90-day window 2026-03-18 .. 2026-06-15 covering the 15.05 payment.
     const r = groupRevenueByDay(
       [pay({ paidAt: new Date('2026-05-15T06:34:00Z'), amount: 2990 })],
-      { days: 90, now },
+      { from: new Date('2026-03-18T00:00:00Z'), to: new Date('2026-06-15T23:59:59Z') },
     );
     const day = r.byDay.find((d) => d.date === '2026-05-15')!;
     expect(day.amount).toBe(2990);

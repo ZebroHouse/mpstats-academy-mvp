@@ -13,23 +13,17 @@ import {
 } from 'recharts';
 import { trpc } from '@/lib/trpc/client';
 import { StatCard } from '@/components/admin/StatCard';
+import { AnalyticsDateRange, presetRange, rangeToBounds } from '@/components/admin/AnalyticsDateRange';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { cn } from '@/lib/utils';
 import { MousePointerClick, UserPlus, ClipboardCheck, Wallet, CreditCard } from 'lucide-react';
-
-const PERIODS = [
-  { label: '7d', days: 7 },
-  { label: '14d', days: 14 },
-  { label: '30d', days: 30 },
-  { label: '90d', days: 90 },
-] as const;
 
 const pct = (v: number | null) => (v === null ? '—' : `${v}%`);
 
 export default function AnalyticsReferralsPage() {
-  const [days, setDays] = useState(30);
-  const q = trpc.admin.analytics.getReferralFunnel.useQuery({ days });
+  const [range, setRange] = useState(presetRange(30));
+  const { from, to } = rangeToBounds(range);
+  const q = trpc.admin.analytics.getReferralFunnel.useQuery({ from, to });
   const d = q.data;
 
   return (
@@ -41,20 +35,7 @@ export default function AnalyticsReferralsPage() {
             Воронка по амбассадорским кодам: переходы → регистрации → продажи (без тестовых)
           </p>
         </div>
-        <div className="flex items-center gap-1 bg-mp-gray-100 rounded-lg p-1">
-          {PERIODS.map((p) => (
-            <button
-              key={p.days}
-              onClick={() => setDays(p.days)}
-              className={cn(
-                'px-3 py-1.5 text-body-sm font-medium rounded-md transition-all duration-200',
-                days === p.days ? 'bg-white text-mp-blue-600 shadow-sm' : 'text-mp-gray-600 hover:text-mp-gray-900',
-              )}
-            >
-              {p.label}
-            </button>
-          ))}
-        </div>
+        <AnalyticsDateRange value={range} onChange={setRange} />
       </div>
 
       {/* Totals */}
@@ -72,7 +53,7 @@ export default function AnalyticsReferralsPage() {
 
       {/* Per-day series */}
       <Card className="p-5">
-        <h4 className="text-body font-semibold text-mp-gray-900 mb-1">Динамика по дням ({days}д)</h4>
+        <h4 className="text-body font-semibold text-mp-gray-900 mb-1">Динамика по дням (за период)</h4>
         <p className="text-xs text-mp-gray-400 mb-4">
           Переходы считаются с момента запуска фичи — историю до этого восстановить нельзя.
         </p>
