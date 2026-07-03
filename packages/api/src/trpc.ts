@@ -92,6 +92,23 @@ export const adminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
   return next({ ctx: { ...ctx, userRole: profile.role } });
 });
 
+// Allows the sales client-registry view in addition to full admins.
+export const analyticsClientsProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  const profile = await ctx.prisma.userProfile.findUnique({
+    where: { id: ctx.user.id },
+    select: { role: true },
+  });
+
+  if (
+    !profile ||
+    (profile.role !== 'ADMIN' && profile.role !== 'SUPERADMIN' && profile.role !== 'SALES')
+  ) {
+    throw new TRPCError({ code: 'FORBIDDEN', message: 'Admin access required' });
+  }
+
+  return next({ ctx: { ...ctx, userRole: profile.role } });
+});
+
 // Superadmin procedure — requires role SUPERADMIN only
 export const superadminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
   const profile = await ctx.prisma.userProfile.findUnique({

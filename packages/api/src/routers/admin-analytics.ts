@@ -12,7 +12,7 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { Prisma } from '@mpstats/db';
-import { router, adminProcedure } from '../trpc';
+import { router, adminProcedure, analyticsClientsProcedure } from '../trpc';
 import { handleDatabaseError } from '../utils/db-errors';
 import { mapActiveUserStats, type ActiveUserDayRow } from '../utils/active-user-stats';
 import { computeRevenueOverview, computeUpcomingRenewals, groupRevenueByDay } from '../utils/revenue-metrics';
@@ -692,7 +692,7 @@ export const adminAnalyticsRouter = router({
    * source, and payment status per registered user. Powers the «Клиенты» tab and
    * shares its fetch with the CSV export route. Test users excluded.
    */
-  getClientRegistry: adminProcedure
+  getClientRegistry: analyticsClientsProcedure
     .input(
       z.object({
         from: z.date().optional(),

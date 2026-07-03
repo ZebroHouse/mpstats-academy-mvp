@@ -4,7 +4,7 @@ import { useState, useCallback } from 'react';
 import { trpc } from '@/lib/trpc/client';
 import { cn } from '@/lib/utils';
 
-type Role = 'USER' | 'ADMIN' | 'SUPERADMIN';
+type Role = 'USER' | 'ADMIN' | 'SUPERADMIN' | 'SALES';
 
 interface UserRow {
   id: string;
@@ -71,12 +71,14 @@ const ROLE_LABELS: Record<Role, string> = {
   USER: 'User',
   ADMIN: 'Admin',
   SUPERADMIN: 'Super',
+  SALES: 'Продажи',
 };
 
 const ROLE_COLORS: Record<Role, string> = {
   USER: 'bg-mp-gray-100 text-mp-gray-700',
   ADMIN: 'bg-mp-blue-100 text-mp-blue-700',
   SUPERADMIN: 'bg-mp-pink-100 text-mp-pink-700',
+  SALES: 'bg-green-100 text-green-700',
 };
 
 function RoleBadge({ role }: { role: Role }) {
@@ -110,6 +112,7 @@ function RoleSelect({
       <option value="USER">User</option>
       <option value="ADMIN">Admin</option>
       <option value="SUPERADMIN">Super</option>
+      <option value="SALES">Продажи</option>
     </select>
   );
 }
