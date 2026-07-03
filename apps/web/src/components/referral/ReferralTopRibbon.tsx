@@ -19,8 +19,6 @@ import { pluralizeDays } from '@/lib/plural';
  */
 
 const DISMISS_KEY = 'ref_ribbon_dismissed';
-/** Fallback for legacy user-to-user codes whose trialDays come back null (see register-form). */
-const DEFAULT_TRIAL_DAYS = 14;
 
 export function ReferralTopRibbon({
   onVisibilityChange,
@@ -58,7 +56,11 @@ export function ReferralTopRibbon({
 
   if (!visible) return null;
 
-  const days = validation.data?.trialDays ?? DEFAULT_TRIAL_DAYS;
+  // Peer (user-to-user) codes return trialDays=null; the friend's trial length is
+  // decided by the i1/i2 flag (14d viral vs 7d pay-gated) — mirror register-form.
+  // Ambassador codes carry their own trialDays and are unaffected by the flag.
+  const i2Mode = process.env.NEXT_PUBLIC_REFERRAL_PAY_GATED === 'true';
+  const days = validation.data?.trialDays ?? (i2Mode ? 7 : 14);
   const label = validation.data?.referrerName;
 
   const handleDismiss = () => {

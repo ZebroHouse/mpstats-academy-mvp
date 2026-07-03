@@ -40,6 +40,7 @@ beforeEach(() => {
 
 afterEach(() => {
   cleanup();
+  vi.unstubAllEnvs();
 });
 
 describe('ReferralTopRibbon', () => {
@@ -72,6 +73,25 @@ describe('ReferralTopRibbon', () => {
 
     const cta = getByRole('link', { name: /Забрать 14 дней/ });
     expect(cta.getAttribute('href')).toBe('/register?ref=REF-ABC123');
+  });
+
+  it('uses the 7-day pay-gated fallback for peer codes when i2 mode is on', () => {
+    vi.stubEnv('NEXT_PUBLIC_REFERRAL_PAY_GATED', 'true');
+    getMock.mockReturnValue('REF-ABC123');
+    mockValidation = { data: { valid: true, referrerName: 'Андрей', trialDays: null, type: 'user' } };
+    const { getByText, getByRole } = render(<ReferralTopRibbon />);
+
+    expect(getByText(/Вам подарили 7 дней полного доступа/)).toBeDefined();
+    expect(getByRole('link', { name: /Забрать 7 дней/ })).toBeDefined();
+  });
+
+  it('keeps the ambassador day count independent of the i2 flag', () => {
+    vi.stubEnv('NEXT_PUBLIC_REFERRAL_PAY_GATED', 'true');
+    getMock.mockReturnValue('AMB-XYZ99');
+    mockValidation = { data: { valid: true, referrerName: 'Блогер', trialDays: 3, type: 'ambassador' } };
+    const { getByText } = render(<ReferralTopRibbon />);
+
+    expect(getByText(/Вам подарили 3 дня полного доступа/)).toBeDefined();
   });
 
   it('renders the ambassador custom day count with correct plural declension', () => {

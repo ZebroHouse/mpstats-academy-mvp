@@ -40,6 +40,12 @@ export function ReferralBanner() {
     setDismissed(true);
   };
 
+  // Short, enticing CTA — the exact mechanics (and how they differ in pay-gated
+  // mode) live on /profile/referral, the banner's link target. Keeping it
+  // clickbait-light lets it stay flag-agnostic and honest in both modes.
+  const title = 'Приглашайте друзей и получайте бонусные дни доступа';
+  const subtitle = 'Больше приглашенных друзей — больше бонусных дней';
+
   return (
     <div
       role="region"
@@ -49,10 +55,10 @@ export function ReferralBanner() {
       <Gift className="hidden size-8 shrink-0 sm:block" aria-hidden="true" />
       <div className="min-w-0 flex-1">
         <p className="text-sm font-semibold leading-tight">
-          Приведи друга — получи 14 дней доступа к платформе бесплатно!
+          {title}
         </p>
         <p className="hidden text-xs text-white/80 sm:block">
-          Больше друзей — больше пользы для бизнеса и команды.
+          {subtitle}
         </p>
       </div>
       <Link
