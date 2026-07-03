@@ -17,6 +17,9 @@ services:
         NEXT_PUBLIC_SITE_URL: https://staging.platform.mpstats.academy
         NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID: ${NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID}
         NEXT_PUBLIC_YANDEX_ID: ${NEXT_PUBLIC_YANDEX_ID}
+        # Referral pay-gated (i2) copy preview — pass NEXT_PUBLIC_REFERRAL_PAY_GATED=true
+        # at build time to render i2 copy on staging (DB flag stays untouched → shared prod).
+        NEXT_PUBLIC_REFERRAL_PAY_GATED: ${NEXT_PUBLIC_REFERRAL_PAY_GATED:-}
         SUPABASE_SECRET_KEY: ${SUPABASE_SECRET_KEY}
         OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
         DATABASE_URL: ${DATABASE_URL}
