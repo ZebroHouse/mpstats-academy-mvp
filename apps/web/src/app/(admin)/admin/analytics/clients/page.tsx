@@ -33,6 +33,9 @@ function fmtDateTime(iso: string | null): string {
 export default function AnalyticsClientsPage() {
   const [from, setFrom] = useState(isoDaysAgo(30));
   const [to, setTo] = useState(today());
+  // Which date the window filters on. 'payment' surfaces clients who paid in the
+  // window even if they registered earlier (e.g. an SBP one-off from an old signup).
+  const [dateField, setDateField] = useState<'registration' | 'payment'>('registration');
 
   // Inclusive day bounds in UTC.
   const range = useMemo(
@@ -40,10 +43,10 @@ export default function AnalyticsClientsPage() {
     [from, to],
   );
 
-  const q = trpc.admin.analytics.getClientRegistry.useQuery(range);
+  const q = trpc.admin.analytics.getClientRegistry.useQuery({ ...range, dateField });
   const rows = q.data?.rows ?? [];
 
-  const csvHref = `/api/admin/client-registry?from=${encodeURIComponent(range.from.toISOString())}&to=${encodeURIComponent(range.to.toISOString())}`;
+  const csvHref = `/api/admin/client-registry?from=${encodeURIComponent(range.from.toISOString())}&to=${encodeURIComponent(range.to.toISOString())}&dateField=${dateField}`;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -51,10 +54,24 @@ export default function AnalyticsClientsPage() {
         <div>
           <h2 className="text-heading-lg font-bold text-mp-gray-900">Клиенты</h2>
           <p className="text-body-sm text-mp-gray-500 mt-1">
-            Реестр зарегистрированных: источник, контакты, статус оплаты. Без тестовых.
+            {dateField === 'payment'
+              ? 'Реестр оплативших за период: источник, контакты, оплата. Без тестовых.'
+              : 'Реестр зарегистрированных: источник, контакты, статус оплаты. Без тестовых.'}
           </p>
         </div>
         <div className="flex items-end gap-3 flex-wrap">
+          <div>
+            <label className="text-xs text-mp-gray-500 block mb-1">Период по</label>
+            <div className="flex items-center gap-1 bg-mp-gray-100 rounded-lg p-1">
+              {([['registration', 'Регистрации'], ['payment', 'Оплате']] as const).map(([val, label]) => (
+                <button key={val} type="button" onClick={() => setDateField(val)}
+                  className={cn('px-3 py-1 text-body-sm font-medium rounded-md transition-all duration-200',
+                    dateField === val ? 'bg-white text-mp-blue-600 shadow-sm' : 'text-mp-gray-600 hover:text-mp-gray-900')}>
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
           <div>
             <label className="text-xs text-mp-gray-500 block mb-1">С</label>
             <input type="date" value={from} max={to} onChange={(e) => setFrom(e.target.value)}

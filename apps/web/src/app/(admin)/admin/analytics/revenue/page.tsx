@@ -7,7 +7,7 @@ import { StatCard } from '@/components/admin/StatCard';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { cn } from '@/lib/utils';
-import { Users, CreditCard, TrendingUp, Wallet, FlaskConical } from 'lucide-react';
+import { Users, CreditCard, TrendingUp, Wallet, FlaskConical, Banknote } from 'lucide-react';
 
 const PERIODS = [
   { label: '7d', days: 7 },
@@ -49,11 +49,12 @@ export default function AnalyticsRevenuePage() {
 
       {/* KPI cards */}
       {overview.isLoading ? (
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-          {[1, 2, 3, 4, 5].map((i) => <Card key={i} className="p-5"><Skeleton className="h-4 w-24 mb-3" /><Skeleton className="h-8 w-16" /></Card>)}
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          {[1, 2, 3, 4, 5, 6].map((i) => <Card key={i} className="p-5"><Skeleton className="h-4 w-24 mb-3" /><Skeleton className="h-8 w-16" /></Card>)}
         </div>
       ) : o ? (
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          <StatCard title={`Выручка за ${days}д`} value={actual.data ? rub(actual.data.total) : '…'} icon={Banknote} color="green" trend="разовые + рекуррент" />
           <StatCard title="MRR" value={rub(o.mrr)} icon={Wallet} color="green" trend={`${o.recurringPayers} на авто-продлении`} />
           <StatCard title="Платящих (ACTIVE)" value={o.activePaying} icon={CreditCard} color="blue" />
           <StatCard title="Триалы (пайплайн)" value={o.trialPipeline} icon={FlaskConical} color="pink" />

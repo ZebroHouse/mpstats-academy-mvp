@@ -631,7 +631,11 @@ export const adminAnalyticsRouter = router({
    */
   getClientRegistry: adminProcedure
     .input(
-      z.object({ from: z.date().optional(), to: z.date().optional() }),
+      z.object({
+        from: z.date().optional(),
+        to: z.date().optional(),
+        dateField: z.enum(['registration', 'payment']).optional(),
+      }),
     )
     .query(async ({ ctx, input }) => {
       try {
@@ -641,7 +645,7 @@ export const adminAnalyticsRouter = router({
         if ((to.getTime() - from.getTime()) / 86_400_000 > MAX_DAYS) {
           throw new TRPCError({ code: 'BAD_REQUEST', message: 'Диапазон не больше 366 дней' });
         }
-        const rows = await fetchClientRegistry(ctx.prisma, { from, to });
+        const rows = await fetchClientRegistry(ctx.prisma, { from, to, dateField: input.dateField });
         return { rows, total: rows.length };
       } catch (error) {
         handleDatabaseError(error);

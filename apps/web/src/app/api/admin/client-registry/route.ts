@@ -32,6 +32,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const toParam = searchParams.get('to');
     const fromParam = searchParams.get('from');
+    const dateField = searchParams.get('dateField') === 'payment' ? 'payment' : 'registration';
     const to = toParam ? new Date(toParam) : new Date();
     const from = fromParam ? new Date(fromParam) : new Date(to.getTime() - 30 * 24 * 60 * 60 * 1000);
     if (Number.isNaN(from.getTime()) || Number.isNaN(to.getTime())) {
@@ -41,9 +42,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'Date range too large (max 366 days)' }, { status: 400 });
     }
 
-    const rows = await fetchClientRegistry(prisma, { from, to });
+    const rows = await fetchClientRegistry(prisma, { from, to, dateField });
     const csv = toRegistryCsv(rows);
-    const fname = `client-registry_${from.toISOString().slice(0, 10)}_${to.toISOString().slice(0, 10)}.csv`;
+    const fname = `client-registry_${dateField}_${from.toISOString().slice(0, 10)}_${to.toISOString().slice(0, 10)}.csv`;
 
     return new NextResponse(csv, {
       status: 200,
