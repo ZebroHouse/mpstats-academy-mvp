@@ -330,6 +330,9 @@ export function parseLearningPath(
   return []; // fallback — never throw
 }
 
+/** Origin surface a learner opened a lesson from — drives contextual post-completion redirect */
+export type LessonContextKind = 'job' | 'plan' | 'course' | 'favorites' | 'storefront';
+
 // ============== KINESCOPE ==============
 
 export const getKinescopeEmbedUrl = (videoId: string): string =>
