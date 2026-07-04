@@ -153,7 +153,7 @@ function describe(item: FavItem): {
   Icon: typeof FileText;
 } {
   if (item.itemType === 'LESSON') {
-    return { href: `/learn/${item.itemId}`, label: 'Урок', title: item.entity.title, Icon: GraduationCap };
+    return { href: `/learn/${item.itemId}?from=favorites`, label: 'Урок', title: item.entity.title, Icon: GraduationCap };
   }
   if (item.itemType === 'JOB') {
     return { href: `/learn/job/${item.entity.slug}`, label: 'Решение', title: item.entity.title, Icon: Wrench };

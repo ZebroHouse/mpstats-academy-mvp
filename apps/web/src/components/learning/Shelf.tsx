@@ -58,7 +58,7 @@ export function Shelf({ shelf }: { shelf: StorefrontShelf }) {
               {it.kind === 'job' ? (
                 <JobCard job={it.job} />
               ) : (
-                <LessonCard lesson={it.lesson} locked={it.lesson.locked} />
+                <LessonCard lesson={it.lesson} locked={it.lesson.locked} context="storefront" />
               )}
             </div>
           ))}

@@ -22,6 +22,8 @@ interface LessonCardProps {
    * Used in the База знаний catalog so manual adds go to Избранное, not the План.
    */
   favorite?: { itemId: string; initialFavorited?: boolean };
+  /** Значение ?from= для контекстного возврата после урока: 'plan' | 'favorites' | 'storefront' | 'course'. */
+  context?: string;
 }
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -78,13 +80,13 @@ const LOCK_ICON = (
   </svg>
 );
 
-export function LessonCard({ lesson, showCourse, courseName, isRecommended, locked, inTrack, onToggleTrack, onRemoveFromTrack, favorite }: LessonCardProps) {
+export function LessonCard({ lesson, showCourse, courseName, isRecommended, locked, inTrack, onToggleTrack, onRemoveFromTrack, favorite, context }: LessonCardProps) {
   const isLocked = locked ?? lesson.locked;
   const status = STATUS_CONFIG[lesson.status];
   const badgePills = deriveBadgePills(lesson.badges);
 
   return (
-    <Link href={`/learn/${lesson.id}`}>
+    <Link href={`/learn/${lesson.id}${context ? `?from=${context}` : ''}`}>
       <Card className="shadow-mp-card hover:shadow-mp-card-hover transition-all duration-300 cursor-pointer h-full hover:-translate-y-0.5">
         <CardContent className="p-3 sm:p-4">
           <div className="flex items-start gap-3 sm:gap-4">
