@@ -507,8 +507,15 @@ html, body {
   .lesson-content img[data-align="center"] { @apply mx-auto block; }
   .lesson-content img[data-align="left"]   { @apply mr-auto block; }
   .lesson-content img[data-align="right"]  { @apply ml-auto block; }
+  /* TipTap wraps every table in .tableWrapper. Let it scroll horizontally so
+     wide tables stay readable on mobile instead of overflowing off-screen
+     (the page itself is overflow-x: clip, so without this the right columns
+     were unreachable). */
+  .lesson-content .tableWrapper {
+    @apply max-w-full overflow-x-auto my-4;
+  }
   .lesson-content table {
-    @apply w-full border-collapse my-4 text-sm;
+    @apply w-full border-collapse text-sm;
   }
   .lesson-content th,
   .lesson-content td {
