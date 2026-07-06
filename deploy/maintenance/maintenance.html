@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <!-- Страница сама перезагрузится: как только платформа поднимется, юзер попадёт на рабочий сайт -->
+  <meta http-equiv="refresh" content="30" />
+  <title>Технические работы — MPSTATS Academy</title>
+  <style>
+    :root {
+      --bg: #0F172A;
+      --card: rgba(255, 255, 255, 0.04);
+      --border: rgba(255, 255, 255, 0.08);
+      --text: #F8FAFC;
+      --muted: #94A3B8;
+      --accent: #2C4FF8;
+      --accent-soft: rgba(44, 79, 248, 0.15);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background:
+        radial-gradient(60% 60% at 50% 0%, rgba(44, 79, 248, 0.18) 0%, transparent 70%),
+        var(--bg);
+      color: var(--text);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100%;
+      padding: 24px;
+      line-height: 1.55;
+      -webkit-font-smoothing: antialiased;
+    }
+    .card {
+      width: 100%;
+      max-width: 480px;
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 40px 32px;
+      text-align: center;
+      backdrop-filter: blur(8px);
+    }
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 28px;
+    }
+    .logo-mark {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .logo-mark svg { width: 16px; height: 16px; display: block; }
+    .logo-text { font-size: 18px; font-weight: 700; letter-spacing: 0.5px; }
+    .logo-text span { color: var(--muted); font-weight: 600; }
+
+    .dots { display: flex; gap: 8px; justify-content: center; margin-bottom: 24px; }
+    .dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--accent);
+      animation: pulse 1.4s ease-in-out infinite;
+    }
+    .dot:nth-child(2) { animation-delay: 0.2s; }
+    .dot:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes pulse {
+      0%, 100% { opacity: 0.25; transform: scale(0.85); }
+      50% { opacity: 1; transform: scale(1); }
+    }
+
+    h1 { font-size: 24px; font-weight: 700; margin-bottom: 14px; }
+    p { color: var(--muted); font-size: 15px; }
+    p + p { margin-top: 10px; }
+    .hint {
+      margin-top: 24px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: 14px;
+    }
+    a { color: var(--text); font-weight: 600; text-decoration: none; border-bottom: 1px solid var(--accent); }
+    a:hover { color: var(--accent); }
+
+    @media (max-width: 480px) {
+      .card { padding: 32px 22px; }
+      h1 { font-size: 21px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .dot { animation: none; opacity: 0.7; }
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="logo">
+      <span class="logo-mark" aria-hidden="true">
+        <svg viewBox="0 0 12 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M0 1.2A1 1 0 0 1 1.5.34l9.4 5.3a1 1 0 0 1 0 1.72l-9.4 5.3A1 1 0 0 1 0 11.8V1.2Z" fill="#fff"/>
+        </svg>
+      </span>
+      <span class="logo-text">MPSTATS <span>Academy</span></span>
+    </div>
+
+    <div class="dots" aria-hidden="true">
+      <span class="dot"></span>
+      <span class="dot"></span>
+      <span class="dot"></span>
+    </div>
+
+    <h1>Идут технические работы</h1>
+    <p>Обновляем платформу — скоро вернемся. Обычно это занимает 5–10 минут</p>
+    <p>Не уходите: как только все будет готово, страница обновится сама</p>
+
+    <div class="hint">
+      <p>Если задержимся дольше обычного — напишите на<br><a href="mailto:clients@mpstats.academy">clients@mpstats.academy</a>, поможем</p>
+    </div>
+  </main>
+</body>
+</html>
