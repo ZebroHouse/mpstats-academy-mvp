@@ -137,6 +137,30 @@ export function InteractiveLessonRenderer({
     onReachedEnd(plan.complete);
   }, [plan.complete, onReachedEnd]);
 
+  // The app sets a global `html { scroll-behavior: smooth }`. That makes the
+  // browser *animate* its scroll-anchoring corrections — the instant, normally
+  // invisible nudges it applies when content above the viewport changes height
+  // (a reveal gate collapsing to a thin <hr>, a lesson image finishing loading).
+  // Animated, those corrections play as a jarring "jump up, then settle down"
+  // every time a student reveals a block. Force plain scroll behavior on the
+  // scroll container while this lesson is mounted so anchoring corrections stay
+  // instant/invisible again. Our own reveal scroll below passes behavior:'smooth'
+  // explicitly, which overrides this and still animates.
+  useEffect(() => {
+    const targets = [document.documentElement, document.querySelector('main')].filter(
+      (el): el is HTMLElement => el instanceof HTMLElement,
+    );
+    const prev = targets.map((el) => el.style.scrollBehavior);
+    targets.forEach((el) => {
+      el.style.scrollBehavior = 'auto';
+    });
+    return () => {
+      targets.forEach((el, i) => {
+        el.style.scrollBehavior = prev[i] ?? '';
+      });
+    };
+  }, []);
+
   // Refs to each rendered reveal item, keyed by item.key, so we can locate the
   // freshly revealed frontier after a reveal/choice.
   const itemRefs = useRef(new Map<string, HTMLElement>());
