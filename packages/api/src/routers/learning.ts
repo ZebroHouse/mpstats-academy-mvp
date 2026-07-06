@@ -13,6 +13,7 @@ import type { CourseWithProgress, LessonWithProgress, LearningPathSection, Secti
 import { generateAxisPath } from './diagnostic';
 import { getRecommendedJobsFromGaps } from '../utils/job-matcher';
 import { rebuildLegacyLearningPath } from '../utils/legacy-path-rebuild';
+import { parseFromParam, resolveContextNav, flattenPlanLessonIds } from '../utils/lesson-context';
 
 function pluralLessons(n: number): string {
   if (n % 10 === 1 && n % 100 !== 11) return `${n} урок`;
@@ -566,7 +567,7 @@ export const learningRouter = router({
 
   // Get lesson details with progress (single DB query via course relation)
   getLesson: protectedProcedure
-    .input(z.object({ lessonId: z.string() }))
+    .input(z.object({ lessonId: z.string(), from: z.string().optional() }))
     .query(async ({ ctx, input }) => {
       try {
         const lesson = await ctx.prisma.lesson.findUnique({
@@ -625,6 +626,88 @@ export const learningRouter = router({
             ? { id: courseLessons[currentIndex - 1].id, title: courseLessons[currentIndex - 1].title }
             : null;
 
+        // Контекстная навигация (аддитивно): from-aware next/prev + returnHref/label
+        const parsedFrom = parseFromParam(input.from);
+        let ctxKind = parsedFrom.kind;
+        let orderedIds: string[] = courseLessons.map((l) => l.id);
+        let label = `курс «${lesson.course.title}»`;
+        let returnHref = `/learn/library#${lesson.course.id}`;
+        let fromParam = 'course';
+
+        if (parsedFrom.kind === 'job' && parsedFrom.jobSlug) {
+          const job = await ctx.prisma.job.findUnique({
+            where: { slug: parsedFrom.jobSlug },
+            select: {
+              title: true,
+              isPublished: true,
+              lessons: {
+                where: { lesson: { isHidden: false, course: { isHidden: false } } },
+                orderBy: { order: 'asc' },
+                select: { lessonId: true },
+              },
+            },
+          });
+          if (job && job.isPublished) {
+            ctxKind = 'job';
+            orderedIds = job.lessons.map((jl) => jl.lessonId);
+            label = `задача «${job.title}»`;
+            returnHref = `/learn/job/${parsedFrom.jobSlug}`;
+            fromParam = `job:${parsedFrom.jobSlug}`;
+          } else {
+            ctxKind = 'course'; // джоба пропала → безопасный fallback
+          }
+        } else if (parsedFrom.kind === 'plan') {
+          const lp = await ctx.prisma.learningPath.findUnique({
+            where: { userId: ctx.user.id },
+            select: { lessons: true },
+          });
+          const flat = flattenPlanLessonIds(lp?.lessons);
+          if (flat.length > 0) {
+            ctxKind = 'plan';
+            orderedIds = flat;
+            label = 'Персональный план';
+            returnHref = '/learn/plan';
+            fromParam = 'plan';
+          } else {
+            ctxKind = 'course';
+          }
+        } else if (parsedFrom.kind === 'favorites') {
+          ctxKind = 'favorites';
+          orderedIds = [lesson.id];
+          label = 'Избранное';
+          returnHref = '/learn/favorites';
+          fromParam = 'favorites';
+        } else if (parsedFrom.kind === 'storefront') {
+          ctxKind = 'storefront';
+          orderedIds = [lesson.id];
+          label = 'Главная';
+          returnHref = '/dashboard';
+          fromParam = 'storefront';
+        }
+
+        const nav = resolveContextNav(orderedIds, lesson.id);
+
+        // Тайтлы для next/prev — одним запросом (работает для всех kind)
+        const navIds = [nav.nextId, nav.prevId].filter((v): v is string => v !== null);
+        const titleMap = new Map<string, string>(courseLessons.map((l) => [l.id, l.title]));
+        const missing = navIds.filter((id) => !titleMap.has(id));
+        if (missing.length > 0) {
+          const rows = await ctx.prisma.lesson.findMany({
+            where: { id: { in: missing } },
+            select: { id: true, title: true },
+          });
+          for (const r of rows) titleMap.set(r.id, r.title);
+        }
+        const contextNav = {
+          kind: ctxKind,
+          label,
+          returnHref,
+          fromParam,
+          nextInContext: nav.nextId ? { id: nav.nextId, title: titleMap.get(nav.nextId) ?? '' } : null,
+          prevInContext: nav.prevId ? { id: nav.prevId, title: titleMap.get(nav.prevId) ?? '' } : null,
+          isLastInContext: nav.isLast,
+        };
+
         return {
           lesson: {
             id: lesson.id,
@@ -647,6 +730,7 @@ export const learningRouter = router({
           course: { id: lesson.course.id, title: lesson.course.title, slug: lesson.course.slug },
           nextLesson: nextLessonNav,
           prevLesson: prevLessonNav,
+          context: contextNav,
           totalLessonsInCourse: courseLessons.length,
           currentLessonNumber: currentIndex + 1,
           hasPlatformSubscription: access.hasPlatformSubscription,

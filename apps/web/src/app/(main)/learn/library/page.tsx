@@ -321,7 +321,7 @@ function LibraryPageInner() {
                         <span className="text-caption text-mp-gray-500">{course.progressPercent}% завершено</span>
                       )}
                       {continueLesson && course.progressPercent < 100 && (
-                        <Link href={`/learn/${continueLesson.id}`}>
+                        <Link href={`/learn/${continueLesson.id}?from=course`}>
                           <Button variant="ghost" size="sm" className="text-caption text-mp-blue-600 hover:text-mp-blue-700 h-auto py-0.5 px-2">
                             Продолжить просмотр
                             <svg className="w-3.5 h-3.5 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -353,6 +353,7 @@ function LibraryPageInner() {
                       isRecommended={recommendedLessonIds.has(lesson.id)}
                       locked={lesson.locked}
                       favorite={{ itemId: lesson.id, initialFavorited: favoritedLessonIds.has(lesson.id) }}
+                      context="course"
                     />
                   ))}
                 </div>

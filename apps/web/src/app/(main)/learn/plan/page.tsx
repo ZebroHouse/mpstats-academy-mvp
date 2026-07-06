@@ -139,7 +139,7 @@ export default function PlanPage() {
             <>
               {firstUnfinishedLesson && (
                 <Link
-                  href={`/learn/${firstUnfinishedLesson.id}`}
+                  href={`/learn/${firstUnfinishedLesson.id}?from=plan`}
                   className="inline-flex items-center justify-center rounded-full h-11 px-6 text-[15px] font-medium text-white bg-mp-blue-500 hover:bg-mp-blue-600 transition-colors"
                 >
                   Продолжить с того места
@@ -279,6 +279,7 @@ export default function PlanPage() {
                                     showCourse
                                     courseName={(lesson as Record<string, unknown>).courseName as string}
                                     locked={lesson.locked}
+                                    context="plan"
                                   />
                                 ))}
                               </div>
@@ -293,6 +294,7 @@ export default function PlanPage() {
                                   showCourse
                                   courseName={(lesson as Record<string, unknown>).courseName as string}
                                   locked={lesson.locked}
+                                  context="plan"
                                 />
                               ))}
                             </div>

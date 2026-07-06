@@ -66,7 +66,7 @@ export default function CollectionPage() {
         <section>
           <h2 className="text-heading font-semibold mb-3">Уроки ({lessons.length})</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            {lessons.map((l) => <LessonCard key={l.id} lesson={l} locked={l.locked} />)}
+            {lessons.map((l) => <LessonCard key={l.id} lesson={l} locked={l.locked} context="storefront" />)}
           </div>
         </section>
       )}

@@ -15,6 +15,7 @@ import { PaywallBanner } from '@/components/learning/PaywallBanner';
 import { CollapsibleSummary } from '@/components/learning/CollapsibleSummary';
 import { LessonMaterials } from '@/components/learning/LessonMaterials';
 import { InteractiveLessonRenderer } from '@/components/learning/InteractiveLessonRenderer';
+import { LessonCompletionModal } from '@/components/learning/LessonCompletionModal';
 import { hasInteractiveBlocks } from '@/components/learning/interactive-reveal';
 import type { InteractiveProgressState } from '@mpstats/shared';
 import { trpc } from '@/lib/trpc/client';
@@ -280,6 +281,7 @@ export default function LessonPage() {
 
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [chatInput, setChatInput] = useState('');
+  const [showCompletionModal, setShowCompletionModal] = useState(false);
   const chatContainerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<PlayerHandle>(null);
 
@@ -294,15 +296,11 @@ export default function LessonPage() {
     : NaN;
   const hasSearchTimecode = !isNaN(searchTimecode) && searchTimecode > 0;
 
-  // Контекст задачи: ?from=job:<slug> — урок открыт из детальной страницы задачи.
+  // Контекст открытия урока: ?from=job:<slug> | plan | favorites | storefront.
+  // Сырой параметр пробрасывается в getLesson → бэкенд отдаёт context (label/returnHref/nav).
   const fromParam = typeof window !== 'undefined'
     ? new URLSearchParams(window.location.search).get('from')
     : null;
-  const fromJobSlug = fromParam?.startsWith('job:') ? fromParam.slice(4) : null;
-  const { data: fromJobTitle } = trpc.job.getTitleBySlug.useQuery(
-    { slug: fromJobSlug! },
-    { enabled: !!fromJobSlug },
-  );
 
   // Watch progress: position tracking refs (no re-renders)
   const lastPositionRef = useRef<number>(0);
@@ -311,7 +309,8 @@ export default function LessonPage() {
   const completedRef = useRef(false);
   const utils = trpc.useUtils();
 
-  const { data, isLoading, error: lessonError } = trpc.learning.getLesson.useQuery({ lessonId });
+  const { data, isLoading, error: lessonError } = trpc.learning.getLesson.useQuery({ lessonId, from: fromParam ?? undefined });
+  const lessonCtx = data?.context;
   const { data: hasDiagnostic } = trpc.diagnostic.hasCompletedDiagnostic.useQuery();
   const { data: recommendedPath } = trpc.learning.getRecommendedPath.useQuery(
     undefined,
@@ -522,7 +521,12 @@ export default function LessonPage() {
       utils.learning.getPath.invalidate();
       utils.learning.getCourses.invalidate();
       utils.profile.getDashboard.invalidate();
-      if (data?.nextLesson) {
+      const c = data?.context;
+      if (c?.isLastInContext) {
+        setShowCompletionModal(true);
+      } else if (c?.nextInContext) {
+        router.push(`/learn/${c.nextInContext.id}?from=${encodeURIComponent(c.fromParam)}`);
+      } else if (data?.nextLesson) {
         router.push(`/learn/${data.nextLesson.id}`);
       } else {
         router.push('/learn');
@@ -644,17 +648,19 @@ export default function LessonPage() {
 
   const { lesson, course, nextLesson, prevLesson, currentLessonNumber, totalLessonsInCourse } = data;
 
+  // Навигация с сохранением контекста ?from= (задача/план/избранное), иначе — курсовая.
+  const prevTarget = lessonCtx ? lessonCtx.prevInContext : prevLesson;
+  const nextTarget = lessonCtx ? lessonCtx.nextInContext : nextLesson;
+  const fromSuffix = lessonCtx ? `?from=${encodeURIComponent(lessonCtx.fromParam)}` : '';
+  const listHref = lessonCtx?.returnHref ?? '/learn';
+
   return (
     <div className="space-y-6">
-      {/* Breadcrumb — контекст-зависимый: из задачи vs стандартный */}
-      {fromJobSlug && fromJobTitle?.title ? (
+      {/* Breadcrumb — контекст-зависимый: из задачи/плана/избранного vs курсовой */}
+      {lessonCtx && lessonCtx.kind !== 'course' ? (
         <div className="flex items-center gap-2 text-body-sm min-w-0 overflow-hidden">
-          <Link href="/learn/solutions" className="text-mp-gray-500 hover:text-mp-blue-600 transition-colors shrink-0">
-            Решения под задачу
-          </Link>
-          <span className="text-mp-gray-400 shrink-0">/</span>
-          <Link href={`/learn/job/${fromJobSlug}`} className="text-mp-gray-500 hover:text-mp-blue-600 transition-colors truncate">
-            {fromJobTitle.title}
+          <Link href={lessonCtx.returnHref} className="text-mp-gray-500 hover:text-mp-blue-600 transition-colors truncate">
+            {lessonCtx.label}
           </Link>
           <span className="text-mp-gray-400 shrink-0">/</span>
           <span className="text-mp-gray-900 font-medium shrink-0">Урок {currentLessonNumber}</span>
@@ -868,8 +874,8 @@ export default function LessonPage() {
             )}
             {/* Prev / Complete (desktop) / Next row */}
             <div className="flex items-center justify-between">
-              {prevLesson ? (
-                <Link href={`/learn/${prevLesson.id}`}>
+              {prevTarget ? (
+                <Link href={`/learn/${prevTarget.id}${fromSuffix}`}>
                   <Button variant="outline" size="sm">
                     <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -904,8 +910,8 @@ export default function LessonPage() {
                 </Button>
               )}
 
-              {nextLesson ? (
-                <Link href={`/learn/${nextLesson.id}`}>
+              {nextTarget ? (
+                <Link href={`/learn/${nextTarget.id}${fromSuffix}`}>
                   <Button variant="outline" size="sm">
                     <span className="hidden sm:inline">Следующий</span>
                     <span className="sm:hidden">Далее</span>
@@ -915,7 +921,7 @@ export default function LessonPage() {
                   </Button>
                 </Link>
               ) : (
-                <Link href="/learn">
+                <Link href={listHref}>
                   <Button variant="outline" size="sm">
                     К списку
                   </Button>
@@ -1046,6 +1052,15 @@ export default function LessonPage() {
           <CommentSection lessonId={lessonId} />
         </div>
       </div>
+      )}
+
+      {showCompletionModal && lessonCtx && (
+        <LessonCompletionModal
+          kind={lessonCtx.kind}
+          label={lessonCtx.label}
+          returnHref={lessonCtx.returnHref}
+          onStay={() => setShowCompletionModal(false)}
+        />
       )}
     </div>
   );
