@@ -698,9 +698,12 @@ export default function LessonPage() {
       {lesson.locked ? (
         <LockOverlay lessonTitle={lesson.title} />
       ) : (
-      <div className="grid lg:grid-cols-3 gap-6">
-        {/* Left column: Video + Summary + Navigation */}
-        <div className="lg:col-span-2 space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Left column: Video + Summary + Navigation.
+            grid-cols-1 (minmax(0,1fr)) + min-w-0 keep this column from being
+            stretched past the viewport on mobile by wide content (tables,
+            images) — without them the whole page distended and clipped. */}
+        <div className="lg:col-span-2 space-y-4 min-w-0">
           {/* Non-blocking diagnostic hint (dismissible) */}
           {hasDiagnostic === false && <DiagnosticGateBanner />}
           {/* Lesson content — video player or text body (Phase B) */}
