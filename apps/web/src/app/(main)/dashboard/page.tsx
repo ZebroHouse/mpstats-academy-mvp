@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { DarkIsland, DarkIslandStat } from '@/components/ui/dark-island';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Shelf } from '@/components/learning/Shelf';
+import { HeroFirstLesson } from '@/components/dashboard/HeroFirstLesson';
 import { DatabaseError } from '@/components/shared/DatabaseError';
 import { trpc } from '@/lib/trpc/client';
 
@@ -134,6 +135,8 @@ export default function DashboardPage() {
           />
         );
       })()}
+
+      <HeroFirstLesson />
 
       {/* Compact entry row — 4 icon-inline buttons (incl. diagnostic), each with own BentoCard tone */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 animate-slide-up" style={{ animationDelay: '50ms' }}>
