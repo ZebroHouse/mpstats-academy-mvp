@@ -9,6 +9,7 @@ import { filterByMarketplace } from './job';
 import {
   GOAL_TO_AXES, GOAL_LABELS, MARKETPLACE_LABELS, goalShelfKey, newShelfKey, resolveShelfKey,
 } from '../utils/storefront-shelves';
+import { resolveFirstLesson, FIRST_LESSON_FALLBACK_ID } from '../utils/first-lesson';
 import type { JobSummary, LessonWithProgress, StorefrontShelf, StorefrontItem } from '@mpstats/shared';
 
 const SHELF_CAP = 12;
@@ -25,6 +26,13 @@ interface AccessCtx {
   billingEnabled: boolean;
   isAdminBypass: boolean;
   firstJobLessonIds: Set<string>;
+}
+
+export interface HeroLesson {
+  id: string;
+  title: string;
+  duration: number;
+  courseId: string;
 }
 
 function lessonLocked(l: { id: string; order: number; courseId: string }, a: AccessCtx): boolean {
@@ -172,6 +180,38 @@ export const dashboardRouter = router({
       ];
 
       return shelves.filter((s): s is StorefrontShelf => s !== null);
+    } catch (e) {
+      throw handleDatabaseError(e);
+    }
+  }),
+
+  // Cold-user hero: the single "first lesson" to land on right after onboarding.
+  // Returns null for returning users (they see «Продолжить» instead) and when the
+  // mapped + fallback lessons are both unavailable.
+  getFirstLesson: protectedProcedure.query(async ({ ctx }): Promise<HeroLesson | null> => {
+    try {
+      const userId = ctx.user.id;
+      const [profile, progressCount] = await Promise.all([
+        ctx.prisma.userProfile.findUnique({ where: { id: userId }, select: { goals: true, marketplaces: true } }),
+        ctx.prisma.lessonProgress.count({ where: { path: { userId }, status: { in: ['IN_PROGRESS', 'COMPLETED'] } } }),
+      ]);
+      if (progressCount > 0) return null;
+
+      const goals = (profile?.goals ?? []) as string[];
+      const marketplaces = (profile?.marketplaces ?? []) as string[];
+      const lessonId = resolveFirstLesson(goals, marketplaces);
+
+      const load = (id: string) =>
+        ctx.prisma.lesson.findFirst({
+          where: { id, isHidden: false, course: { isHidden: false } },
+          select: { id: true, title: true, duration: true, courseId: true },
+        });
+
+      let lesson = await load(lessonId);
+      if (!lesson && lessonId !== FIRST_LESSON_FALLBACK_ID) lesson = await load(FIRST_LESSON_FALLBACK_ID);
+      if (!lesson) return null;
+
+      return { id: lesson.id, title: lesson.title, duration: lesson.duration ?? 0, courseId: lesson.courseId };
     } catch (e) {
       throw handleDatabaseError(e);
     }

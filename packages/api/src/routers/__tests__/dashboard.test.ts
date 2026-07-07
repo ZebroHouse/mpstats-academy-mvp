@@ -133,6 +133,39 @@ describe('dashboard.getStorefront', () => {
   });
 });
 
+describe('dashboard.getFirstLesson', () => {
+  const heroRow = { id: 'skill_analytics_sales_forecast_001', title: 'Планирование продаж на Wildberries', duration: 6, courseId: '01_analytics' };
+
+  it('cold user, ANALYTICS×WB → returns mapped hero lesson', async () => {
+    const ctx = makeCtx({ goals: ['ANALYTICS'], marketplaces: ['WB'], progressCount: 0 });
+    ctx.prisma.lesson.findFirst = vi.fn().mockResolvedValue(heroRow);
+    const res = await dashboardRouter.createCaller(ctx).getFirstLesson();
+    expect(res).toEqual(heroRow);
+    expect(ctx.prisma.lesson.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: expect.objectContaining({ id: 'skill_analytics_sales_forecast_001' }) }),
+    );
+  });
+
+  it('returning user (progressCount > 0) → null (no hero)', async () => {
+    const ctx = makeCtx({ goals: ['ANALYTICS'], marketplaces: ['WB'], progressCount: 3 });
+    ctx.prisma.lesson.findFirst = vi.fn().mockResolvedValue(heroRow);
+    const res = await dashboardRouter.createCaller(ctx).getFirstLesson();
+    expect(res).toBeNull();
+    expect(ctx.prisma.lesson.findFirst).not.toHaveBeenCalled();
+  });
+
+  it('mapped lesson hidden/missing → falls back to ANALYTICS×WB lesson', async () => {
+    const ctx = makeCtx({ goals: ['OPERATIONS'], marketplaces: ['WB'], progressCount: 0 });
+    const findFirst = vi.fn()
+      .mockResolvedValueOnce(null)      // mapped OPERATIONS lesson gone
+      .mockResolvedValueOnce(heroRow);  // fallback resolves
+    ctx.prisma.lesson.findFirst = findFirst;
+    const res = await dashboardRouter.createCaller(ctx).getFirstLesson();
+    expect(res).toEqual(heroRow);
+    expect(findFirst).toHaveBeenCalledTimes(2);
+  });
+});
+
 describe('dashboard.getCollection', () => {
   it('start shelf → full jobs+lessons grouped, no cap', async () => {
     const badgedLessons = [lesson('l1', ['START']), lesson('l2', ['START']), lesson('l3', ['START']), lesson('l4', ['START'])];
