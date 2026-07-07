@@ -8,6 +8,7 @@ interface Props {
   label: string;
   returnHref: string;
   onStay: () => void;
+  showDiagnosticCta?: boolean;
 }
 
 const TITLE: Record<LessonContextKind, string> = {
@@ -32,7 +33,7 @@ const PRIMARY_LABEL: Record<LessonContextKind, string> = {
   storefront: 'На главную',
 };
 
-export function LessonCompletionModal({ kind, label, returnHref, onStay }: Props) {
+export function LessonCompletionModal({ kind, label, returnHref, onStay, showDiagnosticCta }: Props) {
   return (
     <div
       className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4"
@@ -70,6 +71,14 @@ export function LessonCompletionModal({ kind, label, returnHref, onStay }: Props
           >
             {PRIMARY_LABEL[kind]}
           </Link>
+          {showDiagnosticCta && (
+            <Link
+              href="/diagnostic"
+              className="w-full rounded-xl bg-mp-green-50 px-4 py-3 font-medium text-mp-green-700 hover:bg-mp-green-100 transition-colors"
+            >
+              Собрать персональный план → диагностика (10 мин)
+            </Link>
+          )}
           {kind === 'plan' ? (
             <button
               onClick={onStay}
