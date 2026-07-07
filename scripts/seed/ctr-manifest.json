@@ -7,7 +7,7 @@
     "order": 7,
     "price": 4990,
     "isFree": false,
-    "isHidden": true
+    "isHidden": false
   },
   "lessons": [
     { "id": "08_ctr_m01_ctr_001", "order": 1, "duration": 35, "skillCategory": "MARKETING", "title": "Как карточка попадает в выдачу" },
