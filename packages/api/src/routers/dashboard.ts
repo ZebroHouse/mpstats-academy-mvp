@@ -203,7 +203,7 @@ export const dashboardRouter = router({
 
       const load = (id: string) =>
         ctx.prisma.lesson.findFirst({
-          where: { id, isHidden: false, course: { isHidden: false } },
+          where: { id, isHidden: false, course: { isHidden: false, partnerKey: null } },
           select: { id: true, title: true, duration: true, courseId: true },
         });
 
