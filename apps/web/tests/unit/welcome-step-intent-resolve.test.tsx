@@ -78,18 +78,17 @@ describe('WelcomePage — intent.resolve wiring on step 1 exit', () => {
   it('still advances to step 2 and does not break the existing onboarding.complete flow', () => {
     const { getByRole } = render(<WelcomePage />);
 
-    // Advance through all steps to the fork. Each step requires an answer before
-    // advancing (onboarding hotfix dc645c7 — "require an answer on each step"),
-    // so select one per step, mirroring welcome-page.test.tsx.
+    // Advance through all steps. Each step requires an answer before advancing
+    // (onboarding hotfix dc645c7 — "require an answer on each step"), so select
+    // one per step, mirroring welcome-page.test.tsx.
     fireEvent.click(getByRole('button', { name: 'Увеличить продажи' }));
     fireEvent.click(getByRole('button', { name: 'Продолжить' }));
     fireEvent.click(getByRole('button', { name: 'Wildberries' }));
     fireEvent.click(getByRole('button', { name: 'Далее →' }));
     fireEvent.click(getByRole('button', { name: /Только присматриваюсь/ }));
-    fireEvent.click(getByRole('button', { name: 'Далее →' }));
 
-    // On the fork, choose the diagnostic path.
-    fireEvent.click(getByRole('button', { name: 'Пройти диагностику' }));
+    // Wizard now completes on step 3 (no fork) → onboarding.complete fires.
+    fireEvent.click(getByRole('button', { name: 'Начать обучение' }));
 
     // onboarding.complete must still be called (existing flow intact).
     expect(completeMutateMock).toHaveBeenCalledTimes(1);
