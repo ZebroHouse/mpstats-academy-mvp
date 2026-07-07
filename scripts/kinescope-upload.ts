@@ -51,6 +51,7 @@ const COURSE_FOLDER_IDS: Record<string, string> = {
   'skill_analytics': 'cc2bd243-b8e2-4acc-bd73-5cae517cbc1c',
   'skill_marketing': '500cc6a8-109b-445d-9a5a-4a2b46a44a5d',
   '07_instruments':  'a1c43064-e68b-41bf-93f0-65feeb87ef70',
+  '08_ctr':          '5a90515d-3aef-4ba5-80a6-90273569b1ed',
 };
 
 // Retry config

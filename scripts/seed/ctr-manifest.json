@@ -1,0 +1,26 @@
+{
+  "course": {
+    "id": "08_ctr",
+    "title": "Качаем CTR",
+    "slug": "08_ctr",
+    "description": "Как поднять CTR карточки на Wildberries: попадание в выдачу, анализ ЦА через Яндекс Взгляд и разборы карточек с Алексеем Морозовым.",
+    "order": 7,
+    "price": 4990,
+    "isFree": false,
+    "isHidden": true
+  },
+  "lessons": [
+    { "id": "08_ctr_m01_ctr_001", "order": 1, "duration": 35, "skillCategory": "MARKETING", "title": "Как карточка попадает в выдачу" },
+    { "id": "08_ctr_m01_ctr_002", "order": 2, "duration": 16, "skillCategory": "MARKETING", "title": "Почему WB не показывает вашу карточку" },
+    { "id": "08_ctr_m01_ctr_003", "order": 3, "duration": 13, "skillCategory": "ANALYTICS", "title": "Анализируем ЦА с помощью Яндекс Взгляда" },
+    { "id": "08_ctr_m01_ctr_004", "order": 4, "duration": 10, "skillCategory": "ANALYTICS", "title": "Разбор на «Качаем CTR»: Аромат для мужчин" },
+    { "id": "08_ctr_m01_ctr_005", "order": 5, "duration": 5, "skillCategory": "ANALYTICS", "title": "Разбор на «Качаем CTR»: Вентиляционная решётка" },
+    { "id": "08_ctr_m01_ctr_006", "order": 6, "duration": 26, "skillCategory": "ANALYTICS", "title": "Разбор на «Качаем CTR»: Восточные сладости" },
+    { "id": "08_ctr_m01_ctr_007", "order": 7, "duration": 9, "skillCategory": "ANALYTICS", "title": "Разбор на «Качаем CTR»: Декоративные подушки" },
+    { "id": "08_ctr_m01_ctr_008", "order": 8, "duration": 4, "skillCategory": "ANALYTICS", "title": "Разбор на «Качаем CTR»: Детский костюм" },
+    { "id": "08_ctr_m01_ctr_009", "order": 9, "duration": 14, "skillCategory": "ANALYTICS", "title": "Разбор на «Качаем CTR»: Детский стульчик" },
+    { "id": "08_ctr_m01_ctr_010", "order": 10, "duration": 24, "skillCategory": "ANALYTICS", "title": "Разбор на «Качаем CTR»: Стульчик для кормления" },
+    { "id": "08_ctr_m01_ctr_011", "order": 11, "duration": 5, "skillCategory": "ANALYTICS", "title": "Разбор на «Качаем CTR»: Сухари Панко" },
+    { "id": "08_ctr_m01_ctr_012", "order": 12, "duration": 9, "skillCategory": "ANALYTICS", "title": "Разбор на «Качаем CTR»: Фиксатор для шнурков" }
+  ]
+}
