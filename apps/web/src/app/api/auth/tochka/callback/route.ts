@@ -38,7 +38,10 @@ export async function GET(request: Request): Promise<Response> {
     }
 
     // 3. Delete state cookie (one-time use)
-    cookieStore.delete('tochka_oauth_state');
+    // Delete with the SAME path the action set it at (`/api/auth/tochka`);
+    // a bare name defaults to path '/' and would not clear this cookie,
+    // leaving the one-time state cookie alive until its maxAge.
+    cookieStore.delete({ name: 'tochka_oauth_state', path: '/api/auth/tochka' });
 
     // 4. Exchange code for access token
     const provider = new TochkaProvider();

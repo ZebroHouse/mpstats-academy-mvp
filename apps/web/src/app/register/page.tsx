@@ -12,6 +12,10 @@ import {
 } from '@/components/register/value-panel';
 import { RegisterForm } from './register-form';
 
+// Already dynamic via getUser()/cookies() below, but pin it explicitly so the
+// TOCHKA_LOGIN_ENABLED runtime flip is guaranteed even if that changes.
+export const dynamic = 'force-dynamic';
+
 function resolveRefCode(urlRef: string | undefined, cookieRef: string | undefined): string | null {
   // URL ?ref= takes precedence over cookie (explicit user action wins).
   const candidate = (urlRef ?? cookieRef ?? '').toUpperCase();
