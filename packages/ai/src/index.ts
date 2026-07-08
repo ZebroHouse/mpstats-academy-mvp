@@ -52,3 +52,13 @@ export type {
 export { resolveIntent } from './intent';
 export type { IntentResult, IntentAction, JobCandidate } from './intent';
 export type { ResolveArgs } from './intent/resolve';
+
+// Assistant pipeline (multi-turn LLM + retrieval + synthesis)
+export {
+  runAssistantPipeline,
+  type AssistantTurnResult,
+  type AssistantLessonRef,
+  type AssistantJobRef,
+  type AssistantHistoryMessage,
+  type AssistantPipelineArgs,
+} from './assistant';
