@@ -20,16 +20,19 @@ export function AssistantConversation() {
   const scrollRef = useRef<HTMLDivElement>(null);
 
   const { data: convo } = trpc.assistant.getConversation.useQuery(undefined, { refetchOnMount: true });
-  // Sync persisted history once on load — local state then owns optimistic
-  // updates so a background refetch doesn't clobber an in-flight send.
-  const historySyncedRef = useRef(false);
+  // Hydrate persisted history only while the local list is still empty. Guards
+  // against two hazards: (1) optimistic sends/replies live in local state, so
+  // never clobber them once present; (2) on remount, React Query can return a
+  // stale cached `{messages: []}` synchronously before the real refetch — an
+  // empty resolve must not lock us out of the later non-empty one. Returning
+  // `prev` unchanged yields the same reference → no re-render → no loop.
   useEffect(() => {
-    if (convo?.messages && !historySyncedRef.current) {
-      historySyncedRef.current = true;
-      setMessages(
-        convo.messages.map((m) => ({ role: m.role, content: m.content, lessons: m.lessons, jobs: m.jobs })),
-      );
-    }
+    if (!convo?.messages?.length) return;
+    setMessages((prev) =>
+      prev.length === 0
+        ? convo.messages.map((m) => ({ role: m.role, content: m.content, lessons: m.lessons, jobs: m.jobs }))
+        : prev,
+    );
   }, [convo]);
 
   const { data: quota } = trpc.assistant.getQuota.useQuery();
@@ -61,7 +64,6 @@ export function AssistantConversation() {
   const resetMutation = trpc.assistant.resetConversation.useMutation({
     onSuccess: () => {
       setMessages([]);
-      historySyncedRef.current = false;
       utils.assistant.getConversation.invalidate();
     },
   });
