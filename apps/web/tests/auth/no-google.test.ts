@@ -6,6 +6,9 @@ const SRC_DIR = path.resolve(__dirname, '../../src');
 // Phase 65: /login moved out of the centered (auth) group into its own
 // full-width dark layout at app/login/ (same as /register).
 const LOGIN_PAGE = path.join(SRC_DIR, 'app/login/page.tsx');
+// Tochka OAuth: login/page.tsx became a server component reading the flag; the
+// form (with the Yandex button) moved to login-form.tsx, mirroring register.
+const LOGIN_FORM = path.join(SRC_DIR, 'app/login/login-form.tsx');
 // Phase 65: /register moved out of the centered (auth) group into its own
 // full-width split layout at app/register/.
 const REGISTER_PAGE = path.join(SRC_DIR, 'app/register/page.tsx');
@@ -34,8 +37,10 @@ describe('No Google OAuth references remain', () => {
     expect(content).not.toContain('Google');
   });
 
-  it('login/page.tsx imports signInWithYandex from actions', () => {
-    const content = fs.readFileSync(LOGIN_PAGE, 'utf-8');
+  it('login-form.tsx imports signInWithYandex from actions', () => {
+    // Tochka OAuth split login/page.tsx into a server wrapper + login-form.tsx;
+    // the Yandex button lives on the form now (same pattern as register-form).
+    const content = fs.readFileSync(LOGIN_FORM, 'utf-8');
     expect(content).toContain('signInWithYandex');
   });
 

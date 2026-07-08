@@ -3,7 +3,8 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { signUp, signInWithYandex } from '@/lib/auth/actions';
+import { signUp, signInWithYandex, signInWithTochka } from '@/lib/auth/actions';
+import { TochkaButton } from '@/components/auth/TochkaButton';
 import { reachGoal } from '@/lib/analytics/metrika';
 import { METRIKA_GOALS } from '@/lib/analytics/constants';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,7 @@ import { PhoneInput } from '@/components/ui/phone-input';
 import { trpc } from '@/lib/trpc/client';
 import { pluralizeDays } from '@/lib/plural';
 
-export function RegisterForm({ initialRefCode }: { initialRefCode: string | null }) {
+export function RegisterForm({ initialRefCode, tochkaEnabled }: { initialRefCode: string | null; tochkaEnabled?: boolean }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
@@ -73,6 +74,19 @@ export function RegisterForm({ initialRefCode }: { initialRefCode: string | null
 
     reachGoal(METRIKA_GOALS.SIGNUP, { method: 'yandex' });
     const result = await signInWithYandex();
+
+    if (result?.error) {
+      setError(result.error);
+      setLoading(false);
+    }
+  }
+
+  async function handleTochkaSignIn() {
+    setLoading(true);
+    setError(null);
+
+    reachGoal(METRIKA_GOALS.SIGNUP, { method: 'tochka' });
+    const result = await signInWithTochka();
 
     if (result?.error) {
       setError(result.error);
@@ -273,6 +287,8 @@ export function RegisterForm({ initialRefCode }: { initialRefCode: string | null
           </svg>
           Продолжить с Яндекс ID
         </Button>
+
+        {tochkaEnabled && <TochkaButton onClick={handleTochkaSignIn} disabled={loading} />}
       </CardContent>
 
       <CardFooter className="justify-center">
