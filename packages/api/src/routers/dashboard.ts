@@ -9,6 +9,7 @@ import { filterByMarketplace } from './job';
 import {
   GOAL_TO_AXES, GOAL_LABELS, MARKETPLACE_LABELS, goalShelfKey, newShelfKey, resolveShelfKey,
 } from '../utils/storefront-shelves';
+import { resolveFirstLesson, FIRST_LESSON_FALLBACK_ID, resolveGoalLessons, resolvePrimaryGoal } from '../utils/first-lesson';
 import type { JobSummary, LessonWithProgress, StorefrontShelf, StorefrontItem } from '@mpstats/shared';
 
 const SHELF_CAP = 12;
@@ -25,6 +26,13 @@ interface AccessCtx {
   billingEnabled: boolean;
   isAdminBypass: boolean;
   firstJobLessonIds: Set<string>;
+}
+
+export interface HeroLesson {
+  id: string;
+  title: string;
+  duration: number;
+  courseId: string;
 }
 
 function lessonLocked(l: { id: string; order: number; courseId: string }, a: AccessCtx): boolean {
@@ -112,11 +120,36 @@ export const dashboardRouter = router({
 
       // Build each shelf independently, then assemble in a user-state-aware order below.
 
-      // Начни отсюда (START, mix, ≤3) — shown to NEW (cold) users only.
-      const startShelf = cap(
-        [...jobsWithBadge('START').map(toJobItem), ...lessonsWithBadge('START').map(toLessonItem)],
-        START_CAP, 'start', 'Начни отсюда',
-      );
+      // «Начни отсюда» — wizard-driven starter lessons (cold users only).
+      // The primary goal's first lesson is the /dashboard hero (shown separately);
+      // this shelf shows the OTHER goals' starter lessons, topped up with beginner
+      // lessons from the primary goal's axis. Capped so it never shows «Смотреть все».
+      let startShelf: StorefrontShelf | null = null;
+      if (!isReturning) {
+        const heroId = resolveFirstLesson(goals, marketplaces);
+        const starterIds = resolveGoalLessons(goals, marketplaces).filter((id) => id !== heroId);
+        const starterRows = starterIds.length
+          ? await ctx.prisma.lesson.findMany({
+              where: { id: { in: starterIds }, isHidden: false, course: { isHidden: false, partnerKey: null } },
+              include: { progress: { where: { path: { userId } } }, course: { select: { title: true } } },
+            })
+          : [];
+        const starterItems: StorefrontItem[] = starterIds
+          .map((id) => starterRows.find((r: any) => r.id === id))
+          .filter((l): l is any => Boolean(l))
+          .map((l: any) => toLessonItem(l));
+        if (starterItems.length < START_CAP) {
+          const primaryGoal = resolvePrimaryGoal(goals);
+          const axes = primaryGoal ? (GOAL_TO_AXES[primaryGoal] ?? []) : (GOAL_TO_AXES.ANALYTICS ?? []);
+          const used = new Set([heroId, ...starterIds]);
+          starterItems.push(
+            ...badgedLessons
+              .filter((l: any) => axes.includes(l.skillCategory) && !used.has(l.id))
+              .map((l: any) => toLessonItem(l)),
+          );
+        }
+        startShelf = cap(starterItems.slice(0, START_CAP), START_CAP, 'start', 'Начни отсюда');
+      }
 
       // Продолжить (IN_PROGRESS lessons) — top shelf for returning users.
       const continueShelf = cap(
@@ -172,6 +205,38 @@ export const dashboardRouter = router({
       ];
 
       return shelves.filter((s): s is StorefrontShelf => s !== null);
+    } catch (e) {
+      throw handleDatabaseError(e);
+    }
+  }),
+
+  // Cold-user hero: the single "first lesson" to land on right after onboarding.
+  // Returns null for returning users (they see «Продолжить» instead) and when the
+  // mapped + fallback lessons are both unavailable.
+  getFirstLesson: protectedProcedure.query(async ({ ctx }): Promise<HeroLesson | null> => {
+    try {
+      const userId = ctx.user.id;
+      const [profile, progressCount] = await Promise.all([
+        ctx.prisma.userProfile.findUnique({ where: { id: userId }, select: { goals: true, marketplaces: true } }),
+        ctx.prisma.lessonProgress.count({ where: { path: { userId }, status: { in: ['IN_PROGRESS', 'COMPLETED'] } } }),
+      ]);
+      if (progressCount > 0) return null;
+
+      const goals = (profile?.goals ?? []) as string[];
+      const marketplaces = (profile?.marketplaces ?? []) as string[];
+      const lessonId = resolveFirstLesson(goals, marketplaces);
+
+      const load = (id: string) =>
+        ctx.prisma.lesson.findFirst({
+          where: { id, isHidden: false, course: { isHidden: false, partnerKey: null } },
+          select: { id: true, title: true, duration: true, courseId: true },
+        });
+
+      let lesson = await load(lessonId);
+      if (!lesson && lessonId !== FIRST_LESSON_FALLBACK_ID) lesson = await load(FIRST_LESSON_FALLBACK_ID);
+      if (!lesson) return null;
+
+      return { id: lesson.id, title: lesson.title, duration: lesson.duration ?? 0, courseId: lesson.courseId };
     } catch (e) {
       throw handleDatabaseError(e);
     }

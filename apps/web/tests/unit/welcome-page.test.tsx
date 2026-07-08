@@ -2,16 +2,19 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, cleanup, fireEvent } from '@testing-library/react';
 
 /**
- * Regression test for the 2026-05-19 prod incident: completing the wizard and
- * choosing a fork path bounced the user back to the wizard in a loop.
+ * The wizard now completes on step 3 (no fork) and hard-navigates to /dashboard,
+ * where a cold user gets the «Твой первый урок» hero. A partner ?next= path
+ * overrides that default.
  *
- * Root cause — the fork navigated with a soft `router.push`. The (main) layout
- * guard redirects to /welcome while onboardingCompletedAt is null, and Next's
- * client Router Cache replayed a stale pre-onboarding render of that guard.
+ * Regression guard for the 2026-05-19 prod incident: completing the wizard with
+ * a soft `router.push` bounced the user back into the wizard in a loop. The
+ * (main) layout guard redirects to /welcome while onboardingCompletedAt is null,
+ * and Next's client Router Cache replayed a stale pre-onboarding render of that
+ * guard.
  *
- * Fix — the fork must navigate with a hard load (window.location.assign) so the
+ * Fix — completion must navigate with a hard load (window.location.assign) so the
  * Router Cache is discarded and the guard re-renders server-side. This test
- * fails if anyone reverts the fork to router.push.
+ * fails if anyone reverts completion to router.push.
  */
 
 const mutateMock = vi.fn();
@@ -59,20 +62,19 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('WelcomePage — fork navigation', () => {
+describe('WelcomePage — completion navigation', () => {
   it('leaves the wizard with a hard navigation, not a soft router.push', () => {
     const { getByRole } = render(<WelcomePage />);
 
-    // Step 1 → 2 → 3 → fork — each step needs an answer before advancing.
+    // Step 1 → 2 → 3 — each step needs an answer before advancing.
     fireEvent.click(getByRole('button', { name: 'Увеличить продажи' }));
     fireEvent.click(getByRole('button', { name: 'Продолжить' }));
     fireEvent.click(getByRole('button', { name: 'Wildberries' }));
     fireEvent.click(getByRole('button', { name: 'Далее →' }));
     fireEvent.click(getByRole('button', { name: /Только присматриваюсь/ }));
-    fireEvent.click(getByRole('button', { name: 'Далее →' }));
 
-    // On the fork, choose the diagnostic path.
-    fireEvent.click(getByRole('button', { name: 'Пройти диагностику' }));
+    // Step 3 primary button now finishes the wizard.
+    fireEvent.click(getByRole('button', { name: 'Начать обучение' }));
 
     // onboarding.complete ran; navigation is deferred to its onSuccess.
     expect(mutateMock).toHaveBeenCalledTimes(1);
@@ -81,7 +83,7 @@ describe('WelcomePage — fork navigation', () => {
     onSuccess();
 
     // Must be a full-page load to bust Next's Router Cache.
-    expect(assignMock).toHaveBeenCalledWith('/diagnostic');
+    expect(assignMock).toHaveBeenCalledWith('/dashboard');
   });
 });
 
@@ -100,16 +102,15 @@ describe('WelcomePage — ?next= partner destination', () => {
     fireEvent.click(getByRole('button', { name: 'Wildberries' }));
     fireEvent.click(getByRole('button', { name: 'Далее →' }));
     fireEvent.click(getByRole('button', { name: /Только присматриваюсь/ }));
-    fireEvent.click(getByRole('button', { name: 'Далее →' }));
 
-    // On the fork, choose the learn path (the default fork choice should be overridden).
-    fireEvent.click(getByRole('button', { name: 'Перейти в обучение' }));
+    // Complete on step 3 (the default /dashboard should be overridden by ?next=).
+    fireEvent.click(getByRole('button', { name: 'Начать обучение' }));
 
     expect(mutateMock).toHaveBeenCalledTimes(1);
     const onSuccess = mutateMock.mock.calls[0][1].onSuccess as () => void;
     onSuccess();
 
-    // Must navigate to the partner target, not the fork default (/learn).
+    // Must navigate to the partner target, not the default (/dashboard).
     expect(assignMock).toHaveBeenCalledWith('/mpstats-tools/lesson-42');
   });
 
@@ -125,16 +126,15 @@ describe('WelcomePage — ?next= partner destination', () => {
     fireEvent.click(getByRole('button', { name: 'Wildberries' }));
     fireEvent.click(getByRole('button', { name: 'Далее →' }));
     fireEvent.click(getByRole('button', { name: /Только присматриваюсь/ }));
-    fireEvent.click(getByRole('button', { name: 'Далее →' }));
 
-    fireEvent.click(getByRole('button', { name: 'Пройти диагностику' }));
+    fireEvent.click(getByRole('button', { name: 'Начать обучение' }));
 
     expect(mutateMock).toHaveBeenCalledTimes(1);
     const onSuccess = mutateMock.mock.calls[0][1].onSuccess as () => void;
     onSuccess();
 
-    // The absolute URL must be rejected; fall back to the fork default (/diagnostic).
-    expect(assignMock).toHaveBeenCalledWith('/diagnostic');
+    // The absolute URL must be rejected; fall back to the default (/dashboard).
+    expect(assignMock).toHaveBeenCalledWith('/dashboard');
   });
 });
 
@@ -154,10 +154,10 @@ describe('WelcomePage — required answers per step', () => {
     expect(getByRole('button', { name: 'Далее →' })).not.toBeDisabled();
     fireEvent.click(getByRole('button', { name: 'Далее →' }));
 
-    // Step 3: no experience selected → "Далее →" is disabled.
-    expect(getByRole('button', { name: 'Далее →' })).toBeDisabled();
+    // Step 3: no experience selected → "Начать обучение" is disabled.
+    expect(getByRole('button', { name: 'Начать обучение' })).toBeDisabled();
     fireEvent.click(getByRole('button', { name: /Только присматриваюсь/ }));
-    expect(getByRole('button', { name: 'Далее →' })).not.toBeDisabled();
+    expect(getByRole('button', { name: 'Начать обучение' })).not.toBeDisabled();
   });
 
   it('accepts free-text intent as a step 1 answer', () => {
