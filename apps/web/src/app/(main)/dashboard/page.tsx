@@ -5,7 +5,6 @@ import Link from 'next/link';
 import { BarChart3, CalendarCheck, Search, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { DarkIsland, DarkIslandStat } from '@/components/ui/dark-island';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Shelf } from '@/components/learning/Shelf';
 import { HeroFirstLesson } from '@/components/dashboard/HeroFirstLesson';
@@ -20,18 +19,18 @@ import { trpc } from '@/lib/trpc/client';
  *   orange→ #ff6b16 (accent),     white text  — diagnostic (action/energy)
  * Buttons are filled (not white) so they stand out above lesson cards.
  */
-type EntryTone = 'blue' | 'gray' | 'dark' | 'orange';
+type EntryTone = 'blue' | 'green' | 'dark' | 'orange';
 
 const ENTRY_TONE_STYLES: Record<EntryTone, { bg: React.CSSProperties; wrapper: string; iconBg: string; iconColor: string; labelColor: string }> = {
   blue:   { bg: { backgroundColor: '#2C4FF8' }, wrapper: 'hover:-translate-y-0.5 hover:shadow-md hover:brightness-110', iconBg: 'bg-white/20',          iconColor: 'text-white',      labelColor: 'text-white' },
-  gray:   { bg: { backgroundColor: '#f4f4f4' }, wrapper: 'hover:-translate-y-0.5 hover:shadow-md hover:bg-[#e8e8e8]',   iconBg: 'bg-[#121212]/10',       iconColor: 'text-[#121212]',  labelColor: 'text-[#121212]' },
+  green:  { bg: { backgroundColor: '#17BF50' }, wrapper: 'hover:-translate-y-0.5 hover:shadow-md hover:brightness-110', iconBg: 'bg-white/20',          iconColor: 'text-white',      labelColor: 'text-white' },
   dark:   { bg: { backgroundColor: '#0F172A' }, wrapper: 'hover:-translate-y-0.5 hover:shadow-md hover:brightness-125', iconBg: 'bg-white/15',           iconColor: 'text-white',      labelColor: 'text-white' },
   orange: { bg: { backgroundColor: '#ff6b16' }, wrapper: 'hover:-translate-y-0.5 hover:shadow-md hover:brightness-110', iconBg: 'bg-white/20',          iconColor: 'text-white',      labelColor: 'text-white' },
 };
 
 const ENTRY_BUTTONS: Array<{ href: string; icon: React.ElementType; label: string; dataTour?: string; tone: EntryTone }> = [
   { href: '/learn/plan',     icon: CalendarCheck, label: 'Продолжить мой план',  dataTour: 'dashboard-learn-cta',       tone: 'blue' },
-  { href: '/learn/library',  icon: Search,        label: 'Найти быстрый ответ',  dataTour: undefined,                   tone: 'gray' },
+  { href: '/learn/library',  icon: Search,        label: 'Найти быстрый ответ',  dataTour: undefined,                   tone: 'green' },
   { href: '/learn/solutions',icon: Target,        label: 'Решить задачу',        dataTour: undefined,                   tone: 'dark' },
   { href: '/diagnostic',     icon: BarChart3,     label: 'Пройти диагностику',   dataTour: 'dashboard-diagnostic-cta',  tone: 'orange' },
 ];
@@ -111,7 +110,7 @@ export default function DashboardPage() {
         </Card>
       )}
 
-      {/* Hero — DarkIsland (v2), slim: greeting + learning stats only */}
+      {/* Greeting — calm light island (deliberately low-accent; the first-lesson hero below carries the accent) */}
       {(() => {
         const lessons = dashboard?.stats.totalLessonsCompleted || 0;
         const watch = dashboard?.stats.totalWatchTime || 0;
@@ -119,20 +118,29 @@ export default function DashboardPage() {
         const completion = dashboard?.completionPercent || 0;
         const allZero = lessons === 0 && watch === 0 && streak === 0 && completion === 0;
         return (
-          <DarkIsland
-            className="animate-slide-up p-5 sm:p-6"
-            eyebrow="MPSTATS Academy"
-            title={`Привет, ${name}!`}
-            aside={
-              allZero ? undefined : (
-                <div className="flex gap-8">
-                  <DarkIslandStat value={lessons} label="уроков пройдено" />
-                  <DarkIslandStat value={watch} label="минут обучения" />
-                  <DarkIslandStat value={streak} label="дней подряд" />
-                </div>
-              )
-            }
-          />
+          <div
+            className="flex flex-col gap-4 rounded-2xl p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6 animate-slide-up"
+            style={{ backgroundColor: '#f4f4f4' }}
+          >
+            <div>
+              <p className="text-caption font-semibold uppercase tracking-wide text-mp-gray-400">MPSTATS Academy</p>
+              <h1 className="mt-1 text-heading-xl font-bold text-mp-gray-900 sm:text-display-sm">Привет, {name}!</h1>
+            </div>
+            {!allZero && (
+              <div className="flex gap-8">
+                {[
+                  { value: lessons, label: 'уроков пройдено' },
+                  { value: watch, label: 'минут обучения' },
+                  { value: streak, label: 'дней подряд' },
+                ].map((s) => (
+                  <div key={s.label}>
+                    <p className="text-heading-xl font-bold text-mp-gray-900">{s.value}</p>
+                    <p className="text-body-sm text-mp-gray-500">{s.label}</p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         );
       })()}
 
