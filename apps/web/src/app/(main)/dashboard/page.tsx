@@ -2,7 +2,6 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import { BarChart3, CalendarCheck, Search, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -13,18 +12,17 @@ import { DatabaseError } from '@/components/shared/DatabaseError';
 import { trpc } from '@/lib/trpc/client';
 
 /**
- * Tone palette reused from BentoCard (bento-card.tsx):
- *   blue  → #2C4FF8 (brand blue), white text — plan (primary CTA)
- *   gray  → #f4f4f4 (light fill), dark text  — library (soft, exploratory)
- *   dark  → #0F172A (navy),       white text  — solutions (authoritative)
- *   orange→ #ff6b16 (accent),     white text  — diagnostic (action/energy)
- * Buttons are filled (not white) so they stand out above lesson cards.
+ * Entry-tile tones (filled so they stand out above lesson cards):
+ *   dark  → #0F172A (navy)   — solutions (authoritative)
+ *   pink  → #FF168A (magenta)— library / quick search
+ *   orange→ #ff6b16 (accent) — diagnostic (action/energy)
+ *   blue  → #2C4FF8 (brand)  — plan (primary CTA)
  */
-type EntryTone = 'blue' | 'green' | 'dark' | 'orange';
+type EntryTone = 'blue' | 'pink' | 'dark' | 'orange';
 
 const ENTRY_TONE_STYLES: Record<EntryTone, { bg: React.CSSProperties; wrapper: string; iconBg: string; iconColor: string; labelColor: string }> = {
   blue:   { bg: { backgroundColor: '#2C4FF8' }, wrapper: 'hover:-translate-y-0.5 hover:shadow-md hover:brightness-110', iconBg: 'bg-white/20',          iconColor: 'text-white',      labelColor: 'text-white' },
-  green:  { bg: { backgroundColor: '#17BF50' }, wrapper: 'hover:-translate-y-0.5 hover:shadow-md hover:brightness-110', iconBg: 'bg-white/20',          iconColor: 'text-white',      labelColor: 'text-white' },
+  pink:   { bg: { backgroundColor: '#FF168A' }, wrapper: 'hover:-translate-y-0.5 hover:shadow-md hover:brightness-110', iconBg: 'bg-white/20',          iconColor: 'text-white',      labelColor: 'text-white' },
   dark:   { bg: { backgroundColor: '#0F172A' }, wrapper: 'hover:-translate-y-0.5 hover:shadow-md hover:brightness-125', iconBg: 'bg-white/15',           iconColor: 'text-white',      labelColor: 'text-white' },
   orange: { bg: { backgroundColor: '#ff6b16' }, wrapper: 'hover:-translate-y-0.5 hover:shadow-md hover:brightness-110', iconBg: 'bg-white/20',          iconColor: 'text-white',      labelColor: 'text-white' },
 };
@@ -32,18 +30,9 @@ const ENTRY_TONE_STYLES: Record<EntryTone, { bg: React.CSSProperties; wrapper: s
 // Order optimised for a first-time (cold) user: catalog entries first («Решить
 // задачу» / «Найти быстрый ответ» drop into browsable content), diagnostic next
 // (the way to BUILD a plan), «Продолжить мой план» last (empty until there is one).
-// TEMP (UAT): `?btn=green|pink|lime|indigo` recolours the «Найти быстрый ответ»
-// tile for a side-by-side pick. Collapses to the chosen colour before prod.
-const BTN_COLORS: Record<string, string> = {
-  green: '#17BF50',
-  pink: '#FF168A',
-  lime: '#6CC40C',
-  indigo: '#4768F8',
-};
-
 const ENTRY_BUTTONS: Array<{ href: string; icon: React.ElementType; label: string; dataTour?: string; tone: EntryTone }> = [
   { href: '/learn/solutions',icon: Target,        label: 'Решить задачу',        dataTour: undefined,                   tone: 'dark' },
-  { href: '/learn/library',  icon: Search,        label: 'Найти быстрый ответ',  dataTour: undefined,                   tone: 'green' },
+  { href: '/learn/library',  icon: Search,        label: 'Найти быстрый ответ',  dataTour: undefined,                   tone: 'pink' },
   { href: '/diagnostic',     icon: BarChart3,     label: 'Пройти диагностику',   dataTour: 'dashboard-diagnostic-cta',  tone: 'orange' },
   { href: '/learn/plan',     icon: CalendarCheck, label: 'Продолжить мой план',  dataTour: 'dashboard-learn-cta',       tone: 'blue' },
 ];
@@ -52,7 +41,6 @@ export default function DashboardPage() {
   const { data: profile } = trpc.profile.get.useQuery();
   const { data: dashboard, isLoading, error } = trpc.profile.getDashboard.useQuery();
   const storefront = trpc.dashboard.getStorefront.useQuery();
-  const searchBtnColor = BTN_COLORS[useSearchParams().get('btn') ?? ''] ?? null;
 
   const name = profile?.name || 'Пользователь';
 
@@ -161,14 +149,13 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 animate-slide-up" style={{ animationDelay: '50ms' }}>
         {ENTRY_BUTTONS.map(({ href, icon: Icon, label, dataTour, tone }) => {
           const t = ENTRY_TONE_STYLES[tone];
-          const bg = href === '/learn/library' && searchBtnColor ? { backgroundColor: searchBtnColor } : t.bg;
           return (
             <Link
               key={href}
               href={href}
               data-tour={dataTour}
               className={`flex items-center gap-3 rounded-2xl px-4 py-4 transition-all ${t.wrapper}`}
-              style={bg}
+              style={t.bg}
             >
               <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${t.iconBg} ${t.iconColor}`}>
                 <Icon className="h-5 w-5" />
