@@ -60,6 +60,7 @@ model UserProfile {
   referralPackages       ReferralBonusPackage[]   @relation("ReferralPackagesOwned")
   referralsReviewed      Referral[]               @relation("ReferralsReviewedByAdmin")
   ambassadorCodesCreated ReferralCode[]           @relation("AmbassadorCodesCreatedBy")
+  assistantConversations AssistantConversation[]
 }
 
 // ============== DIAGNOSTIC ==============
@@ -749,4 +750,32 @@ model ReferralCodeClickDay {
 
   @@id([codeId, day])
   @@index([day])
+}
+
+model AssistantConversation {
+  id        String   @id @default(cuid())
+  userId    String
+  status    String   @default("active") // active | archived
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     UserProfile        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AssistantMessage[]
+
+  @@index([userId, status])
+}
+
+model AssistantMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String   // user | assistant
+  content        String   @db.Text
+  lessonIds      String[] @default([]) // подмешанные карточки уроков (assistant)
+  jobIds         String[] @default([]) // подмешанные карточки задач (assistant)
+  inDomain       Boolean  @default(true) // false = офф-топик отказ (аналитика + квота)
+  createdAt      DateTime @default(now())
+
+  conversation AssistantConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
 }
