@@ -31,3 +31,19 @@ export function resolveFirstLesson(goals: string[], marketplaces: string[]): str
   const goal = GOAL_PRIORITY.find((g) => goals.includes(g)) ?? 'ANALYTICS';
   return FIRST_LESSON_MAP[goal][mp];
 }
+
+/** Highest-priority goal the user selected, or null. */
+export function resolvePrimaryGoal(goals: string[]): string | null {
+  return GOAL_PRIORITY.find((g) => goals.includes(g)) ?? null;
+}
+
+/**
+ * Ordered, de-duplicated first-lessons for every goal the user picked (priority order).
+ * Element [0] is the hero (primary goal); the rest feed the «Начни отсюда» shelf.
+ */
+export function resolveGoalLessons(goals: string[], marketplaces: string[]): string[] {
+  const mp: 'WB' | 'OZON' =
+    marketplaces.includes('OZON') && !marketplaces.includes('WB') ? 'OZON' : 'WB';
+  const ids = GOAL_PRIORITY.filter((g) => goals.includes(g)).map((g) => FIRST_LESSON_MAP[g][mp]);
+  return [...new Set(ids)];
+}

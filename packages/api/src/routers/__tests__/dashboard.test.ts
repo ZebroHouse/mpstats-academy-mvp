@@ -46,13 +46,16 @@ describe('dashboard.getStorefront', () => {
     expect(res).toEqual([]);
   });
 
-  it('START lesson → «Начни отсюда» shelf, capped at 3', async () => {
+  it('goal ADS + axis lessons → «Начни отсюда» shelf capped at 3 (no see-all)', async () => {
+    // Wizard-driven: goal ADS → MARKETING axis; lesson() defaults skillCategory='MARKETING',
+    // so these axis lessons top up the start shelf. It is pre-capped, so totalCount === shown
+    // count (≤3) by design — the shelf never surfaces a «Смотреть все» link.
     const badgedLessons = [lesson('l1', ['START']), lesson('l2', ['START']), lesson('l3', ['START']), lesson('l4', ['START'])];
-    const res = await dashboardRouter.createCaller(makeCtx({ badgedLessons })).getStorefront();
+    const res = await dashboardRouter.createCaller(makeCtx({ goals: ['ADS'], badgedLessons })).getStorefront();
     const start = res.find((s) => s.shelfKey === 'start')!;
     expect(start.title).toBe('Начни отсюда');
     expect(start.items).toHaveLength(3);
-    expect(start.totalCount).toBe(4);
+    expect(start.totalCount).toBe(3);
   });
 
   it('goal ADS → goal-ads shelf with MARKETING jobs', async () => {
@@ -87,8 +90,9 @@ describe('dashboard.getStorefront', () => {
   it('locked=true when no subs + billing on + not-first-job + not admin', async () => {
     // makeCtx defaults: subscriptions []=no subs, jobLessons []=empty firstJobLessonIds,
     // role undefined=not admin; isFeatureEnabled mocked → true (billing on).
+    // Wizard-driven start shelf: goal ADS → MARKETING axis picks up the MARKETING lesson.
     const badgedLessons = [lesson('l1', ['START'])];
-    const res = await dashboardRouter.createCaller(makeCtx({ badgedLessons })).getStorefront();
+    const res = await dashboardRouter.createCaller(makeCtx({ goals: ['ADS'], badgedLessons })).getStorefront();
     const start = res.find((s) => s.shelfKey === 'start')!;
     const item = start.items[0];
     expect(item.kind).toBe('lesson');
@@ -96,10 +100,12 @@ describe('dashboard.getStorefront', () => {
   });
 
   it('completedLessons counts COMPLETED progress rows on a job', async () => {
-    const jobs = [jobWithCompletedLesson('j1', ['START'])];
+    // Jobs no longer live in the (now lessons-only) start shelf; enrichJob is shared, so
+    // assert completedLessons via the HOT shelf, which still carries jobs.
+    const jobs = [jobWithCompletedLesson('j1', ['HOT'])];
     const res = await dashboardRouter.createCaller(makeCtx({ jobs })).getStorefront();
-    const start = res.find((s) => s.shelfKey === 'start')!;
-    const item = start.items.find((i) => i.kind === 'job')!;
+    const hot = res.find((s) => s.shelfKey === 'hot')!;
+    const item = hot.items.find((i) => i.kind === 'job')!;
     if (item.kind === 'job') {
       expect(item.job.lessonCount).toBe(1);
       expect(item.job.completedLessons).toBe(1);

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { resolveFirstLesson, FIRST_LESSON_FALLBACK_ID } from '../first-lesson';
+import { resolveFirstLesson, FIRST_LESSON_FALLBACK_ID, resolveGoalLessons, resolvePrimaryGoal } from '../first-lesson';
 
 describe('resolveFirstLesson', () => {
   it('ANALYTICS × WB → sales forecast', () => {
@@ -39,5 +39,31 @@ describe('resolveFirstLesson', () => {
         ['OZON', 'WB'],
       ),
     ).toBe('skill_analytics_sales_forecast_001');
+  });
+});
+
+describe('resolveGoalLessons', () => {
+  it('multi-goal → ordered per-goal first lessons, hero first', () => {
+    expect(resolveGoalLessons(['OPERATIONS', 'SALES'], ['WB'])).toEqual([
+      'skill_analytics_sales_forecast_001',
+      '01_analytics_m04_product_selection_007',
+    ]);
+  });
+  it('dedups when two goals map to the same lesson', () => {
+    expect(resolveGoalLessons(['ANALYTICS', 'SALES'], ['WB'])).toEqual(['skill_analytics_sales_forecast_001']);
+  });
+  it('single goal → single lesson', () => {
+    expect(resolveGoalLessons(['CONTENT'], ['WB'])).toEqual(['03_ai_m03_visual_009']);
+  });
+  it('no goals → empty', () => {
+    expect(resolveGoalLessons([], ['WB'])).toEqual([]);
+  });
+});
+describe('resolvePrimaryGoal', () => {
+  it('returns highest-priority present', () => {
+    expect(resolvePrimaryGoal(['OPERATIONS', 'SALES'])).toBe('SALES');
+  });
+  it('null when none', () => {
+    expect(resolvePrimaryGoal([])).toBeNull();
   });
 });

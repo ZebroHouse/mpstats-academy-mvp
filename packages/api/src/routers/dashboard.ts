@@ -9,7 +9,7 @@ import { filterByMarketplace } from './job';
 import {
   GOAL_TO_AXES, GOAL_LABELS, MARKETPLACE_LABELS, goalShelfKey, newShelfKey, resolveShelfKey,
 } from '../utils/storefront-shelves';
-import { resolveFirstLesson, FIRST_LESSON_FALLBACK_ID } from '../utils/first-lesson';
+import { resolveFirstLesson, FIRST_LESSON_FALLBACK_ID, resolveGoalLessons, resolvePrimaryGoal } from '../utils/first-lesson';
 import type { JobSummary, LessonWithProgress, StorefrontShelf, StorefrontItem } from '@mpstats/shared';
 
 const SHELF_CAP = 12;
@@ -120,11 +120,36 @@ export const dashboardRouter = router({
 
       // Build each shelf independently, then assemble in a user-state-aware order below.
 
-      // Начни отсюда (START, mix, ≤3) — shown to NEW (cold) users only.
-      const startShelf = cap(
-        [...jobsWithBadge('START').map(toJobItem), ...lessonsWithBadge('START').map(toLessonItem)],
-        START_CAP, 'start', 'Начни отсюда',
-      );
+      // «Начни отсюда» — wizard-driven starter lessons (cold users only).
+      // The primary goal's first lesson is the /dashboard hero (shown separately);
+      // this shelf shows the OTHER goals' starter lessons, topped up with beginner
+      // lessons from the primary goal's axis. Capped so it never shows «Смотреть все».
+      let startShelf: StorefrontShelf | null = null;
+      if (!isReturning) {
+        const heroId = resolveFirstLesson(goals, marketplaces);
+        const starterIds = resolveGoalLessons(goals, marketplaces).filter((id) => id !== heroId);
+        const starterRows = starterIds.length
+          ? await ctx.prisma.lesson.findMany({
+              where: { id: { in: starterIds }, isHidden: false, course: { isHidden: false, partnerKey: null } },
+              include: { progress: { where: { path: { userId } } }, course: { select: { title: true } } },
+            })
+          : [];
+        const starterItems: StorefrontItem[] = starterIds
+          .map((id) => starterRows.find((r: any) => r.id === id))
+          .filter((l): l is any => Boolean(l))
+          .map((l: any) => toLessonItem(l));
+        if (starterItems.length < START_CAP) {
+          const primaryGoal = resolvePrimaryGoal(goals);
+          const axes = primaryGoal ? (GOAL_TO_AXES[primaryGoal] ?? []) : (GOAL_TO_AXES.ANALYTICS ?? []);
+          const used = new Set([heroId, ...starterIds]);
+          starterItems.push(
+            ...badgedLessons
+              .filter((l: any) => axes.includes(l.skillCategory) && !used.has(l.id))
+              .map((l: any) => toLessonItem(l)),
+          );
+        }
+        startShelf = cap(starterItems.slice(0, START_CAP), START_CAP, 'start', 'Начни отсюда');
+      }
 
       // Продолжить (IN_PROGRESS lessons) — top shelf for returning users.
       const continueShelf = cap(
