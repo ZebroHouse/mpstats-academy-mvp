@@ -1063,7 +1063,6 @@ export default function LessonPage() {
           label={lessonCtx.label}
           returnHref={lessonCtx.returnHref}
           onStay={() => setShowCompletionModal(false)}
-          showDiagnosticCta={hasDiagnostic === false}
         />
       )}
     </div>
