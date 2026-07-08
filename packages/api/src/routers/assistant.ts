@@ -7,7 +7,7 @@ import { createRateLimitMiddleware } from '../middleware/rate-limit';
 import { getAssistantQuota, BURST_PER_MIN } from '../utils/assistant-quota';
 import type { AssistantLessonRef, AssistantJobRef } from '@mpstats/ai';
 
-interface EnrichedMessage {
+export interface EnrichedMessage {
   role: 'user' | 'assistant';
   content: string;
   inDomain: boolean;
