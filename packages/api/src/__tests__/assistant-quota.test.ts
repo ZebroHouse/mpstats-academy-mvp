@@ -39,4 +39,10 @@ describe('getAssistantQuota', () => {
     const q = await getAssistantQuota('u1', fakePrisma(0, 99), new Date('2026-07-08T11:00:00Z'));
     expect(q.remaining).toBe(0);
   });
+
+  it('admin-bypass: без подписок, но ADMIN → full-тир (лимит 50)', async () => {
+    const q = await getAssistantQuota('u1', fakePrisma(0, 0, 'ADMIN'), new Date('2026-07-08T11:00:00Z'));
+    expect(q.tier).toBe('full');
+    expect(q.limit).toBe(PAID_DAILY);
+  });
 });
