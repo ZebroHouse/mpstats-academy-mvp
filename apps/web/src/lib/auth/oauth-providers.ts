@@ -6,11 +6,19 @@
  * To add a new provider: implement OAuthProvider interface, add callback route.
  */
 
+import {
+  buildAuthorizeUrl as tochkaAuthorizeUrl,
+  exchangeCodeForToken as tochkaExchange,
+  fetchUserInfo as tochkaUserInfo,
+} from './tochka';
+
 export interface OAuthUserInfo {
   id: string;
-  email: string;
+  email: string | null;
   name: string | null;
   phone: string | null;
+  emailVerified?: boolean;
+  phoneVerified?: boolean;
 }
 
 export interface OAuthProvider {
@@ -95,9 +103,39 @@ export class YandexProvider implements OAuthProvider {
       // Without this, a Yandex default_email with any uppercase letter misses
       // the existing user and the createUser path 422s with "already
       // registered" — locking returning Yandex users out (incident 2026-06-29).
-      email: data.default_email ? String(data.default_email).trim().toLowerCase() : data.default_email,
+      email: data.default_email ? String(data.default_email).trim().toLowerCase() : null,
       name: data.display_name || [data.first_name, data.last_name].filter(Boolean).join(' ') || null,
       phone: data.default_phone?.number || null,
+    };
+  }
+}
+
+export class TochkaProvider implements OAuthProvider {
+  name = 'tochka';
+
+  authorizeUrl(state: string): string {
+    return tochkaAuthorizeUrl(state);
+  }
+
+  async exchangeCode(code: string): Promise<{ accessToken: string }> {
+    const token = await tochkaExchange(code);
+    return { accessToken: token.access_token };
+  }
+
+  async getUserInfo(accessToken: string): Promise<OAuthUserInfo> {
+    const u = await tochkaUserInfo(accessToken);
+    const name =
+      u.name ||
+      [u.given_name, u.family_name].filter(Boolean).join(' ') ||
+      null;
+    return {
+      id: u.sub,
+      // GoTrue хранит email в lowercase → нормализуем для сравнения в callback.
+      email: u.email ? u.email.trim().toLowerCase() : null,
+      name,
+      phone: u.phone_number || null,
+      emailVerified: u.email_verified,
+      phoneVerified: u.phone_number_verified,
     };
   }
 }

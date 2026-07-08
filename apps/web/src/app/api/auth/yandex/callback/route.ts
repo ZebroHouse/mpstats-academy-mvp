@@ -42,6 +42,12 @@ export async function GET(request: Request): Promise<Response> {
     // 5. Fetch user info from Yandex
     const userInfo = await provider.getUserInfo(accessToken);
 
+    // OAuthUserInfo.email is now nullable (Tochka may omit it); Yandex always
+    // returns one in practice, but TS needs the explicit narrowing below.
+    if (!userInfo.email) {
+      return NextResponse.redirect(new URL('/login?error=auth_callback_error', siteUrl));
+    }
+
     // 6. Find or create Supabase user
     //
     // Lookup via raw SQL on auth.users — `admin.auth.admin.listUsers()` paginates
