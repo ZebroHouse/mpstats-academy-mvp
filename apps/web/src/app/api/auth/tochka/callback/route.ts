@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { createServerClient } from '@supabase/ssr';
 import * as Sentry from '@sentry/nextjs';
 import { prisma } from '@mpstats/db/client';
-import { YandexProvider } from '@/lib/auth/oauth-providers';
+import { TochkaProvider } from '@/lib/auth/oauth-providers';
 import { getSupabaseAdmin } from '@/lib/auth/supabase-admin';
 import { REFERRAL_COOKIE_NAME, isValidRefCodeShape } from '@/lib/referral/attribution';
 import { issueReferralOnSignup } from '@/lib/referral/issue';
@@ -13,6 +13,11 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request): Promise<Response> {
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+
+  // Feature flag gate — silent redirect to /login when disabled.
+  if (process.env.TOCHKA_LOGIN_ENABLED !== 'true') {
+    return NextResponse.redirect(new URL('/login', siteUrl));
+  }
 
   try {
     const url = new URL(request.url);
@@ -26,26 +31,29 @@ export async function GET(request: Request): Promise<Response> {
 
     // 2. CSRF state verification
     const cookieStore = await cookies();
-    const storedState = cookieStore.get('yandex_oauth_state')?.value;
+    const storedState = cookieStore.get('tochka_oauth_state')?.value;
 
     if (!storedState || storedState !== state) {
       return NextResponse.redirect(new URL('/login?error=invalid_state', siteUrl));
     }
 
     // 3. Delete state cookie (one-time use)
-    cookieStore.delete('yandex_oauth_state');
+    // Delete with the SAME path the action set it at (`/api/auth/tochka`);
+    // a bare name defaults to path '/' and would not clear this cookie,
+    // leaving the one-time state cookie alive until its maxAge.
+    cookieStore.delete({ name: 'tochka_oauth_state', path: '/api/auth/tochka' });
 
     // 4. Exchange code for access token
-    const provider = new YandexProvider();
+    const provider = new TochkaProvider();
     const { accessToken } = await provider.exchangeCode(code);
 
-    // 5. Fetch user info from Yandex
+    // 5. Fetch user info from Tochka
     const userInfo = await provider.getUserInfo(accessToken);
 
-    // OAuthUserInfo.email is now nullable (Tochka may omit it); Yandex always
-    // returns one in practice, but TS needs the explicit narrowing below.
+    // Tochka may omit email — distinct error code, and we must NOT reach
+    // createUser (which requires an email) below.
     if (!userInfo.email) {
-      return NextResponse.redirect(new URL('/login?error=auth_callback_error', siteUrl));
+      return NextResponse.redirect(new URL('/login?error=tochka_no_email', siteUrl));
     }
 
     // 6. Find or create Supabase user
@@ -56,12 +64,7 @@ export async function GET(request: Request): Promise<Response> {
     // count crossed 50 (incident 2026-04-27, 422 email_exists from createUser).
     const admin = getSupabaseAdmin();
 
-    // Case-insensitive match: GoTrue normalizes (lowercases) stored emails,
-    // and Yandex may return default_email with different casing. A
-    // case-sensitive `=` missed the existing user, so the create branch fired
-    // and 422'd with "already registered", locking returning Yandex users out
-    // (incident 2026-06-29). getUserInfo also lowercases, but lower()-on-both
-    // is the robust, normalization-agnostic comparison.
+    // Case-insensitive match: GoTrue normalizes (lowercases) stored emails.
     const existingRows = await prisma.$queryRaw<Array<{ id: string; email: string }>>`
       SELECT id::text AS id, email
       FROM auth.users
@@ -77,23 +80,19 @@ export async function GET(request: Request): Promise<Response> {
       supabaseUserId = existingRows[0].id;
       supabaseUserEmail = existingRows[0].email;
 
-      // Backfill yandex_id on user_metadata for accounts that pre-date the
-      // marker (created before this callback existed, or before we started
-      // setting yandex_id). The /profile page uses this field to decide
-      // whether the change-password form makes sense — without it, OAuth
-      // users see a non-functional form. Best-effort: failures are logged
-      // but don't break sign-in.
+      // Backfill tochka_id on user_metadata for accounts that pre-date the
+      // marker. Best-effort: failures are logged but don't break sign-in.
       void admin.auth.admin
         .updateUserById(supabaseUserId, {
           user_metadata: {
-            yandex_id: userInfo.id,
+            tochka_id: userInfo.id,
             full_name: userInfo.name,
           },
         })
         .then(({ error }) => {
           if (error) {
             Sentry.captureException(error, {
-              tags: { route: 'yandex-callback', stage: 'backfill-yandex-id' },
+              tags: { route: 'tochka-callback', stage: 'backfill-tochka-id' },
             });
           }
         });
@@ -104,14 +103,16 @@ export async function GET(request: Request): Promise<Response> {
           email_confirm: true,
           user_metadata: {
             full_name: userInfo.name,
-            yandex_id: userInfo.id,
+            tochka_id: userInfo.id,
+            tochka_email_verified: userInfo.emailVerified ?? null,
+            tochka_phone_verified: userInfo.phoneVerified ?? null,
           },
         });
 
       if (createError || !createData.user) {
         console.error('Failed to create user:', createError);
         Sentry.captureException(createError ?? new Error('createUser returned no user'), {
-          tags: { route: 'yandex-callback', stage: 'create-user' },
+          tags: { route: 'tochka-callback', stage: 'create-user' },
         });
         return NextResponse.redirect(
           new URL('/login?error=auth_callback_error', siteUrl)
@@ -132,7 +133,7 @@ export async function GET(request: Request): Promise<Response> {
     if (linkError || !linkData) {
       console.error('Failed to generate link:', linkError);
       Sentry.captureException(linkError ?? new Error('generateLink returned no data'), {
-        tags: { route: 'yandex-callback', stage: 'generate-link' },
+        tags: { route: 'tochka-callback', stage: 'generate-link' },
       });
       return NextResponse.redirect(
         new URL('/login?error=auth_callback_error', siteUrl)
@@ -148,33 +149,33 @@ export async function GET(request: Request): Promise<Response> {
     if (otpError || !otpData.session) {
       console.error('Failed to verify OTP:', otpError);
       Sentry.captureException(otpError ?? new Error('verifyOtp returned no session'), {
-        tags: { route: 'yandex-callback', stage: 'verify-otp' },
+        tags: { route: 'tochka-callback', stage: 'verify-otp' },
       });
       return NextResponse.redirect(
         new URL('/login?error=auth_callback_error', siteUrl)
       );
     }
 
-    // 9. Update UserProfile.yandexId + phone via Prisma upsert
+    // 9. Update UserProfile.tochkaId + phone via Prisma upsert
     let profilePhone: string | null = null;
     try {
       const upserted = await prisma.userProfile.upsert({
         where: { id: supabaseUserId },
         update: {
-          yandexId: userInfo.id,
+          tochkaId: userInfo.id,
           ...(userInfo.phone ? { phone: userInfo.phone } : {}),
         },
         create: {
           id: supabaseUserId,
           name: userInfo.name,
-          yandexId: userInfo.id,
+          tochkaId: userInfo.id,
           phone: userInfo.phone,
         },
       });
       profilePhone = upserted.phone;
     } catch (prismaError) {
-      // Non-fatal: yandexId binding failed but session is valid
-      console.error('Failed to update yandexId:', prismaError);
+      // Non-fatal: tochkaId binding failed but session is valid
+      console.error('Failed to update tochkaId:', prismaError);
     }
 
     // 10. Create redirect response and set session cookies
@@ -211,16 +212,12 @@ export async function GET(request: Request): Promise<Response> {
     });
 
     // 11. Fire referral hook — new users only
-    // isNewUser is explicitly computed above (existingRows.length === 0),
-    // so we only issue for brand-new Yandex accounts. Returning users with a
-    // stale ref cookie are safely skipped. The orchestrator is also idempotent
-    // (unique constraint on referredUserId), so a duplicate attempt would no-op.
     if (isNewUser) {
       const refCookie = cookieStore.get(REFERRAL_COOKIE_NAME)?.value;
       const refCode = refCookie && isValidRefCodeShape(refCookie) ? refCookie : null;
       if (refCode) {
         issueReferralOnSignup({ refCode, friendUserId: supabaseUserId }).catch((err) => {
-          console.error('[YandexCallback] referral issue failed:', err);
+          console.error('[TochkaCallback] referral issue failed:', err);
         });
         response.cookies.delete(REFERRAL_COOKIE_NAME);
       } else {
@@ -231,9 +228,9 @@ export async function GET(request: Request): Promise<Response> {
 
     return response;
   } catch (error) {
-    console.error('Yandex OAuth callback error:', error);
+    console.error('Tochka OAuth callback error:', error);
     Sentry.captureException(error, {
-      tags: { route: 'yandex-callback', stage: 'unhandled' },
+      tags: { route: 'tochka-callback', stage: 'unhandled' },
     });
     return NextResponse.redirect(
       new URL('/login?error=auth_callback_error', siteUrl)

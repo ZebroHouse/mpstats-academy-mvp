@@ -4,7 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
 import { cookies } from 'next/headers';
-import { YandexProvider } from '@/lib/auth/oauth-providers';
+import { YandexProvider, TochkaProvider } from '@/lib/auth/oauth-providers';
 
 
 export type AuthResult = {
@@ -130,6 +130,31 @@ export async function signInWithYandex(): Promise<AuthResult> {
   });
 
   const provider = new YandexProvider();
+  redirect(provider.authorizeUrl(state));
+}
+
+// ============== SIGN IN WITH TOCHKA ==============
+
+export async function signInWithTochka(): Promise<AuthResult> {
+  // Flag-gated rollout (ship dark → staging → prod flip). Off = inert.
+  if (process.env.TOCHKA_LOGIN_ENABLED !== 'true') {
+    return { error: 'Вход через Точку временно недоступен' };
+  }
+
+  const state = crypto.randomUUID();
+
+  // Store state in httpOnly cookie for CSRF verification in callback.
+  // Path scoped to the Tochka auth routes (tighter than Yandex's '/').
+  const cookieStore = await cookies();
+  cookieStore.set('tochka_oauth_state', state, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: 'lax',
+    maxAge: 600, // 10 minutes
+    path: '/api/auth/tochka',
+  });
+
+  const provider = new TochkaProvider();
   redirect(provider.authorizeUrl(state));
 }
 

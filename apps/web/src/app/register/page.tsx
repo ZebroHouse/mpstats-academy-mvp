@@ -12,6 +12,10 @@ import {
 } from '@/components/register/value-panel';
 import { RegisterForm } from './register-form';
 
+// Already dynamic via getUser()/cookies() below, but pin it explicitly so the
+// TOCHKA_LOGIN_ENABLED runtime flip is guaranteed even if that changes.
+export const dynamic = 'force-dynamic';
+
 function resolveRefCode(urlRef: string | undefined, cookieRef: string | undefined): string | null {
   // URL ?ref= takes precedence over cookie (explicit user action wins).
   const candidate = (urlRef ?? cookieRef ?? '').toUpperCase();
@@ -34,6 +38,8 @@ export default async function RegisterPage({
   const cookieRef = cookieStore.get(REFERRAL_COOKIE_NAME)?.value;
   const refCode = resolveRefCode(searchParams.ref, cookieRef);
 
+  const tochkaEnabled = process.env.TOCHKA_LOGIN_ENABLED === 'true';
+
   // Split layout on a dark canvas: form (left) floats as a white card; the
   // promo headline + thesis plaques sit on the dark page (right on desktop).
   // Desktop grid places the form in column 1 spanning both rows (vertically
@@ -45,7 +51,7 @@ export default async function RegisterPage({
         {/* FORM — col 1, spans both rows, vertically centred */}
         <div className="order-2 lg:order-none lg:col-start-1 lg:row-span-2 lg:self-center">
           <Suspense fallback={<div className="animate-pulse text-white/40">Загрузка...</div>}>
-            <RegisterForm initialRefCode={refCode} />
+            <RegisterForm initialRefCode={refCode} tochkaEnabled={tochkaEnabled} />
           </Suspense>
         </div>
 
