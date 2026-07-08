@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { NextResponse } from 'next/server';
+import { REFERRAL_COOKIE_NAME } from '@/lib/referral/attribution';
 
 // Mock modules before importing (top-level defaults; full-flow cases re-mock
 // per-test with vi.resetModules() + vi.doMock, mirroring yandex-oauth.test.ts).
@@ -454,5 +456,303 @@ describe('Tochka OAuth Callback Route', () => {
     expect(location).toContain('/login');
     expect(location).not.toContain('error=');
     expect(exchangeCodeSpy).not.toHaveBeenCalled();
+  });
+
+  it('exchangeCode throwing is caught → error redirect', async () => {
+    vi.resetModules();
+
+    vi.doMock('@/lib/auth/oauth-providers', () => ({
+      TochkaProvider: vi.fn().mockImplementation(() => ({
+        name: 'tochka',
+        exchangeCode: vi.fn().mockRejectedValue(new Error('network')),
+        getUserInfo: vi.fn(),
+      })),
+    }));
+
+    vi.doMock('next/headers', () => ({
+      cookies: vi.fn(() =>
+        Promise.resolve({
+          get: vi.fn().mockReturnValue({ value: 'valid-state' }),
+          set: vi.fn(),
+          delete: vi.fn(),
+          getAll: vi.fn().mockReturnValue([]),
+        })
+      ),
+    }));
+
+    const { GET } = await import('@/app/api/auth/tochka/callback/route');
+
+    const request = new Request(
+      'https://platform.mpstats.academy/api/auth/tochka/callback?code=valid-code&state=valid-state'
+    );
+    const response = await GET(request);
+
+    const location = response.headers.get('location');
+    expect(location).toContain('error=auth_callback_error');
+  });
+
+  it('verifyOtp returning no session → error redirect', async () => {
+    vi.resetModules();
+
+    vi.doMock('@/lib/auth/oauth-providers', () => ({
+      TochkaProvider: vi.fn().mockImplementation(() => ({
+        name: 'tochka',
+        exchangeCode: vi.fn().mockResolvedValue({ accessToken: 't-token' }),
+        getUserInfo: vi.fn().mockResolvedValue({
+          id: 'tochka-sub-3',
+          email: 'otp-fail@tochka.com',
+          name: 'OTP Fail',
+          phone: '+79001112233',
+        }),
+      })),
+    }));
+
+    vi.doMock('@/lib/auth/supabase-admin', () => ({
+      getSupabaseAdmin: vi.fn(() => ({
+        auth: {
+          admin: {
+            createUser: vi.fn().mockResolvedValue({
+              data: { user: { id: 'otp-uid', email: 'otp-fail@tochka.com' } },
+              error: null,
+            }),
+            updateUserById: vi.fn().mockResolvedValue({ error: null }),
+            generateLink: vi.fn().mockResolvedValue({
+              data: { properties: { hashed_token: 'hashed-token-123' } },
+              error: null,
+            }),
+          },
+          verifyOtp: vi.fn().mockResolvedValue({
+            data: { session: null },
+            error: { message: 'otp expired' },
+          }),
+        },
+      })),
+    }));
+
+    vi.doMock('@mpstats/db/client', () => ({
+      prisma: {
+        userProfile: { upsert: vi.fn().mockResolvedValue({ phone: '+79001112233' }) },
+        $queryRaw: vi.fn().mockResolvedValue([]),
+      },
+    }));
+
+    vi.doMock('next/headers', () => ({
+      cookies: vi.fn(() =>
+        Promise.resolve({
+          get: vi.fn().mockReturnValue({ value: 'valid-state' }),
+          set: vi.fn(),
+          delete: vi.fn(),
+          getAll: vi.fn().mockReturnValue([]),
+        })
+      ),
+    }));
+
+    const { GET } = await import('@/app/api/auth/tochka/callback/route');
+
+    const request = new Request(
+      'https://platform.mpstats.academy/api/auth/tochka/callback?code=valid-code&state=valid-state'
+    );
+    const response = await GET(request);
+
+    const location = response.headers.get('location');
+    expect(location).toContain('error=auth_callback_error');
+  });
+
+  it('matches existing user case-insensitively (no createUser)', async () => {
+    vi.resetModules();
+
+    vi.doMock('@/lib/auth/oauth-providers', () => ({
+      TochkaProvider: vi.fn().mockImplementation(() => ({
+        name: 'tochka',
+        exchangeCode: vi.fn().mockResolvedValue({ accessToken: 't-token' }),
+        getUserInfo: vi.fn().mockResolvedValue({
+          // Adapter already lowercases; the raw value here would have been
+          // Test@Tochka.com. The lower(email) lookup must still hit the row.
+          id: 'tochka-sub-4',
+          email: 'test@tochka.com',
+          name: 'Кейс',
+          phone: '+79004445566',
+        }),
+      })),
+    }));
+
+    const createUserSpy = vi.fn();
+    vi.doMock('@/lib/auth/supabase-admin', () => ({
+      getSupabaseAdmin: vi.fn(() => ({
+        auth: {
+          admin: {
+            createUser: createUserSpy,
+            updateUserById: vi.fn().mockResolvedValue({ error: null }),
+            generateLink: vi.fn().mockResolvedValue({
+              data: { properties: { hashed_token: 'hashed-token-123' } },
+              error: null,
+            }),
+          },
+          verifyOtp: vi.fn().mockResolvedValue({
+            data: {
+              session: {
+                access_token: 'sb-access-token',
+                refresh_token: 'sb-refresh-token',
+              },
+            },
+            error: null,
+          }),
+        },
+      })),
+    }));
+
+    vi.doMock('@supabase/ssr', () => ({
+      createServerClient: vi.fn(() => ({
+        auth: { setSession: vi.fn().mockResolvedValue({ data: {}, error: null }) },
+      })),
+    }));
+
+    vi.doMock('@mpstats/db/client', () => ({
+      prisma: {
+        userProfile: {
+          upsert: vi.fn().mockResolvedValue({ phone: '+79004445566' }),
+        },
+        $queryRaw: vi.fn().mockResolvedValue([
+          { id: 'u1', email: 'test@tochka.com' },
+        ]),
+      },
+    }));
+
+    const ensureBaseTrialSpy = vi.fn().mockResolvedValue(undefined);
+    vi.doMock('@mpstats/api', async (importActual) => ({
+      ...(await importActual<typeof import('@mpstats/api')>()),
+      ensureBaseTrial: ensureBaseTrialSpy,
+    }));
+
+    vi.doMock('next/headers', () => ({
+      cookies: vi.fn(() =>
+        Promise.resolve({
+          get: vi.fn().mockReturnValue({ value: 'valid-state' }),
+          set: vi.fn(),
+          delete: vi.fn(),
+          getAll: vi.fn().mockReturnValue([]),
+        })
+      ),
+    }));
+
+    const { GET } = await import('@/app/api/auth/tochka/callback/route');
+
+    const request = new Request(
+      'https://platform.mpstats.academy/api/auth/tochka/callback?code=valid-code&state=valid-state'
+    );
+    const response = await GET(request);
+
+    const location = response.headers.get('location');
+    expect(createUserSpy).not.toHaveBeenCalled();
+    expect(location).toContain('/dashboard');
+  });
+
+  it('clears referral cookie for a new referred user and skips base trial', async () => {
+    vi.resetModules();
+
+    vi.doMock('@/lib/auth/oauth-providers', () => ({
+      TochkaProvider: vi.fn().mockImplementation(() => ({
+        name: 'tochka',
+        exchangeCode: vi.fn().mockResolvedValue({ accessToken: 't-token' }),
+        getUserInfo: vi.fn().mockResolvedValue({
+          id: 'tochka-sub-5',
+          email: 'referred@tochka.com',
+          name: 'Приглашённый',
+          phone: '+79007778899',
+        }),
+      })),
+    }));
+
+    vi.doMock('@/lib/auth/supabase-admin', () => ({
+      getSupabaseAdmin: vi.fn(() => ({
+        auth: {
+          admin: {
+            createUser: vi.fn().mockResolvedValue({
+              data: { user: { id: 'referred-uid', email: 'referred@tochka.com' } },
+              error: null,
+            }),
+            updateUserById: vi.fn().mockResolvedValue({ error: null }),
+            generateLink: vi.fn().mockResolvedValue({
+              data: { properties: { hashed_token: 'hashed-token-123' } },
+              error: null,
+            }),
+          },
+          verifyOtp: vi.fn().mockResolvedValue({
+            data: {
+              session: {
+                access_token: 'sb-access-token',
+                refresh_token: 'sb-refresh-token',
+              },
+            },
+            error: null,
+          }),
+        },
+      })),
+    }));
+
+    vi.doMock('@supabase/ssr', () => ({
+      createServerClient: vi.fn(() => ({
+        auth: { setSession: vi.fn().mockResolvedValue({ data: {}, error: null }) },
+      })),
+    }));
+
+    vi.doMock('@mpstats/db/client', () => ({
+      prisma: {
+        userProfile: {
+          upsert: vi.fn().mockResolvedValue({ phone: '+79007778899' }),
+        },
+        $queryRaw: vi.fn().mockResolvedValue([]),
+      },
+    }));
+
+    const ensureBaseTrialSpy = vi.fn().mockResolvedValue(undefined);
+    vi.doMock('@mpstats/api', async (importActual) => ({
+      ...(await importActual<typeof import('@mpstats/api')>()),
+      ensureBaseTrial: ensureBaseTrialSpy,
+    }));
+
+    const issueReferralSpy = vi.fn().mockResolvedValue(undefined);
+    vi.doMock('@/lib/referral/issue', () => ({
+      issueReferralOnSignup: issueReferralSpy,
+    }));
+
+    // Cookie store returns a valid-shape ref code for REFERRAL_COOKIE_NAME and
+    // the CSRF state for the state cookie. delete() is a spy so we can assert
+    // the referral cookie is cleared (the route also deletes it on the response).
+    const cookieDelete = vi.fn();
+    vi.doMock('next/headers', () => ({
+      cookies: vi.fn(() =>
+        Promise.resolve({
+          get: vi.fn((name: string) =>
+            name === REFERRAL_COOKIE_NAME
+              ? { value: 'REF-ABC123' }
+              : { value: 'valid-state' }
+          ),
+          set: vi.fn(),
+          delete: cookieDelete,
+          getAll: vi.fn().mockReturnValue([]),
+        })
+      ),
+    }));
+
+    const { GET } = await import('@/app/api/auth/tochka/callback/route');
+
+    const request = new Request(
+      'https://platform.mpstats.academy/api/auth/tochka/callback?code=valid-code&state=valid-state'
+    );
+    const response = await GET(request);
+
+    // Referral branch taken → orchestrator invoked with the referred user.
+    expect(issueReferralSpy).toHaveBeenCalledWith({
+      refCode: 'REF-ABC123',
+      friendUserId: 'referred-uid',
+    });
+    // Referred user does NOT get the base auto-trial (the referral flow owns it).
+    expect(ensureBaseTrialSpy).not.toHaveBeenCalled();
+    // The response clears the referral cookie (route object is a NextResponse).
+    const cleared = (response as unknown as NextResponse).cookies.get(
+      REFERRAL_COOKIE_NAME
+    );
+    expect(cleared?.value ?? '').toBe('');
   });
 });
