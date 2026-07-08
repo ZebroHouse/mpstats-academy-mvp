@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { BarChart3, CalendarCheck, Search, Target } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -28,17 +29,30 @@ const ENTRY_TONE_STYLES: Record<EntryTone, { bg: React.CSSProperties; wrapper: s
   orange: { bg: { backgroundColor: '#ff6b16' }, wrapper: 'hover:-translate-y-0.5 hover:shadow-md hover:brightness-110', iconBg: 'bg-white/20',          iconColor: 'text-white',      labelColor: 'text-white' },
 };
 
+// Order optimised for a first-time (cold) user: catalog entries first («Решить
+// задачу» / «Найти быстрый ответ» drop into browsable content), diagnostic next
+// (the way to BUILD a plan), «Продолжить мой план» last (empty until there is one).
+// TEMP (UAT): `?btn=green|pink|lime|indigo` recolours the «Найти быстрый ответ»
+// tile for a side-by-side pick. Collapses to the chosen colour before prod.
+const BTN_COLORS: Record<string, string> = {
+  green: '#17BF50',
+  pink: '#FF168A',
+  lime: '#6CC40C',
+  indigo: '#4768F8',
+};
+
 const ENTRY_BUTTONS: Array<{ href: string; icon: React.ElementType; label: string; dataTour?: string; tone: EntryTone }> = [
-  { href: '/learn/plan',     icon: CalendarCheck, label: 'Продолжить мой план',  dataTour: 'dashboard-learn-cta',       tone: 'blue' },
-  { href: '/learn/library',  icon: Search,        label: 'Найти быстрый ответ',  dataTour: undefined,                   tone: 'green' },
   { href: '/learn/solutions',icon: Target,        label: 'Решить задачу',        dataTour: undefined,                   tone: 'dark' },
+  { href: '/learn/library',  icon: Search,        label: 'Найти быстрый ответ',  dataTour: undefined,                   tone: 'green' },
   { href: '/diagnostic',     icon: BarChart3,     label: 'Пройти диагностику',   dataTour: 'dashboard-diagnostic-cta',  tone: 'orange' },
+  { href: '/learn/plan',     icon: CalendarCheck, label: 'Продолжить мой план',  dataTour: 'dashboard-learn-cta',       tone: 'blue' },
 ];
 
 export default function DashboardPage() {
   const { data: profile } = trpc.profile.get.useQuery();
   const { data: dashboard, isLoading, error } = trpc.profile.getDashboard.useQuery();
   const storefront = trpc.dashboard.getStorefront.useQuery();
+  const searchBtnColor = BTN_COLORS[useSearchParams().get('btn') ?? ''] ?? null;
 
   const name = profile?.name || 'Пользователь';
 
@@ -118,10 +132,7 @@ export default function DashboardPage() {
         const completion = dashboard?.completionPercent || 0;
         const allZero = lessons === 0 && watch === 0 && streak === 0 && completion === 0;
         return (
-          <div
-            className="flex flex-col gap-4 rounded-2xl p-5 sm:flex-row sm:items-center sm:justify-between sm:p-6 animate-slide-up"
-            style={{ backgroundColor: '#f4f4f4' }}
-          >
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between animate-slide-up">
             <div>
               <p className="text-caption font-semibold uppercase tracking-wide text-mp-gray-400">MPSTATS Academy</p>
               <h1 className="mt-1 text-heading-xl font-bold text-mp-gray-900 sm:text-display-sm">Привет, {name}!</h1>
@@ -150,13 +161,14 @@ export default function DashboardPage() {
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 animate-slide-up" style={{ animationDelay: '50ms' }}>
         {ENTRY_BUTTONS.map(({ href, icon: Icon, label, dataTour, tone }) => {
           const t = ENTRY_TONE_STYLES[tone];
+          const bg = href === '/learn/library' && searchBtnColor ? { backgroundColor: searchBtnColor } : t.bg;
           return (
             <Link
               key={href}
               href={href}
               data-tour={dataTour}
               className={`flex items-center gap-3 rounded-2xl px-4 py-4 transition-all ${t.wrapper}`}
-              style={t.bg}
+              style={bg}
             >
               <span className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${t.iconBg} ${t.iconColor}`}>
                 <Icon className="h-5 w-5" />
