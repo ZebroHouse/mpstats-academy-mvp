@@ -5,6 +5,15 @@ import { router, protectedProcedure } from '../trpc';
 import type { Context } from '../trpc';
 import { createRateLimitMiddleware } from '../middleware/rate-limit';
 import { getAssistantQuota, BURST_PER_MIN } from '../utils/assistant-quota';
+import type { AssistantLessonRef, AssistantJobRef } from '@mpstats/ai';
+
+interface EnrichedMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  inDomain: boolean;
+  lessons: AssistantLessonRef[];
+  jobs: AssistantJobRef[];
+}
 
 const assistantProcedure = protectedProcedure.use(
   createRateLimitMiddleware(BURST_PER_MIN, 60_000, 'assistant'),
@@ -70,4 +79,68 @@ export const assistantRouter = router({
       const quotaAfter = await getAssistantQuota(userId, ctx.prisma, new Date());
       return { ...result, quota: quotaAfter };
     }),
+
+  getQuota: protectedProcedure.query(async ({ ctx }) => {
+    return getAssistantQuota(ctx.user!.id, ctx.prisma, new Date());
+  }),
+
+  resetConversation: protectedProcedure.mutation(async ({ ctx }) => {
+    await ctx.prisma.assistantConversation.updateMany({
+      where: { userId: ctx.user!.id, status: 'active' },
+      data: { status: 'archived' },
+    });
+    return { ok: true };
+  }),
+
+  getConversation: protectedProcedure.query(async ({ ctx }) => {
+    const convo = await ctx.prisma.assistantConversation.findFirst({
+      where: { userId: ctx.user!.id, status: 'active' },
+      orderBy: { updatedAt: 'desc' },
+    });
+    if (!convo) return { messages: [] as EnrichedMessage[] };
+
+    const rows = await ctx.prisma.assistantMessage.findMany({
+      where: { conversationId: convo.id },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    const allLessonIds = Array.from(new Set(rows.flatMap((r) => r.lessonIds)));
+    const allJobIds = Array.from(new Set(rows.flatMap((r) => r.jobIds)));
+    const [lessons, jobs] = await Promise.all([
+      allLessonIds.length
+        ? ctx.prisma.lesson.findMany({
+            where: { id: { in: allLessonIds }, isHidden: false, course: { isHidden: false } },
+            select: { id: true, title: true, duration: true, course: { select: { title: true } } },
+          })
+        : Promise.resolve([]),
+      allJobIds.length
+        ? ctx.prisma.job.findMany({
+            where: { id: { in: allJobIds }, isPublished: true },
+            select: { id: true, title: true, slug: true, _count: { select: { lessons: true } } },
+          })
+        : Promise.resolve([]),
+    ]);
+    const lessonMap = new Map(lessons.map((l) => [l.id, l]));
+    const jobMap = new Map(jobs.map((j) => [j.id, j]));
+
+    const messages: EnrichedMessage[] = rows.map((r) => ({
+      role: r.role as 'user' | 'assistant',
+      content: r.content,
+      inDomain: r.inDomain,
+      lessons: r.lessonIds
+        .filter((id) => lessonMap.has(id))
+        .map((id) => {
+          const l = lessonMap.get(id)!;
+          return { lessonId: l.id, title: l.title, durationMin: l.duration ?? null, courseTitle: l.course?.title ?? null, reason: '' };
+        }),
+      jobs: r.jobIds
+        .filter((id) => jobMap.has(id))
+        .map((id) => {
+          const j = jobMap.get(id)!;
+          return { jobId: j.id, title: j.title, slug: j.slug, lessonCount: j._count.lessons, reason: '' };
+        }),
+    }));
+
+    return { messages };
+  }),
 });

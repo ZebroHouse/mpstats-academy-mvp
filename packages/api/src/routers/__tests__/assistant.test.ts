@@ -58,3 +58,41 @@ describe('assistant.sendMessage', () => {
     expect(ctx.prisma.assistantMessage.create).toHaveBeenCalledTimes(2);
   });
 });
+
+describe('assistant.getConversation', () => {
+  it('возвращает сообщения активной нити с обогащёнными карточками', async () => {
+    const prisma = {
+      assistantConversation: { findFirst: vi.fn().mockResolvedValue({ id: 'C1', userId: 'u1' }) },
+      assistantMessage: { findMany: vi.fn().mockResolvedValue([
+        { role: 'user', content: 'ДРР?', lessonIds: [], jobIds: [], inDomain: true },
+        { role: 'assistant', content: 'ответ', lessonIds: ['L1'], jobIds: [], inDomain: true },
+      ]) },
+      lesson: { findMany: vi.fn().mockResolvedValue([{ id: 'L1', title: 'ДРР урок', duration: 12, course: { title: 'Реклама' } }]) },
+      job: { findMany: vi.fn().mockResolvedValue([]) },
+      userProfile: { findUnique: vi.fn().mockResolvedValue(null), update: vi.fn() },
+      userActivityDay: { upsert: vi.fn() },
+    } as any;
+    const caller = assistantRouter.createCaller({ prisma, user: { id: 'u1' } } as any);
+    const res = await caller.getConversation();
+    expect(res.messages).toHaveLength(2);
+    expect(res.messages[1].lessons[0].title).toBe('ДРР урок');
+  });
+
+  it('пустая нить → пустой массив', async () => {
+    const prisma = { assistantConversation: { findFirst: vi.fn().mockResolvedValue(null) }, userProfile: { findUnique: vi.fn().mockResolvedValue(null), update: vi.fn() }, userActivityDay: { upsert: vi.fn() } } as any;
+    const caller = assistantRouter.createCaller({ prisma, user: { id: 'u1' } } as any);
+    const res = await caller.getConversation();
+    expect(res.messages).toEqual([]);
+  });
+});
+
+describe('assistant.resetConversation', () => {
+  it('архивирует активную нить', async () => {
+    const updateMany = vi.fn().mockResolvedValue({ count: 1 });
+    const prisma = { assistantConversation: { updateMany }, userProfile: { findUnique: vi.fn().mockResolvedValue(null), update: vi.fn() }, userActivityDay: { upsert: vi.fn() } } as any;
+    const caller = assistantRouter.createCaller({ prisma, user: { id: 'u1' } } as any);
+    const res = await caller.resetConversation();
+    expect(res.ok).toBe(true);
+    expect(updateMany).toHaveBeenCalledWith({ where: { userId: 'u1', status: 'active' }, data: { status: 'archived' } });
+  });
+});
