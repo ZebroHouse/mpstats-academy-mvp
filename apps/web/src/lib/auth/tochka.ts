@@ -143,9 +143,12 @@ export function buildAuthorizeUrl(state: string): string {
     client_id: env.clientId,
     redirect_uri: env.redirectUri,
     response_type: 'code',
-    // scope через запятую — квирк Точки (не по RFC 6749). openid для OIDC-claims,
-    // customers для доступа к email/phone. Override — TOCHKA_SCOPE.
-    scope: process.env.TOCHKA_SCOPE || 'openid,customers',
+    // Боевой клиент 245da9… принимает ТОЛЬКО scope=default (проверено 2026-07-08 на
+    // проде: openid / openid,customers / customers / accounts / openapi → 400
+    // "Incorrect scope"; default → 302 на логин Точки). go.mpstats дефолтил
+    // 'openid,customers', но для этого клиента это невалидно. Значения comma-separated
+    // (квирк Точки, не RFC 6749). Override — TOCHKA_SCOPE.
+    scope: process.env.TOCHKA_SCOPE || 'default',
     state,
   })
   return `${env.ssoBaseUrl}/authorize?${params.toString()}`
