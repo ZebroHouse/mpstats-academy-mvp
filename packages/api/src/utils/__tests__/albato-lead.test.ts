@@ -37,6 +37,21 @@ describe('buildAcademyLeadPayload', () => {
     expect(buildAcademyLeadPayload(baseInput({ yandexId: 'y-123' })).registration_source).toBe('Яндекс');
   });
 
+  it('marks partner leads with a distinct registration_source', () => {
+    const p = buildAcademyLeadPayload(baseInput({ isPartner: true }));
+    expect(p.registration_source).toBe('MPSTATS Инструменты');
+  });
+
+  it('partner marker overrides the yandex/email source', () => {
+    const yandexPartner = buildAcademyLeadPayload(baseInput({ isPartner: true, yandexId: 'y-123' }));
+    expect(yandexPartner.registration_source).toBe('MPSTATS Инструменты');
+  });
+
+  it('leaves registration_source as Email/Яндекс for non-partner leads', () => {
+    expect(buildAcademyLeadPayload(baseInput({ isPartner: false })).registration_source).toBe('Email');
+    expect(buildAcademyLeadPayload(baseInput()).registration_source).toBe('Email');
+  });
+
   it('passes through contact fields and referral code', () => {
     const p = buildAcademyLeadPayload(baseInput({ referralCode: 'REF-AB12CD' }));
     expect(p).toMatchObject({

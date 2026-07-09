@@ -58,6 +58,13 @@ export interface AcademyLeadInput {
   trialEndsAt: Date | null;
   registeredAt: Date; // profile.createdAt
   now: Date;
+  /**
+   * Partner-origin lead (MPSTATS seamless-entry, user_metadata.partner_source
+   * === 'mpstats'). Tags registration_source distinctly so Albato can route
+   * these to a separate funnel / deal name. Does NOT add a field — the payload
+   * shape (14 keys) is unchanged, only the registration_source VALUE differs.
+   */
+  isPartner?: boolean;
 }
 
 export interface AcademyLeadPayload {
@@ -86,7 +93,11 @@ export function buildAcademyLeadPayload(input: AcademyLeadInput): AcademyLeadPay
     name: input.name ?? '',
     phone: input.phone ?? '',
     email: input.email ?? '',
-    registration_source: input.yandexId ? 'Яндекс' : 'Email',
+    registration_source: input.isPartner
+      ? 'MPSTATS Инструменты'
+      : input.yandexId
+        ? 'Яндекс'
+        : 'Email',
     referral_code: input.referralCode ?? '',
     marketplaces: input.marketplaces.map((m) => MARKETPLACE_LABELS[m] ?? m).join(', '),
     experience: input.experienceLevel

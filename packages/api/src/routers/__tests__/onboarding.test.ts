@@ -80,7 +80,7 @@ describe('onboarding.complete', () => {
     expect(updateArg.data.experienceLevel).toBe('BEGINNER');
   });
 
-  it('suppresses the amoCRM lead for a partner-origin user but still completes onboarding', async () => {
+  it('sends the amoCRM lead for a partner-origin user flagged as partner', async () => {
     const partnerCtx = {
       user: { id: 'user-1', email: 'partner@x.com', user_metadata: { partner_source: 'mpstats' } },
       prisma: ctxPrismaStub as any,
@@ -92,11 +92,15 @@ describe('onboarding.complete', () => {
       goals: ['SALES'],
     });
 
-    // Onboarding itself still completes (claim + qualification + CQ event stay).
+    // Onboarding itself completes (claim + qualification + CQ event stay).
     expect(ctxPrismaStub.userProfile.updateMany).toHaveBeenCalledTimes(1);
     expect(cqTrackEvent).toHaveBeenCalledWith('user-1', 'pa_onboarding_completed');
-    // But the Albato → amoCRM lead is NOT sent (partner users are logged our side only).
-    expect(sendAcademyLead).not.toHaveBeenCalled();
+    // The lead IS now sent, tagged isPartner:true so Albato routes it to the
+    // partner funnel (distinct registration_source, same 14-field payload).
+    expect(sendAcademyLead).toHaveBeenCalledTimes(1);
+    expect(sendAcademyLead).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: 'user-1', isPartner: true }),
+    );
   });
 
   it('rejects an unknown marketplace key before reaching the DB', async () => {
@@ -184,6 +188,7 @@ describe('onboarding.complete', () => {
         experienceLevel: 'BEGINNER',
         goals: ['ADS', 'ANALYTICS'],
         trialEndsAt: new Date('2026-07-02T10:00:00.000Z'),
+        isPartner: false,
       }),
     );
   });

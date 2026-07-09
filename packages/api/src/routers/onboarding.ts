@@ -94,11 +94,12 @@ export const onboardingRouter = router({
         // run on first completion and a failure never blocks/fails onboarding.
         //
         // Partner-origin users (MPSTATS seamless-entry, user_metadata.partner_source
-        // === 'mpstats') are NOT sent to amoCRM — they are partner traffic, not
-        // platform leads. They stay logged on our side: CarrotQuest (pa_partner_entry
-        // + pa_partner_source at entry time) and queryable in auth.users metadata.
+        // === 'mpstats') ARE sent to amoCRM, but flagged isPartner so Albato routes
+        // them to a separate funnel / deal name (via a distinct registration_source
+        // value — the 14-field payload shape is unchanged). Sales requested partner
+        // leads too, just distinguishable from organic platform leads.
         const isPartnerUser = ctx.user.user_metadata?.partner_source === 'mpstats';
-        if (wasFirstCompletion && !isPartnerUser) {
+        if (wasFirstCompletion) {
           try {
             const [referral, trialSub] = await Promise.all([
               ctx.prisma.referral.findUnique({
@@ -126,6 +127,7 @@ export const onboardingRouter = router({
               trialEndsAt: trialSub?.currentPeriodEnd ?? null,
               registeredAt: profile.createdAt,
               now: new Date(),
+              isPartner: isPartnerUser,
             });
           } catch (leadError) {
             console.error('[onboarding.complete] Albato lead failed:', leadError);
