@@ -19,20 +19,27 @@ export function AssistantConversation() {
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
 
-  const { data: convo } = trpc.assistant.getConversation.useQuery(undefined, { refetchOnMount: true });
-  // Hydrate persisted history only while the local list is still empty. Guards
-  // against two hazards: (1) optimistic sends/replies live in local state, so
-  // never clobber them once present; (2) on remount, React Query can return a
-  // stale cached `{messages: []}` synchronously before the real refetch — an
-  // empty resolve must not lock us out of the later non-empty one. Returning
-  // `prev` unchanged yields the same reference → no re-render → no loop.
+  // Never serve a stale cache on remount (drawer reopen) — always refetch so
+  // the latest server thread (incl. exchanges from a prior open) shows up.
+  const { data: convo } = trpc.assistant.getConversation.useQuery(undefined, {
+    staleTime: 0,
+    refetchOnMount: 'always',
+  });
+  // Re-hydrate whenever the SERVER message count changes. During an in-flight
+  // send `convo` doesn't change (no refetch yet) → effect doesn't fire → the
+  // optimistic local append is preserved. After onSuccess invalidates the
+  // query, the refetch grows the server length → effect fires once → replaces
+  // local with the full server thread (same content). On reopen, remount resets
+  // local `messages` to [] and this ref to -1, and the staleTime:0 refetch
+  // delivers full history → hydrates it. Guarding on the length signature (not
+  // firing setState when unchanged) keeps the fresh-object query result from
+  // looping.
+  const lastServerLenRef = useRef(-1);
   useEffect(() => {
-    if (!convo?.messages?.length) return;
-    setMessages((prev) =>
-      prev.length === 0
-        ? convo.messages.map((m) => ({ role: m.role, content: m.content, lessons: m.lessons, jobs: m.jobs }))
-        : prev,
-    );
+    if (!convo?.messages) return;
+    if (convo.messages.length === lastServerLenRef.current) return;
+    lastServerLenRef.current = convo.messages.length;
+    setMessages(convo.messages.map((m) => ({ role: m.role, content: m.content, lessons: m.lessons, jobs: m.jobs })));
   }, [convo]);
 
   const { data: quota } = trpc.assistant.getQuota.useQuery();
@@ -55,6 +62,7 @@ export function AssistantConversation() {
     onSuccess: (res) => {
       setMessages((prev) => [...prev, { role: 'assistant', content: res.answer, lessons: res.lessons, jobs: res.jobs }]);
       utils.assistant.getQuota.invalidate();
+      utils.assistant.getConversation.invalidate(); // keep cache current for next reopen
     },
     onError: () => {
       setMessages((prev) => [...prev, { role: 'assistant', content: 'Не удалось получить ответ. Попробуй ещё раз.' }]);
@@ -64,6 +72,7 @@ export function AssistantConversation() {
   const resetMutation = trpc.assistant.resetConversation.useMutation({
     onSuccess: () => {
       setMessages([]);
+      lastServerLenRef.current = -1; // allow re-hydration once the emptied thread refetches
       utils.assistant.getConversation.invalidate();
     },
   });

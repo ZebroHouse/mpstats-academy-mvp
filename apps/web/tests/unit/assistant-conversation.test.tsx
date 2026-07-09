@@ -50,4 +50,22 @@ describe('AssistantConversation', () => {
     await waitFor(() => expect(screen.getByText('старый вопрос')).toBeInTheDocument());
     expect(screen.getByText('старый ответ')).toBeInTheDocument();
   });
+
+  it('дозагружает новые сообщения когда server-список растёт (stale→fresh reopen)', async () => {
+    // Reopen serves a stale empty cache first — nothing rendered yet.
+    conversationData = { messages: [] };
+    const { rerender } = render(<AssistantConversation />);
+    expect(screen.queryByText('дозагруженный вопрос')).not.toBeInTheDocument();
+
+    // Fresh refetch (staleTime:0) delivers the full server thread on next render.
+    conversationData = {
+      messages: [
+        { role: 'user', content: 'дозагруженный вопрос', lessons: [], jobs: [], inDomain: true },
+        { role: 'assistant', content: 'дозагруженный ответ', lessons: [], jobs: [], inDomain: true },
+      ],
+    };
+    rerender(<AssistantConversation />);
+    await waitFor(() => expect(screen.getByText('дозагруженный вопрос')).toBeInTheDocument());
+    expect(screen.getByText('дозагруженный ответ')).toBeInTheDocument();
+  });
 });
