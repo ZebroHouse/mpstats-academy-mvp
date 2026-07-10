@@ -80,7 +80,29 @@ export async function handlePaymentSuccess(
     }
 
     const now = new Date();
-    const periodEnd = new Date(now);
+
+    // Additive stacking on top of an active free trial: if the user still has
+    // a running TRIAL when they pay, the paid period begins where the trial
+    // ends — so paid days are never eaten by the remaining free trial days
+    // ("сначала доигрывает триал, потом начинается платная подписка"). The
+    // trial row itself is left untouched (invariant in trial-subscription.ts);
+    // access is a union of all active subs (see utils/access.ts), so both the
+    // trial and the future-dated paid row grant access without any gap.
+    const activeTrial = await prisma.subscription.findFirst({
+      where: {
+        userId: subscription.userId,
+        status: 'TRIAL',
+        currentPeriodEnd: { gt: now },
+      },
+      orderBy: { currentPeriodEnd: 'desc' },
+      select: { currentPeriodEnd: true },
+    });
+
+    const periodStart =
+      activeTrial && activeTrial.currentPeriodEnd > now
+        ? activeTrial.currentPeriodEnd
+        : now;
+    const periodEnd = new Date(periodStart);
     periodEnd.setDate(periodEnd.getDate() + subscription.plan.intervalDays);
 
     // Only set cpSubscriptionId when CP provided one AND we haven't stored it
@@ -93,7 +115,7 @@ export async function handlePaymentSuccess(
       where: { id: subscriptionId },
       data: {
         status: 'ACTIVE',
-        currentPeriodStart: now,
+        currentPeriodStart: periodStart,
         currentPeriodEnd: periodEnd,
         ...(shouldSetCpId
           ? { cpSubscriptionId: payment.cpSubscriptionId }
@@ -102,9 +124,9 @@ export async function handlePaymentSuccess(
     });
 
     console.log(
-      `[Subscription] Activated ${subscriptionId}, period: ${now.toISOString()} - ${periodEnd.toISOString()}${
-        shouldSetCpId ? ` (cp=${payment.cpSubscriptionId})` : ''
-      }`,
+      `[Subscription] Activated ${subscriptionId}, period: ${periodStart.toISOString()} - ${periodEnd.toISOString()}${
+        activeTrial ? ' (stacked after active trial)' : ''
+      }${shouldSetCpId ? ` (cp=${payment.cpSubscriptionId})` : ''}`,
     );
 
     // Fire-and-forget: send payment success email via CQ

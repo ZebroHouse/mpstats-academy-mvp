@@ -1,13 +1,14 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // Mocks must be created via vi.hoisted so the (hoisted) vi.mock factories can reference them.
-const { update, findUnique } = vi.hoisted(() => ({
+const { update, findUnique, findFirst } = vi.hoisted(() => ({
   update: vi.fn(),
   findUnique: vi.fn(),
+  findFirst: vi.fn(),
 }));
 
 vi.mock('@mpstats/db/client', () => ({
-  prisma: { subscription: { update, findUnique } },
+  prisma: { subscription: { update, findUnique, findFirst } },
 }));
 vi.mock('@sentry/nextjs', () => ({ captureException: vi.fn() }));
 vi.mock('@/lib/carrotquest/emails', () => ({
@@ -24,6 +25,8 @@ describe('trial→paid invariant: paid activation never mutates the trial row', 
     update.mockReset();
     update.mockResolvedValue({});
     findUnique.mockReset();
+    findFirst.mockReset();
+    findFirst.mockResolvedValue(null); // default: no active trial
   });
 
   it('handlePaymentSuccess updates only the paid subscription id, leaving TRIAL row untouched', async () => {
@@ -42,5 +45,45 @@ describe('trial→paid invariant: paid activation never mutates the trial row', 
     }
     const trialTouched = update.mock.calls.some((c) => c[0].where?.id === 'trial_1');
     expect(trialTouched).toBe(false);
+  });
+
+  it('stacks the paid period after an active trial (paid starts at trial end)', async () => {
+    findUnique.mockResolvedValue({
+      id: 'paid_1', userId: 'user_1', cpSubscriptionId: null,
+      plan: { intervalDays: 30, name: 'Полный доступ' },
+    });
+    // Trial still running: ends 2 days from now.
+    const trialEnd = new Date(Date.now() + 2 * 24 * 60 * 60 * 1000);
+    findFirst.mockResolvedValue({ currentPeriodEnd: trialEnd });
+
+    await handlePaymentSuccess('paid_1', { id: 'pay_1', amount: 2990, cpSubscriptionId: 'sc_1' });
+
+    const data = update.mock.calls[0][0].data;
+    // Paid period must begin exactly at the trial end, not at "now".
+    expect((data.currentPeriodStart as Date).getTime()).toBe(trialEnd.getTime());
+    // ...and run a full interval from there.
+    const expectedEnd = new Date(trialEnd);
+    expectedEnd.setDate(expectedEnd.getDate() + 30);
+    expect((data.currentPeriodEnd as Date).getTime()).toBe(expectedEnd.getTime());
+    // The trial row is only READ (findFirst), never updated.
+    const trialUpdated = update.mock.calls.some((c) => c[0].where?.id !== 'paid_1');
+    expect(trialUpdated).toBe(false);
+  });
+
+  it('starts the paid period at "now" when there is no active trial', async () => {
+    findUnique.mockResolvedValue({
+      id: 'paid_1', userId: 'user_1', cpSubscriptionId: null,
+      plan: { intervalDays: 30, name: 'Полный доступ' },
+    });
+    findFirst.mockResolvedValue(null);
+
+    const before = Date.now();
+    await handlePaymentSuccess('paid_1', { id: 'pay_1', amount: 2990, cpSubscriptionId: 'sc_1' });
+    const after = Date.now();
+
+    const data = update.mock.calls[0][0].data;
+    const start = (data.currentPeriodStart as Date).getTime();
+    expect(start).toBeGreaterThanOrEqual(before);
+    expect(start).toBeLessThanOrEqual(after);
   });
 });

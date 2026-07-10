@@ -124,6 +124,13 @@ export const billingRouter = router({
       // (currentPeriodEnd > now). Otherwise the user has effectively
       // expired access (EXPIRED is computed lazily, not stored) and
       // should be allowed to subscribe again.
+      //
+      // TRIAL is intentionally NOT a blocker: the base trial is a PLATFORM
+      // subscription (see createTrialSubscription), so counting it here made
+      // every trial user unable to buy "Полный доступ" while the trial was
+      // active. Paying converts a trial into a SEPARATE paid row (the trial
+      // row is never mutated — see trial-subscription.ts invariant), and
+      // handlePaymentSuccess stacks the paid period after the trial ends.
       const existing = await ctx.prisma.subscription.findFirst({
         where: {
           userId: ctx.user.id,
@@ -131,7 +138,7 @@ export const billingRouter = router({
           ...(input.courseId ? { courseId: input.courseId } : { courseId: null }),
           OR: [
             { status: 'PENDING' },
-            { status: { in: ['ACTIVE', 'TRIAL', 'PAST_DUE'] }, currentPeriodEnd: { gt: now } },
+            { status: { in: ['ACTIVE', 'PAST_DUE'] }, currentPeriodEnd: { gt: now } },
           ],
         },
       });
