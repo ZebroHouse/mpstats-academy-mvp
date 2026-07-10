@@ -124,6 +124,13 @@ export const billingRouter = router({
       // (currentPeriodEnd > now). Otherwise the user has effectively
       // expired access (EXPIRED is computed lazily, not stored) and
       // should be allowed to subscribe again.
+      //
+      // TRIAL is intentionally NOT a blocker: the base trial is a PLATFORM
+      // subscription (see createTrialSubscription), so counting it here made
+      // every trial user unable to buy "Полный доступ" while the trial was
+      // active. Paying converts a trial into a SEPARATE paid row (the trial
+      // row is never mutated — see trial-subscription.ts invariant), and
+      // handlePaymentSuccess stacks the paid period after the trial ends.
       const existing = await ctx.prisma.subscription.findFirst({
         where: {
           userId: ctx.user.id,
@@ -131,7 +138,7 @@ export const billingRouter = router({
           ...(input.courseId ? { courseId: input.courseId } : { courseId: null }),
           OR: [
             { status: 'PENDING' },
-            { status: { in: ['ACTIVE', 'TRIAL', 'PAST_DUE'] }, currentPeriodEnd: { gt: now } },
+            { status: { in: ['ACTIVE', 'PAST_DUE'] }, currentPeriodEnd: { gt: now } },
           ],
         },
       });
@@ -186,6 +193,29 @@ export const billingRouter = router({
           ? `MPSTATS Academy — курс «${courseTitle}» (${plan.intervalDays} дней)`
           : `MPSTATS Academy — полный доступ (${plan.intervalDays} дней)`;
 
+      // Recurrent start date for the CloudPayments widget. When the user is on
+      // an active trial, the paid period stacks AFTER the trial ends (see
+      // handlePaymentSuccess), so the first auto-charge must fire at the paid
+      // period end (trialEnd + intervalDays), NOT 30 days from the immediate
+      // payment. Without this, CP would recharge while the trial bonus days are
+      // still running. Only set when a trial is active; otherwise CP defaults to
+      // paymentDate + interval (unchanged behavior for non-trial users).
+      const activeTrial = await ctx.prisma.subscription.findFirst({
+        where: {
+          userId: ctx.user.id,
+          status: 'TRIAL',
+          currentPeriodEnd: { gt: now },
+        },
+        orderBy: { currentPeriodEnd: 'desc' },
+        select: { currentPeriodEnd: true },
+      });
+      let recurrentStartDate: string | undefined;
+      if (activeTrial && activeTrial.currentPeriodEnd > now) {
+        const firstChargeAt = new Date(activeTrial.currentPeriodEnd);
+        firstChargeAt.setDate(firstChargeAt.getDate() + plan.intervalDays);
+        recurrentStartDate = firstChargeAt.toISOString();
+      }
+
       return {
         subscriptionId: subscription.id,
         amount: plan.price,
@@ -193,6 +223,7 @@ export const billingRouter = router({
         description,
         userId: ctx.user.id,
         receipt,
+        recurrentStartDate,
       };
     }),
 

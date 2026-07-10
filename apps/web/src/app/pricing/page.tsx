@@ -250,7 +250,7 @@ function PricingContent() {
         currency: 'RUB',
         accountId: result.userId,
         invoiceId: result.subscriptionId,
-        recurrent: { interval: 'Month', period: 1 },
+        recurrent: { interval: 'Month', period: 1, startDate: result.recurrentStartDate },
         receipt: result.receipt,
       });
 
