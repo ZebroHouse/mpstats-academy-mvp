@@ -193,6 +193,29 @@ export const billingRouter = router({
           ? `MPSTATS Academy — курс «${courseTitle}» (${plan.intervalDays} дней)`
           : `MPSTATS Academy — полный доступ (${plan.intervalDays} дней)`;
 
+      // Recurrent start date for the CloudPayments widget. When the user is on
+      // an active trial, the paid period stacks AFTER the trial ends (see
+      // handlePaymentSuccess), so the first auto-charge must fire at the paid
+      // period end (trialEnd + intervalDays), NOT 30 days from the immediate
+      // payment. Without this, CP would recharge while the trial bonus days are
+      // still running. Only set when a trial is active; otherwise CP defaults to
+      // paymentDate + interval (unchanged behavior for non-trial users).
+      const activeTrial = await ctx.prisma.subscription.findFirst({
+        where: {
+          userId: ctx.user.id,
+          status: 'TRIAL',
+          currentPeriodEnd: { gt: now },
+        },
+        orderBy: { currentPeriodEnd: 'desc' },
+        select: { currentPeriodEnd: true },
+      });
+      let recurrentStartDate: string | undefined;
+      if (activeTrial && activeTrial.currentPeriodEnd > now) {
+        const firstChargeAt = new Date(activeTrial.currentPeriodEnd);
+        firstChargeAt.setDate(firstChargeAt.getDate() + plan.intervalDays);
+        recurrentStartDate = firstChargeAt.toISOString();
+      }
+
       return {
         subscriptionId: subscription.id,
         amount: plan.price,
@@ -200,6 +223,7 @@ export const billingRouter = router({
         description,
         userId: ctx.user.id,
         receipt,
+        recurrentStartDate,
       };
     }),
 

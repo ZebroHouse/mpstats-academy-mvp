@@ -42,6 +42,13 @@ export interface CPChargeOptions {
     interval: 'Month' | 'Week' | 'Day';
     period: number;
     amount?: number;
+    /**
+     * ISO-8601 date of the FIRST recurring charge (CP "Дата первого списания").
+     * Used to stack the paid period after an active trial: the immediate
+     * payment covers up to this date, and CP auto-charges only from here.
+     * When omitted, CP defaults to paymentDate + interval.
+     */
+    startDate?: string;
   };
   /**
    * 54-FZ receipt. Passed both at intent root (first payment) AND inside
@@ -92,6 +99,9 @@ export function openPaymentWidget(options: CPChargeOptions): Promise<boolean> {
         interval: options.recurrent.interval,
         period: options.recurrent.period,
         amount: options.recurrent.amount ?? options.amount,
+        ...(options.recurrent.startDate
+          ? { startDate: options.recurrent.startDate }
+          : {}),
         ...(options.receipt ? { receipt: options.receipt } : {}),
       };
     }
