@@ -2,6 +2,7 @@
 import { NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { prisma } from '@mpstats/db/client';
+import { ensureBaseTrial } from '@mpstats/api';
 import { getSupabaseAdmin } from '@/lib/auth/supabase-admin';
 import { createClient } from '@/lib/supabase/server';
 import { resolvePartnerLessonId } from '@/lib/partner/resolve-module';
@@ -69,6 +70,7 @@ export async function GET(request: Request): Promise<Response> {
       const userId = existingUser ? existingUser.id : await createPartnerUser(admin, email, name, /* pendingVerify */ false);
       if (!userId) return NextResponse.redirect(new URL('/login?error=partner_entry', origin));
       await upsertPartnerProfile(userId, name, phone);
+      await ensureBaseTrial(userId); // partner arrivals get the same base 3-day trial as everyone else (idempotent)
       void firePartnerEntryLead(userId, { email, name, phone, moduleCode: moduleCode || undefined });
       return establishSession(admin, email, target, origin);
     }
@@ -87,6 +89,7 @@ export async function GET(request: Request): Promise<Response> {
         Sentry.captureException(link.error ?? new Error('generateLink returned no token'), { tags: { area: 'partner-entry', stage: 'generate-link' } });
         return NextResponse.redirect(new URL('/login?error=partner_entry', origin));
       }
+      void ensureBaseTrial(existingUser.id); // idempotent: grants a base trial only if they have no subscription yet
       void firePartnerEntryLead(existingUser.id, { email, name, phone, moduleCode: moduleCode || undefined });
       void sendPartnerConfirmEmail(existingUser.id, { email, name, confirmUrl: buildConfirmUrl(origin, token, target) });
       return NextResponse.redirect(new URL(`/partner/check-email?email=${encodeURIComponent(email)}`, origin));
@@ -100,6 +103,7 @@ export async function GET(request: Request): Promise<Response> {
     if (!userId) return NextResponse.redirect(new URL('/login?error=partner_entry', origin));
 
     await upsertPartnerProfile(userId, name, phone);
+    await ensureBaseTrial(userId); // partner arrivals get the same base 3-day trial as everyone else (idempotent)
     void firePartnerEntryLead(userId, { email, name, phone, moduleCode: moduleCode || undefined });
     const onboardingTarget = `/welcome?next=${encodeURIComponent(target)}`;
     return establishSession(admin, email, onboardingTarget, origin);
