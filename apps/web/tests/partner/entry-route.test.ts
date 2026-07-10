@@ -9,6 +9,7 @@ const h = vi.hoisted(() => ({
   server: { auth: { getUser: vi.fn() } },
   prisma: { $queryRaw: vi.fn(), userProfile: { upsert: vi.fn() }, lesson: { findFirst: vi.fn() } },
   cq: { firePartnerEntryLead: vi.fn(), sendPartnerConfirmEmail: vi.fn() },
+  ensureBaseTrial: vi.fn(),
   setSession: vi.fn(),
 }));
 
@@ -18,9 +19,20 @@ vi.mock('@/lib/supabase/server', () => ({ createClient: vi.fn(async () => h.serv
 vi.mock('@supabase/ssr', () => ({ createServerClient: vi.fn(() => ({ auth: { setSession: h.setSession } })) }));
 vi.mock('@mpstats/db/client', () => ({ prisma: h.prisma }));
 vi.mock('@/lib/carrotquest/emails', () => ({ firePartnerEntryLead: h.cq.firePartnerEntryLead, sendPartnerConfirmEmail: h.cq.sendPartnerConfirmEmail }));
+vi.mock('@mpstats/api', async (importOriginal) => ({
+  ...(await importOriginal<Record<string, unknown>>()),
+  ensureBaseTrial: h.ensureBaseTrial,
+}));
 
 import { GET } from '@/app/api/partner/mpstats/enter/route';
-const req = (qs: string) => new Request(`https://platform.test/api/partner/mpstats/enter?${qs}`);
+// Unique client IP per request so the module-level fixed-window rate limiter
+// (10 req/60s/IP) never groups tests into one bucket — otherwise the 11th+
+// request in the file would 429 and fail unrelated assertions.
+let ipSeq = 0;
+const req = (qs: string) =>
+  new Request(`https://platform.test/api/partner/mpstats/enter?${qs}`, {
+    headers: { 'x-forwarded-for': `10.1.${Math.floor(ipSeq / 256)}.${ipSeq++ % 256}` },
+  });
 
 describe('GET /api/partner/mpstats/enter', () => {
   beforeEach(() => {
@@ -38,7 +50,27 @@ describe('GET /api/partner/mpstats/enter', () => {
     h.server.auth.getUser.mockResolvedValue({ data: { user: null } });
     h.cq.firePartnerEntryLead.mockResolvedValue(undefined);
     h.cq.sendPartnerConfirmEmail.mockResolvedValue(undefined);
+    h.ensureBaseTrial.mockResolvedValue(undefined);
     h.setSession.mockResolvedValue({ error: null });
+  });
+
+  it('untrusted new email: grants the base 3-day trial to the fresh partner user', async () => {
+    await GET(req('email=new@x.com&name=Ivan&module_code=auto_bidder'));
+    expect(h.ensureBaseTrial).toHaveBeenCalledWith('new-uid');
+  });
+
+  it('trusted new user: grants the base trial', async () => {
+    const exp = Math.floor(Date.now() / 1000) + 60;
+    const sig = signEntry({ email: 'new@x.com', name: 'Ivan', moduleCode: 'auto_bidder', exp });
+    await GET(req(`email=new@x.com&name=Ivan&module_code=auto_bidder&exp=${exp}&sig=${sig}`));
+    expect(h.ensureBaseTrial).toHaveBeenCalledWith('new-uid');
+  });
+
+  it('untrusted existing user (magic-link path): grants the base trial (idempotent)', async () => {
+    h.prisma.$queryRaw.mockResolvedValue([{ id: 'old-uid', email: 'old@x.com' }]);
+    h.server.auth.getUser.mockResolvedValue({ data: { user: null } });
+    await GET(req('email=old@x.com'));
+    expect(h.ensureBaseTrial).toHaveBeenCalledWith('old-uid');
   });
 
   it('redirects to / when the flag is off', async () => {
