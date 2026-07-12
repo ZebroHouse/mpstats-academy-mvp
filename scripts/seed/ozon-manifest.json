@@ -1,0 +1,413 @@
+{
+  "course": {
+    "id": "09_ozon_prodvizhenie",
+    "title": "Ozon PROдвижение",
+    "slug": "09_ozon_prodvizhenie",
+    "description": "Продвижение на Ozon: экономика рекламы и ДРР, ценообразование и акции, SEO и карточка, воронка продаж, рекламные инструменты, оптимизация ДРР, масштабирование и точки роста.",
+    "order": 8,
+    "price": 4990,
+    "isFree": false,
+    "isHidden": true,
+    "partnerKey": null
+  },
+  "_meta": {
+    "generated_from": "_ozon_prodvizhenie_map.json + ffprobe durations",
+    "note": "skillCategory provisional per-module; reconcile from classification.json before reveal. order = global 1..49 across modules.",
+    "totalMin": 660,
+    "lessonCount": 49
+  },
+  "lessons": [
+    {
+      "id": "09_ozon_prodvizhenie_m01_economics_001",
+      "order": 1,
+      "duration": 12,
+      "skillCategory": "FINANCE",
+      "module_id": "m01_economics",
+      "title": "Экономика рекламы на Ozon - почему ДРР нужно считать до запуска"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m01_economics_002",
+      "order": 2,
+      "duration": 17,
+      "skillCategory": "FINANCE",
+      "module_id": "m01_economics",
+      "title": "Допустимый ДРР на Ozon какие цифры собрать перед расчетом"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m01_economics_003",
+      "order": 3,
+      "duration": 20,
+      "skillCategory": "FINANCE",
+      "module_id": "m01_economics",
+      "title": "Решение после расчета ДРР тест рекламы или пересборка экономики товара"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m01_economics_004",
+      "order": 4,
+      "duration": 19,
+      "skillCategory": "FINANCE",
+      "module_id": "m01_economics",
+      "title": "Как контролировать прибыльность рекламы на Ozon"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m01_economics_005",
+      "order": 5,
+      "duration": 4,
+      "skillCategory": "FINANCE",
+      "module_id": "m01_economics",
+      "title": "Как посмотреть долю рекламных расходов - Анна Борисова"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m02_pricing_001",
+      "order": 6,
+      "duration": 11,
+      "skillCategory": "FINANCE",
+      "module_id": "m02_pricing",
+      "title": "Как рассчитать цену перед участием в акции"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m02_pricing_002",
+      "order": 7,
+      "duration": 6,
+      "skillCategory": "FINANCE",
+      "module_id": "m02_pricing",
+      "title": "Акции Ozon как выбрать механику под задачу"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m02_pricing_003",
+      "order": 8,
+      "duration": 16,
+      "skillCategory": "FINANCE",
+      "module_id": "m02_pricing",
+      "title": "Как работать с разделом «Цены и акции» в кабинете Ozon"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m02_pricing_004",
+      "order": 9,
+      "duration": 18,
+      "skillCategory": "FINANCE",
+      "module_id": "m02_pricing",
+      "title": "Как проверить акцию Ozon перед запуском"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m02_pricing_005",
+      "order": 10,
+      "duration": 32,
+      "skillCategory": "FINANCE",
+      "module_id": "m02_pricing",
+      "title": "Глобальные и собственные акции Ozon как выбрать механику и оценить результат"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m03_card_seo_001",
+      "order": 11,
+      "duration": 10,
+      "skillCategory": "MARKETING",
+      "module_id": "m03_card_seo",
+      "title": "Как работает поиск на Ozon"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m03_card_seo_002",
+      "order": 12,
+      "duration": 21,
+      "skillCategory": "MARKETING",
+      "module_id": "m03_card_seo",
+      "title": "Факторы ранжирования на Ozon"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m03_card_seo_003",
+      "order": 13,
+      "duration": 7,
+      "skillCategory": "MARKETING",
+      "module_id": "m03_card_seo",
+      "title": "Признаки слабого ранжирования"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m03_card_seo_004",
+      "order": 14,
+      "duration": 7,
+      "skillCategory": "MARKETING",
+      "module_id": "m03_card_seo",
+      "title": "Как в ЛК Ozon Seller отследить слабое ранжирование"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m03_card_seo_005",
+      "order": 15,
+      "duration": 37,
+      "skillCategory": "MARKETING",
+      "module_id": "m03_card_seo",
+      "title": "Почему конкурент продает лучше анализ карточки, контента и воронки"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m03_card_seo_006",
+      "order": 16,
+      "duration": 12,
+      "skillCategory": "MARKETING",
+      "module_id": "m03_card_seo",
+      "title": "Что менять в карточке Ozon диагностика просадок и безопасные правки"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m04_funnel_001",
+      "order": 17,
+      "duration": 13,
+      "skillCategory": "ANALYTICS",
+      "module_id": "m04_funnel",
+      "title": "Путь покупателя на Ozon"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m04_funnel_002",
+      "order": 18,
+      "duration": 18,
+      "skillCategory": "ANALYTICS",
+      "module_id": "m04_funnel",
+      "title": "Находим точки потерь в воронке продаж"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m04_funnel_003",
+      "order": 19,
+      "duration": 18,
+      "skillCategory": "ANALYTICS",
+      "module_id": "m04_funnel",
+      "title": "Как по аналитическим данным найти проблему в карточке"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m04_funnel_004",
+      "order": 20,
+      "duration": 12,
+      "skillCategory": "ANALYTICS",
+      "module_id": "m04_funnel",
+      "title": "Влияние срока доставки и выкупа на прибыль"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m04_funnel_005",
+      "order": 21,
+      "duration": 6,
+      "skillCategory": "ANALYTICS",
+      "module_id": "m04_funnel",
+      "title": "Алгоритм диагностики просадки в воронке"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m05_ad_tools_001",
+      "order": 22,
+      "duration": 17,
+      "skillCategory": "MARKETING",
+      "module_id": "m05_ad_tools",
+      "title": "Карта рекламных инструментов - обзор в ЛК Ozon Seller"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m05_ad_tools_002",
+      "order": 23,
+      "duration": 7,
+      "skillCategory": "MARKETING",
+      "module_id": "m05_ad_tools",
+      "title": "Оплата за клик «Только поиск», «Поиск и рекомендации»"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m05_ad_tools_003",
+      "order": 24,
+      "duration": 3,
+      "skillCategory": "MARKETING",
+      "module_id": "m05_ad_tools",
+      "title": "Медийная реклама в ЛК Ozon Seller"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m05_ad_tools_004",
+      "order": 25,
+      "duration": 2,
+      "skillCategory": "MARKETING",
+      "module_id": "m05_ad_tools",
+      "title": "Оплата за заказ - детализация расходов"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m05_ad_tools_005",
+      "order": 26,
+      "duration": 6,
+      "skillCategory": "MARKETING",
+      "module_id": "m05_ad_tools",
+      "title": "«Оплата за заказ» - условия подключения инструмента"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m05_ad_tools_006",
+      "order": 27,
+      "duration": 7,
+      "skillCategory": "MARKETING",
+      "module_id": "m05_ad_tools",
+      "title": "Стратегии рекламных ставок"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m05_ad_tools_007",
+      "order": 28,
+      "duration": 9,
+      "skillCategory": "MARKETING",
+      "module_id": "m05_ad_tools",
+      "title": "Настройка рекламных кампаний под разные стратегии"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m05_ad_tools_008",
+      "order": 29,
+      "duration": 6,
+      "skillCategory": "MARKETING",
+      "module_id": "m05_ad_tools",
+      "title": "Управление РК - недельный бюджет, условия внесения изменений и аналитики"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m05_ad_tools_009",
+      "order": 30,
+      "duration": 4,
+      "skillCategory": "MARKETING",
+      "module_id": "m05_ad_tools",
+      "title": "Как редактировать активную РК"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m06_ad_optimization_001",
+      "order": 31,
+      "duration": 9,
+      "skillCategory": "MARKETING",
+      "module_id": "m06_ad_optimization",
+      "title": "ДРР, CPC, CR и выкупы как читать рекламную воронку Ozon"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m06_ad_optimization_002",
+      "order": 32,
+      "duration": 25,
+      "skillCategory": "MARKETING",
+      "module_id": "m06_ad_optimization",
+      "title": "Почему реклама на Ozon не окупается диагностика через CTR, CR и ДРР"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m06_ad_optimization_003",
+      "order": 33,
+      "duration": 22,
+      "skillCategory": "MARKETING",
+      "module_id": "m06_ad_optimization",
+      "title": "Диагностика рекламной кампании расходы, заказы, ставки и запросы"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m06_ad_optimization_004",
+      "order": 34,
+      "duration": 16,
+      "skillCategory": "MARKETING",
+      "module_id": "m06_ad_optimization",
+      "title": "Ставки, бюджет и SEO как оптимизировать рекламу на Ozon"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m06_ad_optimization_005",
+      "order": 35,
+      "duration": 19,
+      "skillCategory": "MARKETING",
+      "module_id": "m06_ad_optimization",
+      "title": "Как снижать ДРР на Ozon пошаговый алгоритм на 4 недели"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m07_scaling_001",
+      "order": 36,
+      "duration": 7,
+      "skillCategory": "ANALYTICS",
+      "module_id": "m07_scaling",
+      "title": "Как отличить просадку в нише от проблемы конкретного магазина"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m07_scaling_002",
+      "order": 37,
+      "duration": 20,
+      "skillCategory": "ANALYTICS",
+      "module_id": "m07_scaling",
+      "title": "Почему магазин не растет - 5 блоков проверки"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m07_scaling_003",
+      "order": 38,
+      "duration": 12,
+      "skillCategory": "ANALYTICS",
+      "module_id": "m07_scaling",
+      "title": "P&L - отличаем рост выручки от продаж в минус"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m07_scaling_004",
+      "order": 39,
+      "duration": 6,
+      "skillCategory": "ANALYTICS",
+      "module_id": "m07_scaling",
+      "title": "Оцифровка и P&L в сервисе TrueStats"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m07_scaling_005",
+      "order": 40,
+      "duration": 16,
+      "skillCategory": "ANALYTICS",
+      "module_id": "m07_scaling",
+      "title": "Кейсы роста на Ozon - от диагностики к масштабированию"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m08_growth_points_001",
+      "order": 41,
+      "duration": 8,
+      "skillCategory": "ANALYTICS",
+      "module_id": "m08_growth_points",
+      "title": "Алгоритм поиска точки роста карточки"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m08_growth_points_002",
+      "order": 42,
+      "duration": 6,
+      "skillCategory": "ANALYTICS",
+      "module_id": "m08_growth_points",
+      "title": "Где искать идеи для роста и как тренировать насмотренность"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m08_growth_points_003",
+      "order": 43,
+      "duration": 5,
+      "skillCategory": "ANALYTICS",
+      "module_id": "m08_growth_points",
+      "title": "Как найти точка роста в карточках конкурентов"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m08_growth_points_004",
+      "order": 44,
+      "duration": 9,
+      "skillCategory": "ANALYTICS",
+      "module_id": "m08_growth_points",
+      "title": "Как найти точки роста в смежных нишах, сторонних площадках и упаковке"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m08_growth_points_005",
+      "order": 45,
+      "duration": 5,
+      "skillCategory": "ANALYTICS",
+      "module_id": "m08_growth_points",
+      "title": "Идеи и гипотезы - как формулировать и превращать в план тестов"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m08_growth_points_006",
+      "order": 46,
+      "duration": 8,
+      "skillCategory": "ANALYTICS",
+      "module_id": "m08_growth_points",
+      "title": "Запускаем AB тесты через Sellium и оцениваем результат"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m08_growth_points_007",
+      "order": 47,
+      "duration": 5,
+      "skillCategory": "ANALYTICS",
+      "module_id": "m08_growth_points",
+      "title": "Бонус-урок «Находим тренды с модулем SEO от MPSTATS»"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m08_growth_points_008",
+      "order": 48,
+      "duration": 52,
+      "skillCategory": "ANALYTICS",
+      "module_id": "m08_growth_points",
+      "title": "Как масштабировать продажи на МП через трафик и инфлюенс в 2026"
+    },
+    {
+      "id": "09_ozon_prodvizhenie_m08_growth_points_009",
+      "order": 49,
+      "duration": 33,
+      "skillCategory": "ANALYTICS",
+      "module_id": "m08_growth_points",
+      "title": "Как привлекать аудиторию из VK в Ozon и считать эффективность"
+    }
+  ]
+}

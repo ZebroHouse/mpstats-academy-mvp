@@ -2,8 +2,8 @@
   "phase": "classification",
   "model": "openai/gpt-4.1-nano",
   "taxonomy_timestamp": "2026-04-21T19:25:00.000Z",
-  "timestamp": "2026-06-22T13:25:59.069Z",
-  "total_lessons": 496,
+  "timestamp": "2026-07-12T08:46:25.902Z",
+  "total_lessons": 565,
   "lessons": [
     {
       "lesson_id": "01_analytics_m00_bonus_autobidder_001",
@@ -2376,6 +2376,86 @@
       "confidence": "high"
     },
     {
+      "lesson_id": "04_workshops_text_303deebe-26c0-4316-a3a3-d5bf73af4ec6",
+      "title": "WB или Ozon: что важно знать новичку",
+      "skill_blocks": [
+        "ANALYTICS/market_trends",
+        "OPERATIONS/ozon_specifics",
+        "FINANCE/business_planning"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "04_workshops_text_421d0950-964b-4e90-b8b7-20f6794385ba",
+      "title": "Развилка решений: какая модель старта вам подходит",
+      "skill_blocks": [
+        "ANALYTICS/market_trends",
+        "ANALYTICS/target_audience",
+        "ANALYTICS/product_niche_selection"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "lesson_id": "04_workshops_text_49429310-b8ed-444d-a184-9609e7586266",
+      "title": "Как оценить спрос и емкость товара",
+      "skill_blocks": [
+        "ANALYTICS/product_niche_selection",
+        "ANALYTICS/market_trends",
+        "ANALYTICS/assortment_management"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "04_workshops_text_5d10d22a-29fe-4219-a066-811f5665cabe",
+      "title": "С чего начать выбор товара",
+      "skill_blocks": [
+        "ANALYTICS/market_trends",
+        "ANALYTICS/target_audience",
+        "ANALYTICS/competitor_analysis"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "04_workshops_text_5de41e2e-b6bc-4a22-be6e-e6b9afc8e4d2",
+      "title": "Мифы о маркетплейсах, из-за которых новичок теряет деньги",
+      "skill_blocks": [
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/market_trends",
+        "ANALYTICS/product_niche_selection"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "04_workshops_text_626d0d33-88df-4b63-b777-a0dced064922",
+      "title": "Почему старт возможен только через расчет и тест",
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "FINANCE/unit_economics",
+        "FINANCE/cost_management"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "04_workshops_text_cefd1da1-1739-42da-a676-65c5ed5e236d",
+      "title": "Сколько денег нужно на первый запуск",
+      "skill_blocks": [
+        "FINANCE/unit_economics",
+        "FINANCE/pricing",
+        "FINANCE/business_planning"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "04_workshops_text_df1497d7-2c00-49b6-b6b1-be2979be67ed",
+      "title": "Персональная диагностика старта",
+      "skill_blocks": [
+        "ANALYTICS/target_audience",
+        "ANALYTICS/product_niche_selection",
+        "FINANCE/pricing"
+      ],
+      "confidence": "high"
+    },
+    {
       "lesson_id": "04_workshops_w01_feb_ads_001",
       "title": "Ошибки селлеров, которые сливают бюджет и мешают продвижению",
       "skill_blocks": [
@@ -4371,6 +4451,613 @@
         "CONTENT/video_content"
       ],
       "confidence": "medium"
+    },
+    {
+      "lesson_id": "08_ctr_m01_ctr_001",
+      "title": "Как карточка попадает в выдачу",
+      "skill_blocks": [
+        "ANALYTICS/assortment_management",
+        "ANALYTICS/target_audience",
+        "MARKETING/seo_optimization"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "08_ctr_m01_ctr_002",
+      "title": "Почему WB не показывает вашу карточку",
+      "skill_blocks": [
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/market_trends",
+        "ANALYTICS/product_metrics"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "08_ctr_m01_ctr_003",
+      "title": "Анализируем ЦА с помощью Яндекс Взгляда",
+      "skill_blocks": [
+        "ANALYTICS/target_audience",
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/product_niche_selection"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "08_ctr_m01_ctr_004",
+      "title": "Разбор на «Качаем CTR»: Аромат для мужчин",
+      "skill_blocks": [
+        "ANALYTICS/target_audience",
+        "CONTENT/copywriting",
+        "CONTENT/reviews_management"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "08_ctr_m01_ctr_005",
+      "title": "Разбор на «Качаем CTR»: Вентиляционная решётка",
+      "skill_blocks": [
+        "ANALYTICS/target_audience",
+        "CONTENT/copywriting",
+        "CONTENT/reviews_management"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "08_ctr_m01_ctr_006",
+      "title": "Разбор на «Качаем CTR»: Восточные сладости",
+      "skill_blocks": [
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/market_trends",
+        "ANALYTICS/target_audience"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "lesson_id": "08_ctr_m01_ctr_007",
+      "title": "Разбор на «Качаем CTR»: Декоративные подушки",
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "CONTENT/reviews_management",
+        "CONTENT/copywriting"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "08_ctr_m01_ctr_008",
+      "title": "Разбор на «Качаем CTR»: Детский костюм",
+      "skill_blocks": [
+        "CONTENT/neural_content",
+        "CONTENT/neural_analytics",
+        "CONTENT/copywriting"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "08_ctr_m01_ctr_009",
+      "title": "Разбор на «Качаем CTR»: Детский стульчик",
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "CONTENT/copywriting",
+        "CONTENT/neural_content"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "08_ctr_m01_ctr_010",
+      "title": "Разбор на «Качаем CTR»: Стульчик для кормления",
+      "skill_blocks": [
+        "MARKETING/ad_strategy",
+        "MARKETING/card_conversion",
+        "CONTENT/copywriting"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "08_ctr_m01_ctr_011",
+      "title": "Разбор на «Качаем CTR»: Сухари Панко",
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "MARKETING/card_conversion",
+        "CONTENT/copywriting"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "08_ctr_m01_ctr_012",
+      "title": "Разбор на «Качаем CTR»: Фиксатор для шнурков",
+      "skill_blocks": [
+        "CONTENT/copywriting",
+        "MARKETING/card_conversion"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m01_economics_001",
+      "title": "Экономика рекламы на Ozon - почему ДРР нужно считать до запуска",
+      "skill_blocks": [
+        "FINANCE/unit_economics",
+        "MARKETING/ad_strategy",
+        "ANALYTICS/product_niche_selection"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m01_economics_002",
+      "title": "Допустимый ДРР на Ozon какие цифры собрать перед расчетом",
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "FINANCE/pricing",
+        "OPERATIONS/ozon_specifics"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m01_economics_003",
+      "title": "Решение после расчета ДРР тест рекламы или пересборка экономики товара",
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "FINANCE/pricing",
+        "OPERATIONS/logistics_fbo_fbs"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m01_economics_004",
+      "title": "Как контролировать прибыльность рекламы на Ozon",
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "FINANCE/ad_budgeting"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m01_economics_005",
+      "title": "Как посмотреть долю рекламных расходов - Анна Борисова",
+      "skill_blocks": [
+        "ANALYTICS/data_tools",
+        "FINANCE/business_planning",
+        "ANALYTICS/product_metrics"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m02_pricing_001",
+      "title": "Как рассчитать цену перед участием в акции",
+      "skill_blocks": [
+        "ANALYTICS/product_niche_selection",
+        "ANALYTICS/market_trends",
+        "FINANCE/pricing"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m02_pricing_002",
+      "title": "Акции Ozon как выбрать механику под задачу",
+      "skill_blocks": [
+        "ANALYTICS/market_trends",
+        "MARKETING/ad_strategy",
+        "MARKETING/seo_optimization"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m02_pricing_003",
+      "title": "Как работать с разделом «Цены и акции» в кабинете Ozon",
+      "skill_blocks": [
+        "MARKETING/card_conversion",
+        "OPERATIONS/ozon_specifics",
+        "ANALYTICS/market_trends"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m02_pricing_004",
+      "title": "Как проверить акцию Ozon перед запуском",
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/market_trends"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m02_pricing_005",
+      "title": "Глобальные и собственные акции Ozon как выбрать механику и оценить результат",
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "MARKETING/ad_strategy",
+        "OPERATIONS/ozon_specifics"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m03_card_seo_001",
+      "title": "Как работает поиск на Ozon",
+      "skill_blocks": [
+        "ANALYTICS/target_audience",
+        "MARKETING/ad_strategy",
+        "CONTENT/reviews_management"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m03_card_seo_002",
+      "title": "Факторы ранжирования на Ozon",
+      "skill_blocks": [
+        "ANALYTICS/target_audience",
+        "MARKETING/seo_optimization",
+        "CONTENT/copywriting"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m03_card_seo_003",
+      "title": "Признаки слабого ранжирования",
+      "skill_blocks": [
+        "MARKETING/ad_strategy",
+        "MARKETING/seo_optimization",
+        "CONTENT/copywriting"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m03_card_seo_004",
+      "title": "Как в ЛК Ozon Seller отследить слабое ранжирование",
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/market_trends"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m03_card_seo_005",
+      "title": "Почему конкурент продает лучше анализ карточки, контента и воронки",
+      "skill_blocks": [
+        "ANALYTICS/competitor_analysis",
+        "CONTENT/reviews_management"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m03_card_seo_006",
+      "title": "Что менять в карточке Ozon диагностика просадок и безопасные правки",
+      "skill_blocks": [
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/product_metrics",
+        "MARKETING/card_conversion"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m04_funnel_001",
+      "title": "Путь покупателя на Ozon",
+      "skill_blocks": [
+        "ANALYTICS/sales_funnel",
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/market_trends"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m04_funnel_002",
+      "title": "Находим точки потерь в воронке продаж",
+      "skill_blocks": [
+        "ANALYTICS/sales_funnel",
+        "ANALYTICS/product_metrics",
+        "MARKETING/ad_strategy"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m04_funnel_003",
+      "title": "Как по аналитическим данным найти проблему в карточке",
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/sales_funnel",
+        "ANALYTICS/competitor_analysis"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m04_funnel_004",
+      "title": "Влияние срока доставки и выкупа на прибыль",
+      "skill_blocks": [
+        "OPERATIONS/logistics_fbo_fbs",
+        "ANALYTICS/target_audience",
+        "OPERATIONS/ozon_specifics"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m04_funnel_005",
+      "title": "Алгоритм диагностики просадки в воронке",
+      "skill_blocks": [
+        "ANALYTICS/sales_funnel",
+        "ANALYTICS/target_audience",
+        "ANALYTICS/product_metrics"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m05_ad_tools_001",
+      "title": "Карта рекламных инструментов - обзор в ЛК Ozon Seller",
+      "skill_blocks": [
+        "MARKETING/ad_strategy",
+        "ANALYTICS/sales_funnel",
+        "ANALYTICS/market_trends"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m05_ad_tools_002",
+      "title": "Оплата за клик «Только поиск», «Поиск и рекомендации»",
+      "skill_blocks": [
+        "MARKETING/ad_strategy",
+        "MARKETING/ad_campaign_setup",
+        "ANALYTICS/product_niche_selection"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m05_ad_tools_003",
+      "title": "Медийная реклама в ЛК Ozon Seller",
+      "skill_blocks": [
+        "MARKETING/external_advertising",
+        "MARKETING/ad_strategy",
+        "MARKETING/ad_campaign_setup"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m05_ad_tools_004",
+      "title": "Оплата за заказ - детализация расходов",
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/assortment_management",
+        "OPERATIONS/process_automation"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m05_ad_tools_005",
+      "title": "«Оплата за заказ» - условия подключения инструмента",
+      "skill_blocks": [
+        "MARKETING/ad_strategy",
+        "MARKETING/ad_campaign_setup",
+        "MARKETING/ad_optimization"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m05_ad_tools_006",
+      "title": "Стратегии рекламных ставок",
+      "skill_blocks": [
+        "MARKETING/ad_strategy",
+        "MARKETING/ad_optimization",
+        "MARKETING/autobidder"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m05_ad_tools_007",
+      "title": "Настройка рекламных кампаний под разные стратегии",
+      "skill_blocks": [
+        "MARKETING/ad_strategy",
+        "MARKETING/ad_optimization",
+        "ANALYTICS/sales_funnel"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m05_ad_tools_008",
+      "title": "Управление РК - недельный бюджет, условия внесения изменений и аналитики",
+      "skill_blocks": [
+        "MARKETING/ad_campaign_setup",
+        "ANALYTICS/sales_funnel",
+        "ANALYTICS/product_metrics"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m05_ad_tools_009",
+      "title": "Как редактировать активную РК",
+      "skill_blocks": [
+        "MARKETING/ad_strategy",
+        "MARKETING/ad_optimization",
+        "OPERATIONS/process_automation"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m06_ad_optimization_001",
+      "title": "ДРР, CPC, CR и выкупы как читать рекламную воронку Ozon",
+      "skill_blocks": [
+        "MARKETING/ad_optimization",
+        "ANALYTICS/sales_funnel",
+        "ANALYTICS/target_audience"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m06_ad_optimization_002",
+      "title": "Почему реклама на Ozon не окупается диагностика через CTR, CR и ДРР",
+      "skill_blocks": [
+        "ANALYTICS/sales_funnel",
+        "MARKETING/ad_optimization",
+        "CONTENT/reviews_management"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m06_ad_optimization_003",
+      "title": "Диагностика рекламной кампании расходы, заказы, ставки и запросы",
+      "skill_blocks": [
+        "ANALYTICS/sales_funnel",
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/target_audience"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m06_ad_optimization_004",
+      "title": "Ставки, бюджет и SEO как оптимизировать рекламу на Ozon",
+      "skill_blocks": [
+        "MARKETING/ad_strategy",
+        "MARKETING/seo_optimization"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m06_ad_optimization_005",
+      "title": "Как снижать ДРР на Ozon пошаговый алгоритм на 4 недели",
+      "skill_blocks": [
+        "ANALYTICS/target_audience",
+        "MARKETING/ad_optimization",
+        "CONTENT/copywriting"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m07_scaling_001",
+      "title": "Как отличить просадку в нише от проблемы конкретного магазина",
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/sales_funnel",
+        "ANALYTICS/target_audience"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m07_scaling_002",
+      "title": "Почему магазин не растет - 5 блоков проверки",
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "ANALYTICS/assortment_management",
+        "ANALYTICS/target_audience",
+        "MARKETING/ad_strategy",
+        "OPERATIONS/inventory_management"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m07_scaling_003",
+      "title": "P&L - отличаем рост выручки от продаж в минус",
+      "skill_blocks": [
+        "FINANCE/business_planning",
+        "FINANCE/cost_management",
+        "ANALYTICS/product_metrics"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m07_scaling_004",
+      "title": "Оцифровка и P&L в сервисе TrueStats",
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "FINANCE/business_planning",
+        "ANALYTICS/market_trends"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m07_scaling_005",
+      "title": "Кейсы роста на Ozon - от диагностики к масштабированию",
+      "skill_blocks": [
+        "ANALYTICS/market_trends",
+        "OPERATIONS/logistics_fbo_fbs",
+        "MARKETING/ad_strategy"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m08_growth_points_001",
+      "title": "Алгоритм поиска точки роста карточки",
+      "skill_blocks": [
+        "ANALYTICS/product_metrics",
+        "MARKETING/ad_strategy",
+        "OPERATIONS/logistics_fbo_fbs"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m08_growth_points_002",
+      "title": "Где искать идеи для роста и как тренировать насмотренность",
+      "skill_blocks": [
+        "ANALYTICS/market_trends",
+        "ANALYTICS/target_audience",
+        "ANALYTICS/product_metrics"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m08_growth_points_003",
+      "title": "Как найти точка роста в карточках конкурентов",
+      "skill_blocks": [
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/product_metrics",
+        "CONTENT/reviews_management"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m08_growth_points_004",
+      "title": "Как найти точки роста в смежных нишах, сторонних площадках и упаковке",
+      "skill_blocks": [
+        "ANALYTICS/market_trends",
+        "ANALYTICS/competitor_analysis",
+        "CONTENT/neural_content"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m08_growth_points_005",
+      "title": "Идеи и гипотезы - как формулировать и превращать в план тестов",
+      "skill_blocks": [
+        "ANALYTICS/target_audience",
+        "CONTENT/copywriting",
+        "MARKETING/ad_strategy"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m08_growth_points_006",
+      "title": "Запускаем AB тесты через Sellium и оцениваем результат",
+      "skill_blocks": [
+        "ANALYTICS/assortment_management",
+        "ANALYTICS/product_metrics",
+        "MARKETING/ad_strategy"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m08_growth_points_007",
+      "title": "Бонус-урок «Находим тренды с модулем SEO от MPSTATS»",
+      "skill_blocks": [
+        "ANALYTICS/market_trends",
+        "ANALYTICS/target_audience",
+        "ANALYTICS/product_niche_selection"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m08_growth_points_008",
+      "title": "Как масштабировать продажи на МП через трафик и инфлюенс в 2026",
+      "skill_blocks": [
+        "ANALYTICS/target_audience",
+        "ANALYTICS/product_metrics",
+        "MARKETING/influencer_marketing"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m08_growth_points_009",
+      "title": "Как привлекать аудиторию из VK в Ozon и считать эффективность",
+      "skill_blocks": [
+        "MARKETING/external_advertising",
+        "ANALYTICS/target_audience",
+        "OPERATIONS/platform_tools"
+      ],
+      "confidence": "high"
     },
     {
       "lesson_id": "skill_analytics_assortment_001",
