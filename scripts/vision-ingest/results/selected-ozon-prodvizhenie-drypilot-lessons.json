@@ -1,0 +1,62 @@
+[
+  {
+    "localPath": "E:/Academy Courses/09_ozon_prodvizhenie/m01_economics/001_ekonomika_reklamy_na_ozon_pochemu_drr_nuzhno.mp4",
+    "filename": "001_ekonomika_reklamy_na_ozon_pochemu_drr_nuzhno.mp4",
+    "durationSeconds": 726,
+    "durationFormatted": "12:06",
+    "bucketSize": "short",
+    "module": "m01_economics",
+    "category": "theory",
+    "lessonId": "09_ozon_prodvizhenie_m01_economics_001",
+    "lessonTitle": "Экономика рекламы на Ozon - почему ДРР нужно считать до запуска",
+    "platformUrl": "https://platform.mpstats.academy/learn/09_ozon_prodvizhenie_m01_economics_001"
+  },
+  {
+    "localPath": "E:/Academy Courses/09_ozon_prodvizhenie/m01_economics/002_dopustimyy_drr_na_ozon_kakie_cifry_sobrat.mp4",
+    "filename": "002_dopustimyy_drr_na_ozon_kakie_cifry_sobrat.mp4",
+    "durationSeconds": 996,
+    "durationFormatted": "16:36",
+    "bucketSize": "medium",
+    "module": "m01_economics",
+    "category": "ui_demo",
+    "lessonId": "09_ozon_prodvizhenie_m01_economics_002",
+    "lessonTitle": "Допустимый ДРР на Ozon какие цифры собрать перед расчетом",
+    "platformUrl": "https://platform.mpstats.academy/learn/09_ozon_prodvizhenie_m01_economics_002"
+  },
+  {
+    "localPath": "E:/Academy Courses/09_ozon_prodvizhenie/m01_economics/003_reshenie_posle_rascheta_drr_test_reklamy_ili.mp4",
+    "filename": "003_reshenie_posle_rascheta_drr_test_reklamy_ili.mp4",
+    "durationSeconds": 1206,
+    "durationFormatted": "20:06",
+    "bucketSize": "medium",
+    "module": "m01_economics",
+    "category": "ui_demo",
+    "lessonId": "09_ozon_prodvizhenie_m01_economics_003",
+    "lessonTitle": "Решение после расчета ДРР тест рекламы или пересборка экономики товара",
+    "platformUrl": "https://platform.mpstats.academy/learn/09_ozon_prodvizhenie_m01_economics_003"
+  },
+  {
+    "localPath": "E:/Academy Courses/09_ozon_prodvizhenie/m01_economics/004_kak_kontrolirovat_pribylnost_reklamy_na_ozon.mp4",
+    "filename": "004_kak_kontrolirovat_pribylnost_reklamy_na_ozon.mp4",
+    "durationSeconds": 1119,
+    "durationFormatted": "18:39",
+    "bucketSize": "medium",
+    "module": "m01_economics",
+    "category": "ui_demo",
+    "lessonId": "09_ozon_prodvizhenie_m01_economics_004",
+    "lessonTitle": "Как контролировать прибыльность рекламы на Ozon",
+    "platformUrl": "https://platform.mpstats.academy/learn/09_ozon_prodvizhenie_m01_economics_004"
+  },
+  {
+    "localPath": "E:/Academy Courses/09_ozon_prodvizhenie/m01_economics/005_kak_posmotret_dolyu_reklamnyh_rashodov_anna_borisova.mp4",
+    "filename": "005_kak_posmotret_dolyu_reklamnyh_rashodov_anna_borisova.mp4",
+    "durationSeconds": 258,
+    "durationFormatted": "4:18",
+    "bucketSize": "short",
+    "module": "m01_economics",
+    "category": "theory",
+    "lessonId": "09_ozon_prodvizhenie_m01_economics_005",
+    "lessonTitle": "Как посмотреть долю рекламных расходов - Анна Борисова",
+    "platformUrl": "https://platform.mpstats.academy/learn/09_ozon_prodvizhenie_m01_economics_005"
+  }
+]

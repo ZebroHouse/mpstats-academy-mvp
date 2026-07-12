@@ -1,6 +1,6 @@
 {
   "startedAt": "2026-02-18T10:26:44.172Z",
-  "lastUpdated": "2026-06-22T15:47:38.459Z",
+  "lastUpdated": "2026-07-12T22:04:17.065Z",
   "uploaded": [
     {
       "courseId": "01_analytics",
@@ -3579,124 +3579,500 @@
       "uploadedAt": "2026-06-05T13:43:10.991Z"
     },
     {
-      "lessonId": "skill_analytics_assortment_005",
-      "videoId": "e4d6757d-0229-4e6b-bbbf-fa49002ddc77",
       "courseId": "01_analytics",
       "folderId": "71777756-e93a-4484-87eb-570c7588640f",
       "sizeMB": 170,
+      "lessonId": "skill_analytics_assortment_005",
+      "videoId": "e4d6757d-0229-4e6b-bbbf-fa49002ddc77",
       "uploadedAt": "2026-06-22T15:41:45.117Z"
     },
     {
-      "lessonId": "skill_analytics_assortment_003",
-      "videoId": "fad19551-0b5a-4134-b01a-5a751efa748b",
       "courseId": "01_analytics",
       "folderId": "71777756-e93a-4484-87eb-570c7588640f",
       "sizeMB": 178,
+      "lessonId": "skill_analytics_assortment_003",
+      "videoId": "fad19551-0b5a-4134-b01a-5a751efa748b",
       "uploadedAt": "2026-06-22T15:41:58.925Z"
     },
     {
-      "lessonId": "skill_analytics_card_scanning_001",
-      "videoId": "46254772-3b7b-4108-893a-e7e0d8e43a0a",
       "courseId": "01_analytics",
       "folderId": "71777756-e93a-4484-87eb-570c7588640f",
       "sizeMB": 200,
+      "lessonId": "skill_analytics_card_scanning_001",
+      "videoId": "46254772-3b7b-4108-893a-e7e0d8e43a0a",
       "uploadedAt": "2026-06-22T15:42:12.793Z"
     },
     {
-      "lessonId": "skill_analytics_product_lifecycle_001",
-      "videoId": "7f98fb71-07f2-4369-add0-08b24b8a119f",
       "courseId": "01_analytics",
       "folderId": "71777756-e93a-4484-87eb-570c7588640f",
       "sizeMB": 223,
+      "lessonId": "skill_analytics_product_lifecycle_001",
+      "videoId": "7f98fb71-07f2-4369-add0-08b24b8a119f",
       "uploadedAt": "2026-06-22T15:42:27.905Z"
     },
     {
-      "lessonId": "skill_operations_logistics_002",
-      "videoId": "4c169650-cacd-444e-93e3-172b54af9972",
       "courseId": "01_analytics",
       "folderId": "71777756-e93a-4484-87eb-570c7588640f",
       "sizeMB": 227,
+      "lessonId": "skill_operations_logistics_002",
+      "videoId": "4c169650-cacd-444e-93e3-172b54af9972",
       "uploadedAt": "2026-06-22T15:42:43.626Z"
     },
     {
-      "lessonId": "skill_finance_pl_economics_001",
-      "videoId": "7ba427e0-3a4b-4df2-abc5-d3d042397801",
       "courseId": "01_analytics",
       "folderId": "71777756-e93a-4484-87eb-570c7588640f",
       "sizeMB": 243,
+      "lessonId": "skill_finance_pl_economics_001",
+      "videoId": "7ba427e0-3a4b-4df2-abc5-d3d042397801",
       "uploadedAt": "2026-06-22T15:42:59.931Z"
     },
     {
-      "lessonId": "skill_analytics_turnover_001",
-      "videoId": "0c028edb-b471-482f-a561-711b39d9c879",
       "courseId": "01_analytics",
       "folderId": "71777756-e93a-4484-87eb-570c7588640f",
       "sizeMB": 299,
+      "lessonId": "skill_analytics_turnover_001",
+      "videoId": "0c028edb-b471-482f-a561-711b39d9c879",
       "uploadedAt": "2026-06-22T15:43:18.410Z"
     },
     {
-      "lessonId": "skill_analytics_assortment_006",
-      "videoId": "052867f1-4c79-40a6-b404-855127589066",
       "courseId": "01_analytics",
       "folderId": "71777756-e93a-4484-87eb-570c7588640f",
       "sizeMB": 328,
+      "lessonId": "skill_analytics_assortment_006",
+      "videoId": "052867f1-4c79-40a6-b404-855127589066",
       "uploadedAt": "2026-06-22T15:43:39.305Z"
     },
     {
-      "lessonId": "skill_analytics_card_scanning_002",
-      "videoId": "d2024e95-92dc-4d77-944e-ce734cf96bd4",
       "courseId": "01_analytics",
       "folderId": "71777756-e93a-4484-87eb-570c7588640f",
       "sizeMB": 345,
+      "lessonId": "skill_analytics_card_scanning_002",
+      "videoId": "d2024e95-92dc-4d77-944e-ce734cf96bd4",
       "uploadedAt": "2026-06-22T15:44:02.194Z"
     },
     {
-      "lessonId": "skill_finance_pl_economics_002",
-      "videoId": "14238871-4be5-4b17-b63a-a1f3fd0ea70d",
       "courseId": "01_analytics",
       "folderId": "71777756-e93a-4484-87eb-570c7588640f",
       "sizeMB": 365,
+      "lessonId": "skill_finance_pl_economics_002",
+      "videoId": "14238871-4be5-4b17-b63a-a1f3fd0ea70d",
       "uploadedAt": "2026-06-22T15:44:26.107Z"
     },
     {
-      "lessonId": "skill_operations_logistics_001",
-      "videoId": "27cf507f-bfb0-4fac-b831-0967ef26bbfb",
       "courseId": "01_analytics",
       "folderId": "71777756-e93a-4484-87eb-570c7588640f",
       "sizeMB": 478,
+      "lessonId": "skill_operations_logistics_001",
+      "videoId": "27cf507f-bfb0-4fac-b831-0967ef26bbfb",
       "uploadedAt": "2026-06-22T15:44:57.341Z"
     },
     {
-      "lessonId": "skill_operations_supply_001",
-      "videoId": "82f7b93c-b2d8-4c9b-abcf-63417738790e",
       "courseId": "01_analytics",
       "folderId": "71777756-e93a-4484-87eb-570c7588640f",
       "sizeMB": 598,
+      "lessonId": "skill_operations_supply_001",
+      "videoId": "82f7b93c-b2d8-4c9b-abcf-63417738790e",
       "uploadedAt": "2026-06-22T15:45:39.598Z"
     },
     {
-      "lessonId": "skill_operations_geography_002",
-      "videoId": "6d411757-091f-48f5-aa4a-99e70e1016d5",
       "courseId": "01_analytics",
       "folderId": "71777756-e93a-4484-87eb-570c7588640f",
       "sizeMB": 619,
+      "lessonId": "skill_operations_geography_002",
+      "videoId": "6d411757-091f-48f5-aa4a-99e70e1016d5",
       "uploadedAt": "2026-06-22T15:46:18.551Z"
     },
     {
-      "lessonId": "skill_operations_geography_001",
-      "videoId": "92910f9e-dbc4-4a65-92f5-3f90fe0a2dae",
       "courseId": "01_analytics",
       "folderId": "71777756-e93a-4484-87eb-570c7588640f",
       "sizeMB": 626,
+      "lessonId": "skill_operations_geography_001",
+      "videoId": "92910f9e-dbc4-4a65-92f5-3f90fe0a2dae",
       "uploadedAt": "2026-06-22T15:46:57.659Z"
     },
     {
-      "lessonId": "skill_analytics_assortment_004",
-      "videoId": "2f43c389-f4f8-4454-a9a9-a682fe9cff18",
       "courseId": "01_analytics",
       "folderId": "71777756-e93a-4484-87eb-570c7588640f",
       "sizeMB": 630,
+      "lessonId": "skill_analytics_assortment_004",
+      "videoId": "2f43c389-f4f8-4454-a9a9-a682fe9cff18",
       "uploadedAt": "2026-06-22T15:47:38.459Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 17.1,
+      "lessonId": "09_ozon_prodvizhenie_m08_growth_points_007",
+      "videoId": "fc81281f-2323-40b1-8ccc-97ab1401f4cf",
+      "uploadedAt": "2026-07-12T09:08:55.790Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 55.6,
+      "lessonId": "09_ozon_prodvizhenie_m05_ad_tools_009",
+      "videoId": "bc270df5-4671-457b-b8ac-a30221eaaec7",
+      "uploadedAt": "2026-07-12T09:14:33.943Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 65.7,
+      "lessonId": "09_ozon_prodvizhenie_m01_economics_005",
+      "videoId": "a3076093-8ad2-4e85-8e81-485957780fe3",
+      "uploadedAt": "2026-07-12T09:16:00.318Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 73.8,
+      "lessonId": "09_ozon_prodvizhenie_m02_pricing_002",
+      "videoId": "b9699c54-3e72-4ddd-b16d-10cfd027187d",
+      "uploadedAt": "2026-07-12T09:22:09.776Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 79.3,
+      "lessonId": "09_ozon_prodvizhenie_m08_growth_points_005",
+      "videoId": "ae29b606-15f9-43e2-9ba8-35556081b5cc",
+      "uploadedAt": "2026-07-12T09:27:06.377Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 88.8,
+      "lessonId": "09_ozon_prodvizhenie_m07_scaling_001",
+      "videoId": "a1ed7377-a3d6-467a-a86c-d8659afdf4a8",
+      "uploadedAt": "2026-07-12T09:31:49.135Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 89.7,
+      "lessonId": "09_ozon_prodvizhenie_m05_ad_tools_008",
+      "videoId": "dcf1fce8-67a6-4778-9e98-a91b5d0d9cc7",
+      "uploadedAt": "2026-07-12T09:33:33.333Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 90.3,
+      "lessonId": "09_ozon_prodvizhenie_m04_funnel_005",
+      "videoId": "760c8a2b-15ed-4f43-9f81-fd1528bac7ed",
+      "uploadedAt": "2026-07-12T09:36:04.720Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 90.8,
+      "lessonId": "09_ozon_prodvizhenie_m03_card_seo_004",
+      "videoId": "f78df615-86cb-48e5-8620-238616b3a08e",
+      "uploadedAt": "2026-07-12T09:39:14.599Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 91.2,
+      "lessonId": "09_ozon_prodvizhenie_m07_scaling_004",
+      "videoId": "1ac2d8d5-0a27-4558-8b45-f7da9e83942a",
+      "uploadedAt": "2026-07-12T09:41:23.452Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 102.9,
+      "lessonId": "09_ozon_prodvizhenie_m05_ad_tools_006",
+      "videoId": "b909200d-3e92-4ca9-85eb-597ba019042c",
+      "uploadedAt": "2026-07-12T09:46:39.478Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 111.7,
+      "lessonId": "09_ozon_prodvizhenie_m08_growth_points_006",
+      "videoId": "842eebcf-6e68-4749-83c4-3aaf83c8bc88",
+      "uploadedAt": "2026-07-12T09:49:04.627Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 123.2,
+      "lessonId": "09_ozon_prodvizhenie_m07_scaling_003",
+      "videoId": "dd035cab-39c1-4c7b-8ea3-fb7ba4f12d61",
+      "uploadedAt": "2026-07-12T09:59:47.568Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 183.8,
+      "lessonId": "09_ozon_prodvizhenie_m01_economics_002",
+      "videoId": "67f7095a-4a7e-463a-92d5-879476560772",
+      "uploadedAt": "2026-07-12T10:31:42.483Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 194.5,
+      "lessonId": "09_ozon_prodvizhenie_m01_economics_004",
+      "videoId": "70cd95da-74bc-41b3-8456-9c145a2b7c8a",
+      "uploadedAt": "2026-07-12T10:36:54.427Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 218.8,
+      "lessonId": "09_ozon_prodvizhenie_m02_pricing_004",
+      "videoId": "fe538dba-8ffb-44cf-afa6-4eee0da29af0",
+      "uploadedAt": "2026-07-12T10:48:02.613Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 250.3,
+      "lessonId": "09_ozon_prodvizhenie_m04_funnel_003",
+      "videoId": "f626f78a-1a46-4b8a-b344-a8ca41490b48",
+      "uploadedAt": "2026-07-12T21:54:23.937Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 258.1,
+      "lessonId": "09_ozon_prodvizhenie_m03_card_seo_002",
+      "videoId": "a6ac85a3-a99d-4480-8781-1b0baa1a76a2",
+      "uploadedAt": "2026-07-12T21:54:46.953Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 268.8,
+      "lessonId": "09_ozon_prodvizhenie_m04_funnel_002",
+      "videoId": "ac832675-dcf3-4db2-9b58-268704e17156",
+      "uploadedAt": "2026-07-12T21:55:12.776Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 283.7,
+      "lessonId": "09_ozon_prodvizhenie_m06_ad_optimization_005",
+      "videoId": "7a3e6464-4c36-4af3-8a08-9c08bad6c6ca",
+      "uploadedAt": "2026-07-12T21:55:38.386Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 286.5,
+      "lessonId": "09_ozon_prodvizhenie_m06_ad_optimization_003",
+      "videoId": "c8497bb8-2075-47ab-ae1a-9f99434d4686",
+      "uploadedAt": "2026-07-12T21:56:02.620Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 306.8,
+      "lessonId": "09_ozon_prodvizhenie_m06_ad_optimization_002",
+      "videoId": "bbd1505d-686e-4ea7-963d-bfa363e1c0f2",
+      "uploadedAt": "2026-07-12T21:56:26.776Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 387.3,
+      "lessonId": "09_ozon_prodvizhenie_m02_pricing_005",
+      "videoId": "fbb31156-7e18-428f-ba8d-fadc9636ebf4",
+      "uploadedAt": "2026-07-12T21:56:57.855Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 518,
+      "lessonId": "09_ozon_prodvizhenie_m08_growth_points_009",
+      "videoId": "d2076292-01c9-48f9-ba28-f32a669dabd6",
+      "uploadedAt": "2026-07-12T21:57:33.539Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 612.5,
+      "lessonId": "09_ozon_prodvizhenie_m03_card_seo_005",
+      "videoId": "5f37e6e7-38e6-4aa5-8f59-641080a9e384",
+      "uploadedAt": "2026-07-12T21:58:18.176Z"
+    },
+    {
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 683.3,
+      "lessonId": "09_ozon_prodvizhenie_m08_growth_points_008",
+      "videoId": "712d8384-9475-4e06-bf48-dc0fe3518daf",
+      "uploadedAt": "2026-07-12T21:59:04.504Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m05_ad_tools_004",
+      "videoId": "94489f7b-5a0a-4963-8f09-37cd66816df4",
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 37.9,
+      "uploadedAt": "2026-07-12T21:59:53.614Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m05_ad_tools_003",
+      "videoId": "2e7fe2be-f68f-4ec9-aa56-cf461c55f9b5",
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 38.2,
+      "uploadedAt": "2026-07-12T22:00:02.197Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m08_growth_points_003",
+      "videoId": "053f0f02-260d-4699-b688-829c39a87df3",
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 72.7,
+      "uploadedAt": "2026-07-12T22:00:11.855Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m03_card_seo_003",
+      "videoId": "db09c8ac-58d5-4fc6-bdad-3d523daaacd8",
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 79.2,
+      "uploadedAt": "2026-07-12T22:00:22.275Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m08_growth_points_002",
+      "videoId": "b2bf049d-53de-4519-9b7b-11e7aef394fc",
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 86.2,
+      "uploadedAt": "2026-07-12T22:00:32.726Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m05_ad_tools_005",
+      "videoId": "2b6f9f69-c739-4424-8207-8f287f84f2dd",
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 101.5,
+      "uploadedAt": "2026-07-12T22:00:44.063Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m02_pricing_001",
+      "videoId": "743f5d62-6d9d-4ea9-a2da-74cc28732538",
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 113,
+      "uploadedAt": "2026-07-12T22:01:03.004Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m05_ad_tools_002",
+      "videoId": "ed42ea80-1448-42d2-ab2d-02e905c1fecb",
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 113.3,
+      "uploadedAt": "2026-07-12T22:01:14.759Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m08_growth_points_001",
+      "videoId": "aa2d83af-d6d2-491f-88e6-0016f1a99996",
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 113.6,
+      "uploadedAt": "2026-07-12T22:01:26.573Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m03_card_seo_001",
+      "videoId": "46b804a5-b724-4713-b0db-9b8948ba2521",
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 124.6,
+      "uploadedAt": "2026-07-12T22:01:38.758Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m06_ad_optimization_001",
+      "videoId": "6e98e403-b287-4a7a-a727-f223bd5cef39",
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 126.7,
+      "uploadedAt": "2026-07-12T22:01:50.829Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m08_growth_points_004",
+      "videoId": "a01d086f-98b8-4b56-af7f-642e111e378f",
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 136.4,
+      "uploadedAt": "2026-07-12T22:02:03.317Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m01_economics_001",
+      "videoId": "d4f3eaaf-1105-41bb-8e0e-519a185f1deb",
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 139.2,
+      "uploadedAt": "2026-07-12T22:02:15.945Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m03_card_seo_006",
+      "videoId": "11d74fec-2a19-4d09-af4f-07257a6b9d12",
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 153.6,
+      "uploadedAt": "2026-07-12T22:02:29.150Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m05_ad_tools_007",
+      "videoId": "de3b3eda-bbf5-4226-b351-cf195101383a",
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 163.2,
+      "uploadedAt": "2026-07-12T22:02:43.099Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m04_funnel_001",
+      "videoId": "22a68303-52e2-4c52-a7ec-3a1abc2931c3",
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 169.8,
+      "uploadedAt": "2026-07-12T22:02:57.916Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m04_funnel_004",
+      "videoId": "da302f88-cac4-46f1-b16b-54b2d8934174",
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 173,
+      "uploadedAt": "2026-07-12T22:03:12.770Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m07_scaling_005",
+      "videoId": "78a7a560-02da-40e1-8722-d2b718d8de1d",
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 178.5,
+      "uploadedAt": "2026-07-12T22:03:27.964Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m06_ad_optimization_004",
+      "videoId": "066bca88-83a2-486e-9727-392f2e8f1451",
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 181.6,
+      "uploadedAt": "2026-07-12T22:03:42.953Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m02_pricing_003",
+      "videoId": "e81b3e35-b29a-47d6-8e6d-ee63f24c28e9",
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 217.4,
+      "uploadedAt": "2026-07-12T22:03:59.447Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m07_scaling_002",
+      "videoId": "d83c7059-4870-40f0-b123-d4d80767dd6e",
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 232.9,
+      "uploadedAt": "2026-07-12T22:04:17.065Z"
     }
   ],
   "failed": [
@@ -3711,6 +4087,144 @@
       "filePath": "E:\\Academy Courses\\04_workshops\\w03_apr_growth\\den_2._reklama_na_ozon_5_tochek_rosta.mp4",
       "error": "fetch failed",
       "failedAt": "2026-02-20T18:15:48.753Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m05_ad_tools_004",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m05_ad_tools/004_oplata_za_zakaz_detalizaciya_rashodov.mp4",
+      "error": "Init failed HTTP 400: {\n\t\"error\": {\n\t\t\"code\": 400419,\n\t\t\"message\": \"already exists\"\n\t}\n}\n",
+      "failedAt": "2026-07-12T09:10:25.510Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m05_ad_tools_003",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m05_ad_tools/003_mediynaya_reklama_v_lk_ozon_seller.mp4",
+      "error": "fetch failed",
+      "failedAt": "2026-07-12T09:12:34.161Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m08_growth_points_003",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m08_growth_points/003_kak_nayti_tochka_rosta_v_kartochkah_konkurentov.mp4",
+      "error": "Init failed HTTP 400: {\n\t\"error\": {\n\t\t\"code\": 400419,\n\t\t\"message\": \"already exists\"\n\t}\n}\n",
+      "failedAt": "2026-07-12T09:19:26.611Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m03_card_seo_003",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m03_card_seo/003_priznaki_slabogo_ranzhirovaniya.mp4",
+      "error": "fetch failed",
+      "failedAt": "2026-07-12T09:23:37.706Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m08_growth_points_002",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m08_growth_points/002_gde_iskat_idei_dlya_rosta_i_kak.mp4",
+      "error": "Init failed HTTP 400: {\n\t\"error\": {\n\t\t\"code\": 400419,\n\t\t\"message\": \"already exists\"\n\t}\n}\n",
+      "failedAt": "2026-07-12T09:29:33.793Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m05_ad_tools_005",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m05_ad_tools/005_oplata_za_zakaz_usloviya_podklyucheniya_instrumenta.mp4",
+      "error": "Init failed HTTP 400: {\n\t\"error\": {\n\t\t\"code\": 400419,\n\t\t\"message\": \"already exists\"\n\t}\n}\n",
+      "failedAt": "2026-07-12T09:44:06.000Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m02_pricing_001",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m02_pricing/001_kak_rasschitat_cenu_pered_uchastiem_v_akcii.mp4",
+      "error": "Init failed HTTP 400: {\n\t\"error\": {\n\t\t\"code\": 400419,\n\t\t\"message\": \"already exists\"\n\t}\n}\n",
+      "failedAt": "2026-07-12T09:53:24.576Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m05_ad_tools_002",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m05_ad_tools/002_oplata_za_klik_tolko_poisk_poisk_i.mp4",
+      "error": "fetch failed",
+      "failedAt": "2026-07-12T09:54:41.590Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m08_growth_points_001",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m08_growth_points/001_algoritm_poiska_tochki_rosta_kartochki.mp4",
+      "error": "fetch failed",
+      "failedAt": "2026-07-12T09:55:59.897Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m03_card_seo_001",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m03_card_seo/001_kak_rabotaet_poisk_na_ozon.mp4",
+      "error": "Init failed HTTP 400: {\n\t\"error\": {\n\t\t\"code\": 400419,\n\t\t\"message\": \"already exists\"\n\t}\n}\n",
+      "failedAt": "2026-07-12T10:03:45.239Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m06_ad_optimization_001",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m06_ad_optimization/001_drr_cpc_cr_i_vykupy_kak_chitat.mp4",
+      "error": "Init failed HTTP 400: {\n\t\"error\": {\n\t\t\"code\": 400419,\n\t\t\"message\": \"already exists\"\n\t}\n}\n",
+      "failedAt": "2026-07-12T10:05:39.797Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m08_growth_points_004",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m08_growth_points/004_kak_nayti_tochki_rosta_v_smezhnyh_nishah.mp4",
+      "error": "fetch failed",
+      "failedAt": "2026-07-12T10:09:00.142Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m01_economics_001",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m01_economics/001_ekonomika_reklamy_na_ozon_pochemu_drr_nuzhno.mp4",
+      "error": "Init failed HTTP 400: {\n\t\"error\": {\n\t\t\"code\": 400419,\n\t\t\"message\": \"already exists\"\n\t}\n}\n",
+      "failedAt": "2026-07-12T10:10:57.396Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m03_card_seo_006",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m03_card_seo/006_chto_menyat_v_kartochke_ozon_diagnostika_prosadok.mp4",
+      "error": "fetch failed",
+      "failedAt": "2026-07-12T10:12:56.827Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m05_ad_tools_007",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m05_ad_tools/007_nastroyka_reklamnyh_kampaniy_pod_raznye_strategii.mp4",
+      "error": "Init failed HTTP 400: {\n\t\"error\": {\n\t\t\"code\": 400419,\n\t\t\"message\": \"already exists\"\n\t}\n}\n",
+      "failedAt": "2026-07-12T10:14:46.839Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m04_funnel_001",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m04_funnel/001_put_pokupatelya_na_ozon.mp4",
+      "error": "Init failed HTTP 400: {\n\t\"error\": {\n\t\t\"code\": 400419,\n\t\t\"message\": \"already exists\"\n\t}\n}\n",
+      "failedAt": "2026-07-12T10:16:30.460Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m04_funnel_004",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m04_funnel/004_vliyanie_sroka_dostavki_i_vykupa_na_pribyl.mp4",
+      "error": "Init failed HTTP 400: {\n\t\"error\": {\n\t\t\"code\": 400419,\n\t\t\"message\": \"already exists\"\n\t}\n}\n",
+      "failedAt": "2026-07-12T10:18:52.942Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m07_scaling_005",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m07_scaling/005_keysy_rosta_na_ozon_ot_diagnostiki_k.mp4",
+      "error": "\nInvalid `prisma.lesson.update()` invocation in\nD:\\GpT_docs\\MPSTATS ACADEMY ADAPTIVE LEARNING\\MAAL\\.claude\\worktrees\\ozon-course\\scripts\\kinescope-upload.ts:491:27\n\n  488 console.log(`  Kinescope videoId: ${videoId}`);\n  489 \n  490 // Update Lesson in DB\n→ 491 await prisma.lesson.update(\nCan't reach database server at `aws-1-eu-west-1.pooler.supabase.com:6543`\n\nPlease make sure your database server is running at `aws-1-eu-west-1.pooler.supabase.com:6543`.",
+      "failedAt": "2026-07-12T10:23:53.769Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m06_ad_optimization_004",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m06_ad_optimization/004_stavki_byudzhet_i_seo_kak_optimizirovat_reklamu.mp4",
+      "error": "fetch failed",
+      "failedAt": "2026-07-12T10:25:26.928Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m02_pricing_003",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m02_pricing/003_kak_rabotat_s_razdelom_ceny_i_akcii.mp4",
+      "error": "Init failed HTTP 400: {\n\t\"error\": {\n\t\t\"code\": 400419,\n\t\t\"message\": \"already exists\"\n\t}\n}\n",
+      "failedAt": "2026-07-12T10:41:57.670Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m07_scaling_002",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m07_scaling/002_pochemu_magazin_ne_rastet_5_blokov_proverki.mp4",
+      "error": "Init failed HTTP 400: {\n\t\"error\": {\n\t\t\"code\": 400419,\n\t\t\"message\": \"already exists\"\n\t}\n}\n",
+      "failedAt": "2026-07-12T21:52:40.161Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m01_economics_003",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m01_economics/003_reshenie_posle_rascheta_drr_test_reklamy_ili.mp4",
+      "error": "\nInvalid `prisma.lesson.update()` invocation in\nD:\\GpT_docs\\MPSTATS ACADEMY ADAPTIVE LEARNING\\MAAL\\.claude\\worktrees\\ozon-course\\scripts\\kinescope-upload.ts:491:27\n\n  488 console.log(`  Kinescope videoId: ${videoId}`);\n  489 \n  490 // Update Lesson in DB\n→ 491 await prisma.lesson.update(\nServer has closed the connection.",
+      "failedAt": "2026-07-12T21:53:21.509Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m05_ad_tools_001",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m05_ad_tools/001_karta_reklamnyh_instrumentov_obzor_v_lk_ozon.mp4",
+      "error": "\nInvalid `prisma.lesson.update()` invocation in\nD:\\GpT_docs\\MPSTATS ACADEMY ADAPTIVE LEARNING\\MAAL\\.claude\\worktrees\\ozon-course\\scripts\\kinescope-upload.ts:491:27\n\n  488 console.log(`  Kinescope videoId: ${videoId}`);\n  489 \n  490 // Update Lesson in DB\n→ 491 await prisma.lesson.update(\nServer has closed the connection.",
+      "failedAt": "2026-07-12T21:54:01.099Z"
     }
   ]
 }
