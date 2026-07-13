@@ -69,3 +69,5 @@ export {
 // Concierge (platform knowledge map)
 export { PLATFORM_MAP } from './assistant/concierge';
 export type { MapEntry, StaticMapEntry, DynamicMapEntry } from './assistant/concierge';
+export { getFaqItems } from './assistant/concierge';
+export type { FaqItem } from './assistant/concierge';

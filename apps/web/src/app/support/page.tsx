@@ -12,35 +12,8 @@ import {
   AccordionContent,
 } from '@/components/ui/accordion';
 import { createClient } from '@/lib/supabase/client';
+import { getFaqItems } from '@mpstats/ai';
 import { toast } from 'sonner';
-
-const FAQ_ITEMS = [
-  {
-    question: 'Как оформить подписку?',
-    answer:
-      'Перейдите на страницу тарифов, выберите план и оплатите картой. Подписка активируется мгновенно.',
-  },
-  {
-    question: 'Как отменить подписку?',
-    answer:
-      'Откройте раздел Профиль, найдите блок "Подписка" и нажмите "Отменить". Доступ сохранится до конца оплаченного периода.',
-  },
-  {
-    question: 'Не приходит письмо подтверждения',
-    answer:
-      'Проверьте папку Спам. Если письма нет — напишите на clients@mpstats.academy, и мы подтвердим email вручную.',
-  },
-  {
-    question: 'Не воспроизводится видео',
-    answer:
-      'Убедитесь, что браузер обновлён. Попробуйте отключить VPN или блокировщик рекламы. Если проблема сохраняется — напишите в поддержку.',
-  },
-  {
-    question: 'Как пройти диагностику повторно?',
-    answer:
-      'Откройте раздел Диагностика и нажмите "Начать диагностику". Результаты предыдущей диагностики сохранятся для сравнения.',
-  },
-];
 
 const THEMES = [
   'Оплата и подписка',
@@ -57,6 +30,8 @@ export default function SupportPage() {
   const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [userInfo, setUserInfo] = useState<{ id: string; email: string } | null>(null);
+
+  const FAQ_ITEMS = getFaqItems();
 
   // Detect authenticated user via Supabase client (works on public page)
   useEffect(() => {
