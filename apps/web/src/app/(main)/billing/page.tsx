@@ -131,7 +131,7 @@ function BillingContent() {
         currency: 'RUB',
         accountId: result.userId,
         invoiceId: result.subscriptionId,
-        recurrent: { interval: 'Month', period: 1, startDate: result.recurrentStartDate },
+        recurrent: { interval: 'Month', period: 1, startDate: result.recurrentStartDate, amount: result.recurrentAmount },
         receipt: result.receipt,
       });
       if (success) {
