@@ -10,6 +10,7 @@ import {
 } from '../services/referral/activation';
 import { generateAmbassadorCode, ensureUserReferralCode } from '../services/referral/code-generator';
 import { resolveReferralCode } from '../services/referral/code-resolver';
+import { BASE_TRIAL_DAYS } from '../services/billing/trial-subscription';
 
 const AMB_CODE_SHAPE = /^[A-Z][A-Z0-9_]{0,15}-[A-Z0-9]{2,12}$/;
 
@@ -79,7 +80,7 @@ const adminCodesRouter = router({
       z
         .object({
           label: z.string().trim().min(1).max(80),
-          refereeTrialDays: z.number().int().min(1).max(365),
+          refereeTrialDays: z.number().int().min(0).max(365),
           maxUses: z.number().int().min(1).nullable().optional(),
           expiresAt: z
             .date()
@@ -249,7 +250,9 @@ export const referralRouter = router({
         return {
           valid: true,
           referrerName: resolved.code.label,
-          trialDays: resolved.code.refereeTrialDays,
+          // refereeTrialDays=0 means "discount-only, keep the standard base trial" —
+          // surface the effective base trial so the register banner never shows "0 дней".
+          trialDays: resolved.code.refereeTrialDays || BASE_TRIAL_DAYS,
           type: 'ambassador' as const,
         };
       }

@@ -31,6 +31,7 @@ import {
   createTrialSubscription,
   resolveReferralCode,
   resolveReferralCodeRaw,
+  BASE_TRIAL_DAYS,
 } from '@mpstats/api';
 import { checkFraudSignals } from './fraud-checks';
 import { cq } from '@/lib/carrotquest/client';
@@ -144,6 +145,10 @@ async function handleAmbassadorBranch(
   const referralStatus: 'CONVERTED' | 'PENDING_REVIEW' =
     fraud.verdict === 'OK' ? 'CONVERTED' : 'PENDING_REVIEW';
 
+  // refereeTrialDays=0 means the code is discount-only: don't override the trial,
+  // keep the standard base trial. Any positive value overrides as before (D-01).
+  const effectiveTrialDays = code.refereeTrialDays || BASE_TRIAL_DAYS;
+
   try {
     await prisma.$transaction(async (tx: any) => {
       await tx.referral.create({
@@ -164,7 +169,7 @@ async function handleAmbassadorBranch(
       if (referralStatus === 'CONVERTED') {
         await createTrialSubscription({
           userId: args.friendUserId,
-          durationDays: code.refereeTrialDays,
+          durationDays: effectiveTrialDays,
           prismaClient: tx,
         });
 
@@ -201,11 +206,11 @@ async function handleAmbassadorBranch(
 
   try {
     const trialUntil = new Date(
-      Date.now() + code.refereeTrialDays * 24 * 60 * 60 * 1000,
+      Date.now() + effectiveTrialDays * 24 * 60 * 60 * 1000,
     );
     await cq.setUserProps(args.friendUserId, {
       pa_referral_source: code.label,
-      pa_referral_trial_days: code.refereeTrialDays,
+      pa_referral_trial_days: effectiveTrialDays,
       pa_referral_trial_until: formatDateRu(trialUntil),
       pa_referral_trial_until_tech: trialUntil.toISOString(),
     });
