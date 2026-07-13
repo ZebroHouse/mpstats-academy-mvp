@@ -65,6 +65,51 @@ export const billingRouter = router({
   }),
 
   /**
+   * Preview the discount that would apply for the current user + plan.
+   * Used by /pricing to show the reduced price (entered code or the user's
+   * pending ambassador discount). Does not mutate anything.
+   */
+  getApplicableDiscount: protectedProcedure
+    .input(
+      z.object({
+        planType: z.enum(['COURSE', 'PLATFORM']),
+        code: z
+          .string()
+          .min(1)
+          .max(50)
+          .transform((s) => s.trim().toUpperCase())
+          .optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const enabled = await isFeatureEnabled('billing_enabled');
+      if (!enabled) return null;
+
+      const plan = await ctx.prisma.subscriptionPlan.findFirst({
+        where: { type: input.planType, hidden: false, isActive: true },
+      });
+      if (!plan) return null;
+
+      const discount = await resolveApplicableDiscount({
+        prisma: ctx.prisma,
+        userId: ctx.user.id,
+        planType: input.planType,
+        basePrice: plan.price,
+        enteredCode: input.code,
+      });
+      if (!discount) return null;
+
+      return {
+        source: discount.source,
+        label: discount.label,
+        type: discount.type,
+        value: discount.value,
+        originalPrice: discount.originalPrice,
+        discountedPrice: discount.discountedPrice,
+      };
+    }),
+
+  /**
    * Initiate payment: create PENDING subscription + payment record.
    * Frontend then opens CloudPayments widget with returned data.
    */
