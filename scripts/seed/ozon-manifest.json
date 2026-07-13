@@ -5,14 +5,14 @@
     "slug": "09_ozon_prodvizhenie",
     "description": "Продвижение на Ozon: экономика рекламы и ДРР, ценообразование и акции, SEO и карточка, воронка продаж, рекламные инструменты, оптимизация ДРР, масштабирование и точки роста.",
     "order": 8,
-    "price": 4990,
+    "price": 1990,
     "isFree": false,
-    "isHidden": true,
+    "isHidden": false,
     "partnerKey": null
   },
   "_meta": {
     "generated_from": "_ozon_prodvizhenie_map.json + ffprobe durations",
-    "note": "skillCategory provisional per-module; reconcile from classification.json before reveal. order = global 1..49 across modules.",
+    "note": "skillCategory provisional per-module; reconcile from classification.json before reveal. order = global 1..49 across modules. | Revealed 2026-07-13: price 1990, isHidden=false.",
     "totalMin": 660,
     "lessonCount": 49
   },
