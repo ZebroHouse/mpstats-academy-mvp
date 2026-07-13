@@ -1,0 +1,56 @@
+[
+  {
+    "lessonId": "09_ozon_prodvizhenie_m01_economics_006",
+    "lessonTitle": "Юнит-экономика для Ozon",
+    "materialTitle": "Юнит-экономика для Ozon",
+    "type": "PRESENTATION",
+    "url": "https://drive.google.com/file/d/1cwACEtEh8AsacYBrYR9TFRCyRwRI-H7p/view",
+    "cta": "Презентация к уроку",
+    "standalone": false
+  },
+  {
+    "lessonId": "09_ozon_prodvizhenie_m01_economics_007",
+    "lessonTitle": "Расчёт юнит-экономики Ozon в таблице",
+    "materialTitle": "Таблица «Юнит-экономика Ozon»",
+    "type": "CALCULATION_TABLE",
+    "url": "https://docs.google.com/spreadsheets/d/1RWjPdQkHPo_Agz50lSwaqEf80FWwEovXlY5kQxKaB2Y/edit?gid=1365601808#gid=1365601808",
+    "cta": "Таблица «Юнит-экономика Ozon»",
+    "standalone": false
+  },
+  {
+    "lessonId": "09_ozon_prodvizhenie_m01_economics_007",
+    "lessonTitle": "Расчёт юнит-экономики Ozon в таблице",
+    "materialTitle": "Как делать расчёт юнит-экономики",
+    "type": "MEMO",
+    "url": "https://docs.google.com/document/d/1jWgbSqdnlF9Lap8t1RYwPGnkZHSIjCVxar0J8ow5Ix4/edit",
+    "cta": "Как делать расчёт юнит-экономики",
+    "standalone": false
+  },
+  {
+    "lessonId": "09_ozon_prodvizhenie_m01_economics_005",
+    "lessonTitle": "Как посмотреть долю рекламных расходов - Анна Борисова",
+    "materialTitle": "Экономика продвижения: ДРР и стратегия окупаемости",
+    "type": "PRESENTATION",
+    "url": "https://drive.google.com/file/d/1uOrBJq074dORpDmCMvbJ9QplcUErlTNH/view?usp=sharing",
+    "cta": "Презентация к уроку",
+    "standalone": true
+  },
+  {
+    "lessonId": "09_ozon_prodvizhenie_m01_economics_005",
+    "lessonTitle": "Как посмотреть долю рекламных расходов - Анна Борисова",
+    "materialTitle": "Три способа посмотреть ДРР на Ozon",
+    "type": "MEMO",
+    "url": "https://docs.google.com/document/d/1nnNgPlgVUMEEJMzyGakNg0z2-pOw1X_dkLo_xBjEIyI/edit",
+    "cta": "Три способа посмотреть ДРР на Ozon",
+    "standalone": true
+  },
+  {
+    "lessonId": "09_ozon_prodvizhenie_m01_economics_005",
+    "lessonTitle": "Как посмотреть долю рекламных расходов - Анна Борисова",
+    "materialTitle": "Калькулятор ДРР",
+    "type": "EXTERNAL_SERVICE",
+    "url": "https://konstantinbulgakov.com/tools/drr",
+    "cta": "Калькулятор ДРР",
+    "standalone": false
+  }
+]
