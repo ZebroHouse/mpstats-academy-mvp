@@ -67,8 +67,8 @@ export function AmbassadorCodeCreateDialog({ open, onOpenChange, onCreated }: Pr
     }
 
     const days = parseInt(refereeTrialDays, 10);
-    if (!Number.isFinite(days) || days < 1 || days > 365) {
-      toast.error('Trial: число от 1 до 365');
+    if (!Number.isFinite(days) || days < 0 || days > 365) {
+      toast.error('Trial: число от 0 до 365');
       return;
     }
 
@@ -145,11 +145,13 @@ export function AmbassadorCodeCreateDialog({ open, onOpenChange, onCreated }: Pr
               type="number"
               value={refereeTrialDays}
               onChange={(e) => setRefereeTrialDays(e.target.value)}
-              min={1}
+              min={0}
               max={365}
               required
             />
-            <p className="text-xs text-mp-gray-500 mt-1">1..365. Нельзя изменить позже.</p>
+            <p className="text-xs text-mp-gray-500 mt-1">
+              0 = оставить базовый триал (3 дня). 0..365, нельзя изменить позже.
+            </p>
           </div>
           <div>
             <label className="text-body-sm font-medium text-mp-gray-700 block mb-1">

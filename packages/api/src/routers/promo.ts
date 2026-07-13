@@ -88,6 +88,13 @@ export const promoRouter = router({
         });
       }
 
+      // Duration codes always carry a planType (enforced at creation). Guard
+      // defensively so the plan lookups below are type-safe and any anomalous
+      // null surfaces as a clear error rather than a silent mismatch.
+      if (promo.planType == null) {
+        throw new TRPCError({ code: 'INTERNAL_SERVER_ERROR', message: 'Промо-код без тарифа' });
+      }
+
       // Step 2: Check expiration (per D-07)
       if (promo.expiresAt && promo.expiresAt < new Date()) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'Срок действия промо-кода истёк' });
@@ -226,7 +233,7 @@ export const promoRouter = router({
             .max(50)
             .transform((s) => s.trim().toUpperCase())
             .optional(),
-          planType: z.enum(['COURSE', 'PLATFORM']),
+          planType: z.enum(['COURSE', 'PLATFORM']).optional(),
           courseId: z.string().optional(),
           durationDays: z.number().int().min(1).max(365).optional(),
           discountType: z.enum(['PERCENT', 'FIXED']).optional(),
@@ -243,6 +250,10 @@ export const promoRouter = router({
         .refine(
           (d) => d.discountType !== 'PERCENT' || (d.discountValue ?? 0) <= 100,
           { message: 'Процент скидки не может превышать 100' },
+        )
+        .refine(
+          (d) => d.discountType != null || d.planType != null,
+          { message: 'Для кода на дни укажите тариф (Платформа или Курс)' },
         ),
     )
     .mutation(async ({ ctx, input }) => {
@@ -250,10 +261,10 @@ export const promoRouter = router({
       if (input.planType === 'COURSE' && !input.courseId) {
         throw new TRPCError({ code: 'BAD_REQUEST', message: 'Выберите курс для типа COURSE' });
       }
-      if (input.planType === 'PLATFORM' && input.courseId) {
+      if (input.courseId && input.planType !== 'COURSE') {
         throw new TRPCError({
           code: 'BAD_REQUEST',
-          message: 'courseId не нужен для PLATFORM',
+          message: 'courseId допустим только для тарифа COURSE',
         });
       }
 
@@ -271,7 +282,7 @@ export const promoRouter = router({
       return ctx.prisma.promoCode.create({
         data: {
           code,
-          planType: input.planType,
+          planType: input.planType ?? null,
           courseId: input.courseId || null,
           durationDays: input.durationDays ?? 0,
           discountType: input.discountType ?? null,

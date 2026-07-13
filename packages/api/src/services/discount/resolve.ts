@@ -59,7 +59,7 @@ export async function resolveApplicableDiscount(args: {
       promo.isActive &&
       promo.discountType != null &&
       promo.discountValue != null &&
-      promo.planType === planType &&
+      (promo.planType === null || promo.planType === planType) &&
       (!promo.expiresAt || promo.expiresAt >= now) &&
       promo.currentUses < promo.maxUses &&
       !alreadyUsed;

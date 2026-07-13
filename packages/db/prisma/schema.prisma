@@ -366,7 +366,7 @@ enum DiscountType {
 model PromoCode {
   id            String           @id @default(cuid())
   code          String           @unique
-  planType      SubscriptionType // PLATFORM or COURSE (reuses existing enum)
+  planType      SubscriptionType? // PLATFORM or COURSE (reuses existing enum); NULL = any plan (discount codes)
   courseId      String?
   durationDays  Int
   discountType  DiscountType?
