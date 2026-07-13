@@ -1,6 +1,6 @@
 {
   "startedAt": "2026-02-18T10:26:44.172Z",
-  "lastUpdated": "2026-07-12T22:04:17.065Z",
+  "lastUpdated": "2026-07-13T10:32:48.991Z",
   "uploaded": [
     {
       "courseId": "01_analytics",
@@ -3907,172 +3907,188 @@
       "uploadedAt": "2026-07-12T21:59:04.504Z"
     },
     {
-      "lessonId": "09_ozon_prodvizhenie_m05_ad_tools_004",
-      "videoId": "94489f7b-5a0a-4963-8f09-37cd66816df4",
       "courseId": "09_ozon_prodvizhenie",
       "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
       "sizeMB": 37.9,
+      "lessonId": "09_ozon_prodvizhenie_m05_ad_tools_004",
+      "videoId": "94489f7b-5a0a-4963-8f09-37cd66816df4",
       "uploadedAt": "2026-07-12T21:59:53.614Z"
     },
     {
-      "lessonId": "09_ozon_prodvizhenie_m05_ad_tools_003",
-      "videoId": "2e7fe2be-f68f-4ec9-aa56-cf461c55f9b5",
       "courseId": "09_ozon_prodvizhenie",
       "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
       "sizeMB": 38.2,
+      "lessonId": "09_ozon_prodvizhenie_m05_ad_tools_003",
+      "videoId": "2e7fe2be-f68f-4ec9-aa56-cf461c55f9b5",
       "uploadedAt": "2026-07-12T22:00:02.197Z"
     },
     {
-      "lessonId": "09_ozon_prodvizhenie_m08_growth_points_003",
-      "videoId": "053f0f02-260d-4699-b688-829c39a87df3",
       "courseId": "09_ozon_prodvizhenie",
       "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
       "sizeMB": 72.7,
+      "lessonId": "09_ozon_prodvizhenie_m08_growth_points_003",
+      "videoId": "053f0f02-260d-4699-b688-829c39a87df3",
       "uploadedAt": "2026-07-12T22:00:11.855Z"
     },
     {
-      "lessonId": "09_ozon_prodvizhenie_m03_card_seo_003",
-      "videoId": "db09c8ac-58d5-4fc6-bdad-3d523daaacd8",
       "courseId": "09_ozon_prodvizhenie",
       "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
       "sizeMB": 79.2,
+      "lessonId": "09_ozon_prodvizhenie_m03_card_seo_003",
+      "videoId": "db09c8ac-58d5-4fc6-bdad-3d523daaacd8",
       "uploadedAt": "2026-07-12T22:00:22.275Z"
     },
     {
-      "lessonId": "09_ozon_prodvizhenie_m08_growth_points_002",
-      "videoId": "b2bf049d-53de-4519-9b7b-11e7aef394fc",
       "courseId": "09_ozon_prodvizhenie",
       "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
       "sizeMB": 86.2,
+      "lessonId": "09_ozon_prodvizhenie_m08_growth_points_002",
+      "videoId": "b2bf049d-53de-4519-9b7b-11e7aef394fc",
       "uploadedAt": "2026-07-12T22:00:32.726Z"
     },
     {
-      "lessonId": "09_ozon_prodvizhenie_m05_ad_tools_005",
-      "videoId": "2b6f9f69-c739-4424-8207-8f287f84f2dd",
       "courseId": "09_ozon_prodvizhenie",
       "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
       "sizeMB": 101.5,
+      "lessonId": "09_ozon_prodvizhenie_m05_ad_tools_005",
+      "videoId": "2b6f9f69-c739-4424-8207-8f287f84f2dd",
       "uploadedAt": "2026-07-12T22:00:44.063Z"
     },
     {
-      "lessonId": "09_ozon_prodvizhenie_m02_pricing_001",
-      "videoId": "743f5d62-6d9d-4ea9-a2da-74cc28732538",
       "courseId": "09_ozon_prodvizhenie",
       "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
       "sizeMB": 113,
+      "lessonId": "09_ozon_prodvizhenie_m02_pricing_001",
+      "videoId": "743f5d62-6d9d-4ea9-a2da-74cc28732538",
       "uploadedAt": "2026-07-12T22:01:03.004Z"
     },
     {
-      "lessonId": "09_ozon_prodvizhenie_m05_ad_tools_002",
-      "videoId": "ed42ea80-1448-42d2-ab2d-02e905c1fecb",
       "courseId": "09_ozon_prodvizhenie",
       "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
       "sizeMB": 113.3,
+      "lessonId": "09_ozon_prodvizhenie_m05_ad_tools_002",
+      "videoId": "ed42ea80-1448-42d2-ab2d-02e905c1fecb",
       "uploadedAt": "2026-07-12T22:01:14.759Z"
     },
     {
-      "lessonId": "09_ozon_prodvizhenie_m08_growth_points_001",
-      "videoId": "aa2d83af-d6d2-491f-88e6-0016f1a99996",
       "courseId": "09_ozon_prodvizhenie",
       "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
       "sizeMB": 113.6,
+      "lessonId": "09_ozon_prodvizhenie_m08_growth_points_001",
+      "videoId": "aa2d83af-d6d2-491f-88e6-0016f1a99996",
       "uploadedAt": "2026-07-12T22:01:26.573Z"
     },
     {
-      "lessonId": "09_ozon_prodvizhenie_m03_card_seo_001",
-      "videoId": "46b804a5-b724-4713-b0db-9b8948ba2521",
       "courseId": "09_ozon_prodvizhenie",
       "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
       "sizeMB": 124.6,
+      "lessonId": "09_ozon_prodvizhenie_m03_card_seo_001",
+      "videoId": "46b804a5-b724-4713-b0db-9b8948ba2521",
       "uploadedAt": "2026-07-12T22:01:38.758Z"
     },
     {
-      "lessonId": "09_ozon_prodvizhenie_m06_ad_optimization_001",
-      "videoId": "6e98e403-b287-4a7a-a727-f223bd5cef39",
       "courseId": "09_ozon_prodvizhenie",
       "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
       "sizeMB": 126.7,
+      "lessonId": "09_ozon_prodvizhenie_m06_ad_optimization_001",
+      "videoId": "6e98e403-b287-4a7a-a727-f223bd5cef39",
       "uploadedAt": "2026-07-12T22:01:50.829Z"
     },
     {
-      "lessonId": "09_ozon_prodvizhenie_m08_growth_points_004",
-      "videoId": "a01d086f-98b8-4b56-af7f-642e111e378f",
       "courseId": "09_ozon_prodvizhenie",
       "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
       "sizeMB": 136.4,
+      "lessonId": "09_ozon_prodvizhenie_m08_growth_points_004",
+      "videoId": "a01d086f-98b8-4b56-af7f-642e111e378f",
       "uploadedAt": "2026-07-12T22:02:03.317Z"
     },
     {
-      "lessonId": "09_ozon_prodvizhenie_m01_economics_001",
-      "videoId": "d4f3eaaf-1105-41bb-8e0e-519a185f1deb",
       "courseId": "09_ozon_prodvizhenie",
       "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
       "sizeMB": 139.2,
+      "lessonId": "09_ozon_prodvizhenie_m01_economics_001",
+      "videoId": "d4f3eaaf-1105-41bb-8e0e-519a185f1deb",
       "uploadedAt": "2026-07-12T22:02:15.945Z"
     },
     {
-      "lessonId": "09_ozon_prodvizhenie_m03_card_seo_006",
-      "videoId": "11d74fec-2a19-4d09-af4f-07257a6b9d12",
       "courseId": "09_ozon_prodvizhenie",
       "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
       "sizeMB": 153.6,
+      "lessonId": "09_ozon_prodvizhenie_m03_card_seo_006",
+      "videoId": "11d74fec-2a19-4d09-af4f-07257a6b9d12",
       "uploadedAt": "2026-07-12T22:02:29.150Z"
     },
     {
-      "lessonId": "09_ozon_prodvizhenie_m05_ad_tools_007",
-      "videoId": "de3b3eda-bbf5-4226-b351-cf195101383a",
       "courseId": "09_ozon_prodvizhenie",
       "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
       "sizeMB": 163.2,
+      "lessonId": "09_ozon_prodvizhenie_m05_ad_tools_007",
+      "videoId": "de3b3eda-bbf5-4226-b351-cf195101383a",
       "uploadedAt": "2026-07-12T22:02:43.099Z"
     },
     {
-      "lessonId": "09_ozon_prodvizhenie_m04_funnel_001",
-      "videoId": "22a68303-52e2-4c52-a7ec-3a1abc2931c3",
       "courseId": "09_ozon_prodvizhenie",
       "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
       "sizeMB": 169.8,
+      "lessonId": "09_ozon_prodvizhenie_m04_funnel_001",
+      "videoId": "22a68303-52e2-4c52-a7ec-3a1abc2931c3",
       "uploadedAt": "2026-07-12T22:02:57.916Z"
     },
     {
-      "lessonId": "09_ozon_prodvizhenie_m04_funnel_004",
-      "videoId": "da302f88-cac4-46f1-b16b-54b2d8934174",
       "courseId": "09_ozon_prodvizhenie",
       "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
       "sizeMB": 173,
+      "lessonId": "09_ozon_prodvizhenie_m04_funnel_004",
+      "videoId": "da302f88-cac4-46f1-b16b-54b2d8934174",
       "uploadedAt": "2026-07-12T22:03:12.770Z"
     },
     {
-      "lessonId": "09_ozon_prodvizhenie_m07_scaling_005",
-      "videoId": "78a7a560-02da-40e1-8722-d2b718d8de1d",
       "courseId": "09_ozon_prodvizhenie",
       "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
       "sizeMB": 178.5,
+      "lessonId": "09_ozon_prodvizhenie_m07_scaling_005",
+      "videoId": "78a7a560-02da-40e1-8722-d2b718d8de1d",
       "uploadedAt": "2026-07-12T22:03:27.964Z"
     },
     {
-      "lessonId": "09_ozon_prodvizhenie_m06_ad_optimization_004",
-      "videoId": "066bca88-83a2-486e-9727-392f2e8f1451",
       "courseId": "09_ozon_prodvizhenie",
       "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
       "sizeMB": 181.6,
+      "lessonId": "09_ozon_prodvizhenie_m06_ad_optimization_004",
+      "videoId": "066bca88-83a2-486e-9727-392f2e8f1451",
       "uploadedAt": "2026-07-12T22:03:42.953Z"
     },
     {
-      "lessonId": "09_ozon_prodvizhenie_m02_pricing_003",
-      "videoId": "e81b3e35-b29a-47d6-8e6d-ee63f24c28e9",
       "courseId": "09_ozon_prodvizhenie",
       "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
       "sizeMB": 217.4,
+      "lessonId": "09_ozon_prodvizhenie_m02_pricing_003",
+      "videoId": "e81b3e35-b29a-47d6-8e6d-ee63f24c28e9",
       "uploadedAt": "2026-07-12T22:03:59.447Z"
     },
     {
-      "lessonId": "09_ozon_prodvizhenie_m07_scaling_002",
-      "videoId": "d83c7059-4870-40f0-b123-d4d80767dd6e",
       "courseId": "09_ozon_prodvizhenie",
       "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
       "sizeMB": 232.9,
+      "lessonId": "09_ozon_prodvizhenie_m07_scaling_002",
+      "videoId": "d83c7059-4870-40f0-b123-d4d80767dd6e",
       "uploadedAt": "2026-07-12T22:04:17.065Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m01_economics_006",
+      "videoId": "2c138926-16d9-45e2-8903-3487e78bad6c",
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 201.5,
+      "uploadedAt": "2026-07-13T10:31:16.520Z"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m01_economics_007",
+      "videoId": "2fdd11e9-ac15-4df1-a322-c11d3a37fad6",
+      "courseId": "09_ozon_prodvizhenie",
+      "folderId": "ffab2533-d1c1-4d45-9574-7ec24ab5d264",
+      "sizeMB": 365.2,
+      "uploadedAt": "2026-07-13T10:32:48.991Z"
     }
   ],
   "failed": [

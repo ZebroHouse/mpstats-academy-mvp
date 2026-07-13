@@ -10,14 +10,12 @@ import {
   GOAL_TO_AXES, GOAL_LABELS, MARKETPLACE_LABELS, goalShelfKey, newShelfKey, resolveShelfKey,
 } from '../utils/storefront-shelves';
 import { resolveFirstLesson, FIRST_LESSON_FALLBACK_ID, resolveGoalLessons, resolvePrimaryGoal } from '../utils/first-lesson';
-import type { JobSummary, LessonWithProgress, StorefrontShelf, StorefrontItem } from '@mpstats/shared';
+import { courseMarketplace, type JobSummary, type LessonWithProgress, type StorefrontShelf, type StorefrontItem } from '@mpstats/shared';
 
 const SHELF_CAP = 12;
 const START_CAP = 3;
 
-function lessonMarketplace(courseId: string): 'WB' | 'OZON' {
-  return courseId === '05_ozon' ? 'OZON' : 'WB';
-}
+const lessonMarketplace = courseMarketplace;
 
 // Access context shared by every lesson-lock check within one request.
 type ActiveSubscriptions = Awaited<ReturnType<typeof getUserActiveSubscriptions>>;

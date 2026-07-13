@@ -41,7 +41,10 @@ type Row = {
 };
 
 async function main() {
-  const rows: Row[] = JSON.parse(readFileSync(join(__dirname, 'ozon-materials.json'), 'utf-8'));
+  const fileArgIdx = process.argv.indexOf('--file');
+  const srcFile = fileArgIdx !== -1 ? process.argv[fileArgIdx + 1] : 'ozon-materials.json';
+  const rows: Row[] = JSON.parse(readFileSync(join(__dirname, srcFile), 'utf-8'));
+  console.log(`[materials] source: ${srcFile}`);
   console.log(`[materials] Mode: ${APPLY ? 'APPLY' : 'DRY-RUN'} — ${rows.length} rows`);
 
   // Guard: every lessonId must exist in DB (course seeded).

@@ -1,5 +1,5 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr';
-import { NextResponse, type NextRequest, type NextFetchEvent } from 'next/server';
+import { NextResponse, type NextRequest } from 'next/server';
 import {
   REFERRAL_COOKIE_NAME,
   REFERRAL_COOKIE_TTL_SECONDS,
@@ -10,29 +10,45 @@ import {
  * Record a unique-visit click for an ambassador share link. First-touch only:
  * fires when there is no ref cookie yet, or the visitor arrived via a different
  * code — so refreshes / repeat visits with the same code don't inflate the count.
- * Fire-and-forget via event.waitUntil (middleware runs on the edge → no Prisma;
- * the /api/internal/ref-click node route does the DB write). Never blocks nav.
+ * Middleware runs on the edge → no Prisma; the /api/internal/ref-click node route
+ * does the DB write.
+ *
+ * Awaited (not event.waitUntil) and aimed at the internal loopback for two reasons:
+ *  1. event.waitUntil() is not reliably honored for middleware in self-hosted Next
+ *     (standalone) — the fire-and-forget beacon never ran, so ReferralCodeClickDay
+ *     stayed empty platform-wide. Awaiting guarantees the write is issued.
+ *  2. Fetching the external origin from the Edge runtime is unreliable on this VPS
+ *     (IPv6/DNS, AEZA↔KVMKA hop). 127.0.0.1:$PORT hits the same server, no DNS.
+ * Deduped by the ref cookie above → the latency is paid at most once per visitor,
+ * and a short AbortController timeout keeps navigation from ever blocking.
  */
-function recordReferralClick(
+async function recordReferralClick(
   request: NextRequest,
-  event: NextFetchEvent,
   refCode: string | null,
-): void {
+): Promise<void> {
   if (!refCode) return;
   const existing = request.cookies.get(REFERRAL_COOKIE_NAME)?.value;
   if (existing === refCode) return;
 
   const secret = process.env.REF_CLICK_SECRET;
-  event.waitUntil(
-    fetch(`${request.nextUrl.origin}/api/internal/ref-click`, {
+  const port = process.env.PORT || '3000';
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 2000);
+  try {
+    await fetch(`http://127.0.0.1:${port}/api/internal/ref-click`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         ...(secret ? { 'x-ref-click-secret': secret } : {}),
       },
       body: JSON.stringify({ code: refCode }),
-    }).catch(() => {}),
-  );
+      signal: controller.signal,
+    });
+  } catch {
+    /* best-effort — analytics must never block or break navigation */
+  } finally {
+    clearTimeout(timeout);
+  }
 }
 
 // Routes that require authentication
@@ -55,9 +71,9 @@ function decorateWithReferral(response: NextResponse, refCode: string | null): N
 // Routes that should redirect to dashboard if already authenticated
 const authRoutes = ['/login', '/register'];
 
-export async function middleware(request: NextRequest, event: NextFetchEvent) {
+export async function middleware(request: NextRequest) {
   const refCode = parseRefCodeFromUrl(request.nextUrl);
-  recordReferralClick(request, event, refCode);
+  await recordReferralClick(request, refCode);
 
   let supabaseResponse = NextResponse.next({
     request,

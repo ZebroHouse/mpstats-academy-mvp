@@ -1,5 +1,5 @@
 import type { FilterState } from './FilterPanel';
-import type { LessonWithProgress } from '@mpstats/shared';
+import { isOzonCourse, type LessonWithProgress } from '@mpstats/shared';
 
 // Pure per-lesson predicate for the Knowledge Base (/learn/library) filter panel.
 // Extracted from library/page.tsx so the branches can be unit-tested in isolation.
@@ -19,10 +19,11 @@ export function filterLessonByState(lesson: LessonWithProgress, filters: FilterS
   }
   if (filters.marketplace !== 'ALL') {
     const courseId = ((lesson as unknown) as Record<string, unknown>).courseId as string || '';
+    const ozon = isOzonCourse(courseId);
     if (filters.marketplace === 'OZON') {
-      if (courseId !== '05_ozon') return false;
+      if (!ozon) return false;
     } else {
-      if (courseId === '05_ozon') return false;
+      if (ozon) return false;
     }
   }
   if (filters.courseId !== 'ALL' && ((lesson as unknown) as Record<string, unknown>).courseId !== filters.courseId) return false;

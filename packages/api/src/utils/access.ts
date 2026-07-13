@@ -1,5 +1,19 @@
 import type { PrismaClient } from '@mpstats/db';
+import { isOzonCourse } from '@mpstats/shared';
 import { isFeatureEnabled } from './feature-flags';
+
+/**
+ * Does a COURSE subscription unlock `courseId`?
+ *
+ * A COURSE plan normally grants only its own `courseId`. Exception: the two
+ * Ozon courses («Работа с Ozon» + «Ozon PROдвижение») are sold as one bundle —
+ * buying the «Ozon» course tariff unlocks both. See [[isOzonCourse]].
+ */
+function courseSubscriptionUnlocks(sub: SubscriptionWithPlan, courseId: string): boolean {
+  if (sub.plan.type !== 'COURSE' || !sub.courseId) return false;
+  if (sub.courseId === courseId) return true;
+  return isOzonCourse(sub.courseId) && isOzonCourse(courseId);
+}
 
 export interface AccessResult {
   hasAccess: boolean;
@@ -102,7 +116,7 @@ export function isLessonAccessible(
   if (lesson.isPartnerFree) return true; // партнёрский курс — полностью бесплатный
   if (isFirstJobLesson) return true; // первый урок опубликованной джобы — бесплатный
   if (subscriptions.some((s) => s.plan.type === 'PLATFORM')) return true;
-  if (subscriptions.some((s) => s.plan.type === 'COURSE' && s.courseId === lesson.courseId)) return true;
+  if (subscriptions.some((s) => courseSubscriptionUnlocks(s, lesson.courseId))) return true;
   return false;
 }
 
@@ -160,7 +174,7 @@ export async function checkLessonAccess(
     return { hasAccess: true, reason: 'platform_subscription', hasPlatformSubscription: true };
   }
 
-  if (subscriptions.some((s) => s.plan.type === 'COURSE' && s.courseId === lesson.courseId)) {
+  if (subscriptions.some((s) => courseSubscriptionUnlocks(s, lesson.courseId))) {
     return { hasAccess: true, reason: 'course_subscription', hasPlatformSubscription: false };
   }
 

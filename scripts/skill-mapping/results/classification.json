@@ -2,8 +2,8 @@
   "phase": "classification",
   "model": "openai/gpt-4.1-nano",
   "taxonomy_timestamp": "2026-04-21T19:25:00.000Z",
-  "timestamp": "2026-07-12T08:46:25.902Z",
-  "total_lessons": 565,
+  "timestamp": "2026-07-13T10:53:33.799Z",
+  "total_lessons": 569,
   "lessons": [
     {
       "lesson_id": "01_analytics_m00_bonus_autobidder_001",
@@ -2376,6 +2376,15 @@
       "confidence": "high"
     },
     {
+      "lesson_id": "04_workshops_text_199729d9-56e9-419f-8bab-9765c0f2e594",
+      "title": "Как подготовить тестовую поставку",
+      "skill_blocks": [
+        "OPERATIONS/logistics_fbo_fbs",
+        "ANALYTICS/product_metrics"
+      ],
+      "confidence": "high"
+    },
+    {
       "lesson_id": "04_workshops_text_303deebe-26c0-4316-a3a3-d5bf73af4ec6",
       "title": "WB или Ozon: что важно знать новичку",
       "skill_blocks": [
@@ -2402,6 +2411,16 @@
         "ANALYTICS/product_niche_selection",
         "ANALYTICS/market_trends",
         "ANALYTICS/assortment_management"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "04_workshops_text_4b45a247-045e-4789-b9e1-b17f591b0a83",
+      "title": "Что проверить до первой закупки",
+      "skill_blocks": [
+        "ANALYTICS/competitor_analysis",
+        "ANALYTICS/market_trends",
+        "ANALYTICS/target_audience"
       ],
       "confidence": "high"
     },
@@ -4617,6 +4636,23 @@
         "ANALYTICS/data_tools",
         "FINANCE/business_planning",
         "ANALYTICS/product_metrics"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m01_economics_006",
+      "title": "Юнит-экономика для Ozon",
+      "skill_blocks": [
+        "ANALYTICS/market_trends",
+        "ANALYTICS/target_audience"
+      ],
+      "confidence": "high"
+    },
+    {
+      "lesson_id": "09_ozon_prodvizhenie_m01_economics_007",
+      "title": "Расчёт юнит-экономики Ozon в таблице",
+      "skill_blocks": [
+        "FINANCE/unit_economics"
       ],
       "confidence": "high"
     },

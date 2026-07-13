@@ -16,6 +16,9 @@ services:
         OPENROUTER_API_KEY: ${OPENROUTER_API_KEY}
         DATABASE_URL: ${DATABASE_URL}
         DIRECT_URL: ${DIRECT_URL}
+        # Needed at BUILD time so Edge middleware can read it (see Dockerfile note).
+        # Prod-only — deliberately absent from docker-compose.staging.yml.
+        REF_CLICK_SECRET: ${REF_CLICK_SECRET}
     ports:
       - "127.0.0.1:3000:3000"
     env_file:
