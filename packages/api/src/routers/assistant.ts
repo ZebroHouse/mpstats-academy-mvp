@@ -1,18 +1,21 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import { runAssistantPipeline } from '@mpstats/ai';
+import { Prisma } from '@mpstats/db';
 import { router, protectedProcedure } from '../trpc';
 import type { Context } from '../trpc';
 import { createRateLimitMiddleware } from '../middleware/rate-limit';
 import { getAssistantQuota, BURST_PER_MIN } from '../utils/assistant-quota';
-import type { AssistantLessonRef, AssistantJobRef } from '@mpstats/ai';
+import type { AssistantLessonRef, AssistantJobRef, AssistantNavLink } from '@mpstats/ai';
 
 export interface EnrichedMessage {
   role: 'user' | 'assistant';
   content: string;
   inDomain: boolean;
+  category: string | null;
   lessons: AssistantLessonRef[];
   jobs: AssistantJobRef[];
+  navLinks: AssistantNavLink[];
 }
 
 const assistantProcedure = protectedProcedure.use(
@@ -68,7 +71,9 @@ export const assistantRouter = router({
           content: result.answer,
           lessonIds: result.lessons.map((l) => l.lessonId),
           jobIds: result.jobs.map((j) => j.jobId),
-          inDomain: result.inDomain,
+          inDomain: result.category !== 'off_domain',
+          category: result.category,
+          navLinks: result.navLinks as unknown as Prisma.InputJsonValue,
         },
       });
       await ctx.prisma.assistantConversation.update({
@@ -127,6 +132,8 @@ export const assistantRouter = router({
       role: r.role as 'user' | 'assistant',
       content: r.content,
       inDomain: r.inDomain,
+      category: r.category,
+      navLinks: (r.navLinks as unknown as AssistantNavLink[]) ?? [],
       lessons: r.lessonIds
         .filter((id) => lessonMap.has(id))
         .map((id) => {
