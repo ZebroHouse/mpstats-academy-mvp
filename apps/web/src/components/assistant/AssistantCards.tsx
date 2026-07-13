@@ -2,16 +2,17 @@
 
 import Link from 'next/link';
 import { FavoriteButton } from '@/components/learning/FavoriteButton';
-import type { AssistantLessonRef, AssistantJobRef } from '@mpstats/ai';
+import type { AssistantLessonRef, AssistantJobRef, AssistantNavLink } from '@mpstats/ai';
 
 interface Props {
   lessons: AssistantLessonRef[];
   jobs: AssistantJobRef[];
+  navLinks?: AssistantNavLink[];
   favoritedKeys: Set<string>; // "LESSON:<id>" / "JOB:<id>"
 }
 
-export function AssistantCards({ lessons, jobs, favoritedKeys }: Props) {
-  if (lessons.length === 0 && jobs.length === 0) return null;
+export function AssistantCards({ lessons, jobs, navLinks = [], favoritedKeys }: Props) {
+  if (lessons.length === 0 && jobs.length === 0 && navLinks.length === 0) return null;
 
   return (
     <div className="mt-2 space-y-2">
@@ -58,6 +59,22 @@ export function AssistantCards({ lessons, jobs, favoritedKeys }: Props) {
             initialFavorited={favoritedKeys.has(`LESSON:${l.lessonId}`)}
           />
         </div>
+      ))}
+
+      {navLinks.map((n) => (
+        <Link
+          key={`N:${n.href}`}
+          href={n.href}
+          className="flex items-center gap-3 rounded-lg border border-mp-blue-200 bg-mp-blue-50 p-2.5 hover:bg-mp-blue-100"
+        >
+          <div className="min-w-0 flex-1">
+            <div className="text-[10px] font-bold uppercase tracking-wide text-mp-blue-500">Перейти</div>
+            <div className="truncate text-sm font-semibold text-mp-blue-700">{n.label}</div>
+          </div>
+          <svg className="h-4 w-4 shrink-0 text-mp-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+          </svg>
+        </Link>
       ))}
     </div>
   );
