@@ -93,8 +93,21 @@ const adminCodesRouter = router({
           // Where the share link points. Both attribute via the ?ref= cookie
           // (middleware decorates any URL); this only sets the landing page.
           landingTarget: z.enum(['HOME', 'REGISTER']).default('REGISTER'),
+          // Optional discount applied at the referee's first purchase, independent
+          // of refereeTrialDays — an ambassador code may grant trial days AND/OR
+          // a discount (unlike promo codes, which are strict XOR).
+          discountType: z.enum(['PERCENT', 'FIXED']).optional(),
+          discountValue: z.number().int().positive().optional(),
         })
-        .strict(),
+        .strict()
+        .refine(
+          (d) => (d.discountType != null) === (d.discountValue != null),
+          { message: 'Укажите и тип скидки, и значение — либо ни одного' },
+        )
+        .refine(
+          (d) => d.discountType !== 'PERCENT' || (d.discountValue ?? 0) <= 100,
+          { message: 'Процент скидки не может превышать 100' },
+        ),
     )
     .mutation(async ({ ctx, input }) => {
       const candidateCode = (input.code ?? generateAmbassadorCode()).toUpperCase();
@@ -125,6 +138,8 @@ const adminCodesRouter = router({
           expiresAt: input.expiresAt ?? null,
           isActive: true,
           createdByUserId: ctx.user.id,
+          discountType: input.discountType ?? null,
+          discountValue: input.discountValue ?? null,
         },
       });
     }),
