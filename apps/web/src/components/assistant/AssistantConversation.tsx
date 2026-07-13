@@ -4,13 +4,14 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Send } from 'lucide-react';
 import { trpc } from '@/lib/trpc/client';
 import { AssistantCards } from '@/components/assistant/AssistantCards';
-import type { AssistantLessonRef, AssistantJobRef } from '@mpstats/ai';
+import type { AssistantLessonRef, AssistantJobRef, AssistantNavLink } from '@mpstats/ai';
 
 interface UiMessage {
   role: 'user' | 'assistant';
   content: string;
   lessons?: AssistantLessonRef[];
   jobs?: AssistantJobRef[];
+  navLinks?: AssistantNavLink[];
 }
 
 export function AssistantConversation() {
@@ -39,7 +40,7 @@ export function AssistantConversation() {
     if (!convo?.messages) return;
     if (convo.messages.length === lastServerLenRef.current) return;
     lastServerLenRef.current = convo.messages.length;
-    setMessages(convo.messages.map((m) => ({ role: m.role, content: m.content, lessons: m.lessons, jobs: m.jobs })));
+    setMessages(convo.messages.map((m) => ({ role: m.role, content: m.content, lessons: m.lessons, jobs: m.jobs, navLinks: m.navLinks })));
   }, [convo]);
 
   const { data: quota } = trpc.assistant.getQuota.useQuery();
@@ -60,7 +61,7 @@ export function AssistantConversation() {
 
   const sendMutation = trpc.assistant.sendMessage.useMutation({
     onSuccess: (res) => {
-      setMessages((prev) => [...prev, { role: 'assistant', content: res.answer, lessons: res.lessons, jobs: res.jobs }]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: res.answer, lessons: res.lessons, jobs: res.jobs, navLinks: res.navLinks }]);
       utils.assistant.getQuota.invalidate();
       utils.assistant.getConversation.invalidate(); // keep cache current for next reopen
     },
@@ -123,7 +124,7 @@ export function AssistantConversation() {
             >
               <p className="whitespace-pre-wrap">{m.content}</p>
               {m.role === 'assistant' && (
-                <AssistantCards lessons={m.lessons ?? []} jobs={m.jobs ?? []} favoritedKeys={favoritedKeys} />
+                <AssistantCards lessons={m.lessons ?? []} jobs={m.jobs ?? []} navLinks={m.navLinks ?? []} favoritedKeys={favoritedKeys} />
               )}
             </div>
           </div>
