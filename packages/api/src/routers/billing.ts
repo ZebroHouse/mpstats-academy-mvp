@@ -3,6 +3,7 @@ import { TRPCError } from '@trpc/server';
 import { router, publicProcedure, protectedProcedure, superadminProcedure } from '../trpc';
 import { isFeatureEnabled } from '../utils/feature-flags';
 import { cancelCloudPaymentsSubscription } from '../utils/cloudpayments';
+import { resolveApplicableDiscount } from '../services/discount/resolve';
 import { buildReceipt } from '@mpstats/shared';
 
 /**
@@ -64,6 +65,51 @@ export const billingRouter = router({
   }),
 
   /**
+   * Preview the discount that would apply for the current user + plan.
+   * Used by /pricing to show the reduced price (entered code or the user's
+   * pending ambassador discount). Does not mutate anything.
+   */
+  getApplicableDiscount: protectedProcedure
+    .input(
+      z.object({
+        planType: z.enum(['COURSE', 'PLATFORM']),
+        code: z
+          .string()
+          .min(1)
+          .max(50)
+          .transform((s) => s.trim().toUpperCase())
+          .optional(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      const enabled = await isFeatureEnabled('billing_enabled');
+      if (!enabled) return null;
+
+      const plan = await ctx.prisma.subscriptionPlan.findFirst({
+        where: { type: input.planType, hidden: false, isActive: true },
+      });
+      if (!plan) return null;
+
+      const discount = await resolveApplicableDiscount({
+        prisma: ctx.prisma,
+        userId: ctx.user.id,
+        planType: input.planType,
+        basePrice: plan.price,
+        enteredCode: input.code,
+      });
+      if (!discount) return null;
+
+      return {
+        source: discount.source,
+        label: discount.label,
+        type: discount.type,
+        value: discount.value,
+        originalPrice: discount.originalPrice,
+        discountedPrice: discount.discountedPrice,
+      };
+    }),
+
+  /**
    * Initiate payment: create PENDING subscription + payment record.
    * Frontend then opens CloudPayments widget with returned data.
    */
@@ -72,6 +118,12 @@ export const billingRouter = router({
       z.object({
         planType: z.enum(['COURSE', 'PLATFORM']),
         courseId: z.string().optional(),
+        promoCode: z
+          .string()
+          .min(1)
+          .max(50)
+          .transform((s) => s.trim().toUpperCase())
+          .optional(),
       }),
     )
     .mutation(async ({ ctx, input }) => {
@@ -103,6 +155,18 @@ export const billingRouter = router({
       if (!plan) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Plan not found or inactive' });
       }
+
+      // Resolve an applicable discount (entered promo-discount code > pending
+      // ambassador discount). Charged amount is the discounted price; the
+      // recurrent charge is always pinned to full plan.price below.
+      const discount = await resolveApplicableDiscount({
+        prisma: ctx.prisma,
+        userId: ctx.user.id,
+        planType: input.planType,
+        basePrice: plan.price,
+        enteredCode: input.promoCode,
+      });
+      const firstAmount = discount ? discount.discountedPrice : plan.price;
 
       // Verify course exists if COURSE plan; capture title for receipt label
       let courseTitle: string | undefined;
@@ -169,6 +233,7 @@ export const billingRouter = router({
           status: 'PENDING',
           currentPeriodStart: now,
           currentPeriodEnd: now, // Will be set properly by webhook on payment success
+          promoCodeId: discount?.source === 'promo' ? discount.promoCodeId : null,
         },
       });
 
@@ -176,7 +241,7 @@ export const billingRouter = router({
       await ctx.prisma.payment.create({
         data: {
           subscriptionId: subscription.id,
-          amount: plan.price,
+          amount: firstAmount,
           status: 'PENDING',
         },
       });
@@ -184,7 +249,7 @@ export const billingRouter = router({
       const receipt = buildReceipt({
         plan: { type: plan.type, intervalDays: plan.intervalDays },
         user: { email: ctx.user.email },
-        amount: plan.price,
+        amount: firstAmount,
         courseTitle,
       });
 
@@ -218,7 +283,11 @@ export const billingRouter = router({
 
       return {
         subscriptionId: subscription.id,
-        amount: plan.price,
+        amount: firstAmount,
+        recurrentAmount: plan.price,
+        discountApplied: discount
+          ? { source: discount.source, label: discount.label, originalPrice: discount.originalPrice }
+          : null,
         planName: plan.name,
         description,
         userId: ctx.user.id,

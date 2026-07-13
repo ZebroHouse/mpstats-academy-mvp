@@ -37,10 +37,13 @@ export default function AdminPromoPage() {
   const [expandedRow, setExpandedRow] = useState<string | null>(null);
 
   // Form state
+  const [formMode, setFormMode] = useState<'duration' | 'discount'>('duration');
   const [formPlanType, setFormPlanType] = useState<'PLATFORM' | 'COURSE'>('PLATFORM');
   const [formCourseId, setFormCourseId] = useState('');
   const [formDuration, setFormDuration] = useState(30);
   const [formCustomDuration, setFormCustomDuration] = useState('');
+  const [formDiscountType, setFormDiscountType] = useState<'PERCENT' | 'FIXED'>('PERCENT');
+  const [formDiscountValue, setFormDiscountValue] = useState('');
   const [formMaxUses, setFormMaxUses] = useState(1);
   const [formExpiresAt, setFormExpiresAt] = useState('');
   const [formNoExpiry, setFormNoExpiry] = useState(true);
@@ -76,10 +79,13 @@ export default function AdminPromoPage() {
   });
 
   function resetForm() {
+    setFormMode('duration');
     setFormPlanType('PLATFORM');
     setFormCourseId('');
     setFormDuration(30);
     setFormCustomDuration('');
+    setFormDiscountType('PERCENT');
+    setFormDiscountValue('');
     setFormMaxUses(1);
     setFormExpiresAt('');
     setFormNoExpiry(true);
@@ -87,6 +93,32 @@ export default function AdminPromoPage() {
   }
 
   function handleCreate() {
+    const base = {
+      code: formCode || undefined,
+      planType: formPlanType,
+      courseId: formPlanType === 'COURSE' ? formCourseId || undefined : undefined,
+      maxUses: formMaxUses,
+      expiresAt: formNoExpiry ? undefined : formExpiresAt || undefined,
+    };
+
+    if (formMode === 'discount') {
+      const value = parseInt(formDiscountValue, 10);
+      if (!value || value < 1) {
+        toast.error('Укажите размер скидки');
+        return;
+      }
+      if (formDiscountType === 'PERCENT' && value > 100) {
+        toast.error('Процент скидки не может превышать 100');
+        return;
+      }
+      createPromo.mutate({
+        ...base,
+        discountType: formDiscountType,
+        discountValue: value,
+      });
+      return;
+    }
+
     const duration = formCustomDuration ? parseInt(formCustomDuration, 10) : formDuration;
     if (!duration || duration < 1) {
       toast.error('Укажите длительность');
@@ -94,12 +126,8 @@ export default function AdminPromoPage() {
     }
 
     createPromo.mutate({
-      code: formCode || undefined,
-      planType: formPlanType,
-      courseId: formPlanType === 'COURSE' ? formCourseId || undefined : undefined,
+      ...base,
       durationDays: duration,
-      maxUses: formMaxUses,
-      expiresAt: formNoExpiry ? undefined : formExpiresAt || undefined,
     });
   }
 
@@ -192,38 +220,117 @@ export default function AdminPromoPage() {
               </div>
             )}
 
-            {/* Duration */}
+            {/* Code mode: access days vs discount */}
             <div>
               <label className="block text-body-sm font-medium text-mp-gray-700 mb-1.5">
-                Длительность (дней)
+                Тип промо-кода
               </label>
-              <div className="flex gap-2 flex-wrap">
-                {DURATION_PRESETS.map((d) => (
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormMode('duration')}
+                  className={`px-4 py-2 rounded-lg text-body-sm font-medium border transition-colors ${
+                    formMode === 'duration'
+                      ? 'bg-mp-blue-50 border-mp-blue-300 text-mp-blue-700'
+                      : 'border-mp-gray-200 text-mp-gray-600 hover:bg-mp-gray-50'
+                  }`}
+                >
+                  Дни доступа
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormMode('discount')}
+                  className={`px-4 py-2 rounded-lg text-body-sm font-medium border transition-colors ${
+                    formMode === 'discount'
+                      ? 'bg-mp-blue-50 border-mp-blue-300 text-mp-blue-700'
+                      : 'border-mp-gray-200 text-mp-gray-600 hover:bg-mp-gray-50'
+                  }`}
+                >
+                  Скидка
+                </button>
+              </div>
+            </div>
+
+            {/* Duration (only in duration mode) */}
+            {formMode === 'duration' && (
+              <div>
+                <label className="block text-body-sm font-medium text-mp-gray-700 mb-1.5">
+                  Длительность (дней)
+                </label>
+                <div className="flex gap-2 flex-wrap">
+                  {DURATION_PRESETS.map((d) => (
+                    <button
+                      key={d}
+                      type="button"
+                      onClick={() => { setFormDuration(d); setFormCustomDuration(''); }}
+                      className={`px-3 py-1.5 rounded-lg text-body-sm font-medium border transition-colors ${
+                        formDuration === d && !formCustomDuration
+                          ? 'bg-mp-blue-50 border-mp-blue-300 text-mp-blue-700'
+                          : 'border-mp-gray-200 text-mp-gray-600 hover:bg-mp-gray-50'
+                      }`}
+                    >
+                      {d}
+                    </button>
+                  ))}
+                  <Input
+                    inputSize="sm"
+                    type="number"
+                    min={1}
+                    max={365}
+                    placeholder="Другое"
+                    value={formCustomDuration}
+                    onChange={(e) => setFormCustomDuration(e.target.value)}
+                    className="w-24"
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Discount (only in discount mode) */}
+            {formMode === 'discount' && (
+              <div>
+                <label className="block text-body-sm font-medium text-mp-gray-700 mb-1.5">
+                  Размер скидки
+                </label>
+                <div className="flex gap-2 items-center flex-wrap">
                   <button
-                    key={d}
                     type="button"
-                    onClick={() => { setFormDuration(d); setFormCustomDuration(''); }}
+                    onClick={() => setFormDiscountType('PERCENT')}
                     className={`px-3 py-1.5 rounded-lg text-body-sm font-medium border transition-colors ${
-                      formDuration === d && !formCustomDuration
+                      formDiscountType === 'PERCENT'
                         ? 'bg-mp-blue-50 border-mp-blue-300 text-mp-blue-700'
                         : 'border-mp-gray-200 text-mp-gray-600 hover:bg-mp-gray-50'
                     }`}
                   >
-                    {d}
+                    %
                   </button>
-                ))}
-                <Input
-                  inputSize="sm"
-                  type="number"
-                  min={1}
-                  max={365}
-                  placeholder="Другое"
-                  value={formCustomDuration}
-                  onChange={(e) => setFormCustomDuration(e.target.value)}
-                  className="w-24"
-                />
+                  <button
+                    type="button"
+                    onClick={() => setFormDiscountType('FIXED')}
+                    className={`px-3 py-1.5 rounded-lg text-body-sm font-medium border transition-colors ${
+                      formDiscountType === 'FIXED'
+                        ? 'bg-mp-blue-50 border-mp-blue-300 text-mp-blue-700'
+                        : 'border-mp-gray-200 text-mp-gray-600 hover:bg-mp-gray-50'
+                    }`}
+                  >
+                    ₽
+                  </button>
+                  <Input
+                    inputSize="sm"
+                    type="number"
+                    min={1}
+                    max={formDiscountType === 'PERCENT' ? 100 : undefined}
+                    placeholder={formDiscountType === 'PERCENT' ? 'до 100' : 'сумма'}
+                    value={formDiscountValue}
+                    onChange={(e) => setFormDiscountValue(e.target.value)}
+                    className="w-28"
+                  />
+                </div>
+                <p className="text-xs text-mp-gray-400 mt-1">
+                  Скидка на первую оплату
+                </p>
               </div>
-            </div>
+            )}
 
             {/* Max Uses */}
             <div>
@@ -375,6 +482,8 @@ function PromoRow({
     code: string;
     planType: string;
     durationDays: number;
+    discountType: 'PERCENT' | 'FIXED' | null;
+    discountValue: number | null;
     currentUses: number;
     maxUses: number;
     expiresAt: string | Date | null;
@@ -412,7 +521,11 @@ function PromoRow({
           {promo.planType === 'PLATFORM' ? 'Платформа' : promo.course?.title || 'Курс'}
         </td>
         <td className="px-4 py-3 text-body-sm text-mp-gray-600">
-          {promo.durationDays} дн.
+          {promo.discountType === 'PERCENT'
+            ? `−${promo.discountValue}%`
+            : promo.discountType === 'FIXED'
+              ? `−${promo.discountValue} ₽`
+              : `${promo.durationDays} дн.`}
         </td>
         <td className="px-4 py-3 text-body-sm text-mp-gray-600">
           {promo.currentUses}/{promo.maxUses}

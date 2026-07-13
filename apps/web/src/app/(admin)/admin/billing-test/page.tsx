@@ -41,7 +41,7 @@ export default function AdminBillingTestPage() {
         currency: 'RUB',
         accountId: result.userId,
         invoiceId: result.subscriptionId,
-        recurrent: { interval: 'Day', period: 1 },
+        recurrent: { interval: 'Day', period: 1, amount: result.amount },
         receipt: result.receipt,
       });
 

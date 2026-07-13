@@ -6,6 +6,7 @@ import {
   sendCancellationEmail,
 } from '@/lib/carrotquest/emails';
 import { processReferralConversion } from '@/lib/referral/conversion';
+import { shouldConsumeAmbassadorDiscount } from './consume-discount';
 import { decideRecurrentUpdate } from './decide-recurrent-update';
 import type { NormalizedRecurrentEvent, RawWebhookPayload } from './parse-webhook';
 
@@ -128,6 +129,73 @@ export async function handlePaymentSuccess(
         activeTrial ? ' (stacked after active trial)' : ''
       }${shouldSetCpId ? ` (cp=${payment.cpSubscriptionId})` : ''}`,
     );
+
+    // --- Record discount redemption (consume-on-success) ---
+    // Promo-discount code: the PENDING sub carries promoCodeId (set in
+    // initiatePayment). Burn it exactly once via PromoActivation's
+    // @@unique([promoCodeId, userId]) guard. The discount was already granted
+    // at pricing time, so we record the use regardless of the code's current
+    // active/expiry state; the unique guard makes webhook replays idempotent.
+    if (subscription.promoCodeId) {
+      const promo = await prisma.promoCode.findUnique({
+        where: { id: subscription.promoCodeId },
+        select: { id: true, discountType: true },
+      });
+      if (promo?.discountType) {
+        const already = await prisma.promoActivation.findUnique({
+          where: {
+            promoCodeId_userId: { promoCodeId: promo.id, userId: subscription.userId },
+          },
+          select: { id: true },
+        });
+        if (!already) {
+          try {
+            await prisma.$transaction([
+              prisma.promoActivation.create({
+                data: {
+                  promoCodeId: promo.id,
+                  userId: subscription.userId,
+                  subscriptionId: subscription.id,
+                },
+              }),
+              prisma.promoCode.update({
+                where: { id: promo.id },
+                data: { currentUses: { increment: 1 } },
+              }),
+            ]);
+          } catch (err) {
+            // Unique race on webhook replay — already consumed, safe to ignore.
+            console.warn(
+              `[Discount] promo activation race for sub=${subscription.id}:`,
+              err,
+            );
+          }
+        }
+      }
+    } else if (
+      shouldConsumeAmbassadorDiscount({
+        paidAmount: payment.amount,
+        planPrice: subscription.plan.price,
+        promoCodeId: subscription.promoCodeId,
+      })
+    ) {
+      // Ambassador discount: mark the user's pending referral row consumed.
+      const pending = await prisma.referral.findFirst({
+        where: {
+          referredUserId: subscription.userId,
+          discountConsumedAt: null,
+          codeId: { not: null },
+          referralCode: { discountType: { not: null } },
+        },
+        select: { id: true },
+      });
+      if (pending) {
+        await prisma.referral.update({
+          where: { id: pending.id },
+          data: { discountConsumedAt: now },
+        });
+      }
+    }
 
     // Fire-and-forget: send payment success email via CQ
     sendPaymentSuccessEmail(subscription.userId, {

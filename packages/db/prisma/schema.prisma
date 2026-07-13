@@ -358,18 +358,25 @@ model FeatureFlag {
 
 // ============== PROMO CODES ==============
 
+enum DiscountType {
+  PERCENT
+  FIXED
+}
+
 model PromoCode {
-  id           String           @id @default(cuid())
-  code         String           @unique
-  planType     SubscriptionType // PLATFORM or COURSE (reuses existing enum)
-  courseId     String?
-  durationDays Int
-  maxUses      Int              @default(1)
-  currentUses  Int              @default(0)
-  expiresAt    DateTime?
-  isActive     Boolean          @default(true)
-  createdBy    String
-  createdAt    DateTime         @default(now())
+  id            String           @id @default(cuid())
+  code          String           @unique
+  planType      SubscriptionType // PLATFORM or COURSE (reuses existing enum)
+  courseId      String?
+  durationDays  Int
+  discountType  DiscountType?
+  discountValue Int?
+  maxUses       Int              @default(1)
+  currentUses   Int              @default(0)
+  expiresAt     DateTime?
+  isActive      Boolean          @default(true)
+  createdBy     String
+  createdAt     DateTime         @default(now())
 
   course        Course?           @relation(fields: [courseId], references: [id])
   activations   PromoActivation[]
@@ -590,15 +597,16 @@ enum ReferralBonusPackageStatus {
 }
 
 model Referral {
-  id                String           @id @default(cuid())
-  code              String
-  codeType          ReferralCodeType @default(EXTERNAL_USER)
-  referrerUserId    String?
-  referredUserId    String           @unique
-  status            ReferralStatus   @default(PENDING)
-  conversionTrigger String?
-  createdAt         DateTime         @default(now())
-  convertedAt       DateTime?
+  id                 String           @id @default(cuid())
+  code               String
+  codeType           ReferralCodeType @default(EXTERNAL_USER)
+  referrerUserId     String?
+  referredUserId     String           @unique
+  status             ReferralStatus   @default(PENDING)
+  conversionTrigger  String?
+  createdAt          DateTime         @default(now())
+  convertedAt        DateTime?
+  discountConsumedAt DateTime?
 
   // Phase 53B audit trail (admin moderation of PENDING_REVIEW)
   rejectReason     String?
@@ -642,6 +650,8 @@ model ReferralCode {
   label            String
   landingTarget    String           @default("REGISTER") // Where the share link points: HOME (/) | REGISTER (/register). Both attribute via ?ref= cookie.
   refereeTrialDays Int
+  discountType     DiscountType?
+  discountValue    Int?
   maxUses          Int?
   currentUses      Int              @default(0)
   expiresAt        DateTime?

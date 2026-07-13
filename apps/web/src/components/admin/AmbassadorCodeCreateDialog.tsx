@@ -28,6 +28,8 @@ export function AmbassadorCodeCreateDialog({ open, onOpenChange, onCreated }: Pr
   const [expiresAt, setExpiresAt] = useState<string>('');
   const [code, setCode] = useState<string>('');
   const [landingTarget, setLandingTarget] = useState<'HOME' | 'REGISTER'>('REGISTER');
+  const [discountType, setDiscountType] = useState<'PERCENT' | 'FIXED'>('PERCENT');
+  const [discountValue, setDiscountValue] = useState<string>('');
 
   const utils = trpc.useUtils();
   const createMutation = trpc.referral.admin.createAmbassadorCode.useMutation({
@@ -41,6 +43,8 @@ export function AmbassadorCodeCreateDialog({ open, onOpenChange, onCreated }: Pr
       setExpiresAt('');
       setCode('');
       setLandingTarget('REGISTER');
+      setDiscountType('PERCENT');
+      setDiscountValue('');
       onOpenChange(false);
       onCreated?.();
     },
@@ -82,6 +86,23 @@ export function AmbassadorCodeCreateDialog({ open, onOpenChange, onCreated }: Pr
 
     const trimmedCode = code.trim().toUpperCase();
 
+    // Discount is optional and both-or-neither: only build the pair when the
+    // value input is non-empty (a type is always selected via the selector).
+    // The spread below sends BOTH fields or NEITHER — never just one.
+    let discountPayload: { discountType: 'PERCENT' | 'FIXED'; discountValue: number } | null = null;
+    if (discountValue.trim()) {
+      const value = parseInt(discountValue, 10);
+      if (!Number.isFinite(value) || value < 1) {
+        toast.error('Скидка: положительное число или пусто');
+        return;
+      }
+      if (discountType === 'PERCENT' && value > 100) {
+        toast.error('Скидка в %: максимум 100');
+        return;
+      }
+      discountPayload = { discountType, discountValue: value };
+    }
+
     createMutation.mutate({
       label: trimmedLabel,
       refereeTrialDays: days,
@@ -89,6 +110,7 @@ export function AmbassadorCodeCreateDialog({ open, onOpenChange, onCreated }: Pr
       expiresAt: parsedExpiresAt,
       landingTarget,
       ...(trimmedCode ? { code: trimmedCode } : {}),
+      ...(discountPayload ?? {}),
     });
   }
 
@@ -128,6 +150,33 @@ export function AmbassadorCodeCreateDialog({ open, onOpenChange, onCreated }: Pr
               required
             />
             <p className="text-xs text-mp-gray-500 mt-1">1..365. Нельзя изменить позже.</p>
+          </div>
+          <div>
+            <label className="text-body-sm font-medium text-mp-gray-700 block mb-1">
+              Скидка (необязательно)
+            </label>
+            <div className="flex gap-2">
+              <select
+                value={discountType}
+                onChange={(e) => setDiscountType(e.target.value as 'PERCENT' | 'FIXED')}
+                className="px-3 py-2 border border-mp-gray-200 rounded-lg text-body-sm bg-white focus:outline-none focus:ring-2 focus:ring-mp-blue-500"
+              >
+                <option value="PERCENT">%</option>
+                <option value="FIXED">₽</option>
+              </select>
+              <Input
+                type="number"
+                value={discountValue}
+                onChange={(e) => setDiscountValue(e.target.value)}
+                min={1}
+                max={discountType === 'PERCENT' ? 100 : undefined}
+                placeholder="Пусто = без скидки"
+                className="flex-1"
+              />
+            </div>
+            <p className="text-xs text-mp-gray-500 mt-1">
+              Применится к первой покупке приведённого юзера. Можно вместе с trial.
+            </p>
           </div>
           <div>
             <label className="text-body-sm font-medium text-mp-gray-700 block mb-1">

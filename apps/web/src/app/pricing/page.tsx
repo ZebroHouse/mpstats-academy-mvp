@@ -10,6 +10,7 @@ import { V8Footer } from '@/components/v8/V8Footer';
 import { Reveal } from '@/components/v8/Reveal';
 import { StickyCTA } from '@/components/v8/StickyCTA';
 import { trpc } from '@/lib/trpc/client';
+import { DiscountedPrice } from '@/components/pricing/DiscountedPrice';
 import { openPaymentWidget } from '@/lib/cloudpayments/widget';
 import { reachGoal } from '@/lib/analytics/metrika';
 import { METRIKA_GOALS } from '@/lib/analytics/constants';
@@ -149,6 +150,8 @@ function PricingContent() {
 
   const [promoCode, setPromoCode] = useState(searchParams.get('promo') || '');
   const [promoError, setPromoError] = useState('');
+  const [discountCode, setDiscountCode] = useState<string | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
 
   // tRPC queries — все tolerant к неавторизованным
   const { data: plans } = trpc.billing.getPlans.useQuery();
@@ -163,6 +166,19 @@ function PricingContent() {
   });
   const isAuthenticated = !!profile;
 
+  const utils = trpc.useUtils();
+
+  // Discount preview — покрывает и введённый discount-код, и pending ambassador-скидку
+  // (precedence решает сервер). Запрос на план, т.к. код нацелен на конкретный тип плана.
+  const courseDiscountQuery = trpc.billing.getApplicableDiscount.useQuery(
+    { planType: 'COURSE', code: discountCode ?? undefined },
+    { enabled: isAuthenticated },
+  );
+  const platformDiscountQuery = trpc.billing.getApplicableDiscount.useQuery(
+    { planType: 'PLATFORM', code: discountCode ?? undefined },
+    { enabled: isAuthenticated },
+  );
+
   const initiatePayment = trpc.billing.initiatePayment.useMutation();
   const activatePromo = trpc.promo.activate.useMutation({
     onSuccess: (data) => {
@@ -173,6 +189,31 @@ function PricingContent() {
     },
     onError: (err) => setPromoError(err.message),
   });
+
+  // Валидируем код и роутим по типу: discount-код держим для оплаты (НЕ активируем),
+  // duration-код идёт в существующий флоу активации.
+  const applyPromoCode = async (code: string) => {
+    setIsValidating(true);
+    try {
+      const res = await utils.promo.validate.fetch({ code });
+      if (!res.valid) {
+        setDiscountCode(null);
+        setPromoError(res.error);
+        return;
+      }
+      if (res.kind === 'discount') {
+        setPromoError('');
+        setDiscountCode(code);
+        toast.success('Промокод применён');
+        return;
+      }
+      activatePromo.mutate({ code });
+    } catch (err) {
+      setPromoError(err instanceof Error ? err.message : 'Не удалось проверить промо-код');
+    } finally {
+      setIsValidating(false);
+    }
+  };
 
   // Filter courses для pill-chips
   const courseOptions = (courses || [])
@@ -206,18 +247,20 @@ function PricingContent() {
     }
   }, [isAuthenticated, promoCode]);
 
-  // Авто-активация промо, если юзер пришёл после DOI с ?promo=CODE в URL
-  // (через auth/callback?next=/pricing?promo=...).
-  // Activate mutation сам проверит что код валиден и не использован — если нет,
-  // покажет ошибку в UI, юзер увидит форму с уже введённым кодом.
+  // Авто-обработка промо, если юзер пришёл после DOI с ?promo=CODE в URL
+  // (через auth/callback?next=/pricing?promo=...). Валидируем и роутим по типу:
+  // duration → активация, discount → держим для оплаты. Невалидный код → ошибка
+  // в UI, юзер видит форму с уже введённым кодом.
   const promoFromUrl = searchParams.get('promo');
   const [autoActivated, setAutoActivated] = useState(false);
   useEffect(() => {
-    if (!autoActivated && isAuthenticated && promoFromUrl && !activatePromo.isPending) {
+    if (!autoActivated && isAuthenticated && promoFromUrl && !activatePromo.isPending && !isValidating) {
       setAutoActivated(true);
-      activatePromo.mutate({ code: promoFromUrl.trim().toUpperCase() });
+      void applyPromoCode(promoFromUrl.trim().toUpperCase());
     }
-  }, [autoActivated, isAuthenticated, promoFromUrl, activatePromo]);
+    // applyPromoCode намеренно вне deps — флаг autoActivated гарантирует однократный запуск.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoActivated, isAuthenticated, promoFromUrl, activatePromo, isValidating]);
 
   const hasActiveCourseSubscription =
     subscription &&
@@ -241,6 +284,7 @@ function PricingContent() {
       const result = await initiatePayment.mutateAsync({
         planType,
         courseId: planType === 'COURSE' ? selectedCourseId : undefined,
+        promoCode: discountCode ?? undefined,
       });
 
       const success = await openPaymentWidget({
@@ -250,7 +294,12 @@ function PricingContent() {
         currency: 'RUB',
         accountId: result.userId,
         invoiceId: result.subscriptionId,
-        recurrent: { interval: 'Month', period: 1, startDate: result.recurrentStartDate },
+        recurrent: {
+          interval: 'Month',
+          period: 1,
+          amount: result.recurrentAmount,
+          startDate: result.recurrentStartDate,
+        },
         receipt: result.receipt,
       });
 
@@ -292,8 +341,10 @@ function PricingContent() {
       router.push(`/register?redirect=/pricing&promo=${encodeURIComponent(trimmed)}`);
       return;
     }
-    activatePromo.mutate({ code: trimmed });
+    void applyPromoCode(trimmed);
   };
+
+  const promoBusy = activatePromo.isPending || isValidating;
 
   const courseBtnDisabled = Boolean(isProcessing || !widgetReady || !selectedCourseId || hasActiveCourseSubscription);
   const platformBtnDisabled = Boolean(isProcessing || !widgetReady || hasActivePlatformSubscription);
@@ -336,14 +387,20 @@ function PricingContent() {
                 <h3 className="text-[22px] sm:text-[24px] font-bold" style={{ color: TEXT }}>
                   Подписка на курс
                 </h3>
-                <div className="mt-4 flex items-baseline gap-1">
-                  <span className="text-[36px] sm:text-[44px] font-bold leading-none" style={{ color: TEXT }}>
-                    1 990 &#8381;
-                  </span>
-                  <span className="text-[17px]" style={{ color: TEXT, opacity: 0.5 }}>
-                    /мес
-                  </span>
-                </div>
+                {courseDiscountQuery.data ? (
+                  <div className="mt-4">
+                    <DiscountedPrice discount={courseDiscountQuery.data} onDark={false} />
+                  </div>
+                ) : (
+                  <div className="mt-4 flex items-baseline gap-1">
+                    <span className="text-[36px] sm:text-[44px] font-bold leading-none" style={{ color: TEXT }}>
+                      1 990 &#8381;
+                    </span>
+                    <span className="text-[17px]" style={{ color: TEXT, opacity: 0.5 }}>
+                      /мес
+                    </span>
+                  </div>
+                )}
               </div>
 
               {/* Course picker */}
@@ -420,14 +477,20 @@ function PricingContent() {
                 <h3 className="text-[22px] sm:text-[24px] font-bold text-white">
                   Полный доступ
                 </h3>
-                <div className="mt-4 flex items-baseline gap-1">
-                  <span className="text-[36px] sm:text-[44px] font-bold leading-none text-white">
-                    2 990 &#8381;
-                  </span>
-                  <span className="text-[17px] text-white/50">
-                    /мес
-                  </span>
-                </div>
+                {platformDiscountQuery.data ? (
+                  <div className="mt-4">
+                    <DiscountedPrice discount={platformDiscountQuery.data} onDark={true} />
+                  </div>
+                ) : (
+                  <div className="mt-4 flex items-baseline gap-1">
+                    <span className="text-[36px] sm:text-[44px] font-bold leading-none text-white">
+                      2 990 &#8381;
+                    </span>
+                    <span className="text-[17px] text-white/50">
+                      /мес
+                    </span>
+                  </div>
+                )}
               </div>
 
               <ul className="mt-6 flex flex-col gap-3 flex-1">
@@ -469,19 +532,19 @@ function PricingContent() {
                 }}
                 onKeyDown={(e) => { if (e.key === 'Enter') handlePromoApply(); }}
                 placeholder="Введите промокод"
-                disabled={activatePromo.isPending}
+                disabled={promoBusy}
                 className="flex-1 min-w-0 h-[48px] sm:h-[52px] px-5 rounded-full border border-[#121212]/10 text-[14px] sm:text-[15px] font-medium outline-none transition-colors focus:border-[#2C4FF8] disabled:opacity-60"
                 style={{ color: TEXT, backgroundColor: '#fff' }}
               />
               <button
                 onClick={handlePromoApply}
-                disabled={activatePromo.isPending || !promoCode.trim()}
+                disabled={promoBusy || !promoCode.trim()}
                 className="flex-shrink-0 h-[48px] sm:h-[52px] px-6 sm:px-7 rounded-full text-[14px] sm:text-[15px] font-medium text-white transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 style={{ backgroundColor: BLUE }}
                 onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.backgroundColor = BLUE_HOVER; }}
                 onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = BLUE; }}
               >
-                {activatePromo.isPending ? 'Проверка...' : 'Применить'}
+                {promoBusy ? 'Проверка...' : 'Применить'}
               </button>
             </div>
             {promoError && (

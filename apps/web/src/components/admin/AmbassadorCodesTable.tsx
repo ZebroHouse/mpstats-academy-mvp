@@ -147,7 +147,15 @@ export function AmbassadorCodesTable() {
                   <td className="px-4 py-3 text-mp-gray-700 whitespace-nowrap">
                     {row.landingTarget === 'HOME' ? 'Главная' : 'Регистрация'}
                   </td>
-                  <td className="px-4 py-3 text-mp-gray-700">{row.refereeTrialDays}</td>
+                  <td className="px-4 py-3 text-mp-gray-700">
+                    {row.refereeTrialDays}
+                    {row.discountType != null && (
+                      <span className="block text-xs text-green-700 whitespace-nowrap">
+                        + скидка −{row.discountValue}
+                        {row.discountType === 'PERCENT' ? '%' : ' ₽'}
+                      </span>
+                    )}
+                  </td>
                   <td className="px-4 py-3 text-mp-gray-700">
                     {row.currentUses}/{row.maxUses ?? '∞'}
                   </td>
