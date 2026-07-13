@@ -8,7 +8,7 @@ import { MAP_EMBEDDINGS } from './platform-map.embeddings';
 import type { MapEntry } from './types';
 
 const TOP_K = 4;
-const THRESHOLD = 0.35; // калибруется в Phase D
+const THRESHOLD = 0.4; // Task D4: откалибровано на eval-наборе (потолок промахов 0.26, пол хитов 0.51 → середина разрыва даёт макс. маржу)
 
 const MISS: AssistantBranchResult = {
   answer: 'Точно подсказать по этому не берусь, чтобы не запутать. Если что — напиши в поддержку, там помогут.',
