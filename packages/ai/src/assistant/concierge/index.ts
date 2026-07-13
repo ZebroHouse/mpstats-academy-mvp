@@ -1,16 +1,4 @@
-import type { AssistantBranchResult, AssistantHistoryMessage } from '../types';
-
-export interface ConciergePipelineArgs {
-  query: string;
-  history: AssistantHistoryMessage[];
-}
-
-// Стаб — реальная реализация в Phase B (concierge-pipeline.ts).
-export async function runConciergePipeline(_args: ConciergePipelineArgs): Promise<AssistantBranchResult> {
-  return {
-    answer: 'Точно подсказать по этому не берусь, чтобы не запутать. Если что — напиши в поддержку, там помогут.',
-    lessons: [],
-    jobs: [],
-    navLinks: [{ label: 'Написать в поддержку', href: '/support' }],
-  };
-}
+export { runConciergePipeline } from './concierge-pipeline';
+export type { ConciergePipelineArgs } from './concierge-pipeline';
+export type { MapEntry, StaticMapEntry, DynamicMapEntry } from './types';
+export { PLATFORM_MAP } from './platform-map';

@@ -65,3 +65,7 @@ export {
   type AssistantHistoryMessage,
   type AssistantPipelineArgs,
 } from './assistant';
+
+// Concierge (platform knowledge map)
+export { PLATFORM_MAP } from './assistant/concierge';
+export type { MapEntry, StaticMapEntry, DynamicMapEntry } from './assistant/concierge';
