@@ -28,7 +28,7 @@ describe('synthesizeAssistantResponse', () => {
   it('обогащает whitelisted lessonIds/jobIds метаданными кандидатов', async () => {
     mockReply({ answer: 'ДРР — доля рекламных расходов ...', lessonIds: ['L1'], jobIds: ['J1'] });
     const r = await synthesizeAssistantResponse({ query: 'ДРР?', history: [], lessonCandidates: lessonCands, jobCandidates: jobCands });
-    expect(r.inDomain).toBe(true);
+    expect(r.navLinks).toEqual([]);
     expect(r.answer).toContain('ДРР');
     expect(r.lessons[0].title).toBe('ДРР урок');
     expect(r.jobs[0].slug).toBe('nastroit-reklamu');
@@ -44,7 +44,7 @@ describe('synthesizeAssistantResponse', () => {
   it('при невалидном JSON возвращает fallback-ответ без карточек', async () => {
     createMock.mockResolvedValueOnce({ choices: [{ message: { content: 'сломано' } }] });
     const r = await synthesizeAssistantResponse({ query: 'q', history: [], lessonCandidates: lessonCands, jobCandidates: jobCands });
-    expect(r.inDomain).toBe(true);
+    expect(r.navLinks).toEqual([]);
     expect(r.lessons).toEqual([]);
     expect(r.answer.length).toBeGreaterThan(0);
   });

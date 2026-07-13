@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { getOpenRouterClient, MODELS } from '../openrouter';
 import { fixBrandNames } from '../generation';
-import type { AssistantHistoryMessage, AssistantTurnResult, LessonCandidate } from './types';
+import type { AssistantHistoryMessage, AssistantBranchResult, LessonCandidate } from './types';
 import type { JobCandidate } from '../intent/types';
 
 export interface SynthesizeArgs {
@@ -46,7 +46,7 @@ function buildUserMessage(args: SynthesizeArgs): string {
   return `ИСТОРИЯ ДИАЛОГА:\n${hist || '(пусто)'}\n\nВОПРОС: ${args.query}\n\nКАНДИДАТЫ-УРОКИ:\n${lessons || '(нет)'}\n\nКАНДИДАТЫ-ЗАДАЧИ:\n${jobs || '(нет)'}`;
 }
 
-export async function synthesizeAssistantResponse(args: SynthesizeArgs): Promise<AssistantTurnResult> {
+export async function synthesizeAssistantResponse(args: SynthesizeArgs): Promise<AssistantBranchResult> {
   let parsed: z.infer<typeof llmSchema> | null = null;
   try {
     const client = getOpenRouterClient();
@@ -68,7 +68,7 @@ export async function synthesizeAssistantResponse(args: SynthesizeArgs): Promise
   }
 
   if (!parsed) {
-    return { inDomain: true, answer: FALLBACK_ANSWER, lessons: [], jobs: [] };
+    return { answer: FALLBACK_ANSWER, lessons: [], jobs: [], navLinks: [] };
   }
 
   const lessonById = new Map(args.lessonCandidates.map((l) => [l.lessonId, l]));
@@ -88,5 +88,5 @@ export async function synthesizeAssistantResponse(args: SynthesizeArgs): Promise
       return { jobId: id, title: m.title, slug: m.slug, lessonCount: m.lessonCount, reason: '' };
     });
 
-  return { inDomain: true, answer: fixBrandNames(parsed.answer), lessons, jobs };
+  return { answer: fixBrandNames(parsed.answer), lessons, jobs, navLinks: [] };
 }

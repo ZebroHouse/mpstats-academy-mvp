@@ -12,10 +12,10 @@ import { runAssistantPipeline } from '../assistant/pipeline';
 describe('runAssistantPipeline', () => {
   beforeEach(() => { gateMock.mockReset(); retrieveMock.mockReset(); synthMock.mockReset(); });
 
-  it('офф-топик: возвращает inDomain=false без ретрива и синтеза', async () => {
-    gateMock.mockResolvedValue({ inDomain: false });
+  it('офф-топик: возвращает off_domain без ретрива и синтеза', async () => {
+    gateMock.mockResolvedValue({ category: 'off_domain' });
     const r = await runAssistantPipeline({ query: 'напиши стих', history: [] });
-    expect(r.inDomain).toBe(false);
+    expect(r.category).toBe('off_domain');
     expect(r.lessons).toEqual([]);
     expect(retrieveMock).not.toHaveBeenCalled();
     expect(synthMock).not.toHaveBeenCalled();
@@ -23,9 +23,9 @@ describe('runAssistantPipeline', () => {
   });
 
   it('in-domain: гоняет ретрив + синтез', async () => {
-    gateMock.mockResolvedValue({ inDomain: true });
+    gateMock.mockResolvedValue({ category: 'material' });
     retrieveMock.mockResolvedValue({ lessons: [{ lessonId: 'L1' }], jobs: [] });
-    synthMock.mockResolvedValue({ inDomain: true, answer: 'ответ', lessons: [], jobs: [] });
+    synthMock.mockResolvedValue({ answer: 'ответ', lessons: [], jobs: [], navLinks: [] });
     const r = await runAssistantPipeline({ query: 'что такое ДРР', history: [] });
     expect(retrieveMock).toHaveBeenCalledWith('что такое ДРР');
     expect(synthMock).toHaveBeenCalled();
