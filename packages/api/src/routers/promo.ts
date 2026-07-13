@@ -23,6 +23,8 @@ export const promoRouter = router({
           planType: true,
           courseId: true,
           durationDays: true,
+          discountType: true,
+          discountValue: true,
           isActive: true,
           expiresAt: true,
           maxUses: true,
@@ -41,11 +43,15 @@ export const promoRouter = router({
         return { valid: false as const, error: 'Промо-код уже использован' };
       }
 
+      const isDiscount = promo.discountType != null && promo.discountValue != null;
       return {
         valid: true as const,
+        kind: isDiscount ? ('discount' as const) : ('duration' as const),
         planType: promo.planType,
         courseTitle: promo.course?.title || null,
         durationDays: promo.durationDays,
+        discountType: promo.discountType,
+        discountValue: promo.discountValue,
       };
     }),
 
@@ -72,6 +78,14 @@ export const promoRouter = router({
       });
       if (!promo || !promo.isActive) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Промо-код не найден' });
+      }
+
+      // Discount codes are not "activated" — they are applied at payment time.
+      if (promo.discountType != null) {
+        throw new TRPCError({
+          code: 'BAD_REQUEST',
+          message: 'Это скидочный код — примените его при оплате',
+        });
       }
 
       // Step 2: Check expiration (per D-07)
