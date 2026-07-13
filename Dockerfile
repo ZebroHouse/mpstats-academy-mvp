@@ -51,11 +51,18 @@ ARG SUPABASE_SECRET_KEY
 ARG OPENROUTER_API_KEY
 ARG DATABASE_URL
 ARG DIRECT_URL
+# Referral-click beacon secret. MUST be present at build time: middleware runs in
+# the Next Edge Runtime, which reads env from the build-time bundle — a runtime-only
+# (env_file) value is undefined there, so the beacon never sends x-ref-click-secret
+# and /api/internal/ref-click fail-closes. Staging intentionally omits this build arg
+# → its middleware secret stays empty → no clicks written to the shared prod Supabase.
+ARG REF_CLICK_SECRET
 
 ENV SUPABASE_SECRET_KEY=$SUPABASE_SECRET_KEY
 ENV OPENROUTER_API_KEY=$OPENROUTER_API_KEY
 ENV DATABASE_URL=$DATABASE_URL
 ENV DIRECT_URL=$DIRECT_URL
+ENV REF_CLICK_SECRET=$REF_CLICK_SECRET
 
 RUN mkdir -p /app/apps/web/public
 RUN pnpm turbo build --filter=@mpstats/web
