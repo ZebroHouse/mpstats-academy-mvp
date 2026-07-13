@@ -10,6 +10,7 @@ import { V8Footer } from '@/components/v8/V8Footer';
 import { Reveal } from '@/components/v8/Reveal';
 import { StickyCTA } from '@/components/v8/StickyCTA';
 import { trpc } from '@/lib/trpc/client';
+import { DiscountedPrice } from '@/components/pricing/DiscountedPrice';
 import { openPaymentWidget } from '@/lib/cloudpayments/widget';
 import { reachGoal } from '@/lib/analytics/metrika';
 import { METRIKA_GOALS } from '@/lib/analytics/constants';
@@ -98,36 +99,6 @@ function DashIcon() {
     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#121212" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 opacity-20">
       <line x1="5" y1="12" x2="19" y2="12" />
     </svg>
-  );
-}
-
-/* ── Discount Banner ──────────────────────────────────── */
-
-function DiscountBanner({
-  type,
-  value,
-  label,
-  discountedPrice,
-  originalPrice,
-  onDark,
-}: {
-  type: string;
-  value: number;
-  label: string;
-  discountedPrice: number;
-  originalPrice: number;
-  onDark: boolean;
-}) {
-  const amount = type === 'PERCENT' ? `${value}%` : `${value} ₽`;
-  return (
-    <div
-      className="mt-4 rounded-2xl px-4 py-2.5 text-[13px] sm:text-[14px] leading-snug font-medium"
-      style={onDark
-        ? { backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff' }
-        : { backgroundColor: 'rgba(44,79,248,0.08)', color: BLUE }}
-    >
-      Скидка {amount} по коду {label} — {discountedPrice.toLocaleString('ru-RU')} &#8381; вместо {originalPrice.toLocaleString('ru-RU')} &#8381;
-    </div>
   );
 }
 
@@ -416,16 +387,19 @@ function PricingContent() {
                 <h3 className="text-[22px] sm:text-[24px] font-bold" style={{ color: TEXT }}>
                   Подписка на курс
                 </h3>
-                <div className="mt-4 flex items-baseline gap-1">
-                  <span className="text-[36px] sm:text-[44px] font-bold leading-none" style={{ color: TEXT }}>
-                    1 990 &#8381;
-                  </span>
-                  <span className="text-[17px]" style={{ color: TEXT, opacity: 0.5 }}>
-                    /мес
-                  </span>
-                </div>
-                {courseDiscountQuery.data && (
-                  <DiscountBanner {...courseDiscountQuery.data} onDark={false} />
+                {courseDiscountQuery.data ? (
+                  <div className="mt-4">
+                    <DiscountedPrice discount={courseDiscountQuery.data} onDark={false} />
+                  </div>
+                ) : (
+                  <div className="mt-4 flex items-baseline gap-1">
+                    <span className="text-[36px] sm:text-[44px] font-bold leading-none" style={{ color: TEXT }}>
+                      1 990 &#8381;
+                    </span>
+                    <span className="text-[17px]" style={{ color: TEXT, opacity: 0.5 }}>
+                      /мес
+                    </span>
+                  </div>
                 )}
               </div>
 
@@ -503,16 +477,19 @@ function PricingContent() {
                 <h3 className="text-[22px] sm:text-[24px] font-bold text-white">
                   Полный доступ
                 </h3>
-                <div className="mt-4 flex items-baseline gap-1">
-                  <span className="text-[36px] sm:text-[44px] font-bold leading-none text-white">
-                    2 990 &#8381;
-                  </span>
-                  <span className="text-[17px] text-white/50">
-                    /мес
-                  </span>
-                </div>
-                {platformDiscountQuery.data && (
-                  <DiscountBanner {...platformDiscountQuery.data} onDark={true} />
+                {platformDiscountQuery.data ? (
+                  <div className="mt-4">
+                    <DiscountedPrice discount={platformDiscountQuery.data} onDark={true} />
+                  </div>
+                ) : (
+                  <div className="mt-4 flex items-baseline gap-1">
+                    <span className="text-[36px] sm:text-[44px] font-bold leading-none text-white">
+                      2 990 &#8381;
+                    </span>
+                    <span className="text-[17px] text-white/50">
+                      /мес
+                    </span>
+                  </div>
                 )}
               </div>
 

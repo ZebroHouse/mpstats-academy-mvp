@@ -13,6 +13,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Script from 'next/script';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
+import { DiscountedPrice } from '@/components/pricing/DiscountedPrice';
 import { trpc } from '@/lib/trpc/client';
 import { openPaymentWidget } from '@/lib/cloudpayments/widget';
 import { reachGoal } from '@/lib/analytics/metrika';
@@ -58,6 +59,8 @@ function BillingContent() {
   const [selectedCourseId, setSelectedCourseId] = useState('');
   const [promoCode, setPromoCode] = useState(searchParams.get('promo') || '');
   const [promoError, setPromoError] = useState('');
+  const [discountCode, setDiscountCode] = useState<string | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
 
   const { data: plans } = trpc.billing.getPlans.useQuery();
   const { data: courses } = trpc.billing.getCourses.useQuery();
@@ -65,6 +68,25 @@ function BillingContent() {
     retry: false,
     refetchOnWindowFocus: false,
   });
+  const { data: profile } = trpc.profile.get.useQuery(undefined, {
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+  const isAuthenticated = !!profile;
+
+  const utils = trpc.useUtils();
+
+  // Discount preview — covers both an entered discount code and a pending
+  // ambassador discount (server decides precedence). Runs with code undefined
+  // so a referred user sees their ambassador discount without typing anything.
+  const courseDiscountQuery = trpc.billing.getApplicableDiscount.useQuery(
+    { planType: 'COURSE', code: discountCode ?? undefined },
+    { enabled: isAuthenticated },
+  );
+  const platformDiscountQuery = trpc.billing.getApplicableDiscount.useQuery(
+    { planType: 'PLATFORM', code: discountCode ?? undefined },
+    { enabled: isAuthenticated },
+  );
 
   const initiatePayment = trpc.billing.initiatePayment.useMutation();
   const activatePromo = trpc.promo.activate.useMutation({
@@ -76,6 +98,31 @@ function BillingContent() {
     },
     onError: (err) => setPromoError(err.message),
   });
+
+  // Validate the code and route by kind: a discount code is held for payment
+  // (NOT activated), a duration code goes through the existing activation flow.
+  const applyPromoCode = async (code: string) => {
+    setIsValidating(true);
+    try {
+      const res = await utils.promo.validate.fetch({ code });
+      if (!res.valid) {
+        setDiscountCode(null);
+        setPromoError(res.error);
+        return;
+      }
+      if (res.kind === 'discount') {
+        setPromoError('');
+        setDiscountCode(code);
+        toast.success('Промокод применён');
+        return;
+      }
+      activatePromo.mutate({ code });
+    } catch (err) {
+      setPromoError(err instanceof Error ? err.message : 'Не удалось проверить промо-код');
+    } finally {
+      setIsValidating(false);
+    }
+  };
 
   const coursePlan = plans?.find((p) => p.type === 'COURSE');
   const platformPlan = plans?.find((p) => p.type === 'PLATFORM');
@@ -92,15 +139,19 @@ function BillingContent() {
     reachGoal(METRIKA_GOALS.PRICING_VIEW);
   }, []);
 
-  // Auto-activate promo arriving via ?promo= (e.g. (main) salvage redirect).
+  // Auto-apply promo arriving via ?promo= (e.g. (main) salvage redirect).
+  // Route through applyPromoCode so a discount code lands in discountCode
+  // (held for payment) instead of being activated as a duration code.
   const promoFromUrl = searchParams.get('promo');
   const [autoActivated, setAutoActivated] = useState(false);
   useEffect(() => {
-    if (!autoActivated && promoFromUrl && !activatePromo.isPending) {
+    if (!autoActivated && isAuthenticated && promoFromUrl && !activatePromo.isPending && !isValidating) {
       setAutoActivated(true);
-      activatePromo.mutate({ code: promoFromUrl.trim().toUpperCase() });
+      void applyPromoCode(promoFromUrl.trim().toUpperCase());
     }
-  }, [autoActivated, promoFromUrl, activatePromo]);
+    // applyPromoCode intentionally out of deps — autoActivated guards single run.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoActivated, isAuthenticated, promoFromUrl, activatePromo, isValidating]);
 
   const hasActiveCourseSubscription =
     subscription &&
@@ -123,6 +174,7 @@ function BillingContent() {
       const result = await initiatePayment.mutateAsync({
         planType,
         courseId: planType === 'COURSE' ? selectedCourseId : undefined,
+        promoCode: discountCode ?? undefined,
       });
       const success = await openPaymentWidget({
         publicId: process.env.NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID!,
@@ -162,8 +214,10 @@ function BillingContent() {
       return;
     }
     setPromoError('');
-    activatePromo.mutate({ code: trimmed });
+    void applyPromoCode(trimmed);
   };
+
+  const promoBusy = activatePromo.isPending || isValidating;
 
   const courseBtnDisabled = Boolean(isProcessing || !widgetReady || !selectedCourseId || hasActiveCourseSubscription);
   const platformBtnDisabled = Boolean(isProcessing || !widgetReady || hasActivePlatformSubscription);
@@ -189,10 +243,16 @@ function BillingContent() {
         {/* COURSE */}
         <div className="rounded-2xl border border-mp-gray-200 bg-white shadow-mp-card p-6 sm:p-8 flex flex-col">
           <h2 className="text-heading-lg font-bold text-mp-gray-900">Подписка на курс</h2>
-          <div className="mt-3 flex items-baseline gap-1">
-            <span className="text-[36px] font-bold leading-none text-mp-gray-900">{formatPrice(coursePlan?.price)}</span>
-            <span className="text-body-sm text-mp-gray-400">/мес</span>
-          </div>
+          {courseDiscountQuery.data ? (
+            <div className="mt-3">
+              <DiscountedPrice discount={courseDiscountQuery.data} onDark={false} />
+            </div>
+          ) : (
+            <div className="mt-3 flex items-baseline gap-1">
+              <span className="text-[36px] font-bold leading-none text-mp-gray-900">{formatPrice(coursePlan?.price)}</span>
+              <span className="text-body-sm text-mp-gray-400">/мес</span>
+            </div>
+          )}
 
           <div className="mt-5">
             <p className="text-caption font-medium uppercase tracking-wider text-mp-gray-400 mb-2">Выберите курс</p>
@@ -242,10 +302,16 @@ function BillingContent() {
             Рекомендуем
           </span>
           <h2 className="text-heading-lg font-bold text-white">Полный доступ</h2>
-          <div className="mt-3 flex items-baseline gap-1">
-            <span className="text-[36px] font-bold leading-none text-white">{formatPrice(platformPlan?.price)}</span>
-            <span className="text-body-sm text-white/50">/мес</span>
-          </div>
+          {platformDiscountQuery.data ? (
+            <div className="mt-3">
+              <DiscountedPrice discount={platformDiscountQuery.data} onDark={true} />
+            </div>
+          ) : (
+            <div className="mt-3 flex items-baseline gap-1">
+              <span className="text-[36px] font-bold leading-none text-white">{formatPrice(platformPlan?.price)}</span>
+              <span className="text-body-sm text-white/50">/мес</span>
+            </div>
+          )}
 
           <ul className="mt-6 flex flex-col gap-3 flex-1">
             {PLATFORM_FEATURES.map((f) => (
@@ -280,15 +346,15 @@ function BillingContent() {
               if (e.key === 'Enter') handlePromoApply();
             }}
             placeholder="Введите промокод"
-            disabled={activatePromo.isPending}
+            disabled={promoBusy}
             error={Boolean(promoError)}
           />
           <button
             onClick={handlePromoApply}
-            disabled={activatePromo.isPending || !promoCode.trim()}
+            disabled={promoBusy || !promoCode.trim()}
             className="flex-shrink-0 h-11 px-6 rounded-full text-body-sm font-medium text-white bg-mp-blue-500 hover:bg-mp-blue-600 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {activatePromo.isPending ? 'Проверка…' : 'Применить'}
+            {promoBusy ? 'Проверка…' : 'Применить'}
           </button>
         </div>
         {promoError && <p className="mt-2 text-center text-body-sm text-red-600">{promoError}</p>}
