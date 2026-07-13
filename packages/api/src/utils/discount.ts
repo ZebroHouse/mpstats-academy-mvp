@@ -30,10 +30,14 @@ export function computeDiscountedAmount(
   discount: DiscountInput | null,
 ): number {
   if (!discount) return basePrice;
+  // Defensive: a negative discount value must never increase the price.
+  // Upstream code creation validates positivity (z.positive()); this is
+  // belt-and-suspenders for the money path — clamp, never throw.
+  const value = Math.max(0, discount.value);
   const reduced =
     discount.type === 'PERCENT'
-      ? basePrice - Math.round((basePrice * discount.value) / 100)
-      : basePrice - discount.value;
+      ? basePrice - Math.round((basePrice * value) / 100)
+      : basePrice - value;
   return Math.max(MIN_CHARGE_RUB, reduced);
 }
 

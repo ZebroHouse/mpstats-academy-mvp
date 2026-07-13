@@ -30,6 +30,14 @@ describe('computeDiscountedAmount', () => {
   it('clamps to MIN_CHARGE_RUB when percent >= 100', () => {
     expect(computeDiscountedAmount(2990, { type: 'PERCENT', value: 100 })).toBe(MIN_CHARGE_RUB);
   });
+
+  it('treats a negative fixed value as no discount (never increases price)', () => {
+    expect(computeDiscountedAmount(2990, { type: 'FIXED', value: -500 })).toBe(2990);
+  });
+
+  it('treats a negative percent value as no discount', () => {
+    expect(computeDiscountedAmount(2990, { type: 'PERCENT', value: -20 })).toBe(2990);
+  });
 });
 
 describe('pickDiscount', () => {
