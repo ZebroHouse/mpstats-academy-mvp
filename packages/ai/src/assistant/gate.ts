@@ -1,24 +1,24 @@
 import { getOpenRouterClient, MODELS } from '../openrouter';
+import type { ReplyCategory } from './types';
 
 export interface DomainVerdict {
-  inDomain: boolean;
+  category: ReplyCategory;
 }
 
-const SYSTEM = `Ты — классификатор запросов для обучающей платформы селлеров маркетплейсов (Wildberries, Ozon).
-Верни СТРОГО JSON: {"inDomain": true} или {"inDomain": false}.
+const VALID: ReplyCategory[] = ['material', 'platform_help', 'complaint', 'off_domain'];
 
-inDomain=true, если вопрос про ведение или рост бизнеса продавца на маркетплейсах, включая смежные предпринимательские темы:
-- механика WB/Ozon: карточки, реклама, аналитика, выкупы, рейтинг, поставки, логистика;
-- финансы бизнеса: PnL, юнит-экономика, ДРР, маржа, кэшфлоу, налоги ИП/самозанятого;
-- продвижение, маркетинг, внешний трафик, SEO;
-- операционка, закупки, найм под этот бизнес.
+const SYSTEM = `Ты — классификатор реплик пользователя в AI-ассистенте обучающей платформы для селлеров маркетплейсов (Wildberries, Ozon).
+Верни СТРОГО JSON: {"category":"<одна из: material | platform_help | complaint | off_domain>"}.
 
-inDomain=false для всего остального: код, школьные/математические задачи, медицина, политика, творчество, ЛИЧНЫЕ финансы (ипотека, вклады), написание текстов не про бизнес продавца, любые общие вопросы.
+Категории:
+- "platform_help" — вопрос про ПОЛЬЗОВАНИЕ этой платформой: где что нажать, как отменить подписку, где избранное/план/диагностика, как работает реф-программа, что умеет ассистент, сколько уроков в курсе, как перезапустить онбординг. Ориентирование по интерфейсу и функциям платформы.
+- "complaint" — жалоба/негатив/«не работает»/«ничего не открывается»/раздражение в адрес платформы или обучения.
+- "material" — содержательный вопрос про бизнес продавца на маркетплейсах: механика WB/Ozon, карточки, реклама, аналитика, финансы бизнеса (юнит-экономика, ДРР, налоги ИП), продвижение, операционка. Всё «про дело», не про интерфейс платформы.
+- "off_domain" — всё остальное: код, школьные/мед/полит вопросы, личные финансы, творчество не про бизнес продавца.
 
-При сомнении в сторону бизнеса продавца — ставь true. Личное/общее — false.`;
+Правила приоритета: если это жалоба на платформу → "complaint". Если про интерфейс/функции платформы → "platform_help". Если по сути про бизнес продавца → "material". Иначе → "off_domain". При сомнении между material и off_domain выбирай material.`;
 
-// Fail-open: любая ошибка/невалидный ответ → пропускаем (true).
-// Ошибка «отказал реальному селлеру» дороже ошибки «ответил на пограничное».
+// Fail-open: любая ошибка/невалидность → material (безопаснее ответить, чем отказать селлеру).
 export async function classifyDomain(query: string): Promise<DomainVerdict> {
   try {
     const client = getOpenRouterClient();
@@ -32,9 +32,13 @@ export async function classifyDomain(query: string): Promise<DomainVerdict> {
       temperature: 0,
     });
     const raw = resp.choices[0]?.message?.content ?? '';
-    const parsed = JSON.parse(raw) as { inDomain?: unknown };
-    return { inDomain: parsed.inDomain === false ? false : true };
+    const parsed = JSON.parse(raw) as { category?: unknown };
+    const cat = parsed.category;
+    if (typeof cat === 'string' && VALID.includes(cat as ReplyCategory)) {
+      return { category: cat as ReplyCategory };
+    }
+    return { category: 'material' };
   } catch {
-    return { inDomain: true };
+    return { category: 'material' };
   }
 }
