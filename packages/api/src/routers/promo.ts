@@ -218,19 +218,32 @@ export const promoRouter = router({
    */
   createPromoCode: adminProcedure
     .input(
-      z.object({
-        code: z
-          .string()
-          .min(3)
-          .max(50)
-          .transform((s) => s.trim().toUpperCase())
-          .optional(),
-        planType: z.enum(['COURSE', 'PLATFORM']),
-        courseId: z.string().optional(),
-        durationDays: z.number().int().min(1).max(365),
-        maxUses: z.number().int().min(1).max(100000).default(1),
-        expiresAt: z.string().datetime().optional(),
-      }),
+      z
+        .object({
+          code: z
+            .string()
+            .min(3)
+            .max(50)
+            .transform((s) => s.trim().toUpperCase())
+            .optional(),
+          planType: z.enum(['COURSE', 'PLATFORM']),
+          courseId: z.string().optional(),
+          durationDays: z.number().int().min(1).max(365).optional(),
+          discountType: z.enum(['PERCENT', 'FIXED']).optional(),
+          discountValue: z.number().int().positive().optional(),
+          maxUses: z.number().int().min(1).max(100000).default(1),
+          expiresAt: z.string().datetime().optional(),
+        })
+        .refine(
+          (d) =>
+            (d.durationDays != null) !==
+            (d.discountType != null && d.discountValue != null),
+          { message: 'Укажите либо длительность (дни), либо скидку (тип + значение) — но не оба' },
+        )
+        .refine(
+          (d) => d.discountType !== 'PERCENT' || (d.discountValue ?? 0) <= 100,
+          { message: 'Процент скидки не может превышать 100' },
+        ),
     )
     .mutation(async ({ ctx, input }) => {
       // Validate courseId for COURSE type
@@ -260,7 +273,9 @@ export const promoRouter = router({
           code,
           planType: input.planType,
           courseId: input.courseId || null,
-          durationDays: input.durationDays,
+          durationDays: input.durationDays ?? 0,
+          discountType: input.discountType ?? null,
+          discountValue: input.discountValue ?? null,
           maxUses: input.maxUses,
           expiresAt: input.expiresAt ? new Date(input.expiresAt) : null,
           isActive: true,
