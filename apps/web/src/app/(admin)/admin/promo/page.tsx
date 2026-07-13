@@ -480,7 +480,7 @@ function PromoRow({
   promo: {
     id: string;
     code: string;
-    planType: string;
+    planType: string | null;
     durationDays: number;
     discountType: 'PERCENT' | 'FIXED' | null;
     discountValue: number | null;
@@ -518,7 +518,11 @@ function PromoRow({
           </div>
         </td>
         <td className="px-4 py-3 text-body-sm text-mp-gray-600">
-          {promo.planType === 'PLATFORM' ? 'Платформа' : promo.course?.title || 'Курс'}
+          {promo.planType == null
+            ? 'Все тарифы'
+            : promo.planType === 'PLATFORM'
+              ? 'Платформа'
+              : promo.course?.title || 'Курс'}
         </td>
         <td className="px-4 py-3 text-body-sm text-mp-gray-600">
           {promo.discountType === 'PERCENT'
