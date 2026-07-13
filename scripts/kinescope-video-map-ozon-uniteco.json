@@ -1,0 +1,27 @@
+{
+  "generated": "2026-07-13 (09_ozon uniteco add)",
+  "matched": [
+    {
+      "lessonId": "09_ozon_prodvizhenie_m01_economics_006",
+      "courseId": "09_ozon_prodvizhenie",
+      "title": "Юнит-экономика для Ozon",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m01_economics/006_yunit_ekonomika_dlya_ozon.mp4",
+      "fileExists": true,
+      "fileSizeMB": 201.5,
+      "extension": ".mp4"
+    },
+    {
+      "lessonId": "09_ozon_prodvizhenie_m01_economics_007",
+      "courseId": "09_ozon_prodvizhenie",
+      "title": "Расчёт юнит-экономики Ozon в таблице",
+      "filePath": "E:/Academy Courses/09_ozon_prodvizhenie/m01_economics/007_raschet_yunit_ekonomiki_ozon_v_tablice.mp4",
+      "fileExists": true,
+      "fileSizeMB": 365.2,
+      "extension": ".mp4"
+    }
+  ],
+  "stats": {
+    "total": 2,
+    "matched": 2
+  }
+}

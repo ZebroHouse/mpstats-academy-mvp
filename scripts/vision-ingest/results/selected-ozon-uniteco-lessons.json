@@ -1,0 +1,26 @@
+[
+  {
+    "localPath": "E:/Academy Courses/09_ozon_prodvizhenie/m01_economics/006_yunit_ekonomika_dlya_ozon.mp4",
+    "filename": "006_yunit_ekonomika_dlya_ozon.mp4",
+    "durationSeconds": 923,
+    "durationFormatted": "15:23",
+    "bucketSize": "medium",
+    "module": "m01_economics",
+    "category": "ui_demo",
+    "lessonId": "09_ozon_prodvizhenie_m01_economics_006",
+    "lessonTitle": "Юнит-экономика для Ozon",
+    "platformUrl": "https://platform.mpstats.academy/learn/09_ozon_prodvizhenie_m01_economics_006"
+  },
+  {
+    "localPath": "E:/Academy Courses/09_ozon_prodvizhenie/m01_economics/007_raschet_yunit_ekonomiki_ozon_v_tablice.mp4",
+    "filename": "007_raschet_yunit_ekonomiki_ozon_v_tablice.mp4",
+    "durationSeconds": 1097,
+    "durationFormatted": "18:17",
+    "bucketSize": "medium",
+    "module": "m01_economics",
+    "category": "ui_demo",
+    "lessonId": "09_ozon_prodvizhenie_m01_economics_007",
+    "lessonTitle": "Расчёт юнит-экономики Ozon в таблице",
+    "platformUrl": "https://platform.mpstats.academy/learn/09_ozon_prodvizhenie_m01_economics_007"
+  }
+]
