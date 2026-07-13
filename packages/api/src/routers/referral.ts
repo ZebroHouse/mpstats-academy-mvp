@@ -8,7 +8,7 @@ import {
   activatePackage,
   PackageActivationError,
 } from '../services/referral/activation';
-import { generateAmbassadorCode } from '../services/referral/code-generator';
+import { generateAmbassadorCode, ensureUserReferralCode } from '../services/referral/code-generator';
 import { resolveReferralCode } from '../services/referral/code-resolver';
 
 const AMB_CODE_SHAPE = /^[A-Z][A-Z0-9_]{0,15}-[A-Z0-9]{2,12}$/;
@@ -187,12 +187,12 @@ export const referralRouter = router({
   getMyState: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.user.id;
 
-    const [profile, totalReferred, totalConverted, pendingPackages, usedPackages] =
+    const [referralCode, totalReferred, totalConverted, pendingPackages, usedPackages] =
       await Promise.all([
-        prisma.userProfile.findUnique({
-          where: { id: userId },
-          select: { referralCode: true },
-        }),
+        // Lazily assign the personal code on first read so it is never null for
+        // an authenticated user (self-heals the 387 post-rollout gap + every
+        // future registration path — email DOI, Yandex, Tochka, partner entry).
+        ensureUserReferralCode(userId),
         prisma.referral.count({ where: { referrerUserId: userId } }),
         prisma.referral.count({
           where: { referrerUserId: userId, status: 'CONVERTED' },
@@ -211,7 +211,7 @@ export const referralRouter = router({
       ]);
 
     return {
-      referralCode: profile?.referralCode ?? null,
+      referralCode,
       totalReferred,
       totalConverted,
       pendingPackages,

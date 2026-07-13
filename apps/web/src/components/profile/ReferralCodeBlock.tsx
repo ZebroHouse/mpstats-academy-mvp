@@ -9,7 +9,7 @@ export function ReferralCodeBlock({ code }: { code: string | null }) {
   if (!code) {
     return (
       <div className="border border-mp-gray-200 rounded-lg p-4 bg-mp-gray-50 text-sm text-mp-gray-600">
-        Реф-код будет доступен после подтверждения email.
+        Генерируем твою реферальную ссылку — обнови страницу через минуту.
       </div>
     );
   }
