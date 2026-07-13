@@ -1,9 +1,23 @@
+// Категория реплики (хребет): определяется гейтом, роутит пайплайн.
+export type ReplyCategory = 'material' | 'platform_help' | 'complaint' | 'off_domain';
+
+// Навигационная deep-link карточка концьержа (propose→click).
+export interface AssistantNavLink {
+  label: string;
+  href: string;
+}
+
+// Результат одной ветки пайплайна (без категории — её проставляет оркестратор).
+export interface AssistantBranchResult {
+  answer: string;
+  lessons: AssistantLessonRef[];
+  jobs: AssistantJobRef[];
+  navLinks: AssistantNavLink[];
+}
+
 // Ответ ассистента на один ход диалога.
-export interface AssistantTurnResult {
-  inDomain: boolean;              // false = офф-топик, карточек нет
-  answer: string;                 // markdown-ответ юзеру
-  lessons: AssistantLessonRef[];  // подмешанные карточки уроков
-  jobs: AssistantJobRef[];        // подмешанные карточки задач
+export interface AssistantTurnResult extends AssistantBranchResult {
+  category: ReplyCategory; // off_domain ⟺ !inDomain (inDomain выводим при персисте)
 }
 
 export interface AssistantLessonRef {

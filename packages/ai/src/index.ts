@@ -57,8 +57,11 @@ export type { ResolveArgs } from './intent/resolve';
 export {
   runAssistantPipeline,
   type AssistantTurnResult,
+  type AssistantBranchResult,
   type AssistantLessonRef,
   type AssistantJobRef,
+  type AssistantNavLink,
+  type ReplyCategory,
   type AssistantHistoryMessage,
   type AssistantPipelineArgs,
 } from './assistant';
