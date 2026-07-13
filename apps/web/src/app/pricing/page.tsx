@@ -101,6 +101,36 @@ function DashIcon() {
   );
 }
 
+/* ── Discount Banner ──────────────────────────────────── */
+
+function DiscountBanner({
+  type,
+  value,
+  label,
+  discountedPrice,
+  originalPrice,
+  onDark,
+}: {
+  type: string;
+  value: number;
+  label: string;
+  discountedPrice: number;
+  originalPrice: number;
+  onDark: boolean;
+}) {
+  const amount = type === 'PERCENT' ? `${value}%` : `${value} ₽`;
+  return (
+    <div
+      className="mt-4 rounded-2xl px-4 py-2.5 text-[13px] sm:text-[14px] leading-snug font-medium"
+      style={onDark
+        ? { backgroundColor: 'rgba(255,255,255,0.15)', color: '#fff' }
+        : { backgroundColor: 'rgba(44,79,248,0.08)', color: BLUE }}
+    >
+      Скидка {amount} по коду {label} — {discountedPrice.toLocaleString('ru-RU')} &#8381; вместо {originalPrice.toLocaleString('ru-RU')} &#8381;
+    </div>
+  );
+}
+
 /* ── FAQ Item ──────────────────────────────────────────── */
 
 function FaqItem({ q, a }: { q: string; a: string }) {
@@ -149,6 +179,8 @@ function PricingContent() {
 
   const [promoCode, setPromoCode] = useState(searchParams.get('promo') || '');
   const [promoError, setPromoError] = useState('');
+  const [discountCode, setDiscountCode] = useState<string | null>(null);
+  const [isValidating, setIsValidating] = useState(false);
 
   // tRPC queries — все tolerant к неавторизованным
   const { data: plans } = trpc.billing.getPlans.useQuery();
@@ -163,6 +195,19 @@ function PricingContent() {
   });
   const isAuthenticated = !!profile;
 
+  const utils = trpc.useUtils();
+
+  // Discount preview — покрывает и введённый discount-код, и pending ambassador-скидку
+  // (precedence решает сервер). Запрос на план, т.к. код нацелен на конкретный тип плана.
+  const courseDiscountQuery = trpc.billing.getApplicableDiscount.useQuery(
+    { planType: 'COURSE', code: discountCode ?? undefined },
+    { enabled: isAuthenticated },
+  );
+  const platformDiscountQuery = trpc.billing.getApplicableDiscount.useQuery(
+    { planType: 'PLATFORM', code: discountCode ?? undefined },
+    { enabled: isAuthenticated },
+  );
+
   const initiatePayment = trpc.billing.initiatePayment.useMutation();
   const activatePromo = trpc.promo.activate.useMutation({
     onSuccess: (data) => {
@@ -173,6 +218,31 @@ function PricingContent() {
     },
     onError: (err) => setPromoError(err.message),
   });
+
+  // Валидируем код и роутим по типу: discount-код держим для оплаты (НЕ активируем),
+  // duration-код идёт в существующий флоу активации.
+  const applyPromoCode = async (code: string) => {
+    setIsValidating(true);
+    try {
+      const res = await utils.promo.validate.fetch({ code });
+      if (!res.valid) {
+        setDiscountCode(null);
+        setPromoError(res.error);
+        return;
+      }
+      if (res.kind === 'discount') {
+        setPromoError('');
+        setDiscountCode(code);
+        toast.success('Промокод применён');
+        return;
+      }
+      activatePromo.mutate({ code });
+    } catch (err) {
+      setPromoError(err instanceof Error ? err.message : 'Не удалось проверить промо-код');
+    } finally {
+      setIsValidating(false);
+    }
+  };
 
   // Filter courses для pill-chips
   const courseOptions = (courses || [])
@@ -206,18 +276,20 @@ function PricingContent() {
     }
   }, [isAuthenticated, promoCode]);
 
-  // Авто-активация промо, если юзер пришёл после DOI с ?promo=CODE в URL
-  // (через auth/callback?next=/pricing?promo=...).
-  // Activate mutation сам проверит что код валиден и не использован — если нет,
-  // покажет ошибку в UI, юзер увидит форму с уже введённым кодом.
+  // Авто-обработка промо, если юзер пришёл после DOI с ?promo=CODE в URL
+  // (через auth/callback?next=/pricing?promo=...). Валидируем и роутим по типу:
+  // duration → активация, discount → держим для оплаты. Невалидный код → ошибка
+  // в UI, юзер видит форму с уже введённым кодом.
   const promoFromUrl = searchParams.get('promo');
   const [autoActivated, setAutoActivated] = useState(false);
   useEffect(() => {
-    if (!autoActivated && isAuthenticated && promoFromUrl && !activatePromo.isPending) {
+    if (!autoActivated && isAuthenticated && promoFromUrl && !activatePromo.isPending && !isValidating) {
       setAutoActivated(true);
-      activatePromo.mutate({ code: promoFromUrl.trim().toUpperCase() });
+      void applyPromoCode(promoFromUrl.trim().toUpperCase());
     }
-  }, [autoActivated, isAuthenticated, promoFromUrl, activatePromo]);
+    // applyPromoCode намеренно вне deps — флаг autoActivated гарантирует однократный запуск.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [autoActivated, isAuthenticated, promoFromUrl, activatePromo, isValidating]);
 
   const hasActiveCourseSubscription =
     subscription &&
@@ -241,6 +313,7 @@ function PricingContent() {
       const result = await initiatePayment.mutateAsync({
         planType,
         courseId: planType === 'COURSE' ? selectedCourseId : undefined,
+        promoCode: discountCode ?? undefined,
       });
 
       const success = await openPaymentWidget({
@@ -250,7 +323,12 @@ function PricingContent() {
         currency: 'RUB',
         accountId: result.userId,
         invoiceId: result.subscriptionId,
-        recurrent: { interval: 'Month', period: 1, startDate: result.recurrentStartDate },
+        recurrent: {
+          interval: 'Month',
+          period: 1,
+          amount: result.recurrentAmount,
+          startDate: result.recurrentStartDate,
+        },
         receipt: result.receipt,
       });
 
@@ -292,8 +370,10 @@ function PricingContent() {
       router.push(`/register?redirect=/pricing&promo=${encodeURIComponent(trimmed)}`);
       return;
     }
-    activatePromo.mutate({ code: trimmed });
+    void applyPromoCode(trimmed);
   };
+
+  const promoBusy = activatePromo.isPending || isValidating;
 
   const courseBtnDisabled = Boolean(isProcessing || !widgetReady || !selectedCourseId || hasActiveCourseSubscription);
   const platformBtnDisabled = Boolean(isProcessing || !widgetReady || hasActivePlatformSubscription);
@@ -344,6 +424,9 @@ function PricingContent() {
                     /мес
                   </span>
                 </div>
+                {courseDiscountQuery.data && (
+                  <DiscountBanner {...courseDiscountQuery.data} onDark={false} />
+                )}
               </div>
 
               {/* Course picker */}
@@ -428,6 +511,9 @@ function PricingContent() {
                     /мес
                   </span>
                 </div>
+                {platformDiscountQuery.data && (
+                  <DiscountBanner {...platformDiscountQuery.data} onDark={true} />
+                )}
               </div>
 
               <ul className="mt-6 flex flex-col gap-3 flex-1">
@@ -469,19 +555,19 @@ function PricingContent() {
                 }}
                 onKeyDown={(e) => { if (e.key === 'Enter') handlePromoApply(); }}
                 placeholder="Введите промокод"
-                disabled={activatePromo.isPending}
+                disabled={promoBusy}
                 className="flex-1 min-w-0 h-[48px] sm:h-[52px] px-5 rounded-full border border-[#121212]/10 text-[14px] sm:text-[15px] font-medium outline-none transition-colors focus:border-[#2C4FF8] disabled:opacity-60"
                 style={{ color: TEXT, backgroundColor: '#fff' }}
               />
               <button
                 onClick={handlePromoApply}
-                disabled={activatePromo.isPending || !promoCode.trim()}
+                disabled={promoBusy || !promoCode.trim()}
                 className="flex-shrink-0 h-[48px] sm:h-[52px] px-6 sm:px-7 rounded-full text-[14px] sm:text-[15px] font-medium text-white transition-colors cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
                 style={{ backgroundColor: BLUE }}
                 onMouseEnter={(e) => { if (!e.currentTarget.disabled) e.currentTarget.style.backgroundColor = BLUE_HOVER; }}
                 onMouseLeave={(e) => { e.currentTarget.style.backgroundColor = BLUE; }}
               >
-                {activatePromo.isPending ? 'Проверка...' : 'Применить'}
+                {promoBusy ? 'Проверка...' : 'Применить'}
               </button>
             </div>
             {promoError && (
