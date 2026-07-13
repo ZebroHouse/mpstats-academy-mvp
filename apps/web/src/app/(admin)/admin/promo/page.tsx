@@ -38,7 +38,8 @@ export default function AdminPromoPage() {
 
   // Form state
   const [formMode, setFormMode] = useState<'duration' | 'discount'>('duration');
-  const [formPlanType, setFormPlanType] = useState<'PLATFORM' | 'COURSE'>('PLATFORM');
+  // 'ALL' (discount-only) → payload omits planType so the discount hits every plan.
+  const [formPlanScope, setFormPlanScope] = useState<'ALL' | 'PLATFORM' | 'COURSE'>('PLATFORM');
   const [formCourseId, setFormCourseId] = useState('');
   const [formDuration, setFormDuration] = useState(30);
   const [formCustomDuration, setFormCustomDuration] = useState('');
@@ -80,7 +81,7 @@ export default function AdminPromoPage() {
 
   function resetForm() {
     setFormMode('duration');
-    setFormPlanType('PLATFORM');
+    setFormPlanScope('PLATFORM');
     setFormCourseId('');
     setFormDuration(30);
     setFormCustomDuration('');
@@ -95,8 +96,13 @@ export default function AdminPromoPage() {
   function handleCreate() {
     const base = {
       code: formCode || undefined,
-      planType: formPlanType,
-      courseId: formPlanType === 'COURSE' ? formCourseId || undefined : undefined,
+      // 'ALL' scope (discount only) omits planType → discount applies to any plan.
+      ...(formPlanScope === 'ALL'
+        ? {}
+        : {
+            planType: formPlanScope,
+            courseId: formPlanScope === 'COURSE' ? formCourseId || undefined : undefined,
+          }),
       maxUses: formMaxUses,
       expiresAt: formNoExpiry ? undefined : formExpiresAt || undefined,
     };
@@ -170,17 +176,30 @@ export default function AdminPromoPage() {
             <CardTitle className="text-heading-md">Новый промо-код</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {/* Plan Type */}
+            {/* Plan scope. «Все тарифы» exists only in discount mode. */}
             <div>
               <label className="block text-body-sm font-medium text-mp-gray-700 mb-1.5">
                 Тип доступа
               </label>
               <div className="flex gap-3">
+                {formMode === 'discount' && (
+                  <button
+                    type="button"
+                    onClick={() => { setFormPlanScope('ALL'); setFormCourseId(''); }}
+                    className={`px-4 py-2 rounded-lg text-body-sm font-medium border transition-colors ${
+                      formPlanScope === 'ALL'
+                        ? 'bg-mp-blue-50 border-mp-blue-300 text-mp-blue-700'
+                        : 'border-mp-gray-200 text-mp-gray-600 hover:bg-mp-gray-50'
+                    }`}
+                  >
+                    Все тарифы
+                  </button>
+                )}
                 <button
                   type="button"
-                  onClick={() => { setFormPlanType('PLATFORM'); setFormCourseId(''); }}
+                  onClick={() => { setFormPlanScope('PLATFORM'); setFormCourseId(''); }}
                   className={`px-4 py-2 rounded-lg text-body-sm font-medium border transition-colors ${
-                    formPlanType === 'PLATFORM'
+                    formPlanScope === 'PLATFORM'
                       ? 'bg-mp-blue-50 border-mp-blue-300 text-mp-blue-700'
                       : 'border-mp-gray-200 text-mp-gray-600 hover:bg-mp-gray-50'
                   }`}
@@ -189,9 +208,9 @@ export default function AdminPromoPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setFormPlanType('COURSE')}
+                  onClick={() => setFormPlanScope('COURSE')}
                   className={`px-4 py-2 rounded-lg text-body-sm font-medium border transition-colors ${
-                    formPlanType === 'COURSE'
+                    formPlanScope === 'COURSE'
                       ? 'bg-mp-blue-50 border-mp-blue-300 text-mp-blue-700'
                       : 'border-mp-gray-200 text-mp-gray-600 hover:bg-mp-gray-50'
                   }`}
@@ -201,8 +220,8 @@ export default function AdminPromoPage() {
               </div>
             </div>
 
-            {/* Course select (only for COURSE type) */}
-            {formPlanType === 'COURSE' && (
+            {/* Course select (only for COURSE scope) */}
+            {formPlanScope === 'COURSE' && (
               <div>
                 <label className="block text-body-sm font-medium text-mp-gray-700 mb-1.5">
                   Курс
@@ -228,7 +247,11 @@ export default function AdminPromoPage() {
               <div className="flex gap-3">
                 <button
                   type="button"
-                  onClick={() => setFormMode('duration')}
+                  onClick={() => {
+                    setFormMode('duration');
+                    // Duration codes require a planType → never leave scope on 'ALL'.
+                    setFormPlanScope((s) => (s === 'ALL' ? 'PLATFORM' : s));
+                  }}
                   className={`px-4 py-2 rounded-lg text-body-sm font-medium border transition-colors ${
                     formMode === 'duration'
                       ? 'bg-mp-blue-50 border-mp-blue-300 text-mp-blue-700'
@@ -239,7 +262,12 @@ export default function AdminPromoPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={() => setFormMode('discount')}
+                  onClick={() => {
+                    setFormMode('discount');
+                    // Default discount codes to «Все тарифы».
+                    setFormPlanScope('ALL');
+                    setFormCourseId('');
+                  }}
                   className={`px-4 py-2 rounded-lg text-body-sm font-medium border transition-colors ${
                     formMode === 'discount'
                       ? 'bg-mp-blue-50 border-mp-blue-300 text-mp-blue-700'
