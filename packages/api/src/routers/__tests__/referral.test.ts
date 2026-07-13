@@ -348,11 +348,28 @@ describe('referral.admin.createAmbassadorCode', () => {
     ).rejects.toThrow();
   });
 
-  it('rejects refereeTrialDays=0 with zod error', async () => {
+  it('accepts refereeTrialDays=0 (keeps base trial, discount-only code)', async () => {
+    mockReferralCodeFindUnique.mockResolvedValue(null);
+    mockUserFindFirst.mockResolvedValue(null);
+    mockReferralCodeCreate.mockResolvedValue({ id: 'rc0', code: 'AMB-ZERO01', refereeTrialDays: 0 });
+
+    await adminCaller().admin.createAmbassadorCode({
+      label: 'X',
+      refereeTrialDays: 0,
+    });
+
+    expect(mockReferralCodeCreate).toHaveBeenCalledWith(
+      expect.objectContaining({
+        data: expect.objectContaining({ refereeTrialDays: 0 }),
+      }),
+    );
+  });
+
+  it('rejects a negative refereeTrialDays with zod error', async () => {
     await expect(
       adminCaller().admin.createAmbassadorCode({
         label: 'X',
-        refereeTrialDays: 0,
+        refereeTrialDays: -1,
       }),
     ).rejects.toThrow();
   });
