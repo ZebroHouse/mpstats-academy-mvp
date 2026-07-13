@@ -11,6 +11,7 @@ const mockReferralCodeFindMany = vi.hoisted(() => vi.fn());
 const mockReferralCodeCreate = vi.hoisted(() => vi.fn());
 const mockReferralCodeUpdate = vi.hoisted(() => vi.fn());
 const mockQueryRaw = vi.hoisted(() => vi.fn());
+const mockEnsureUserReferralCode = vi.hoisted(() => vi.fn());
 
 vi.mock('@mpstats/db/client', () => ({
   prisma: {
@@ -48,6 +49,7 @@ vi.mock('@mpstats/db', async () => {
 // Force-deterministic ambassador code generation for create tests.
 vi.mock('../../services/referral/code-generator', () => ({
   generateAmbassadorCode: () => 'AMB-TESTCD',
+  ensureUserReferralCode: mockEnsureUserReferralCode,
 }));
 
 vi.mock('../../services/referral/activation', () => ({
@@ -87,7 +89,7 @@ beforeEach(() => {
 
 describe('referral.getMyState', () => {
   it('returns code, counters, packages', async () => {
-    mockUserFindUnique.mockResolvedValue({ referralCode: 'REF-AAA111' });
+    mockEnsureUserReferralCode.mockResolvedValue('REF-AAA111');
     mockReferralCount.mockResolvedValueOnce(5).mockResolvedValueOnce(3);
     mockPkgFindMany
       .mockResolvedValueOnce([
@@ -101,12 +103,15 @@ describe('referral.getMyState', () => {
     expect(result.pendingPackages).toHaveLength(1);
   });
 
-  it('returns null code if user has none yet', async () => {
-    mockUserFindUnique.mockResolvedValue({ referralCode: null });
+  it('lazily assigns a code on first read when user has none yet', async () => {
+    // ensureUserReferralCode generates + persists a code, so getMyState never
+    // surfaces null for an authenticated user.
+    mockEnsureUserReferralCode.mockResolvedValue('REF-NEWCDE');
     mockReferralCount.mockResolvedValue(0);
     mockPkgFindMany.mockResolvedValue([]);
     const result = await caller().getMyState();
-    expect(result.referralCode).toBeNull();
+    expect(result.referralCode).toBe('REF-NEWCDE');
+    expect(mockEnsureUserReferralCode).toHaveBeenCalledWith('user-1');
   });
 });
 
