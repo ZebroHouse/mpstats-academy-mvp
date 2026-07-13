@@ -1031,10 +1031,13 @@ git commit -m "feat(concierge): grounded LLM synthesis + navLink whitelist"
 ```ts
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-const matchTopK = vi.fn();
-const synthesizeConcierge = vi.fn();
-const resolveCourseFacts = vi.fn();
-const embedQuery = vi.fn();
+// vi.hoisted: vi.mock хойстится выше объявлений — обычный const в фабрике даёт TDZ ReferenceError.
+const { matchTopK, synthesizeConcierge, resolveCourseFacts, embedQuery } = vi.hoisted(() => ({
+  matchTopK: vi.fn(),
+  synthesizeConcierge: vi.fn(),
+  resolveCourseFacts: vi.fn(),
+  embedQuery: vi.fn(),
+}));
 
 vi.mock('./concierge-match', async (orig) => ({ ...(await orig<any>()), matchTopK }));
 vi.mock('./concierge-synthesize', async (orig) => ({ ...(await orig<any>()), synthesizeConcierge }));
