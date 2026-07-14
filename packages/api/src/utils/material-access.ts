@@ -12,9 +12,11 @@ import { isFeatureEnabled } from './feature-flags';
  * Батч: множество materialId → Set доступных.
  *
  * Материал доступен ⟺ у него ≥1 видимый прикреплённый урок, доступный юзеру.
- * Зеркалит D-23 ACL из `material.getSignedUrl`, но без N+1: subs / billing-flag /
- * admin-bypass / first-job-lessons резолвятся один раз для всей пачки, а не на
- * каждый урок каждого материала.
+ *
+ * Зеркалит access-логику `material.getSignedUrl` (packages/api/src/routers/material.ts)
+ * — тот же `isLessonAccessible`-вызов с тем же lesson-shape, но батчем без N+1:
+ * subs / billing-flag / admin-bypass / first-job-lessons резолвятся один раз для
+ * всей пачки, а не на каждый урок каждого материала. Держать в синхроне с getSignedUrl.
  */
 export async function resolveAccessibleMaterialIds(
   prisma: PrismaClient,
