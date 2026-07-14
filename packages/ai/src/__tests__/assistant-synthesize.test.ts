@@ -20,6 +20,7 @@ const jobCands = [
 const materialCands = [
   { materialId: 'M1', type: 'CHECKLIST', title: 'Чек-лист карточки', description: null, ctaText: 'Скачать', externalUrl: null, hasFile: true, similarity: 0.7 },
   { materialId: 'M2', type: 'CALCULATION_TABLE', title: 'Таблица юнит-экономики', description: null, ctaText: 'Открыть', externalUrl: 'https://x', hasFile: false, similarity: 0.6 },
+  { materialId: 'M3', type: 'MEMO', title: 'Памятка по возвратам', description: null, ctaText: 'Открыть', externalUrl: null, hasFile: true, similarity: 0.55 },
 ];
 
 function mockReply(json: unknown) {
@@ -46,7 +47,7 @@ describe('synthesizeAssistantResponse', () => {
   });
 
   it('whitelist материалов + кап 2, ghost выброшен', async () => {
-    mockReply({ answer: 'текст', lessonIds: [], jobIds: [], materialIds: ['GHOST', 'M1', 'M2'] });
+    mockReply({ answer: 'текст', lessonIds: [], jobIds: [], materialIds: ['GHOST', 'M1', 'M2', 'M3'] });
     const r = await synthesizeAssistantResponse({ query: 'чек-лист по карточке', history: [], lessonCandidates: [], jobCandidates: [], materialCandidates: materialCands });
     expect(r.materials.map((m) => m.materialId)).toEqual(['M1', 'M2']);
     expect(r.materials[0]).toMatchObject({ isAccessible: true, hasFile: true });
