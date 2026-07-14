@@ -9,7 +9,7 @@ export interface SynthesizeArgs {
   history: AssistantHistoryMessage[];
   lessonCandidates: LessonCandidate[];
   jobCandidates: JobCandidate[];
-  // MA4: принимается для будущего whitelist в MA5; пока не используется.
+  // Кандидаты-материалы: LLM выбирает из них materialIds, whitelist+кап 2 ниже.
   materialCandidates: MaterialCandidate[];
 }
 
