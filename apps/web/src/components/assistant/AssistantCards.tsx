@@ -151,8 +151,13 @@ function MaterialDownloadButton({ materialId, ctaText }: { materialId: string; c
     setLoading(true);
     try {
       const { signedUrl } = await utils.material.getSignedUrl.fetch({ materialId });
-      window.open(signedUrl, '_blank', 'noopener,noreferrer');
-    } catch {
+      const opened = window.open(signedUrl, '_blank', 'noopener,noreferrer');
+      if (!opened) {
+        toast.error('Не удалось открыть файл. Проверьте, разрешены ли всплывающие окна.');
+        return;
+      }
+    } catch (err) {
+      console.error('[MaterialDownload] fetch failed:', err);
       toast.error('Не удалось получить файл. Попробуйте ещё раз.');
     } finally {
       setLoading(false);
@@ -160,7 +165,7 @@ function MaterialDownloadButton({ materialId, ctaText }: { materialId: string; c
   };
 
   return (
-    <button type="button" onClick={handleDownload} disabled={loading} className={`${CTA_CLASS} disabled:opacity-50`}>
+    <button type="button" onClick={handleDownload} disabled={loading} className={`${CTA_CLASS} disabled:opacity-50 disabled:no-underline`}>
       {loading ? 'Загрузка…' : ctaText || 'Скачать'}
     </button>
   );
