@@ -1,18 +1,31 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import { FavoriteButton } from '@/components/learning/FavoriteButton';
-import type { AssistantLessonRef, AssistantJobRef, AssistantNavLink } from '@mpstats/ai';
+import { trpc } from '@/lib/trpc/client';
+import type { AssistantLessonRef, AssistantJobRef, AssistantNavLink, AssistantMaterialRef } from '@mpstats/ai';
 
 interface Props {
   lessons: AssistantLessonRef[];
   jobs: AssistantJobRef[];
   navLinks?: AssistantNavLink[];
-  favoritedKeys: Set<string>; // "LESSON:<id>" / "JOB:<id>"
+  materials?: AssistantMaterialRef[];
+  favoritedKeys: Set<string>; // "LESSON:<id>" / "JOB:<id>" / "MATERIAL:<id>"
 }
 
-export function AssistantCards({ lessons, jobs, navLinks = [], favoritedKeys }: Props) {
-  if (lessons.length === 0 && jobs.length === 0 && navLinks.length === 0) return null;
+// type → эмодзи-иконка (MaterialType).
+const MATERIAL_TYPE_ICON: Record<string, string> = {
+  CALCULATION_TABLE: '📊',
+  CHECKLIST: '✅',
+  MEMO: '📄',
+  PRESENTATION: '🖼',
+  EXTERNAL_SERVICE: '🔗',
+};
+
+export function AssistantCards({ lessons, jobs, navLinks = [], materials = [], favoritedKeys }: Props) {
+  if (lessons.length === 0 && jobs.length === 0 && navLinks.length === 0 && materials.length === 0) return null;
 
   return (
     <div className="mt-2 space-y-2">
@@ -76,6 +89,79 @@ export function AssistantCards({ lessons, jobs, navLinks = [], favoritedKeys }: 
           </svg>
         </Link>
       ))}
+
+      {materials.map((mat) => (
+        <div
+          key={`M:${mat.materialId}`}
+          className="flex items-center gap-3 rounded-lg border border-mp-gray-200 bg-white p-2.5"
+        >
+          <span className="shrink-0 text-lg" aria-hidden>
+            {MATERIAL_TYPE_ICON[mat.type] ?? '📎'}
+          </span>
+          <div className="min-w-0 flex-1">
+            <div className="text-[10px] font-bold uppercase tracking-wide text-mp-gray-400">Материал</div>
+            <div className="truncate text-sm font-semibold text-mp-gray-900">{mat.title}</div>
+            <MaterialCta material={mat} />
+          </div>
+          <FavoriteButton
+            itemType="MATERIAL"
+            itemId={mat.materialId}
+            initialFavorited={favoritedKeys.has(`MATERIAL:${mat.materialId}`)}
+          />
+        </div>
+      ))}
     </div>
+  );
+}
+
+const CTA_CLASS = 'text-xs font-semibold text-mp-blue-600 hover:underline';
+
+function MaterialCta({ material }: { material: AssistantMaterialRef }) {
+  // Залоченный материал: бэкенд занулил externalUrl — карточка ничего не грузит/не открывает,
+  // единственный аффорданс — оформить доступ.
+  if (!material.isAccessible) {
+    return (
+      <Link href="/billing" className={CTA_CLASS}>
+        🔒 Оформить доступ
+      </Link>
+    );
+  }
+
+  if (material.externalUrl) {
+    return (
+      <a href={material.externalUrl} target="_blank" rel="noopener noreferrer" className={CTA_CLASS}>
+        {material.ctaText}
+      </a>
+    );
+  }
+
+  if (material.hasFile) {
+    return <MaterialDownloadButton materialId={material.materialId} ctaText={material.ctaText} />;
+  }
+
+  return null;
+}
+
+function MaterialDownloadButton({ materialId, ctaText }: { materialId: string; ctaText: string }) {
+  const utils = trpc.useUtils();
+  const [loading, setLoading] = useState(false);
+
+  const handleDownload = async () => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      const { signedUrl } = await utils.material.getSignedUrl.fetch({ materialId });
+      window.open(signedUrl, '_blank', 'noopener,noreferrer');
+    } catch {
+      toast.error('Не удалось получить файл. Попробуйте ещё раз.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <button type="button" onClick={handleDownload} disabled={loading} className={`${CTA_CLASS} disabled:opacity-50`}>
+      {loading ? 'Загрузка…' : ctaText || 'Скачать'}
+    </button>
   );
 }
