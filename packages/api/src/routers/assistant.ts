@@ -6,7 +6,8 @@ import { router, protectedProcedure } from '../trpc';
 import type { Context } from '../trpc';
 import { createRateLimitMiddleware } from '../middleware/rate-limit';
 import { getAssistantQuota, BURST_PER_MIN } from '../utils/assistant-quota';
-import type { AssistantLessonRef, AssistantJobRef, AssistantNavLink } from '@mpstats/ai';
+import { resolveAccessibleMaterialIds, applyMaterialAccess } from '../utils/material-access';
+import type { AssistantLessonRef, AssistantJobRef, AssistantNavLink, AssistantMaterialRef } from '@mpstats/ai';
 
 export interface EnrichedMessage {
   role: 'user' | 'assistant';
@@ -16,6 +17,7 @@ export interface EnrichedMessage {
   lessons: AssistantLessonRef[];
   jobs: AssistantJobRef[];
   navLinks: AssistantNavLink[];
+  materials: AssistantMaterialRef[];
 }
 
 const assistantProcedure = protectedProcedure.use(
@@ -74,6 +76,7 @@ export const assistantRouter = router({
           inDomain: result.category !== 'off_domain',
           category: result.category,
           navLinks: result.navLinks as unknown as Prisma.InputJsonValue,
+          materialIds: result.materials.map((m) => m.materialId),
         },
       });
       await ctx.prisma.assistantConversation.update({
@@ -81,8 +84,15 @@ export const assistantRouter = router({
         data: { updatedAt: new Date() },
       });
 
+      const accessibleIds = await resolveAccessibleMaterialIds(
+        ctx.prisma,
+        userId,
+        result.materials.map((m) => m.materialId),
+      );
+      const gatedMaterials = applyMaterialAccess(result.materials, accessibleIds);
+
       const quotaAfter = await getAssistantQuota(userId, ctx.prisma, new Date());
-      return { ...result, quota: quotaAfter };
+      return { ...result, materials: gatedMaterials, quota: quotaAfter };
     }),
 
   getQuota: protectedProcedure.query(async ({ ctx }) => {
@@ -111,7 +121,8 @@ export const assistantRouter = router({
 
     const allLessonIds = Array.from(new Set(rows.flatMap((r) => r.lessonIds)));
     const allJobIds = Array.from(new Set(rows.flatMap((r) => r.jobIds)));
-    const [lessons, jobs] = await Promise.all([
+    const allMaterialIds = Array.from(new Set(rows.flatMap((r) => r.materialIds ?? [])));
+    const [lessons, jobs, materialRows] = await Promise.all([
       allLessonIds.length
         ? ctx.prisma.lesson.findMany({
             where: { id: { in: allLessonIds }, isHidden: false, course: { isHidden: false } },
@@ -124,9 +135,29 @@ export const assistantRouter = router({
             select: { id: true, title: true, slug: true, _count: { select: { lessons: true } } },
           })
         : Promise.resolve([]),
+      allMaterialIds.length
+        ? ctx.prisma.material.findMany({
+            where: { id: { in: allMaterialIds }, isHidden: false },
+            select: { id: true, type: true, title: true, ctaText: true, externalUrl: true, storagePath: true },
+          })
+        : Promise.resolve([]),
     ]);
     const lessonMap = new Map(lessons.map((l) => [l.id, l]));
     const jobMap = new Map(jobs.map((j) => [j.id, j]));
+
+    // Материалы: собрать pre-gate ref → пересчитать доступ на момент чтения (доступ мог измениться).
+    const preGateMaterials: AssistantMaterialRef[] = materialRows.map((m) => ({
+      materialId: m.id,
+      type: m.type,
+      title: m.title,
+      ctaText: m.ctaText,
+      isAccessible: true,
+      externalUrl: m.externalUrl,
+      hasFile: m.storagePath != null,
+    }));
+    const accessibleMaterialIds = await resolveAccessibleMaterialIds(ctx.prisma, ctx.user!.id, allMaterialIds);
+    const gatedMaterials = applyMaterialAccess(preGateMaterials, accessibleMaterialIds);
+    const materialMap = new Map(gatedMaterials.map((m) => [m.materialId, m]));
 
     const messages: EnrichedMessage[] = rows.map((r) => ({
       role: r.role as 'user' | 'assistant',
@@ -146,6 +177,9 @@ export const assistantRouter = router({
           const j = jobMap.get(id)!;
           return { jobId: j.id, title: j.title, slug: j.slug, lessonCount: j._count.lessons, reason: '' };
         }),
+      materials: (r.materialIds ?? [])
+        .filter((id) => materialMap.has(id))
+        .map((id) => materialMap.get(id)!),
     }));
 
     return { messages };

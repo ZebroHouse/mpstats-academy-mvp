@@ -776,6 +776,7 @@ model AssistantMessage {
   inDomain       Boolean  @default(true) // false = офф-топик отказ (аналитика + квота)
   category       String?  // material | platform_help | complaint | off_domain (хребет)
   navLinks       Json     @default("[]") // deep-link карточки концьержа [{label,href}]
+  materialIds    String[] @default([]) // подмешанные карточки материалов (assistant)
   createdAt      DateTime @default(now())
 
   conversation AssistantConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)

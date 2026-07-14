@@ -19,7 +19,8 @@ async function main() {
   await run(
     `CREATE INDEX IF NOT EXISTS "Material_embedding_idx" ON "Material" USING ivfflat ("embedding" vector_cosine_ops) WITH (lists = 50);`,
   );
-  console.log('OK: Material.embedding + index добавлены');
+  await run(`ALTER TABLE "AssistantMessage" ADD COLUMN IF NOT EXISTS "materialIds" text[] NOT NULL DEFAULT '{}'::text[];`);
+  console.log('OK: Material.embedding + index + AssistantMessage.materialIds добавлены');
 }
 main().catch((e) => {
   console.error(e);

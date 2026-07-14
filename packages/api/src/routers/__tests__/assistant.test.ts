@@ -48,7 +48,7 @@ describe('assistant.sendMessage', () => {
     quotaMock
       .mockResolvedValueOnce({ tier: 'full', limit: 50, used: 0, remaining: 50, resetsAt: new Date() })
       .mockResolvedValueOnce({ tier: 'full', limit: 50, used: 1, remaining: 49, resetsAt: new Date() });
-    pipelineMock.mockResolvedValue({ inDomain: true, answer: 'ответ про ДРР', lessons: [{ lessonId: 'L1', title: 'x', durationMin: 5, courseTitle: null, reason: '' }], jobs: [] });
+    pipelineMock.mockResolvedValue({ inDomain: true, answer: 'ответ про ДРР', lessons: [{ lessonId: 'L1', title: 'x', durationMin: 5, courseTitle: null, reason: '' }], jobs: [], materials: [] });
     const ctx = makeCtx();
     const caller = assistantRouter.createCaller(ctx);
     const res = await caller.sendMessage({ message: 'что такое ДРР' });
