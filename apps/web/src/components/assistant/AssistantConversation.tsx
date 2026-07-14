@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Send } from 'lucide-react';
 import { trpc } from '@/lib/trpc/client';
 import { AssistantCards } from '@/components/assistant/AssistantCards';
+import { AssistantThinking } from '@/components/assistant/AssistantThinking';
 import type { AssistantLessonRef, AssistantJobRef, AssistantNavLink, AssistantMaterialRef } from '@mpstats/ai';
 
 interface UiMessage {
@@ -131,7 +132,7 @@ export function AssistantConversation() {
             </div>
           </div>
         ))}
-        {sendMutation.isPending && <div className="text-xs text-mp-gray-400">Ассистент печатает…</div>}
+        {sendMutation.isPending && <AssistantThinking />}
       </div>
 
       <div className="border-t border-mp-gray-200 p-3">
