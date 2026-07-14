@@ -24,13 +24,17 @@ export async function runAssistantPipeline(args: AssistantPipelineArgs): Promise
     return { category, ...r };
   }
 
-  // material | complaint → материальная ветка (complaint: детекция записана категорией, поведение = помочь)
-  const { lessons, jobs } = await retrieveForAssistant(args.query);
+  // material | complaint → материальная ветка. Материалы подмешиваем ТОЛЬКО для чистого material
+  // (жалобе complaint не отвлекаем внимание материалами).
+  const { lessons, jobs, materials } = await retrieveForAssistant(args.query, {
+    withMaterials: category === 'material',
+  });
   const r = await synthesizeAssistantResponse({
     query: args.query,
     history: args.history,
     lessonCandidates: lessons,
     jobCandidates: jobs,
+    materialCandidates: materials,
   });
   return { category, ...r };
 }

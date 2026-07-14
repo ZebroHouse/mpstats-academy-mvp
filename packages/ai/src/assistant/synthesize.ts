@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { getOpenRouterClient, MODELS } from '../openrouter';
 import { fixBrandNames } from '../generation';
-import type { AssistantHistoryMessage, AssistantBranchResult, LessonCandidate } from './types';
+import type { AssistantHistoryMessage, AssistantBranchResult, LessonCandidate, MaterialCandidate } from './types';
 import type { JobCandidate } from '../intent/types';
 
 export interface SynthesizeArgs {
@@ -9,6 +9,8 @@ export interface SynthesizeArgs {
   history: AssistantHistoryMessage[];
   lessonCandidates: LessonCandidate[];
   jobCandidates: JobCandidate[];
+  // MA4: принимается для будущего whitelist в MA5; пока не используется.
+  materialCandidates: MaterialCandidate[];
 }
 
 const llmSchema = z.object({

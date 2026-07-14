@@ -2,7 +2,8 @@ import { prisma } from '@mpstats/db';
 import { searchChunks } from '../retrieval';
 import { expandSellerQuery } from '../seller-lexicon';
 import { searchJobsByEmbedding, aggregateChunksToJobs, mergeJobCandidates } from '../intent/retrieval';
-import type { LessonCandidate } from './types';
+import { searchMaterialsByEmbedding } from './materials';
+import type { LessonCandidate, MaterialCandidate } from './types';
 import type { JobCandidate } from '../intent/types';
 
 const LESSON_CHUNK_LIMIT = 12;
@@ -10,10 +11,13 @@ const LESSON_TOP = 6;
 const JOB_EMB_LIMIT = 8;
 const JOB_CHUNK_LIMIT = 24;
 const JOB_TOP = 4;
+const MATERIAL_LIMIT = 6;
+const MATERIAL_THRESHOLD = 0.35;
 
 export interface AssistantRetrieval {
   lessons: LessonCandidate[];
   jobs: JobCandidate[];
+  materials: MaterialCandidate[];
 }
 
 async function retrieveLessons(query: string): Promise<LessonCandidate[]> {
@@ -67,11 +71,19 @@ async function retrieveJobs(query: string): Promise<JobCandidate[]> {
   return merged.slice(0, JOB_TOP);
 }
 
-export async function retrieveForAssistant(query: string): Promise<AssistantRetrieval> {
+async function retrieveMaterials(query: string): Promise<MaterialCandidate[]> {
+  return searchMaterialsByEmbedding(query, { limit: MATERIAL_LIMIT, threshold: MATERIAL_THRESHOLD });
+}
+
+export async function retrieveForAssistant(
+  query: string,
+  opts: { withMaterials?: boolean } = {},
+): Promise<AssistantRetrieval> {
   const expanded = expandSellerQuery(query);
-  const [lessons, jobs] = await Promise.all([
+  const [lessons, jobs, materials] = await Promise.all([
     retrieveLessons(expanded),
     retrieveJobs(query),
+    opts.withMaterials ? retrieveMaterials(query) : Promise.resolve([] as MaterialCandidate[]),
   ]);
-  return { lessons, jobs };
+  return { lessons, jobs, materials };
 }

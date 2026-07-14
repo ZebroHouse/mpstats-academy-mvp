@@ -27,7 +27,7 @@ describe('synthesizeAssistantResponse', () => {
 
   it('обогащает whitelisted lessonIds/jobIds метаданными кандидатов', async () => {
     mockReply({ answer: 'ДРР — доля рекламных расходов ...', lessonIds: ['L1'], jobIds: ['J1'] });
-    const r = await synthesizeAssistantResponse({ query: 'ДРР?', history: [], lessonCandidates: lessonCands, jobCandidates: jobCands });
+    const r = await synthesizeAssistantResponse({ query: 'ДРР?', history: [], lessonCandidates: lessonCands, jobCandidates: jobCands, materialCandidates: [] });
     expect(r.navLinks).toEqual([]);
     expect(r.answer).toContain('ДРР');
     expect(r.lessons[0].title).toBe('ДРР урок');
@@ -36,14 +36,14 @@ describe('synthesizeAssistantResponse', () => {
 
   it('выбрасывает выдуманные id, которых нет в кандидатах (anti-hallucination)', async () => {
     mockReply({ answer: 'текст', lessonIds: ['GHOST', 'L1'], jobIds: ['FAKE'] });
-    const r = await synthesizeAssistantResponse({ query: 'q', history: [], lessonCandidates: lessonCands, jobCandidates: jobCands });
+    const r = await synthesizeAssistantResponse({ query: 'q', history: [], lessonCandidates: lessonCands, jobCandidates: jobCands, materialCandidates: [] });
     expect(r.lessons.map((l) => l.lessonId)).toEqual(['L1']);
     expect(r.jobs).toEqual([]);
   });
 
   it('при невалидном JSON возвращает fallback-ответ без карточек', async () => {
     createMock.mockResolvedValueOnce({ choices: [{ message: { content: 'сломано' } }] });
-    const r = await synthesizeAssistantResponse({ query: 'q', history: [], lessonCandidates: lessonCands, jobCandidates: jobCands });
+    const r = await synthesizeAssistantResponse({ query: 'q', history: [], lessonCandidates: lessonCands, jobCandidates: jobCands, materialCandidates: [] });
     expect(r.navLinks).toEqual([]);
     expect(r.lessons).toEqual([]);
     expect(r.answer.length).toBeGreaterThan(0);
