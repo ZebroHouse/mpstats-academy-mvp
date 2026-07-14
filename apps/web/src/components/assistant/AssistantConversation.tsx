@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { Send } from 'lucide-react';
 import { trpc } from '@/lib/trpc/client';
 import { AssistantCards } from '@/components/assistant/AssistantCards';
-import type { AssistantLessonRef, AssistantJobRef, AssistantNavLink } from '@mpstats/ai';
+import type { AssistantLessonRef, AssistantJobRef, AssistantNavLink, AssistantMaterialRef } from '@mpstats/ai';
 
 interface UiMessage {
   role: 'user' | 'assistant';
@@ -12,6 +12,7 @@ interface UiMessage {
   lessons?: AssistantLessonRef[];
   jobs?: AssistantJobRef[];
   navLinks?: AssistantNavLink[];
+  materials?: AssistantMaterialRef[];
 }
 
 export function AssistantConversation() {
@@ -40,16 +41,17 @@ export function AssistantConversation() {
     if (!convo?.messages) return;
     if (convo.messages.length === lastServerLenRef.current) return;
     lastServerLenRef.current = convo.messages.length;
-    setMessages(convo.messages.map((m) => ({ role: m.role, content: m.content, lessons: m.lessons, jobs: m.jobs, navLinks: m.navLinks })));
+    setMessages(convo.messages.map((m) => ({ role: m.role, content: m.content, lessons: m.lessons, jobs: m.jobs, navLinks: m.navLinks, materials: m.materials })));
   }, [convo]);
 
   const { data: quota } = trpc.assistant.getQuota.useQuery();
 
   const favItems = useMemo(() => {
-    const items: { itemType: 'LESSON' | 'JOB'; itemId: string }[] = [];
+    const items: { itemType: 'LESSON' | 'JOB' | 'MATERIAL'; itemId: string }[] = [];
     for (const m of messages) {
       (m.lessons ?? []).forEach((l) => items.push({ itemType: 'LESSON', itemId: l.lessonId }));
       (m.jobs ?? []).forEach((j) => items.push({ itemType: 'JOB', itemId: j.jobId }));
+      (m.materials ?? []).forEach((mat) => items.push({ itemType: 'MATERIAL', itemId: mat.materialId }));
     }
     return items;
   }, [messages]);
@@ -61,7 +63,7 @@ export function AssistantConversation() {
 
   const sendMutation = trpc.assistant.sendMessage.useMutation({
     onSuccess: (res) => {
-      setMessages((prev) => [...prev, { role: 'assistant', content: res.answer, lessons: res.lessons, jobs: res.jobs, navLinks: res.navLinks }]);
+      setMessages((prev) => [...prev, { role: 'assistant', content: res.answer, lessons: res.lessons, jobs: res.jobs, navLinks: res.navLinks, materials: res.materials }]);
       utils.assistant.getQuota.invalidate();
       utils.assistant.getConversation.invalidate(); // keep cache current for next reopen
     },
@@ -124,7 +126,7 @@ export function AssistantConversation() {
             >
               <p className="whitespace-pre-wrap">{m.content}</p>
               {m.role === 'assistant' && (
-                <AssistantCards lessons={m.lessons ?? []} jobs={m.jobs ?? []} navLinks={m.navLinks ?? []} favoritedKeys={favoritedKeys} />
+                <AssistantCards lessons={m.lessons ?? []} jobs={m.jobs ?? []} navLinks={m.navLinks ?? []} materials={m.materials ?? []} favoritedKeys={favoritedKeys} />
               )}
             </div>
           </div>
