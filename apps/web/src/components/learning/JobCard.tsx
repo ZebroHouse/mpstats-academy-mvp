@@ -33,7 +33,7 @@ export function JobCard({
   return (
     <Link
       href={`/learn/job/${job.slug}`}
-      className="flex flex-col bg-[#f5f6ff] border border-mp-gray-200 border-l-4 border-l-[#4338ca] rounded-xl py-4 pr-4 pl-5 shadow-mp-card hover:shadow-mp-card-hover transition-shadow"
+      className="flex flex-col h-full bg-[#f5f6ff] border border-mp-gray-200 border-l-4 border-l-[#4338ca] rounded-xl py-4 pr-4 pl-5 shadow-mp-card hover:shadow-mp-card-hover transition-shadow"
     >
       {/* Top row: type pill (left) + editorial badges (right) — never collapses */}
       <div className="flex items-center justify-between gap-1.5 mb-2 min-h-[22px]">

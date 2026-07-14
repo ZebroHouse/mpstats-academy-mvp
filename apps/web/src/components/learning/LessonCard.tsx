@@ -86,7 +86,7 @@ export function LessonCard({ lesson, showCourse, courseName, isRecommended, lock
   const badgePills = deriveBadgePills(lesson.badges);
 
   return (
-    <Link href={`/learn/${lesson.id}${context ? `?from=${context}` : ''}`}>
+    <Link href={`/learn/${lesson.id}${context ? `?from=${context}` : ''}`} className="block h-full">
       <Card className="shadow-mp-card hover:shadow-mp-card-hover transition-all duration-300 cursor-pointer h-full hover:-translate-y-0.5">
         <CardContent className="p-3 sm:p-4">
           <div className="flex items-start gap-3 sm:gap-4">
