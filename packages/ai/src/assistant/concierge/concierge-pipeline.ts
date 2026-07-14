@@ -15,6 +15,7 @@ const MISS: AssistantBranchResult = {
   lessons: [],
   jobs: [],
   navLinks: [{ label: 'Написать в поддержку', href: '/support' }],
+  materials: [],
 };
 
 const EMBEDDINGS = MAP_EMBEDDINGS;
@@ -37,5 +38,5 @@ export async function runConciergePipeline(args: ConciergePipelineArgs): Promise
   const courseFacts = hasDynamic ? formatCourseFacts(await resolveCourseFacts()) : undefined;
 
   const answer = await synthesizeConcierge({ query: args.query, history: args.history, entries, courseFacts });
-  return { answer, lessons: [], jobs: [], navLinks: buildNavLinks(entries) };
+  return { answer, lessons: [], jobs: [], navLinks: buildNavLinks(entries), materials: [] };
 }

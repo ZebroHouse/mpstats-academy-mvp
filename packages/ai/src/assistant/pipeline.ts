@@ -16,7 +16,7 @@ export async function runAssistantPipeline(args: AssistantPipelineArgs): Promise
   const { category } = await classifyDomain(args.query);
 
   if (category === 'off_domain') {
-    return { category, answer: OFF_DOMAIN_REPLY, lessons: [], jobs: [], navLinks: [] };
+    return { category, answer: OFF_DOMAIN_REPLY, lessons: [], jobs: [], navLinks: [], materials: [] };
   }
 
   if (category === 'platform_help') {

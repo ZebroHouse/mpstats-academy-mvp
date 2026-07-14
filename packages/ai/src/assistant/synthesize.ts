@@ -68,7 +68,7 @@ export async function synthesizeAssistantResponse(args: SynthesizeArgs): Promise
   }
 
   if (!parsed) {
-    return { answer: FALLBACK_ANSWER, lessons: [], jobs: [], navLinks: [] };
+    return { answer: FALLBACK_ANSWER, lessons: [], jobs: [], navLinks: [], materials: [] };
   }
 
   const lessonById = new Map(args.lessonCandidates.map((l) => [l.lessonId, l]));
@@ -88,5 +88,5 @@ export async function synthesizeAssistantResponse(args: SynthesizeArgs): Promise
       return { jobId: id, title: m.title, slug: m.slug, lessonCount: m.lessonCount, reason: '' };
     });
 
-  return { answer: fixBrandNames(parsed.answer), lessons, jobs, navLinks: [] };
+  return { answer: fixBrandNames(parsed.answer), lessons, jobs, navLinks: [], materials: [] };
 }

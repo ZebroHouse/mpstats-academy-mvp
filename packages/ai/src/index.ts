@@ -61,6 +61,8 @@ export {
   type AssistantLessonRef,
   type AssistantJobRef,
   type AssistantNavLink,
+  type AssistantMaterialRef,
+  type MaterialCandidate,
   type ReplyCategory,
   type AssistantHistoryMessage,
   type AssistantPipelineArgs,
