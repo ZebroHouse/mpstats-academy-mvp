@@ -253,6 +253,18 @@ export const billingRouter = router({
         courseTitle,
       });
 
+      // Separate receipt for the recurrent (auto-charge) at the FULL plan price.
+      // The first payment may be discounted (firstAmount < plan.price), but CP
+      // recharges at plan.price — so its 54-FZ receipt template must reflect the
+      // full amount, not the discounted first payment. When there's no discount,
+      // firstAmount === plan.price and this receipt is identical to `receipt`.
+      const recurrentReceipt = buildReceipt({
+        plan: { type: plan.type, intervalDays: plan.intervalDays },
+        user: { email: ctx.user.email },
+        amount: plan.price,
+        courseTitle,
+      });
+
       const description =
         input.planType === 'COURSE' && courseTitle
           ? `MPSTATS Academy — курс «${courseTitle}» (${plan.intervalDays} дней)`
@@ -292,6 +304,7 @@ export const billingRouter = router({
         description,
         userId: ctx.user.id,
         receipt,
+        recurrentReceipt,
         recurrentStartDate,
       };
     }),

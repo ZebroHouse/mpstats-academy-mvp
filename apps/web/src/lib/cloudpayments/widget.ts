@@ -49,6 +49,12 @@ export interface CPChargeOptions {
      * When omitted, CP defaults to paymentDate + interval.
      */
     startDate?: string;
+    /**
+     * 54-FZ receipt template for the auto-charge. May differ from the root
+     * `receipt` when the first payment is discounted but the recurrent charges
+     * the full plan price. When omitted, falls back to the root `receipt`.
+     */
+    receipt?: CustomerReceipt;
   };
   /**
    * 54-FZ receipt. Passed both at intent root (first payment) AND inside
@@ -95,6 +101,7 @@ export function openPaymentWidget(options: CPChargeOptions): Promise<boolean> {
     }
 
     if (options.recurrent) {
+      const recurrentReceipt = options.recurrent.receipt ?? options.receipt;
       intentParams.recurrent = {
         interval: options.recurrent.interval,
         period: options.recurrent.period,
@@ -102,7 +109,7 @@ export function openPaymentWidget(options: CPChargeOptions): Promise<boolean> {
         ...(options.recurrent.startDate
           ? { startDate: options.recurrent.startDate }
           : {}),
-        ...(options.receipt ? { receipt: options.receipt } : {}),
+        ...(recurrentReceipt ? { receipt: recurrentReceipt } : {}),
       };
     }
 
