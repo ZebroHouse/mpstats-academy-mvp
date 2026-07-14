@@ -1,0 +1,23 @@
+[
+  { "query": "хочу перестать платить за подписку", "expect": "cancel-subscription" },
+  { "query": "где посмотреть уроки которые я добавил в сохранённое", "expect": "favorites" },
+  { "query": "сколько занятий в курсе по аналитике", "expect": "course-catalog" },
+  { "query": "как позвать друга и получить за это бонусные дни", "expect": "referral-how" },
+  { "query": "расскажи как проходит тест на навыки", "expect": "diagnostic-how" },
+  { "query": "хочу оплатить и получить доступ ко всем урокам", "expect": "subscribe" },
+  { "query": "надо поменять пароль от аккаунта", "expect": "change-password" },
+  { "query": "куда написать если нужна помощь живого человека", "expect": "support" },
+  { "query": "где смотреть колокольчик с новыми сообщениями", "expect": "notifications" },
+  { "query": "как включить бонусные дни за приглашённого", "expect": "referral-activate" },
+  { "query": "хочу заново пройти диагностику", "expect": "diagnostic-retake" },
+  { "query": "куда вводить купон на скидку", "expect": "promo" },
+  { "query": "мне не приходит письмо чтобы подтвердить почту", "expect": "email-not-confirmed" },
+  { "query": "видео в уроке не запускается, чёрный экран", "expect": "video-not-playing" },
+  { "query": "как отметить что урок пройден", "expect": "lesson-complete" },
+  { "query": "где найти мою программу обучения", "expect": "learn-plan" },
+  { "query": "чем ты вообще можешь мне помочь", "expect": "assistant-about" },
+  { "query": "какая погода завтра в москве", "expect": "MISS" },
+  { "query": "сколько сегодня стоит биткоин", "expect": "MISS" },
+  { "query": "посоветуй хороший рецепт борща", "expect": "MISS" },
+  { "query": "кто выиграл вчера в футбольном матче", "expect": "MISS" }
+]

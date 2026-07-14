@@ -13,7 +13,7 @@ function getBaseUrl() {
 }
 
 // AI procedures are slow (LLM calls, 3-10s) — must not block fast queries
-const AI_PROCEDURES = new Set(['ai.getLessonSummary', 'ai.chat', 'ai.searchChunks', 'ai.searchLessons']);
+const AI_PROCEDURES = new Set(['ai.getLessonSummary', 'ai.chat', 'ai.searchChunks', 'ai.searchLessons', 'assistant.sendMessage']);
 
 export function TRPCProvider({ children }: { children: React.ReactNode }) {
   const [queryClient] = useState(

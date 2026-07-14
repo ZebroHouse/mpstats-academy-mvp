@@ -14,6 +14,7 @@ import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { TrialCountdown } from '@/components/billing/TrialCountdown';
 import { ReferralBanner } from '@/components/referral/ReferralBanner';
 import { PartnerSetupBanner } from '@/components/partner/PartnerSetupBanner';
+import { AssistantLauncher } from '@/components/assistant/AssistantLauncher';
 
 export const metadata: Metadata = {
   title: 'Личный кабинет',
@@ -78,6 +79,9 @@ export default async function MainLayout({
   // (staging on / prod off until launch sign-off). Runtime flag — no rebuild to flip.
   const partnerEnabled = process.env.PARTNER_COURSES_ENABLED === 'true';
 
+  // AI assistant top-bar launcher is env-gated per environment during rollout.
+  const assistantEnabled = process.env.ASSISTANT_ENABLED === 'true';
+
   return (
     <div className="min-h-screen bg-mp-gray-50">
       {/* Sidebar - fixed on desktop */}
@@ -108,6 +112,7 @@ export default async function MainLayout({
               <div className="hidden md:block" />
               {/* Help + User nav */}
               <div className="flex items-center gap-2">
+                <AssistantLauncher enabled={assistantEnabled} />
                 <TrialCountdown />
                 <NotificationBell />
                 <HelpCircleButton />

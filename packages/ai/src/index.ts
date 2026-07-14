@@ -52,3 +52,24 @@ export type {
 export { resolveIntent } from './intent';
 export type { IntentResult, IntentAction, JobCandidate } from './intent';
 export type { ResolveArgs } from './intent/resolve';
+
+// Assistant pipeline (multi-turn LLM + retrieval + synthesis)
+export {
+  runAssistantPipeline,
+  type AssistantTurnResult,
+  type AssistantBranchResult,
+  type AssistantLessonRef,
+  type AssistantJobRef,
+  type AssistantNavLink,
+  type AssistantMaterialRef,
+  type MaterialCandidate,
+  type ReplyCategory,
+  type AssistantHistoryMessage,
+  type AssistantPipelineArgs,
+} from './assistant';
+
+// Concierge (platform knowledge map)
+export { PLATFORM_MAP } from './assistant/concierge';
+export type { MapEntry, StaticMapEntry, DynamicMapEntry } from './assistant/concierge';
+export { getFaqItems } from './assistant/concierge';
+export type { FaqItem } from './assistant/concierge';

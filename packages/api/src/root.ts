@@ -16,6 +16,7 @@ import { intentRouter } from './routers/intent';
 import { favoriteRouter } from './routers/favorite';
 import { partnerRouter } from './routers/partner';
 import { dashboardRouter } from './routers/dashboard';
+import { assistantRouter } from './routers/assistant';
 
 export const appRouter = router({
   profile: profileRouter,
@@ -35,6 +36,7 @@ export const appRouter = router({
   favorite: favoriteRouter,
   partner: partnerRouter,
   dashboard: dashboardRouter,
+  assistant: assistantRouter,
 });
 
 export type AppRouter = typeof appRouter;

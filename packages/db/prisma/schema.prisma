@@ -61,6 +61,7 @@ model UserProfile {
   referralPackages       ReferralBonusPackage[]   @relation("ReferralPackagesOwned")
   referralsReviewed      Referral[]               @relation("ReferralsReviewedByAdmin")
   ambassadorCodesCreated ReferralCode[]           @relation("AmbassadorCodesCreatedBy")
+  assistantConversations AssistantConversation[]
 }
 
 // ============== DIAGNOSTIC ==============
@@ -488,6 +489,7 @@ model Material {
   createdBy    String // userId автора (методолог/админ)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
+  embedding    Unsupported("vector(1536)")? // material-surfacing: assistant retrieval via pgvector cosine
 
   lessons LessonMaterial[]
 
@@ -760,4 +762,35 @@ model ReferralCodeClickDay {
 
   @@id([codeId, day])
   @@index([day])
+}
+
+model AssistantConversation {
+  id        String   @id @default(cuid())
+  userId    String
+  status    String   @default("active") // active | archived
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user     UserProfile        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  messages AssistantMessage[]
+
+  @@index([userId, status])
+}
+
+model AssistantMessage {
+  id             String   @id @default(cuid())
+  conversationId String
+  role           String   // user | assistant
+  content        String   @db.Text
+  lessonIds      String[] @default([]) // подмешанные карточки уроков (assistant)
+  jobIds         String[] @default([]) // подмешанные карточки задач (assistant)
+  inDomain       Boolean  @default(true) // false = офф-топик отказ (аналитика + квота)
+  category       String?  // material | platform_help | complaint | off_domain (хребет)
+  navLinks       Json     @default("[]") // deep-link карточки концьержа [{label,href}]
+  materialIds    String[] @default([]) // подмешанные карточки материалов (assistant)
+  createdAt      DateTime @default(now())
+
+  conversation AssistantConversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+
+  @@index([conversationId, createdAt])
 }
