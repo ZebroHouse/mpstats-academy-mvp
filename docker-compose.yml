@@ -34,6 +34,10 @@ services:
       # rule (see docs/partner/carrotquest-magic-link-rule-spec.md) — new emails and
       # already-logged-in users work without it. Flip off = remove this line + up -d.
       PARTNER_ENTRY_ENABLED: "true"
+      # Cross-platform AI assistant (right drawer + /support concierge + material
+      # surfacing). Enabled on prod after staging UAT sign-off 2026-07-14. Runtime
+      # flag — flip off = remove this line + up -d (assistant code goes inert).
+      ASSISTANT_ENABLED: "true"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health"]
