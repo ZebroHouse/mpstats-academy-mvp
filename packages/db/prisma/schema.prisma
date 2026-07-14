@@ -481,6 +481,7 @@ model Material {
   createdBy    String // userId автора (методолог/админ)
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
+  embedding    Unsupported("vector(1536)")? // material-surfacing: assistant retrieval via pgvector cosine
 
   lessons LessonMaterial[]
 
