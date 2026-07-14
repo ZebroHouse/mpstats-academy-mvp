@@ -172,7 +172,7 @@ export function AssistantConversation() {
           </button>
         </div>
         <p className="mt-1.5 text-center text-[10px] text-mp-gray-400">
-          Отвечает по материалам академии. Не финансовый совет.
+          ИИ-помощник: могу ошибаться, финальное решение за тобой.
         </p>
       </div>
     </div>
