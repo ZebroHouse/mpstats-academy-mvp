@@ -299,6 +299,7 @@ function PricingContent() {
           period: 1,
           amount: result.recurrentAmount,
           startDate: result.recurrentStartDate,
+          receipt: result.recurrentReceipt,
         },
         receipt: result.receipt,
       });
