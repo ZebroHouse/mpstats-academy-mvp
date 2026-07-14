@@ -9,6 +9,14 @@ vi.mock('../../utils/assistant-quota', async (orig) => {
   return { ...actual, getAssistantQuota: (...a: unknown[]) => quotaMock(...a) };
 });
 
+// Stub only resolveAccessibleMaterialIds — keep the real applyMaterialAccess so the
+// actual externalUrl-nulling (leak invariant) runs against the router wiring.
+const resolveAccessibleMock = vi.fn();
+vi.mock('../../utils/material-access', async (orig) => {
+  const actual = await (orig as any)();
+  return { ...actual, resolveAccessibleMaterialIds: (...a: unknown[]) => resolveAccessibleMock(...a) };
+});
+
 import { assistantRouter } from '../assistant';
 
 function makeCtx() {
@@ -76,6 +84,32 @@ describe('assistant.getConversation', () => {
     const res = await caller.getConversation();
     expect(res.messages).toHaveLength(2);
     expect(res.messages[1].lessons[0].title).toBe('ДРР урок');
+  });
+
+  it('гейтит материалы на чтении: URL залоченного зануляется (leak invariant)', async () => {
+    resolveAccessibleMock.mockResolvedValue(new Set(['m-open']));
+    const prisma = {
+      assistantConversation: { findFirst: vi.fn().mockResolvedValue({ id: 'C1', userId: 'u1' }) },
+      assistantMessage: { findMany: vi.fn().mockResolvedValue([
+        { role: 'assistant', content: 'вот материалы', lessonIds: [], jobIds: [], materialIds: ['m-open', 'm-locked'], inDomain: true },
+      ]) },
+      lesson: { findMany: vi.fn().mockResolvedValue([]) },
+      job: { findMany: vi.fn().mockResolvedValue([]) },
+      material: { findMany: vi.fn().mockResolvedValue([
+        { id: 'm-open', type: 'sheet', title: 'Открытый', ctaText: 'Открыть', externalUrl: 'https://x', storagePath: null },
+        { id: 'm-locked', type: 'sheet', title: 'Залоченный', ctaText: 'Открыть', externalUrl: 'https://y', storagePath: null },
+      ]) },
+      userProfile: { findUnique: vi.fn().mockResolvedValue(null), update: vi.fn() },
+      userActivityDay: { upsert: vi.fn() },
+    } as any;
+    const caller = assistantRouter.createCaller({ prisma, user: { id: 'u1' } } as any);
+    const res = await caller.getConversation();
+
+    const mats = res.messages[0].materials;
+    const open = mats.find((m) => m.materialId === 'm-open')!;
+    const locked = mats.find((m) => m.materialId === 'm-locked')!;
+    expect(open).toMatchObject({ isAccessible: true, externalUrl: 'https://x' });
+    expect(locked).toMatchObject({ isAccessible: false, externalUrl: null });
   });
 
   it('пустая нить → пустой массив', async () => {
