@@ -27,4 +27,12 @@ describe('searchMaterialsByEmbedding', () => {
     queryRawUnsafe.mockResolvedValue([]);
     expect(await searchMaterialsByEmbedding('x', {})).toEqual([]);
   });
+
+  it('прокидывает limit и threshold в SQL', async () => {
+    queryRawUnsafe.mockResolvedValue([]);
+    await searchMaterialsByEmbedding('q', { limit: 5, threshold: 0.5 });
+    const sql = queryRawUnsafe.mock.calls[0][0] as string;
+    expect(sql).toContain('LIMIT 5');
+    expect(sql).toContain('> 0.5');
+  });
 });

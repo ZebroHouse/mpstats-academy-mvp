@@ -14,11 +14,13 @@ interface MaterialEmbedRow {
 }
 
 // Косинус-поиск по Material.embedding. Только non-hidden материалы,
-// у которых есть хотя бы один видимый прикреплённый урок.
+// у которых есть хотя бы один видимый прикреплённый урок в видимом курсе.
 export async function searchMaterialsByEmbedding(
   query: string,
   opts: { limit?: number; threshold?: number } = {},
 ): Promise<MaterialCandidate[]> {
+  // threshold 0.35 — провизорное значение, будет откалибровано на staging (Task MD1).
+  // Отличие от jobs (0.2) намеренное, не баг.
   const { limit = 6, threshold = 0.35 } = opts;
   const vec = await embedQuery(query);
   const literal = `[${vec.join(',')}]`;
@@ -34,7 +36,10 @@ export async function searchMaterialsByEmbedding(
        AND EXISTS (
          SELECT 1 FROM "LessonMaterial" lm
          JOIN "Lesson" l ON l.id = lm."lessonId"
-         WHERE lm."materialId" = m.id AND l."isHidden" = false
+         JOIN "Course" c ON c.id = l."courseId"
+         WHERE lm."materialId" = m.id
+           AND l."isHidden" = false
+           AND c."isHidden" = false
        )
      ORDER BY m."embedding" <=> '${literal}'::vector
      LIMIT ${limit}`,
