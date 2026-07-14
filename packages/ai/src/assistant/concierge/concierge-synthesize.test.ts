@@ -21,4 +21,13 @@ describe('buildNavLinks', () => {
     const links = buildNavLinks([entries[2]]);
     expect(links).toEqual([]);
   });
+
+  it('дедуп по href: несколько записей на одну страницу → одна карточка', () => {
+    const dupes: MapEntry[] = [
+      { id: 'plan', kind: 'static', section: 'nav', triggers: [], answer: 'a', deepLink: { label: 'Открыть план', href: '/learn/plan' } },
+      { id: 'recos', kind: 'static', section: 'diag', triggers: [], answer: 'b', deepLink: { label: 'Открыть план', href: '/learn/plan' } },
+      { id: 'rebuild', kind: 'static', section: 'diag', triggers: [], answer: 'c', deepLink: { label: 'Открыть план', href: '/learn/plan' } },
+    ];
+    expect(buildNavLinks(dupes)).toEqual([{ label: 'Открыть план', href: '/learn/plan' }]);
+  });
 });

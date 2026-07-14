@@ -10,10 +10,17 @@ const FALLBACK =
   'Точно подсказать по этому не берусь, чтобы не запутать. Если что — напиши в поддержку, там помогут.';
 
 // Whitelist: deep-links только из найденных записей карты. LLM их не генерирует.
+// Дедуп по href: несколько записей карты часто ведут на одну страницу (напр. learn-plan
+// + diagnostic-recos + diagnostic-rebuild → /learn/plan) — показываем одну карточку на
+// назначение, а не дубли. Порядок сохраняем (первое вхождение = самое релевантное).
 export function buildNavLinks(entries: MapEntry[]): AssistantNavLink[] {
   const links: AssistantNavLink[] = [];
+  const seen = new Set<string>();
   for (const e of entries) {
-    if (e.kind === 'static' && e.deepLink) links.push(e.deepLink);
+    if (e.kind !== 'static' || !e.deepLink) continue;
+    if (seen.has(e.deepLink.href)) continue;
+    seen.add(e.deepLink.href);
+    links.push(e.deepLink);
   }
   return links;
 }
