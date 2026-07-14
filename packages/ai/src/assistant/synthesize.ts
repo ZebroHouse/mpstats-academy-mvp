@@ -23,6 +23,11 @@ const llmSchema = z.object({
 const FALLBACK_ANSWER =
   'Кажется, я не смог собрать точный ответ. Переформулируй вопрос — или загляни в Базу знаний, там есть материалы по большинству тем.';
 
+// Явный запрос материала (чек-лист/шаблон/таблица/памятка/файл/презентация/материал/скачать)
+// → если LLM не выбрал материал, включаем самый релевантный кандидат при similarity ≥ порога.
+const EXPLICIT_MATERIAL_RE = /чек-?лист|шаблон|табли|памятк|презентац|файл|скачать|материал/i;
+const MATERIAL_FALLBACK_FLOOR = 0.5;
+
 const SYSTEM = `Ты — помощник обучающей платформы для селлеров Wildberries и Ozon. Отвечай по-русски, кратко и по делу.
 
 ПРАВИЛА:
@@ -30,7 +35,7 @@ const SYSTEM = `Ты — помощник обучающей платформы 
 2. НЕ выдумывай живые рыночные данные (какие ниши горячи, конкретные цифры спроса) и НЕ давай директивных финсоветов «вложи сюда». На такие вопросы объясняй МЕТОД и предлагай проверить гипотезы в сервисе MPSTATS.
 3. В поле "answer" пиши ТОЛЬКО связный содержательный ответ обычным текстом. КАТЕГОРИЧЕСКИ НЕЛЬЗЯ: перечислять, называть или упоминать в тексте конкретные уроки/задачи, писать их id, технические коды (вроде 04_workshops_...), слово «id=», ссылки или списки «полезные уроки». Подходящие материалы платформа сама покажет отдельными карточками под ответом — их выбираешь ТОЛЬКО через массивы lessonIds/jobIds.
 4. В lessonIds/jobIds клади ТОЛЬКО те id из списка КАНДИДАТОВ ниже, что реально релевантны вопросу (обычно 1–3, не все подряд). Не придумывай id. Если ничего толком не подходит — верни пустые массивы, и в тексте на карточки не ссылайся.
-5. В "materialIds" клади ТОЛЬКО id из списка КАНДИДАТОВ-МАТЕРИАЛОВ ниже и ТОЛЬКО если материал прямо в тему вопроса или юзер просит шаблон/чек-лист/таблицу. МАКСИМУМ 1-2, не вываливай все. Обычно 0-1. Не придумывай id. В тексте ответа материалы и их id не упоминай.
+5. В "materialIds" клади id из списка КАНДИДАТОВ-МАТЕРИАЛОВ ниже. Если юзер ЯВНО просит чек-лист / шаблон / таблицу / памятку / файл / презентацию (слова вроде «дай», «скачать», «есть ли файл/таблица») И среди кандидатов есть подходящий по теме — ОБЯЗАТЕЛЬНО добавь самый релевантный (1, максимум 2). Без явного запроса добавляй материал только если он прямо в тему и реально полезен (0-1). Не придумывай id, не вываливай все, в тексте ответа материалы и их id не упоминай.
 
 Верни СТРОГО JSON (в "answer" — только человекочитаемый текст, без id и без перечня уроков):
 {"answer": "<markdown-ответ без упоминания уроков и id>", "lessonIds": ["<id из кандидатов>"], "jobIds": ["<id из кандидатов>"], "materialIds": ["<id>"]}`;
@@ -97,17 +102,26 @@ export async function synthesizeAssistantResponse(args: SynthesizeArgs): Promise
 
   const CAP = 2;
   const materialById = new Map(args.materialCandidates.map((m) => [m.materialId, m]));
-  const materials = parsed.materialIds
+  const toMaterialRef = (m: MaterialCandidate): AssistantMaterialRef => ({
+    materialId: m.materialId, type: m.type, title: m.title, ctaText: m.ctaText,
+    isAccessible: true, // STUB: реальный доступ проставит роутер (MB2); здесь всегда true
+    externalUrl: m.externalUrl, hasFile: m.hasFile,
+  });
+  let materials = parsed.materialIds
     .filter((id) => materialById.has(id))
     .slice(0, CAP)
-    .map((id) => {
-      const m = materialById.get(id)!;
-      return {
-        materialId: id, type: m.type, title: m.title, ctaText: m.ctaText,
-        isAccessible: true, // STUB: реальный доступ проставит роутер (MB2); здесь всегда true
-        externalUrl: m.externalUrl, hasFile: m.hasFile,
-      } satisfies AssistantMaterialRef;
-    });
+    .map((id) => toMaterialRef(materialById.get(id)!));
+
+  // Детерминированный фолбэк: юзер ЯВНО просит чек-лист/шаблон/таблицу/файл, а LLM
+  // (капризно, temp 0.3) ничего не выбрал — подставляем самый релевантный кандидат,
+  // если он реально в тему (similarity ≥ порога). Гарантирует материал на явный запрос.
+  if (materials.length === 0 && EXPLICIT_MATERIAL_RE.test(args.query)) {
+    const top = args.materialCandidates.reduce<MaterialCandidate | null>(
+      (best, m) => (best === null || m.similarity > best.similarity ? m : best),
+      null,
+    );
+    if (top && top.similarity >= MATERIAL_FALLBACK_FLOOR) materials = [toMaterialRef(top)];
+  }
 
   return { answer: fixBrandNames(parsed.answer), lessons, jobs, navLinks: [], materials };
 }

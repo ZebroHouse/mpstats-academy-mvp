@@ -59,6 +59,25 @@ describe('synthesizeAssistantResponse', () => {
     expect(r.materials).toEqual([]);
   });
 
+  it('фолбэк: явный запрос («дай чек-лист») + LLM пусто → самый релевантный кандидат', async () => {
+    mockReply({ answer: 'текст', lessonIds: [], jobIds: [], materialIds: [] });
+    const r = await synthesizeAssistantResponse({ query: 'дай чек-лист по карточке', history: [], lessonCandidates: [], jobCandidates: [], materialCandidates: materialCands });
+    expect(r.materials.map((m) => m.materialId)).toEqual(['M1']); // топ по similarity (0.7)
+  });
+
+  it('фолбэк НЕ срабатывает при слабом топ-кандидате (<0.5)', async () => {
+    mockReply({ answer: 'текст', lessonIds: [], jobIds: [], materialIds: [] });
+    const weak = materialCands.map((m) => ({ ...m, similarity: 0.4 }));
+    const r = await synthesizeAssistantResponse({ query: 'дай чек-лист', history: [], lessonCandidates: [], jobCandidates: [], materialCandidates: weak });
+    expect(r.materials).toEqual([]);
+  });
+
+  it('фолбэк НЕ срабатывает без явного запроса материала', async () => {
+    mockReply({ answer: 'текст', lessonIds: [], jobIds: [], materialIds: [] });
+    const r = await synthesizeAssistantResponse({ query: 'как поднять продажи', history: [], lessonCandidates: [], jobCandidates: [], materialCandidates: materialCands });
+    expect(r.materials).toEqual([]);
+  });
+
   it('при невалидном JSON возвращает fallback-ответ без карточек', async () => {
     createMock.mockResolvedValueOnce({ choices: [{ message: { content: 'сломано' } }] });
     const r = await synthesizeAssistantResponse({ query: 'q', history: [], lessonCandidates: lessonCands, jobCandidates: jobCands, materialCandidates: [] });
