@@ -69,6 +69,7 @@ Sibling project `D:/GpT_docs/Ai_MP_manager/` запустил `prisma db push --
 | v1.28 Диагностика по осям | Shipped 2026-07-03 (`AxisLearningPath v3`, разбор ошибок ожил; `1397a93`) |
 | Post-v1.28 (07-06→07-08) | Контекстный возврат после урока, скролл/мобайл фиксы интерактива, курс `08_ctr`, роль SALES, единые фильтры аналитики, Tochka OAuth LIVE, пост-онбординг первый урок (`f9120da`) — см. `MEMORY.md` |
 | Post-v1.28 (07-12→07-13) | Курс `09_ozon_prodvizhenie` LIVE (51 ур, 1990₽; `afd3424`), реф-код lazy-gen фикс + backfill 391 (`2c438b5`, PR #33) — см. `MEMORY.md` |
+| v1.29 Скидочные промокоды | Shipped 2026-07-13/14 (`2884a7f`): скидка %/фикса на первый платёж для промо- и амбассадор-кодов, рекуррент по полной цене, «Все тарифы» (plan-agnostic), амбассадор `refereeTrialDays=0`=базовый триал, consume-on-success. Фиксы: чек рекуррента 54-ФЗ, кнопка отмены на скидочной подписке. Деплой в обход staging. Детали — `.claude/memory/project_discount_promo_codes.md` |
 
 **Remaining work:**
 1. Phase 33-03: CQ Dashboard Setup (на стороне CQ команды).
@@ -115,7 +116,7 @@ _No long-lived branches in flight._ Ветки фаз смерджены; worktr
 
 Полная лента «Last/Previous Session» перенесена в `.claude/memory/session-history.md` (newest-first, 50+ сессий с 2026-03).
 Свежие сессии + durable-факты/гочи — в auto-memory `MEMORY.md`.
-Прод сейчас: `2c438b5` (курс Озон `09_ozon_prodvizhenie` + реф-код lazy-gen фикс). Ранее: `08_ctr`, роль SALES, Tochka OAuth, пост-онбординг `f9120da`.
+Прод сейчас: `2884a7f` (скидочные промокоды: скидка на первый платёж, «Все тарифы», амбассадор-скидки, фиксы чека рекуррента + кнопки отмены). Ранее: курс Озон `09_ozon_prodvizhenie` (`2c438b5`), `08_ctr`, Tochka OAuth.
 
 ## Key Decisions
 
