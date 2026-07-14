@@ -453,7 +453,13 @@ export default function ProfilePage() {
   const hasActiveSubscription =
     subscription && ['ACTIVE', 'TRIAL', 'PAST_DUE', 'CANCELLED'].includes(subscription.status);
 
-  const isPromoSubscription = subscription?.promoCodeId != null;
+  // "Промо-доступ" = бесплатный comp-доступ по промокоду на ДНИ (нет платежа,
+  // нет рекуррента → нечего отменять). Скидочный промокод тоже ставит
+  // promoCodeId, но на РЕАЛЬНОЙ рекуррент-подписке (есть cpSubscriptionId) —
+  // её надо показывать как платную и давать кнопку отмены. Поэтому промо-доступ
+  // определяем как promoCodeId есть И cpSubscriptionId нет.
+  const isPromoSubscription =
+    subscription?.promoCodeId != null && subscription?.cpSubscriptionId == null;
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 overflow-hidden">
