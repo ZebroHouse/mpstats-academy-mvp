@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { getOpenRouterClient, MODELS } from '../openrouter';
 import { fixBrandNames } from '../generation';
-import type { AssistantHistoryMessage, AssistantBranchResult, LessonCandidate, MaterialCandidate } from './types';
+import type { AssistantHistoryMessage, AssistantBranchResult, AssistantMaterialRef, LessonCandidate, MaterialCandidate } from './types';
 import type { JobCandidate } from '../intent/types';
 
 export interface SynthesizeArgs {
@@ -17,6 +17,7 @@ const llmSchema = z.object({
   answer: z.string().min(1),
   lessonIds: z.array(z.string()).default([]),
   jobIds: z.array(z.string()).default([]),
+  materialIds: z.array(z.string()).default([]),
 });
 
 const FALLBACK_ANSWER =
@@ -29,9 +30,10 @@ const SYSTEM = `Ты — помощник обучающей платформы 
 2. НЕ выдумывай живые рыночные данные (какие ниши горячи, конкретные цифры спроса) и НЕ давай директивных финсоветов «вложи сюда». На такие вопросы объясняй МЕТОД и предлагай проверить гипотезы в сервисе MPSTATS.
 3. В поле "answer" пиши ТОЛЬКО связный содержательный ответ обычным текстом. КАТЕГОРИЧЕСКИ НЕЛЬЗЯ: перечислять, называть или упоминать в тексте конкретные уроки/задачи, писать их id, технические коды (вроде 04_workshops_...), слово «id=», ссылки или списки «полезные уроки». Подходящие материалы платформа сама покажет отдельными карточками под ответом — их выбираешь ТОЛЬКО через массивы lessonIds/jobIds.
 4. В lessonIds/jobIds клади ТОЛЬКО те id из списка КАНДИДАТОВ ниже, что реально релевантны вопросу (обычно 1–3, не все подряд). Не придумывай id. Если ничего толком не подходит — верни пустые массивы, и в тексте на карточки не ссылайся.
+5. В "materialIds" клади ТОЛЬКО id из списка КАНДИДАТОВ-МАТЕРИАЛОВ ниже и ТОЛЬКО если материал прямо в тему вопроса или юзер просит шаблон/чек-лист/таблицу. МАКСИМУМ 1-2, не вываливай все. Обычно 0-1. Не придумывай id. В тексте ответа материалы и их id не упоминай.
 
 Верни СТРОГО JSON (в "answer" — только человекочитаемый текст, без id и без перечня уроков):
-{"answer": "<markdown-ответ без упоминания уроков и id>", "lessonIds": ["<id из кандидатов>"], "jobIds": ["<id из кандидатов>"]}`;
+{"answer": "<markdown-ответ без упоминания уроков и id>", "lessonIds": ["<id из кандидатов>"], "jobIds": ["<id из кандидатов>"], "materialIds": ["<id>"]}`;
 
 function buildUserMessage(args: SynthesizeArgs): string {
   const lessons = args.lessonCandidates
@@ -40,12 +42,15 @@ function buildUserMessage(args: SynthesizeArgs): string {
   const jobs = args.jobCandidates
     .map((j) => `- ЗАДАЧА id=${j.jobId} | ${j.title} (${j.lessonCount} уроков)`)
     .join('\n');
+  const materials = args.materialCandidates
+    .map((m) => `- МАТЕРИАЛ id=${m.materialId} | ${m.title} | ${m.type}`)
+    .join('\n');
   const hist = args.history
     .slice(-10)
     .map((m) => `${m.role === 'user' ? 'Юзер' : 'Ассистент'}: ${m.content}`)
     .join('\n');
 
-  return `ИСТОРИЯ ДИАЛОГА:\n${hist || '(пусто)'}\n\nВОПРОС: ${args.query}\n\nКАНДИДАТЫ-УРОКИ:\n${lessons || '(нет)'}\n\nКАНДИДАТЫ-ЗАДАЧИ:\n${jobs || '(нет)'}`;
+  return `ИСТОРИЯ ДИАЛОГА:\n${hist || '(пусто)'}\n\nВОПРОС: ${args.query}\n\nКАНДИДАТЫ-УРОКИ:\n${lessons || '(нет)'}\n\nКАНДИДАТЫ-ЗАДАЧИ:\n${jobs || '(нет)'}\n\nКАНДИДАТЫ-МАТЕРИАЛЫ:\n${materials || '(нет)'}`;
 }
 
 export async function synthesizeAssistantResponse(args: SynthesizeArgs): Promise<AssistantBranchResult> {
@@ -90,5 +95,18 @@ export async function synthesizeAssistantResponse(args: SynthesizeArgs): Promise
       return { jobId: id, title: m.title, slug: m.slug, lessonCount: m.lessonCount, reason: '' };
     });
 
-  return { answer: fixBrandNames(parsed.answer), lessons, jobs, navLinks: [], materials: [] };
+  const CAP = 2;
+  const materialById = new Map(args.materialCandidates.map((m) => [m.materialId, m]));
+  const materials = parsed.materialIds
+    .filter((id) => materialById.has(id))
+    .slice(0, CAP)
+    .map((id) => {
+      const m = materialById.get(id)!;
+      return {
+        materialId: id, type: m.type, title: m.title, ctaText: m.ctaText,
+        isAccessible: true, externalUrl: m.externalUrl, hasFile: m.hasFile,
+      } satisfies AssistantMaterialRef;
+    });
+
+  return { answer: fixBrandNames(parsed.answer), lessons, jobs, navLinks: [], materials };
 }

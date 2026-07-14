@@ -17,6 +17,10 @@ const lessonCands: LessonCandidate[] = [
 const jobCands = [
   { jobId: 'J1', title: 'Настроить рекламу WB', slug: 'nastroit-reklamu', lessonCount: 7 } as JobCandidate,
 ];
+const materialCands = [
+  { materialId: 'M1', type: 'CHECKLIST', title: 'Чек-лист карточки', description: null, ctaText: 'Скачать', externalUrl: null, hasFile: true, similarity: 0.7 },
+  { materialId: 'M2', type: 'CALCULATION_TABLE', title: 'Таблица юнит-экономики', description: null, ctaText: 'Открыть', externalUrl: 'https://x', hasFile: false, similarity: 0.6 },
+];
 
 function mockReply(json: unknown) {
   createMock.mockResolvedValueOnce({ choices: [{ message: { content: JSON.stringify(json) } }] });
@@ -39,6 +43,19 @@ describe('synthesizeAssistantResponse', () => {
     const r = await synthesizeAssistantResponse({ query: 'q', history: [], lessonCandidates: lessonCands, jobCandidates: jobCands, materialCandidates: [] });
     expect(r.lessons.map((l) => l.lessonId)).toEqual(['L1']);
     expect(r.jobs).toEqual([]);
+  });
+
+  it('whitelist материалов + кап 2, ghost выброшен', async () => {
+    mockReply({ answer: 'текст', lessonIds: [], jobIds: [], materialIds: ['GHOST', 'M1', 'M2'] });
+    const r = await synthesizeAssistantResponse({ query: 'чек-лист по карточке', history: [], lessonCandidates: [], jobCandidates: [], materialCandidates: materialCands });
+    expect(r.materials.map((m) => m.materialId)).toEqual(['M1', 'M2']);
+    expect(r.materials[0]).toMatchObject({ isAccessible: true, hasFile: true });
+  });
+
+  it('материалы не отдаются при отсутствии materialIds', async () => {
+    mockReply({ answer: 'текст', lessonIds: [], jobIds: [] });
+    const r = await synthesizeAssistantResponse({ query: 'q', history: [], lessonCandidates: [], jobCandidates: [], materialCandidates: materialCands });
+    expect(r.materials).toEqual([]);
   });
 
   it('при невалидном JSON возвращает fallback-ответ без карточек', async () => {
