@@ -104,7 +104,8 @@ export async function synthesizeAssistantResponse(args: SynthesizeArgs): Promise
       const m = materialById.get(id)!;
       return {
         materialId: id, type: m.type, title: m.title, ctaText: m.ctaText,
-        isAccessible: true, externalUrl: m.externalUrl, hasFile: m.hasFile,
+        isAccessible: true, // STUB: реальный доступ проставит роутер (MB2); здесь всегда true
+        externalUrl: m.externalUrl, hasFile: m.hasFile,
       } satisfies AssistantMaterialRef;
     });
 
