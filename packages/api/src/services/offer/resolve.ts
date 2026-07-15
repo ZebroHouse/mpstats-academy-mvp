@@ -19,8 +19,8 @@ export interface ResolvedOffer {
  * applies for `userId`. Eligible when ALL hold:
  *  - planType === 'PLATFORM' (COURSE is always normal)
  *  - no discount is being applied (discount wins — spec §3.4)
- *  - the user has a TRIAL subscription whose currentPeriodEnd is within the
- *    window [now, trialEnd + 24h grace]
+ *  - the user has a TRIAL subscription and `now` is within the window
+ *    [trialEnd, trialEnd + 24h grace]
  *  - the user has no active paid PLATFORM subscription
  *  - the offer has not been redeemed before (OfferRedemption is one-per-user)
  *
@@ -57,12 +57,16 @@ export async function resolveApplicableOffer(args: {
   });
   if (redeemed) return null;
 
-  // Already has an active paid PLATFORM sub → not a trial-conversion target.
+  // Already has paid PLATFORM access → not a trial-conversion target.
+  // CANCELLED with a still-future currentPeriodEnd counts: the user paid and
+  // merely turned auto-renew off, so they retain access until period end.
+  // Mirrors access.ts's active-access definition (ACTIVE|TRIAL|CANCELLED &&
+  // currentPeriodEnd > now); TRIAL is handled by the trial lookup above.
   const paid = await prisma.subscription.findFirst({
     where: {
       userId,
       plan: { type: 'PLATFORM' },
-      status: { in: ['ACTIVE', 'PAST_DUE'] },
+      status: { in: ['ACTIVE', 'PAST_DUE', 'CANCELLED'] },
       currentPeriodEnd: { gt: now },
     },
     select: { id: true },

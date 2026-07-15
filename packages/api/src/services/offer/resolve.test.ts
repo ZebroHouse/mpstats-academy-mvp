@@ -6,17 +6,26 @@ const DAY = 24 * 60 * 60 * 1000;
 // Minimal fake prisma: only the methods resolveApplicableOffer calls.
 function fakePrisma(opts: {
   trialEnd?: Date | null;         // latest TRIAL sub's currentPeriodEnd, null = no trial
-  paidActive?: boolean;           // an ACTIVE/PAST_DUE PLATFORM sub with periodEnd > now
+  paidActive?: boolean;           // shorthand: an ACTIVE PLATFORM sub with periodEnd > now
+  paidStatus?: 'ACTIVE' | 'PAST_DUE' | 'CANCELLED' | null; // status of the existing paid PLATFORM sub
+  paidPeriodEnd?: Date;           // periodEnd of that paid sub (defaults to +30d)
   redeemed?: boolean;             // OfferRedemption exists for user
 }) {
+  // Model the existing paid PLATFORM sub, if any.
+  const paidStatus = opts.paidStatus ?? (opts.paidActive ? 'ACTIVE' : null);
+  const paidPeriodEnd = opts.paidPeriodEnd ?? new Date(Date.now() + 30 * DAY);
   return {
     subscription: {
       findFirst: async ({ where }: any) => {
         if (where.status === 'TRIAL') {
           return opts.trialEnd ? { currentPeriodEnd: opts.trialEnd } : null;
         }
-        // paid-active lookup: status in [ACTIVE, PAST_DUE]
-        return opts.paidActive ? { id: 'paid1' } : null;
+        // paid-sub lookup: faithfully apply the status + periodEnd filters so
+        // the test truly exercises the gate (which statuses count as paid).
+        if (!paidStatus) return null;
+        const statusMatches = where.status?.in?.includes(paidStatus) ?? false;
+        const periodMatches = paidPeriodEnd.getTime() > where.currentPeriodEnd.gt.getTime();
+        return statusMatches && periodMatches ? { id: 'paid1' } : null;
       },
     },
     offerRedemption: {
@@ -86,6 +95,19 @@ describe('resolveApplicableOffer', () => {
   it('returns null when the user already has an active paid PLATFORM sub', async () => {
     const offer = await resolveApplicableOffer({
       prisma: fakePrisma({ trialEnd: new Date(Date.now() + DAY), paidActive: true }),
+      userId: 'u1', planType: 'PLATFORM', suppressForDiscount: false,
+    });
+    expect(offer).toBeNull();
+  });
+
+  it('returns null when the user has a cancelled-but-still-valid paid PLATFORM sub', async () => {
+    // Auto-renew off, but paid access still valid → not an offer target.
+    const offer = await resolveApplicableOffer({
+      prisma: fakePrisma({
+        trialEnd: new Date(Date.now() + DAY),
+        paidStatus: 'CANCELLED',
+        paidPeriodEnd: new Date(Date.now() + 15 * DAY),
+      }),
       userId: 'u1', planType: 'PLATFORM', suppressForDiscount: false,
     });
     expect(offer).toBeNull();
