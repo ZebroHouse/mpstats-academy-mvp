@@ -285,19 +285,19 @@ model SubscriptionPlan {
 }
 
 model Subscription {
-  id                 String             @id @default(cuid())
-  userId             String
-  planId             String
-  courseId           String? // null for PLATFORM, course ID for COURSE
-  status             SubscriptionStatus @default(ACTIVE)
-  currentPeriodStart DateTime
-  currentPeriodEnd   DateTime
-  cancelledAt        DateTime?
-  promoCodeId        String?
-  cpSubscriptionId   String?            @unique // CP-side subscription id (sc_xxx), captured from recurrent webhook
+  id                   String             @id @default(cuid())
+  userId               String
+  planId               String
+  courseId             String? // null for PLATFORM, course ID for COURSE
+  status               SubscriptionStatus @default(ACTIVE)
+  currentPeriodStart   DateTime
+  currentPeriodEnd     DateTime
+  cancelledAt          DateTime?
+  promoCodeId          String?
+  cpSubscriptionId     String?            @unique // CP-side subscription id (sc_xxx), captured from recurrent webhook
   offerFirstPeriodDays Int? // 60 when the trial 2-for-1 offer applies; null = normal plan.intervalDays
-  createdAt          DateTime           @default(now())
-  updatedAt          DateTime           @updatedAt
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
 
   user            UserProfile      @relation(fields: [userId], references: [id], onDelete: Cascade)
   plan            SubscriptionPlan @relation(fields: [planId], references: [id])

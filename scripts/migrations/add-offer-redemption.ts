@@ -22,7 +22,9 @@ async function main() {
       "userId" text NOT NULL UNIQUE,
       "subscriptionId" text NOT NULL UNIQUE,
       "offerKey" text NOT NULL,
-      "redeemedAt" timestamp(3) NOT NULL DEFAULT now()
+      "redeemedAt" timestamp(3) NOT NULL DEFAULT now(),
+      CONSTRAINT "OfferRedemption_userId_fkey" FOREIGN KEY ("userId") REFERENCES "UserProfile"("id") ON DELETE RESTRICT ON UPDATE CASCADE,
+      CONSTRAINT "OfferRedemption_subscriptionId_fkey" FOREIGN KEY ("subscriptionId") REFERENCES "Subscription"("id") ON DELETE RESTRICT ON UPDATE CASCADE
     );
   `);
   await run(`CREATE INDEX IF NOT EXISTS "OfferRedemption_userId_idx" ON "OfferRedemption" ("userId");`);
