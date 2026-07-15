@@ -20,7 +20,7 @@ async function main() {
     CREATE TABLE IF NOT EXISTS "OfferRedemption" (
       "id" text PRIMARY KEY,
       "userId" text NOT NULL UNIQUE,
-      "subscriptionId" text NOT NULL,
+      "subscriptionId" text NOT NULL UNIQUE,
       "offerKey" text NOT NULL,
       "redeemedAt" timestamp(3) NOT NULL DEFAULT now()
     );
