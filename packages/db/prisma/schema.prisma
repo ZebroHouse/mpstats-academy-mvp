@@ -62,6 +62,7 @@ model UserProfile {
   referralsReviewed      Referral[]               @relation("ReferralsReviewedByAdmin")
   ambassadorCodesCreated ReferralCode[]           @relation("AmbassadorCodesCreatedBy")
   assistantConversations AssistantConversation[]
+  offerRedemption        OfferRedemption?
 }
 
 // ============== DIAGNOSTIC ==============
@@ -294,6 +295,7 @@ model Subscription {
   cancelledAt        DateTime?
   promoCodeId        String?
   cpSubscriptionId   String?            @unique // CP-side subscription id (sc_xxx), captured from recurrent webhook
+  offerFirstPeriodDays Int? // 60 when the trial 2-for-1 offer applies; null = normal plan.intervalDays
   createdAt          DateTime           @default(now())
   updatedAt          DateTime           @updatedAt
 
@@ -302,6 +304,7 @@ model Subscription {
   course          Course?          @relation(fields: [courseId], references: [id])
   promoCode       PromoCode?       @relation(fields: [promoCodeId], references: [id])
   promoActivation PromoActivation?
+  offerRedemption OfferRedemption?
   payments        Payment[]
 
   @@index([userId])
@@ -396,6 +399,19 @@ model PromoActivation {
   subscription Subscription @relation(fields: [subscriptionId], references: [id])
 
   @@unique([promoCodeId, userId])
+}
+
+model OfferRedemption {
+  id             String   @id @default(cuid())
+  userId         String   @unique
+  subscriptionId String   @unique
+  offerKey       String // "trial_2for1"
+  redeemedAt     DateTime @default(now())
+
+  user         UserProfile  @relation(fields: [userId], references: [id])
+  subscription Subscription @relation(fields: [subscriptionId], references: [id])
+
+  @@index([userId])
 }
 
 // ============== RAG ==============
