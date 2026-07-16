@@ -252,4 +252,77 @@ export const assistantAnalyticsRouter = router({
       handleDatabaseError(error);
     }
   }),
+
+  /** Section 4 — quota pressure: free users hitting the daily cap + upsell candidates. */
+  getUpsell: adminProcedure.input(rangeInput).query(async ({ ctx, input }) => {
+    try {
+      const { from, to } = input;
+      assertRange(from, to);
+
+      // Shared CTE fragment: free = not admin-role and no currently-active subscription.
+      const freeDayCountsCte = `
+        WITH full_users AS (
+          SELECT up.id FROM "UserProfile" up
+          WHERE up.role IN ('ADMIN','SUPERADMIN','SALES')
+          UNION
+          SELECT s."userId" FROM "Subscription" s
+          WHERE s.status IN ('ACTIVE','TRIAL','CANCELLED') AND s."currentPeriodEnd" > now()
+        ),
+        day_counts AS (
+          SELECT c."userId" AS "userId",
+                 to_char((m."createdAt" + interval '3 hours'), 'YYYY-MM-DD') AS day,
+                 COUNT(*)::int AS "dayCount"
+          FROM "AssistantMessage" m
+          JOIN "AssistantConversation" c ON c.id = m."conversationId"
+          JOIN "UserProfile" up ON up.id = c."userId"
+          WHERE m.role = 'assistant' AND m."inDomain" = true
+            AND m."createdAt" BETWEEN $1 AND $2
+            AND up."isTest" = false
+            AND c."userId" NOT IN (SELECT id FROM full_users)
+          GROUP BY c."userId", 2
+        )
+      `;
+
+      const dayCountRows = await ctx.prisma.$queryRawUnsafe<Array<{ userId: string; dayCount: number }>>(
+        `${freeDayCountsCte}
+         SELECT dc."userId" AS "userId", dc."dayCount" AS "dayCount" FROM day_counts dc`,
+        from,
+        to,
+      );
+
+      const candidateRows = await ctx.prisma.$queryRawUnsafe<
+        Array<{ userId: string; email: string | null; total: number; daysCapped: number }>
+      >(
+        `${freeDayCountsCte}
+         SELECT dc."userId" AS "userId",
+                au.email AS email,
+                SUM(dc."dayCount")::int AS total,
+                COUNT(*) FILTER (WHERE dc."dayCount" >= $3)::int AS "daysCapped"
+         FROM day_counts dc
+         LEFT JOIN auth.users au ON au.id::text = dc."userId"
+         GROUP BY dc."userId", au.email
+         ORDER BY total DESC
+         LIMIT 20`,
+        from,
+        to,
+        FREE_DAILY,
+      );
+
+      const summary = computeUpsell(dayCountRows, { cap: FREE_DAILY, repeatThreshold: 2 });
+
+      return {
+        cap: FREE_DAILY,
+        ...summary,
+        candidates: candidateRows.map((r) => ({
+          userId: r.userId,
+          email: r.email,
+          total: Number(r.total),
+          daysCapped: Number(r.daysCapped),
+        })),
+      };
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      handleDatabaseError(error);
+    }
+  }),
 });
