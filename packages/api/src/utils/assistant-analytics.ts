@@ -3,19 +3,25 @@
 /** MSK is UTC+3, no DST. Mirror of assistant-quota.ts day math. */
 export const MSK_OFFSET_MS = 3 * 60 * 60 * 1000;
 
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
+
 /** Calendar day (YYYY-MM-DD) that a timestamp falls into in Moscow time. */
 export function mskDayKey(d: Date): string {
   return new Date(d.getTime() + MSK_OFFSET_MS).toISOString().slice(0, 10);
 }
 
-/** Every MSK calendar day key in [from..to], inclusive. */
+/**
+ * Every MSK calendar day key in [from..to], inclusive.
+ * Iterates by whole days over UTC-midnight boundaries; output keys are ISO
+ * date strings representing MSK calendar days.
+ */
 export function enumerateMskDays(from: Date, to: Date): string[] {
   const keys: string[] = [];
   let cur = new Date(`${mskDayKey(from)}T00:00:00Z`);
   const end = new Date(`${mskDayKey(to)}T00:00:00Z`);
   while (cur.getTime() <= end.getTime()) {
     keys.push(cur.toISOString().slice(0, 10));
-    cur = new Date(cur.getTime() + 24 * 60 * 60 * 1000);
+    cur = new Date(cur.getTime() + ONE_DAY_MS);
   }
   return keys;
 }
