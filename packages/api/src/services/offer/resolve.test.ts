@@ -1,7 +1,18 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeEach, afterAll } from 'vitest';
 import { resolveApplicableOffer, OFFER_FIRST_PERIOD_DAYS } from './resolve';
 
 const DAY = 24 * 60 * 60 * 1000;
+
+// The offer is env-gated. Enable it for every eligibility test; one test below
+// flips it off to prove the kill-switch.
+const ORIGINAL_OFFER_ENABLED = process.env.OFFER_ENABLED;
+beforeEach(() => {
+  process.env.OFFER_ENABLED = 'true';
+});
+afterAll(() => {
+  if (ORIGINAL_OFFER_ENABLED === undefined) delete process.env.OFFER_ENABLED;
+  else process.env.OFFER_ENABLED = ORIGINAL_OFFER_ENABLED;
+});
 
 // Minimal fake prisma: only the methods resolveApplicableOffer calls.
 function fakePrisma(opts: {
@@ -116,6 +127,15 @@ describe('resolveApplicableOffer', () => {
   it('returns null when the user has no trial at all', async () => {
     const offer = await resolveApplicableOffer({
       prisma: fakePrisma({ trialEnd: null }),
+      userId: 'u1', planType: 'PLATFORM', suppressForDiscount: false,
+    });
+    expect(offer).toBeNull();
+  });
+
+  it('returns null when OFFER_ENABLED is off (kill-switch), even for an eligible user', async () => {
+    process.env.OFFER_ENABLED = 'false';
+    const offer = await resolveApplicableOffer({
+      prisma: fakePrisma({ trialEnd: new Date(Date.now() + 2 * DAY) }),
       userId: 'u1', planType: 'PLATFORM', suppressForDiscount: false,
     });
     expect(offer).toBeNull();

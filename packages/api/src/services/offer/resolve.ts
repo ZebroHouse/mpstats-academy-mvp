@@ -7,6 +7,15 @@ export const OFFER_GRACE_MS = 24 * 60 * 60 * 1000;
 /** Stable key stored on OfferRedemption. */
 export const OFFER_KEY = 'trial_2for1';
 
+/**
+ * Master kill-switch for the trial 2-for-1 offer. Env-gated (like
+ * PARTNER_COURSES_ENABLED / ASSISTANT_ENABLED) so we can ship the engine dark
+ * and flip it on at launch — or off instantly if something goes wrong.
+ */
+export function isOfferEnabled(): boolean {
+  return process.env.OFFER_ENABLED === 'true';
+}
+
 export interface ResolvedOffer {
   firstPeriodDays: number; // OFFER_FIRST_PERIOD_DAYS
   trialEnd: Date;          // the trial's currentPeriodEnd
@@ -33,6 +42,7 @@ export async function resolveApplicableOffer(args: {
   suppressForDiscount: boolean;
 }): Promise<ResolvedOffer | null> {
   const { prisma, userId, planType, suppressForDiscount } = args;
+  if (!isOfferEnabled()) return null; // kill-switch — offer off ⇒ engine invisible
   if (planType !== 'PLATFORM') return null;
   if (suppressForDiscount) return null;
 

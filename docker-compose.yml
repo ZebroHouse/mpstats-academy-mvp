@@ -38,6 +38,10 @@ services:
       # surfacing). Enabled on prod after staging UAT sign-off 2026-07-14. Runtime
       # flag — flip off = remove this line + up -d (assistant code goes inert).
       ASSISTANT_ENABLED: "true"
+      # Trial 2-for-1 offer engine (60-day first period for trial users). Ships
+      # DARK — engine + banner + pricing deploy invisible. Launch = flip to "true"
+      # + up -d (no rebuild). Kill-switch: back to "false" + up -d, offer inert.
+      OFFER_ENABLED: "false"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health"]
