@@ -118,6 +118,7 @@ export default function AssistantAnalyticsPage() {
                     <th className="text-left py-2 px-4 text-mp-gray-500 font-medium">Тип</th>
                     <th className="text-left py-2 pl-4 text-mp-gray-500 font-medium">Запрос</th>
                   </tr></thead>
+                  {/* index key: append-only read list, refetched fresh on range change; no stable id from backend */}
                   <tbody>
                     {problems.data.items.map((it, i) => (
                       <tr key={i} className="border-b border-mp-gray-100 last:border-0">
@@ -186,7 +187,7 @@ export default function AssistantAnalyticsPage() {
                 <tbody>
                   {upsell.data.loadHistogram.map((b) => (
                     <tr key={b.bucket} className="border-b border-mp-gray-100 last:border-0">
-                      <td className="py-2 pr-4 text-mp-gray-900">{b.bucket === upsell.data!.cap ? `${b.bucket}+` : b.bucket}</td>
+                      <td className="py-2 pr-4 text-mp-gray-900">{b.bucket === upsell.data.cap ? `${b.bucket}+` : b.bucket}</td>
                       <td className="py-2 pl-4 text-right text-mp-gray-700 tabular-nums">{b.userDays}</td>
                     </tr>
                   ))}
