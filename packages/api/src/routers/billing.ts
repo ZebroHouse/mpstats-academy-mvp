@@ -259,7 +259,7 @@ export const billingRouter = router({
       });
 
       const receipt = buildReceipt({
-        plan: { type: plan.type, intervalDays: plan.intervalDays },
+        plan: { type: plan.type, intervalDays: firstPeriodDays },
         user: { email: ctx.user.email },
         amount: firstAmount,
         courseTitle,
@@ -279,8 +279,8 @@ export const billingRouter = router({
 
       const description =
         input.planType === 'COURSE' && courseTitle
-          ? `MPSTATS Academy — курс «${courseTitle}» (${plan.intervalDays} дней)`
-          : `MPSTATS Academy — полный доступ (${plan.intervalDays} дней)`;
+          ? `MPSTATS Academy — курс «${courseTitle}» (${firstPeriodDays} дней)`
+          : `MPSTATS Academy — полный доступ (${firstPeriodDays} дней)`;
 
       // Recurrent start date for the CloudPayments widget. When the user is on
       // an active trial, the paid period stacks AFTER the trial ends (see
