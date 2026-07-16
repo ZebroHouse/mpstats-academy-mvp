@@ -2,6 +2,7 @@
 import { describe, it, expect } from 'vitest';
 import { mskDayKey, enumerateMskDays, fillDaySeries } from './assistant-analytics';
 import { computeQuality } from './assistant-analytics';
+import { labelProblem } from './assistant-analytics';
 
 describe('mskDayKey', () => {
   it('shifts UTC into MSK before taking the calendar day', () => {
@@ -49,5 +50,44 @@ describe('computeQuality', () => {
     expect(q.complaintRate).toBeCloseTo(0.05);
     expect(q.fallbackRate).toBeCloseTo(0.15);
     expect(q.total).toBe(200);
+  });
+});
+
+describe('labelProblem', () => {
+  it('labels a complaint', () => {
+    const out = labelProblem({
+      createdAt: new Date('2026-07-02T09:00:00Z'),
+      category: 'complaint',
+      isFallback: false,
+      query: 'всё тормозит',
+    });
+    expect(out).toEqual({ date: '2026-07-02', kind: 'complaint', label: 'Жалоба', query: 'всё тормозит' });
+  });
+
+  it('labels an off-domain refusal', () => {
+    const out = labelProblem({
+      createdAt: new Date('2026-07-02T09:00:00Z'),
+      category: 'off_domain',
+      isFallback: false,
+      query: 'погода завтра',
+    });
+    expect(out.kind).toBe('off_domain');
+    expect(out.label).toBe('Офф-топик');
+  });
+
+  it('labels a concierge fallback when category is not a problem category', () => {
+    const out = labelProblem({
+      createdAt: new Date('2026-07-02T09:00:00Z'),
+      category: 'platform_help',
+      isFallback: true,
+      query: 'где кнопка X',
+    });
+    expect(out.kind).toBe('fallback');
+    expect(out.label).toBe('Не смог помочь (→ поддержка)');
+  });
+
+  it('tolerates a null query', () => {
+    const out = labelProblem({ createdAt: new Date('2026-07-02T09:00:00Z'), category: 'off_domain', isFallback: false, query: null });
+    expect(out.query).toBe('');
   });
 });

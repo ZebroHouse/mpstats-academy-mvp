@@ -65,3 +65,37 @@ export function computeQuality(i: {
     fallbackRate: rate(fallback),
   };
 }
+
+export type ProblemKind = 'off_domain' | 'complaint' | 'fallback';
+
+export interface RawProblemRow {
+  createdAt: Date | string;
+  category: string | null;
+  isFallback: boolean;
+  query: string | null;
+}
+
+export interface ProblemItem {
+  date: string;
+  kind: ProblemKind;
+  label: string;
+  query: string;
+}
+
+const PROBLEM_LABEL: Record<ProblemKind, string> = {
+  complaint: 'Жалоба',
+  off_domain: 'Офф-топик',
+  fallback: 'Не смог помочь (→ поддержка)',
+};
+
+/**
+ * Category is authoritative: complaint / off_domain are mutually exclusive
+ * categories. Anything else that reached the problem list did so because it
+ * was a concierge fallback (navLinks → /support), so label it fallback.
+ */
+export function labelProblem(row: RawProblemRow): ProblemItem {
+  const kind: ProblemKind =
+    row.category === 'complaint' ? 'complaint' : row.category === 'off_domain' ? 'off_domain' : 'fallback';
+  const at = typeof row.createdAt === 'string' ? new Date(row.createdAt) : row.createdAt;
+  return { date: mskDayKey(at), kind, label: PROBLEM_LABEL[kind], query: row.query ?? '' };
+}
