@@ -21,6 +21,7 @@ import { computeConversionFunnel, churnRate, type FunnelUserRow } from '../utils
 import { extractCheckpoints, tallyCheckpoints } from '../utils/checkpoint-analytics';
 import { assembleReferralFunnel } from '../utils/referral-funnel';
 import { fetchClientRegistry } from '../services/sales-registry';
+import { assistantAnalyticsRouter } from './admin-analytics-assistant';
 
 /**
  * Pulls a valid checkpointChoices map out of a persisted `progressState`.
@@ -37,6 +38,9 @@ function checkpointChoicesOf(progressState: unknown): Record<string, string> | n
 }
 
 export const adminAnalyticsRouter = router({
+  /** Assistant analytics sub-namespace → admin.analytics.assistant.* */
+  assistant: assistantAnalyticsRouter,
+
   /**
    * Analytics: user growth and diagnostic activity grouped by day for a given period.
    */
