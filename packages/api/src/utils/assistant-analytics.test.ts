@@ -3,6 +3,7 @@ import { describe, it, expect } from 'vitest';
 import { mskDayKey, enumerateMskDays, fillDaySeries } from './assistant-analytics';
 import { computeQuality } from './assistant-analytics';
 import { labelProblem } from './assistant-analytics';
+import { computeUpsell } from './assistant-analytics';
 
 describe('mskDayKey', () => {
   it('shifts UTC into MSK before taking the calendar day', () => {
@@ -89,5 +90,42 @@ describe('labelProblem', () => {
   it('tolerates a null query', () => {
     const out = labelProblem({ createdAt: new Date('2026-07-02T09:00:00Z'), category: 'off_domain', isFallback: false, query: null });
     expect(out.query).toBe('');
+  });
+});
+
+describe('computeUpsell', () => {
+  const opts = { cap: 5, repeatThreshold: 2 };
+
+  it('counts capped users, repeat cappers, and clamps the load histogram', () => {
+    const rows = [
+      { userId: 'a', dayCount: 5 }, // a capped day 1
+      { userId: 'a', dayCount: 7 }, // a capped day 2 (clamped to bucket 5)
+      { userId: 'b', dayCount: 5 }, // b capped once
+      { userId: 'c', dayCount: 3 }, // c never capped
+      { userId: 'c', dayCount: 1 },
+    ];
+    const out = computeUpsell(rows, opts);
+    expect(out.cappedUsers).toBe(2); // a, b
+    expect(out.repeatCappers).toBe(1); // only a (>=2 capped days)
+    expect(out.loadHistogram).toEqual([
+      { bucket: 1, userDays: 1 }, // c's 1
+      { bucket: 2, userDays: 0 },
+      { bucket: 3, userDays: 1 }, // c's 3
+      { bucket: 4, userDays: 0 },
+      { bucket: 5, userDays: 3 }, // a(5), a(7→5), b(5)
+    ]);
+  });
+
+  it('returns zeroed buckets for an empty input', () => {
+    const out = computeUpsell([], opts);
+    expect(out.cappedUsers).toBe(0);
+    expect(out.repeatCappers).toBe(0);
+    expect(out.loadHistogram).toEqual([
+      { bucket: 1, userDays: 0 },
+      { bucket: 2, userDays: 0 },
+      { bucket: 3, userDays: 0 },
+      { bucket: 4, userDays: 0 },
+      { bucket: 5, userDays: 0 },
+    ]);
   });
 });

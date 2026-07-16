@@ -99,3 +99,39 @@ export function labelProblem(row: RawProblemRow): ProblemItem {
   const at = typeof row.createdAt === 'string' ? new Date(row.createdAt) : row.createdAt;
   return { date: mskDayKey(at), kind, label: PROBLEM_LABEL[kind], query: row.query ?? '' };
 }
+
+export interface UpsellSummary {
+  cappedUsers: number;
+  repeatCappers: number;
+  loadHistogram: Array<{ bucket: number; userDays: number }>;
+}
+
+/**
+ * rows = one entry per (free user, MSK day) with dayCount = inDomain assistant
+ * replies that day. "Capped" = dayCount >= cap (exactly the quota rule).
+ */
+export function computeUpsell(
+  rows: Array<{ userId: string; dayCount: number | bigint }>,
+  opts: { cap: number; repeatThreshold: number },
+): UpsellSummary {
+  const cappedDaysByUser = new Map<string, number>();
+  const histogram = new Map<number, number>();
+  for (let b = 1; b <= opts.cap; b++) histogram.set(b, 0);
+
+  for (const r of rows) {
+    const c = Number(r.dayCount);
+    if (c <= 0) continue;
+    const bucket = Math.min(c, opts.cap);
+    histogram.set(bucket, (histogram.get(bucket) ?? 0) + 1);
+    if (c >= opts.cap) cappedDaysByUser.set(r.userId, (cappedDaysByUser.get(r.userId) ?? 0) + 1);
+  }
+
+  let repeatCappers = 0;
+  for (const days of cappedDaysByUser.values()) if (days >= opts.repeatThreshold) repeatCappers++;
+
+  const loadHistogram = Array.from(histogram.entries())
+    .map(([bucket, userDays]) => ({ bucket, userDays }))
+    .sort((a, b) => a.bucket - b.bucket);
+
+  return { cappedUsers: cappedDaysByUser.size, repeatCappers, loadHistogram };
+}
