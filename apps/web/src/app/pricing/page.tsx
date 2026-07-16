@@ -11,7 +11,7 @@ import { Reveal } from '@/components/v8/Reveal';
 import { StickyCTA } from '@/components/v8/StickyCTA';
 import { trpc } from '@/lib/trpc/client';
 import { DiscountedPrice } from '@/components/pricing/DiscountedPrice';
-import { OfferStrip } from '@/components/billing/offer/OfferStrip';
+import { OfferStrip, OFFER_STRIP_HEIGHT } from '@/components/billing/offer/OfferStrip';
 import { ReviewsMarquee } from '@/components/billing/offer/ReviewsMarquee';
 import { openPaymentWidget } from '@/lib/cloudpayments/widget';
 import { reachGoal } from '@/lib/analytics/metrika';
@@ -377,22 +377,29 @@ function PricingContent() {
       />
 
       {showOfferMode && offerState && (
-        <OfferStrip state={offerState.state} endsAt={offerState.offerEndsAt} />
+        <div className="fixed inset-x-0 top-0 z-[60]">
+          <OfferStrip state={offerState.state} endsAt={offerState.offerEndsAt} />
+        </div>
       )}
-      <V8Header onDarkHero={true} />
+      <V8Header onDarkHero={true} topOffset={showOfferMode ? OFFER_STRIP_HEIGHT : 0} />
 
-      {/* ── 1. Hero ────────────────────────────────────── */}
+      {/* ── 1. Hero (compact) ──────────────────────────── */}
       <section
-        className="relative pt-[140px] pb-[80px] sm:pt-[160px] sm:pb-[100px] px-6"
-        style={{ backgroundColor: DARK }}
+        className="relative px-6 pb-[40px] sm:pb-[52px]"
+        style={{ backgroundColor: DARK, paddingTop: (showOfferMode ? OFFER_STRIP_HEIGHT : 0) + 104 }}
       >
-        <div className="max-w-[800px] mx-auto text-center">
-          <h1 className="text-[36px] sm:text-[48px] md:text-[56px] font-bold leading-[1.1] tracking-tight text-white">
+        <div className="max-w-[720px] mx-auto text-center">
+          {showOfferMode && (
+            <div className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-[13px] font-semibold text-white ring-1 ring-white/15">
+              🎁 Только для вас: 2 месяца по цене одного
+            </div>
+          )}
+          <h1 className="text-[28px] sm:text-[36px] md:text-[42px] font-bold leading-[1.12] tracking-tight text-white">
             400+ уроков MPSTATS Academy
             <br />
             за 2 990 ₽ в месяц
           </h1>
-          <p className="mt-6 text-[18px] sm:text-[20px] leading-relaxed text-white/70 max-w-[520px] mx-auto">
+          <p className="mt-4 text-[16px] sm:text-[18px] leading-relaxed text-white/70 max-w-[480px] mx-auto">
             Помесячная подписка без оплаты курса целиком. Изучайте материалы платформы, пользуйтесь AI-инструментами и развивайте навыки за фиксированную сумму в месяц
           </p>
         </div>
@@ -402,7 +409,7 @@ function PricingContent() {
       <ReviewsMarquee />
 
       {/* ── 2. Pricing Cards + promo ────────────────────── */}
-      <section id="тарифы" className="py-[80px] sm:py-[100px] px-6 bg-white">
+      <section id="тарифы" className="pt-[24px] pb-[72px] sm:pt-[32px] sm:pb-[90px] px-6 bg-white">
         <div className="max-w-[1040px] mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6">
 

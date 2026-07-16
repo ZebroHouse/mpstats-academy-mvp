@@ -12,8 +12,8 @@ const TEXT = '#121212';
 export function ReviewsMarquee() {
   const doubled = [...REVIEWS, ...REVIEWS];
   return (
-    <section className="py-[70px] sm:py-[90px] overflow-hidden bg-white">
-      <h2 className="text-[24px] sm:text-[32px] font-bold text-center mb-10 px-6" style={{ color: TEXT }}>
+    <section className="py-[36px] sm:py-[48px] overflow-hidden bg-white">
+      <h2 className="text-[20px] sm:text-[26px] font-bold text-center mb-6 px-6" style={{ color: TEXT }}>
         Что говорят ученики Академии
       </h2>
       <style>{`
