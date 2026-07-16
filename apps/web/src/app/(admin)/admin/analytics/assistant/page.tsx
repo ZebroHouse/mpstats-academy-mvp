@@ -48,6 +48,7 @@ export default function AssistantAnalyticsPage() {
   const quality = trpc.admin.analytics.assistant.getQuality.useQuery({ from, to });
   const problems = trpc.admin.analytics.assistant.getProblemMessages.useQuery({ from, to, limit: 50 });
   const demand = trpc.admin.analytics.assistant.getDemand.useQuery({ from, to });
+  const upsell = trpc.admin.analytics.assistant.getUpsell.useQuery({ from, to });
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -156,6 +157,68 @@ export default function AssistantAnalyticsPage() {
           <TopList title="Топ уроков" rows={demand.data?.topLessons ?? []} />
           <TopList title="Топ задач" rows={demand.data?.topJobs ?? []} />
         </div>
+      </section>
+
+      {/* Section 4 — Апселл */}
+      <section className="space-y-4">
+        <div>
+          <h3 className="text-body font-semibold text-mp-gray-900">Давление квоты (апселл)</h3>
+          <p className="text-body-sm text-mp-gray-500 mt-0.5">Free-юзеры по текущему статусу подписки; «упёрся» = {upsell.data?.cap ?? 5}+ ответов в день</p>
+        </div>
+        {upsell.isLoading ? (
+          <div className="grid grid-cols-2 gap-4">
+            {[1, 2].map((i) => <Card key={i} className="p-5"><Skeleton className="h-4 w-24 mb-3" /><Skeleton className="h-8 w-16" /></Card>)}
+          </div>
+        ) : upsell.data ? (
+          <>
+            <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+              <StatCard title="Упёрлись в лимит" value={upsell.data.cappedUsers} icon={Gauge} color="pink" />
+              <StatCard title="Повторно упирались" value={upsell.data.repeatCappers} icon={Gauge} color="pink" />
+            </div>
+
+            <Card className="p-5">
+              <h4 className="text-body font-semibold text-mp-gray-900 mb-3">Распределение дневной нагрузки (free)</h4>
+              <table className="w-full text-body-sm">
+                <thead><tr className="border-b border-mp-gray-200">
+                  <th className="text-left py-2 pr-4 text-mp-gray-500 font-medium">Ответов в день</th>
+                  <th className="text-right py-2 pl-4 text-mp-gray-500 font-medium">Юзеро-дней</th>
+                </tr></thead>
+                <tbody>
+                  {upsell.data.loadHistogram.map((b) => (
+                    <tr key={b.bucket} className="border-b border-mp-gray-100 last:border-0">
+                      <td className="py-2 pr-4 text-mp-gray-900">{b.bucket === upsell.data!.cap ? `${b.bucket}+` : b.bucket}</td>
+                      <td className="py-2 pl-4 text-right text-mp-gray-700 tabular-nums">{b.userDays}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </Card>
+
+            <Card className="p-5">
+              <h4 className="text-body font-semibold text-mp-gray-900 mb-3">Кандидаты на апселл (топ free по объёму)</h4>
+              {upsell.data.candidates.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-body-sm">
+                    <thead><tr className="border-b border-mp-gray-200">
+                      <th className="text-left py-2 pr-4 text-mp-gray-500 font-medium">Email</th>
+                      <th className="text-right py-2 px-4 text-mp-gray-500 font-medium">Всего ответов</th>
+                      <th className="text-right py-2 pl-4 text-mp-gray-500 font-medium">Дней упирался</th>
+                    </tr></thead>
+                    <tbody>
+                      {upsell.data.candidates.map((c) => (
+                        <tr key={c.userId} className="border-b border-mp-gray-100 last:border-0">
+                          <td className="py-2 pr-4 text-mp-gray-900">{c.email || '—'}</td>
+                          <td className="py-2 px-4 text-right text-mp-gray-700 tabular-nums">{c.total}</td>
+                          <td className="py-2 pl-4 text-right text-mp-gray-700 tabular-nums">{c.daysCapped}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : <p className="text-body-sm text-mp-gray-500">Нет активных free-юзеров ассистента за период.</p>}
+            </Card>
+          </>
+        ) : null}
       </section>
     </div>
   );
