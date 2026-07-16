@@ -309,6 +309,10 @@ export const billingRouter = router({
         firstChargeAt.setDate(firstChargeAt.getDate() + firstPeriodDays);
         recurrentStartDate = firstChargeAt.toISOString();
       } else if (offer) {
+        // Benign drift: this uses initiate-time `now`, while the webhook computes
+        // currentPeriodEnd from webhook-time `now` (>= this one) — so CP's recurrent
+        // fires at-or-slightly-before access end (never a gap, never a double charge).
+        // Do NOT "fix" by moving to webhook time: initiate has no webhook `now`.
         const firstChargeAt = new Date(now);
         firstChargeAt.setDate(firstChargeAt.getDate() + firstPeriodDays);
         recurrentStartDate = firstChargeAt.toISOString();
