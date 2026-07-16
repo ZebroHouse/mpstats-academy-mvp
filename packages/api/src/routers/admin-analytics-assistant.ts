@@ -175,4 +175,81 @@ export const assistantAnalyticsRouter = router({
         handleDatabaseError(error);
       }
     }),
+
+  /** Section 3 — demand: category breakdown + top surfaced materials/lessons/jobs. */
+  getDemand: adminProcedure.input(rangeInput).query(async ({ ctx, input }) => {
+    try {
+      const { from, to } = input;
+      assertRange(from, to);
+
+      const categoryRows = await ctx.prisma.$queryRawUnsafe<Array<{ category: string; count: number }>>(
+        `
+        SELECT m.category AS category, COUNT(*)::int AS count
+        FROM "AssistantMessage" m
+        JOIN "AssistantConversation" c ON c.id = m."conversationId"
+        JOIN "UserProfile" up ON up.id = c."userId"
+        WHERE m.role = 'assistant' AND m.category IS NOT NULL
+          AND m."createdAt" BETWEEN $1 AND $2 AND up."isTest" = false
+        GROUP BY 1 ORDER BY count DESC
+        `,
+        from,
+        to,
+      );
+
+      const topMaterials = await ctx.prisma.$queryRawUnsafe<Array<{ id: string; title: string; count: number }>>(
+        `
+        SELECT mat.id AS id, mat.title AS title, COUNT(*)::int AS count
+        FROM "AssistantMessage" m
+        JOIN "AssistantConversation" c ON c.id = m."conversationId"
+        JOIN "UserProfile" up ON up.id = c."userId"
+        CROSS JOIN LATERAL unnest(m."materialIds") AS mid(id)
+        JOIN "Material" mat ON mat.id = mid.id
+        WHERE m.role = 'assistant' AND m."createdAt" BETWEEN $1 AND $2 AND up."isTest" = false
+        GROUP BY mat.id, mat.title ORDER BY count DESC LIMIT 10
+        `,
+        from,
+        to,
+      );
+
+      const topLessons = await ctx.prisma.$queryRawUnsafe<Array<{ id: string; title: string; count: number }>>(
+        `
+        SELECT l.id AS id, l.title AS title, COUNT(*)::int AS count
+        FROM "AssistantMessage" m
+        JOIN "AssistantConversation" c ON c.id = m."conversationId"
+        JOIN "UserProfile" up ON up.id = c."userId"
+        CROSS JOIN LATERAL unnest(m."lessonIds") AS lid(id)
+        JOIN "Lesson" l ON l.id = lid.id
+        WHERE m.role = 'assistant' AND m."createdAt" BETWEEN $1 AND $2 AND up."isTest" = false
+        GROUP BY l.id, l.title ORDER BY count DESC LIMIT 10
+        `,
+        from,
+        to,
+      );
+
+      const topJobs = await ctx.prisma.$queryRawUnsafe<Array<{ id: string; title: string; count: number }>>(
+        `
+        SELECT j.id AS id, j.title AS title, COUNT(*)::int AS count
+        FROM "AssistantMessage" m
+        JOIN "AssistantConversation" c ON c.id = m."conversationId"
+        JOIN "UserProfile" up ON up.id = c."userId"
+        CROSS JOIN LATERAL unnest(m."jobIds") AS jid(id)
+        JOIN "Job" j ON j.id = jid.id
+        WHERE m.role = 'assistant' AND m."createdAt" BETWEEN $1 AND $2 AND up."isTest" = false
+        GROUP BY j.id, j.title ORDER BY count DESC LIMIT 10
+        `,
+        from,
+        to,
+      );
+
+      return {
+        categories: categoryRows.map((r) => ({ category: r.category, count: Number(r.count) })),
+        topMaterials: topMaterials.map((r) => ({ id: r.id, title: r.title, count: Number(r.count) })),
+        topLessons: topLessons.map((r) => ({ id: r.id, title: r.title, count: Number(r.count) })),
+        topJobs: topJobs.map((r) => ({ id: r.id, title: r.title, count: Number(r.count) })),
+      };
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      handleDatabaseError(error);
+    }
+  }),
 });
