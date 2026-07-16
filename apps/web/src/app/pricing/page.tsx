@@ -11,6 +11,8 @@ import { Reveal } from '@/components/v8/Reveal';
 import { StickyCTA } from '@/components/v8/StickyCTA';
 import { trpc } from '@/lib/trpc/client';
 import { DiscountedPrice } from '@/components/pricing/DiscountedPrice';
+import { OfferStrip } from '@/components/billing/offer/OfferStrip';
+import { ReviewsMarquee } from '@/components/billing/offer/ReviewsMarquee';
 import { openPaymentWidget } from '@/lib/cloudpayments/widget';
 import { reachGoal } from '@/lib/analytics/metrika';
 import { METRIKA_GOALS } from '@/lib/analytics/constants';
@@ -178,6 +180,22 @@ function PricingContent() {
     { planType: 'PLATFORM', code: discountCode ?? undefined },
     { enabled: isAuthenticated },
   );
+
+  // Trial 2-for-1 offer state (server-authoritative; returns 'none' when the
+  // OFFER_ENABLED flag is off, so the strip/offer-mode simply never activate).
+  const { data: offerState } = trpc.offer.getState.useQuery(undefined, {
+    enabled: isAuthenticated,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+
+  // Discount wins over the offer (spec §3.4). platformDiscountQuery already
+  // reflects an entered discount code (it re-runs when discountCode changes),
+  // so gating on it also handles the "entered a code" case — no getState
+  // re-query needed. offerState is server-suppressed for pending ambassador
+  // discounts too.
+  const offerActive = offerState?.state === 'trial_active' || offerState?.state === 'grace';
+  const showOfferMode = Boolean(offerActive && !platformDiscountQuery.data);
 
   const initiatePayment = trpc.billing.initiatePayment.useMutation();
   const activatePromo = trpc.promo.activate.useMutation({
@@ -358,6 +376,9 @@ function PricingContent() {
         onReady={() => setWidgetReady(true)}
       />
 
+      {showOfferMode && offerState && (
+        <OfferStrip state={offerState.state} endsAt={offerState.offerEndsAt} />
+      )}
       <V8Header onDarkHero={true} />
 
       {/* ── 1. Hero ────────────────────────────────────── */}
@@ -376,6 +397,9 @@ function PricingContent() {
           </p>
         </div>
       </section>
+
+      {/* ── Reviews marquee ─────────────────────────────── */}
+      <ReviewsMarquee />
 
       {/* ── 2. Pricing Cards + promo ────────────────────── */}
       <section id="тарифы" className="py-[80px] sm:py-[100px] px-6 bg-white">
@@ -482,6 +506,22 @@ function PricingContent() {
                   <div className="mt-4">
                     <DiscountedPrice discount={platformDiscountQuery.data} onDark={true} />
                   </div>
+                ) : showOfferMode ? (
+                  <div className="mt-4">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-[18px] font-medium text-white/50 line-through">5 980 &#8381;</span>
+                      <span className="text-[36px] sm:text-[44px] font-bold leading-none text-white">2 990 &#8381;</span>
+                      <span className="text-[15px] text-white/60">/ первые 2 месяца</span>
+                    </div>
+                    <p className="mt-2 text-[13px] font-semibold text-white">
+                      {offerState?.state === 'grace'
+                        ? 'Успейте — предложение скоро закроется'
+                        : 'Предложение действует до конца бесплатного доступа'}
+                    </p>
+                    <p className="mt-0.5 text-[12px] text-white/60">
+                      С 3-го месяца — 2 990 ₽/мес. Напомним письмом за 3 дня до списания.
+                    </p>
+                  </div>
                 ) : (
                   <div className="mt-4 flex items-baseline gap-1">
                     <span className="text-[36px] sm:text-[44px] font-bold leading-none text-white">
@@ -513,7 +553,9 @@ function PricingContent() {
                   ? 'Текущий план'
                   : isProcessing
                     ? 'Обработка...'
-                    : 'Оформить подписку'}
+                    : showOfferMode
+                      ? 'Открыть всё за 2 990 ₽'
+                      : 'Оформить подписку'}
               </button>
             </Reveal>
           </div>
