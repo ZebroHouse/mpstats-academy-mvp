@@ -12,7 +12,10 @@ import { TourProvider } from '@/components/shared/TourProvider';
 import { HelpCircleButton } from '@/components/shared/HelpCircleButton';
 import { NotificationBell } from '@/components/notifications/NotificationBell';
 import { TrialCountdown } from '@/components/billing/TrialCountdown';
-import { ReferralBanner } from '@/components/referral/ReferralBanner';
+// ReferralBanner is intentionally no longer mounted (experiment: run without it).
+// Component kept in the codebase for easy revival. Offer banner takes its slot.
+import { OfferBanner } from '@/components/billing/offer/OfferBanner';
+import { resolveOfferBannerState } from '@mpstats/api';
 import { PartnerSetupBanner } from '@/components/partner/PartnerSetupBanner';
 import { AssistantLauncher } from '@/components/assistant/AssistantLauncher';
 
@@ -69,6 +72,10 @@ export default async function MainLayout({
     redirect('/welcome');
   }
 
+  // Trial 2-for-1 offer banner state (server-authoritative; kill-switch inside
+  // the helper returns 'none' when OFFER_ENABLED is off → nothing renders).
+  const offerBanner = await resolveOfferBannerState({ prisma, userId: user.id });
+
   // Generate HMAC hash for Carrot Quest user identification
   const cqUserAuthKey = process.env.CARROTQUEST_USER_AUTH_KEY || '';
   const cqHash = cqUserAuthKey
@@ -90,10 +97,9 @@ export default async function MainLayout({
       {/* Main content area — TourProvider wraps header+main so HelpCircleButton can access useTour */}
       <TourProvider>
         <div className="md:ml-64 flex flex-col min-h-screen">
-          {/* Referral promo banner — above the sticky header, scrolls away */}
-          <ReferralBanner />
           {/* Partner finish-setup banner — shown to auto-created partner users who need to
-              confirm email (partner_pending_verify) and/or set a password (passwordless) */}
+              confirm email (partner_pending_verify) and/or set a password (passwordless).
+              Non-sticky: scrolls away above the pinned offer+header stack. */}
           {(() => {
             const needsVerify = user.user_metadata?.partner_pending_verify === true;
             const needsPassword = user.user_metadata?.passwordless === true;
@@ -101,8 +107,13 @@ export default async function MainLayout({
               <PartnerSetupBanner email={user.email ?? ''} needsVerify={needsVerify} needsPassword={needsPassword} />
             ) : null;
           })()}
-          {/* Header */}
-          <header className="h-16 border-b border-mp-gray-200 bg-white/95 backdrop-blur-sm sticky top-0 z-40">
+          {/* Offer banner + header share one sticky stack (banner pinned above header). */}
+          <div className="sticky top-0 z-40">
+            {offerBanner.state !== 'none' && (
+              <OfferBanner state={offerBanner.state} endsAt={offerBanner.offerEndsAt} />
+            )}
+            {/* Header */}
+            <header className="h-16 border-b border-mp-gray-200 bg-white/95 backdrop-blur-sm">
             <div className="h-full px-4 md:px-6 flex items-center justify-between">
               {/* Mobile logo */}
               <div className="md:hidden">
@@ -124,6 +135,7 @@ export default async function MainLayout({
               </div>
             </div>
           </header>
+          </div>
 
           {/* Page content */}
           <main className="flex-1 p-4 md:p-6 pb-20 md:pb-6 overflow-x-hidden">

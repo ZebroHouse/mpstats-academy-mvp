@@ -4,6 +4,7 @@ import { router, publicProcedure, protectedProcedure, superadminProcedure } from
 import { isFeatureEnabled } from '../utils/feature-flags';
 import { cancelCloudPaymentsSubscription } from '../utils/cloudpayments';
 import { resolveApplicableDiscount } from '../services/discount/resolve';
+import { resolveApplicableOffer } from '../services/offer/resolve';
 import { buildReceipt } from '@mpstats/shared';
 
 /**
@@ -168,6 +169,16 @@ export const billingRouter = router({
       });
       const firstAmount = discount ? discount.discountedPrice : plan.price;
 
+      // Trial 2-for-1 offer: a 60-day first period instead of plan.intervalDays.
+      // Mutually exclusive with discounts (discount wins — spec §3.4).
+      const offer = await resolveApplicableOffer({
+        prisma: ctx.prisma,
+        userId: ctx.user.id,
+        planType: input.planType,
+        suppressForDiscount: discount != null,
+      });
+      const firstPeriodDays = offer ? offer.firstPeriodDays : plan.intervalDays;
+
       // Verify course exists if COURSE plan; capture title for receipt label
       let courseTitle: string | undefined;
       if (input.planType === 'COURSE' && input.courseId) {
@@ -234,6 +245,7 @@ export const billingRouter = router({
           currentPeriodStart: now,
           currentPeriodEnd: now, // Will be set properly by webhook on payment success
           promoCodeId: discount?.source === 'promo' ? discount.promoCodeId : null,
+          offerFirstPeriodDays: offer ? offer.firstPeriodDays : null,
         },
       });
 
@@ -247,7 +259,7 @@ export const billingRouter = router({
       });
 
       const receipt = buildReceipt({
-        plan: { type: plan.type, intervalDays: plan.intervalDays },
+        plan: { type: plan.type, intervalDays: firstPeriodDays },
         user: { email: ctx.user.email },
         amount: firstAmount,
         courseTitle,
@@ -267,8 +279,8 @@ export const billingRouter = router({
 
       const description =
         input.planType === 'COURSE' && courseTitle
-          ? `MPSTATS Academy — курс «${courseTitle}» (${plan.intervalDays} дней)`
-          : `MPSTATS Academy — полный доступ (${plan.intervalDays} дней)`;
+          ? `MPSTATS Academy — курс «${courseTitle}» (${firstPeriodDays} дней)`
+          : `MPSTATS Academy — полный доступ (${firstPeriodDays} дней)`;
 
       // Recurrent start date for the CloudPayments widget. When the user is on
       // an active trial, the paid period stacks AFTER the trial ends (see
@@ -286,10 +298,23 @@ export const billingRouter = router({
         orderBy: { currentPeriodEnd: 'desc' },
         select: { currentPeriodEnd: true },
       });
+      // First auto-charge fires at the end of the first paid period. Base flow:
+      // paid days stack after an active trial (see handlePaymentSuccess). Offer
+      // flow: the first period is `firstPeriodDays` (60) long — and in the 24h
+      // grace the trial row has already expired (no activeTrial), so the period
+      // starts now; without an explicit startDate CP would recharge at now+1mo.
       let recurrentStartDate: string | undefined;
       if (activeTrial && activeTrial.currentPeriodEnd > now) {
         const firstChargeAt = new Date(activeTrial.currentPeriodEnd);
-        firstChargeAt.setDate(firstChargeAt.getDate() + plan.intervalDays);
+        firstChargeAt.setDate(firstChargeAt.getDate() + firstPeriodDays);
+        recurrentStartDate = firstChargeAt.toISOString();
+      } else if (offer) {
+        // Benign drift: this uses initiate-time `now`, while the webhook computes
+        // currentPeriodEnd from webhook-time `now` (>= this one) — so CP's recurrent
+        // fires at-or-slightly-before access end (never a gap, never a double charge).
+        // Do NOT "fix" by moving to webhook time: initiate has no webhook `now`.
+        const firstChargeAt = new Date(now);
+        firstChargeAt.setDate(firstChargeAt.getDate() + firstPeriodDays);
         recurrentStartDate = firstChargeAt.toISOString();
       }
 

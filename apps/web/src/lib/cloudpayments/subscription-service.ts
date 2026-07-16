@@ -56,6 +56,22 @@ export async function enrichPayloadWithDbLookup(
  */
 
 /**
+ * First paid period length: the trial 2-for-1 offer overrides plan.intervalDays
+ * with a 60-day first period (offerFirstPeriodDays). Recurrent renewals still
+ * use plan.intervalDays (see decide-recurrent-update.ts) — only the FIRST
+ * period is affected.
+ */
+export function computeFirstPeriodEnd(
+  periodStart: Date,
+  plan: { intervalDays: number; offerFirstPeriodDays: number | null },
+): Date {
+  const days = plan.offerFirstPeriodDays ?? plan.intervalDays;
+  const end = new Date(periodStart);
+  end.setDate(end.getDate() + days);
+  return end;
+}
+
+/**
  * Handle successful payment — activate subscription with correct period dates.
  * Called on "pay" event.
  *
@@ -103,8 +119,10 @@ export async function handlePaymentSuccess(
       activeTrial && activeTrial.currentPeriodEnd > now
         ? activeTrial.currentPeriodEnd
         : now;
-    const periodEnd = new Date(periodStart);
-    periodEnd.setDate(periodEnd.getDate() + subscription.plan.intervalDays);
+    const periodEnd = computeFirstPeriodEnd(periodStart, {
+      intervalDays: subscription.plan.intervalDays,
+      offerFirstPeriodDays: subscription.offerFirstPeriodDays,
+    });
 
     // Only set cpSubscriptionId when CP provided one AND we haven't stored it
     // yet. Once stored, never overwrite (recurrent flow depends on stability).
@@ -129,6 +147,22 @@ export async function handlePaymentSuccess(
         activeTrial ? ' (stacked after active trial)' : ''
       }${shouldSetCpId ? ` (cp=${payment.cpSubscriptionId})` : ''}`,
     );
+
+    // Trial 2-for-1 offer: burn once-per-user. @unique(userId) makes webhook
+    // replays idempotent (a second success on the same user is swallowed).
+    if (subscription.offerFirstPeriodDays != null) {
+      try {
+        await prisma.offerRedemption.create({
+          data: {
+            userId: subscription.userId,
+            subscriptionId: subscription.id,
+            offerKey: 'trial_2for1',
+          },
+        });
+      } catch (err) {
+        console.warn(`[Offer] redemption race for user=${subscription.userId}:`, err);
+      }
+    }
 
     // --- Record discount redemption (consume-on-success) ---
     // Promo-discount code: the PENDING sub carries promoCodeId (set in

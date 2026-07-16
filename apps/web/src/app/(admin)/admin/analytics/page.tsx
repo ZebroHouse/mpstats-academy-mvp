@@ -21,6 +21,7 @@ export default function AnalyticsOverviewPage() {
   const [range, setRange] = useState(presetRange(7));
   const { from, to } = rangeToBounds(range);
   const analytics = trpc.admin.analytics.getAnalytics.useQuery({ from, to });
+  const offerDuplicates = trpc.admin.analytics.getOfferDuplicates.useQuery();
 
   const days = daySpan(range);
   const userTotal = analytics.data?.userGrowth.reduce((s, d) => s + d.count, 0) ?? 0;
@@ -80,6 +81,30 @@ export default function AnalyticsOverviewPage() {
           <p className="text-body-sm text-mp-gray-500 mt-1">DAU / WAU / MAU и липкость аудитории</p>
         </div>
         <ActiveUsersSection from={from} to={to} />
+      </div>
+
+      {/* Offer integrity monitor — duplicate active PLATFORM subscriptions */}
+      <div className="pt-4">
+        <Card className="p-5">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-heading font-bold text-mp-gray-900">Дубли активных PLATFORM-подписок</h3>
+              <p className="text-body-sm text-mp-gray-500 mt-1">
+                В норме 0. При &gt;0 — гонка двойной оплаты, разобрать вручную.
+              </p>
+            </div>
+            <p className={`text-3xl font-bold ${(offerDuplicates.data?.total ?? 0) > 0 ? 'text-red-600' : 'text-mp-gray-900'}`}>
+              {offerDuplicates.isLoading ? '…' : offerDuplicates.data?.total ?? 0}
+            </p>
+          </div>
+          {(offerDuplicates.data?.total ?? 0) > 0 && (
+            <ul className="mt-4 space-y-1 text-body-sm text-mp-gray-700">
+              {offerDuplicates.data!.rows.map((r) => (
+                <li key={r.userId} className="font-mono">{r.userId} — {r.count} подписки</li>
+              ))}
+            </ul>
+          )}
+        </Card>
       </div>
     </div>
   );
