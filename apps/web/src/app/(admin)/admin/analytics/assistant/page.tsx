@@ -11,11 +11,43 @@ import { MessageSquare, Users, MessagesSquare, Gauge } from 'lucide-react';
 
 const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
 
+const CATEGORY_LABEL: Record<string, string> = {
+  material: 'Материалы',
+  platform_help: 'Помощь по платформе',
+  complaint: 'Жалобы',
+  off_domain: 'Офф-топик',
+};
+
+function TopList({ title, rows }: { title: string; rows: Array<{ id: string; title: string; count: number }> }) {
+  return (
+    <Card className="p-5">
+      <h4 className="text-body font-semibold text-mp-gray-900 mb-3">{title}</h4>
+      {rows.length === 0 ? (
+        <p className="text-body-sm text-mp-gray-500">Нет данных за период.</p>
+      ) : (
+        <table className="w-full text-body-sm">
+          <tbody>
+            {rows.map((r) => (
+              <tr key={r.id} className="border-b border-mp-gray-100 last:border-0">
+                <td className="py-2 pr-4 text-mp-gray-900">{r.title}</td>
+                <td className="py-2 pl-4 text-right text-mp-gray-700 tabular-nums">{r.count}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </Card>
+  );
+}
+
 export default function AssistantAnalyticsPage() {
   const [range, setRange] = useState(presetRange(30));
   const { from, to } = rangeToBounds(range);
 
   const pulse = trpc.admin.analytics.assistant.getPulse.useQuery({ from, to });
+  const quality = trpc.admin.analytics.assistant.getQuality.useQuery({ from, to });
+  const problems = trpc.admin.analytics.assistant.getProblemMessages.useQuery({ from, to, limit: 50 });
+  const demand = trpc.admin.analytics.assistant.getDemand.useQuery({ from, to });
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -56,6 +88,73 @@ export default function AssistantAnalyticsPage() {
             {pulse.isLoading ? <Skeleton className="h-[250px] w-full" /> :
               <ActivityChart data={pulse.data?.usersByDay ?? []} title="Уник. юзеров в день" color="#16a34a" />}
           </Card>
+        </div>
+      </section>
+
+      {/* Section 2 — Качество */}
+      <section className="space-y-4">
+        <h3 className="text-body font-semibold text-mp-gray-900">Качество ответов</h3>
+        {quality.isLoading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => <Card key={i} className="p-5"><Skeleton className="h-4 w-24 mb-3" /><Skeleton className="h-8 w-16" /></Card>)}
+          </div>
+        ) : quality.data ? (
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+            <StatCard title="Офф-топик" value={pct(quality.data.offDomainRate)} icon={Gauge} color="gray" trend={`${quality.data.offDomain} из ${quality.data.total}`} />
+            <StatCard title="Жалобы" value={pct(quality.data.complaintRate)} icon={Gauge} color="pink" trend={`${quality.data.complaint} из ${quality.data.total}`} />
+            <StatCard title="Не смог помочь" value={pct(quality.data.fallbackRate)} icon={Gauge} color="gray" trend={`${quality.data.fallback} из ${quality.data.total}`} />
+          </div>
+        ) : null}
+
+        <Card className="p-5">
+          <h4 className="text-body font-semibold text-mp-gray-900 mb-3">Последние промахи</h4>
+          {problems.isLoading ? <Skeleton className="h-24 w-full" /> :
+            problems.data && problems.data.items.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-body-sm">
+                  <thead><tr className="border-b border-mp-gray-200">
+                    <th className="text-left py-2 pr-4 text-mp-gray-500 font-medium">Дата</th>
+                    <th className="text-left py-2 px-4 text-mp-gray-500 font-medium">Тип</th>
+                    <th className="text-left py-2 pl-4 text-mp-gray-500 font-medium">Запрос</th>
+                  </tr></thead>
+                  <tbody>
+                    {problems.data.items.map((it, i) => (
+                      <tr key={i} className="border-b border-mp-gray-100 last:border-0">
+                        <td className="py-2 pr-4 text-mp-gray-600 whitespace-nowrap">{it.date}</td>
+                        <td className="py-2 px-4 text-mp-gray-700 whitespace-nowrap">{it.label}</td>
+                        <td className="py-2 pl-4 text-mp-gray-900">{it.query || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : <p className="text-body-sm text-mp-gray-500">Промахов за период нет.</p>}
+        </Card>
+      </section>
+
+      {/* Section 3 — Спрос */}
+      <section className="space-y-4">
+        <h3 className="text-body font-semibold text-mp-gray-900">Спрос</h3>
+        <Card className="p-5">
+          <h4 className="text-body font-semibold text-mp-gray-900 mb-3">О чём спрашивают (категории)</h4>
+          {demand.isLoading ? <Skeleton className="h-24 w-full" /> :
+            demand.data && demand.data.categories.length > 0 ? (
+              <table className="w-full text-body-sm">
+                <tbody>
+                  {demand.data.categories.map((c) => (
+                    <tr key={c.category} className="border-b border-mp-gray-100 last:border-0">
+                      <td className="py-2 pr-4 text-mp-gray-900">{CATEGORY_LABEL[c.category] ?? c.category}</td>
+                      <td className="py-2 pl-4 text-right text-mp-gray-700 tabular-nums">{c.count}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            ) : <p className="text-body-sm text-mp-gray-500">Нет данных за период.</p>}
+        </Card>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <TopList title="Топ материалов" rows={demand.data?.topMaterials ?? []} />
+          <TopList title="Топ уроков" rows={demand.data?.topLessons ?? []} />
+          <TopList title="Топ задач" rows={demand.data?.topJobs ?? []} />
         </div>
       </section>
     </div>
