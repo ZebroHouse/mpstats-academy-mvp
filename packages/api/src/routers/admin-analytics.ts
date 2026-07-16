@@ -21,6 +21,7 @@ import { computeConversionFunnel, churnRate, type FunnelUserRow } from '../utils
 import { extractCheckpoints, tallyCheckpoints } from '../utils/checkpoint-analytics';
 import { assembleReferralFunnel } from '../utils/referral-funnel';
 import { fetchClientRegistry } from '../services/sales-registry';
+import { tallyDuplicatePlatformSubs } from '../utils/offer-duplicates';
 
 /**
  * Pulls a valid checkpointChoices map out of a persisted `progressState`.
@@ -37,6 +38,25 @@ function checkpointChoicesOf(progressState: unknown): Record<string, string> | n
 }
 
 export const adminAnalyticsRouter = router({
+  /**
+   * Monitor: users holding more than one ACTIVE PLATFORM subscription. The
+   * double-initiate race (two concurrent card payments → two 60-day subs) is
+   * accepted, not hard-locked — this is the tripwire. Steady state total = 0.
+   */
+  getOfferDuplicates: adminProcedure.query(async ({ ctx }) => {
+    const now = new Date();
+    const grouped = await ctx.prisma.subscription.groupBy({
+      by: ['userId'],
+      where: {
+        plan: { type: 'PLATFORM' },
+        status: { in: ['ACTIVE', 'PAST_DUE'] },
+        currentPeriodEnd: { gt: now },
+      },
+      _count: { _all: true },
+    });
+    return tallyDuplicatePlatformSubs(grouped);
+  }),
+
   /**
    * Analytics: user growth and diagnostic activity grouped by day for a given period.
    */
