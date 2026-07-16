@@ -33,3 +33,35 @@ export function fillDaySeries(
   const m = new Map(sparse.map((r) => [r.date, Number(r.count)]));
   return dayKeys.map((date) => ({ date, count: m.get(date) ?? 0 }));
 }
+
+export interface QualityMetrics {
+  total: number;
+  offDomain: number;
+  offDomainRate: number;
+  complaint: number;
+  complaintRate: number;
+  fallback: number;
+  fallbackRate: number;
+}
+
+export function computeQuality(i: {
+  total: number | bigint;
+  offDomain: number | bigint;
+  complaint: number | bigint;
+  fallback: number | bigint;
+}): QualityMetrics {
+  const total = Number(i.total);
+  const offDomain = Number(i.offDomain);
+  const complaint = Number(i.complaint);
+  const fallback = Number(i.fallback);
+  const rate = (x: number) => (total === 0 ? 0 : x / total);
+  return {
+    total,
+    offDomain,
+    offDomainRate: rate(offDomain),
+    complaint,
+    complaintRate: rate(complaint),
+    fallback,
+    fallbackRate: rate(fallback),
+  };
+}

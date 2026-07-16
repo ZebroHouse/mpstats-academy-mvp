@@ -1,6 +1,7 @@
 // packages/api/src/utils/assistant-analytics.test.ts
 import { describe, it, expect } from 'vitest';
 import { mskDayKey, enumerateMskDays, fillDaySeries } from './assistant-analytics';
+import { computeQuality } from './assistant-analytics';
 
 describe('mskDayKey', () => {
   it('shifts UTC into MSK before taking the calendar day', () => {
@@ -29,5 +30,24 @@ describe('fillDaySeries', () => {
       { date: '2026-07-02', count: 5 },
       { date: '2026-07-03', count: 0 },
     ]);
+  });
+});
+
+describe('computeQuality', () => {
+  it('computes rates and guards division by zero', () => {
+    expect(computeQuality({ total: 0, offDomain: 0, complaint: 0, fallback: 0 })).toEqual({
+      total: 0,
+      offDomain: 0, offDomainRate: 0,
+      complaint: 0, complaintRate: 0,
+      fallback: 0, fallbackRate: 0,
+    });
+  });
+
+  it('divides each problem count by total', () => {
+    const q = computeQuality({ total: 200, offDomain: 20, complaint: 10, fallback: 30 });
+    expect(q.offDomainRate).toBeCloseTo(0.1);
+    expect(q.complaintRate).toBeCloseTo(0.05);
+    expect(q.fallbackRate).toBeCloseTo(0.15);
+    expect(q.total).toBe(200);
   });
 });
