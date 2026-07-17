@@ -507,11 +507,11 @@ export const assistantAnalyticsRouter = router({
         to,
       );
 
-      const a = fillDaySeries(assistantByDay, dayKeys);
-      const ch = fillDaySeries(chatByDay, dayKeys);
-      const byDay = dayKeys.map((date, i) => ({ date, assistant: a[i].count, lessonChat: ch[i].count }));
-      const assistantTotal = a.reduce((s, d) => s + d.count, 0);
-      const lessonChatTotal = ch.reduce((s, d) => s + d.count, 0);
+      const assistantMap = new Map(fillDaySeries(assistantByDay, dayKeys).map((d) => [d.date, d.count]));
+      const chatMap = new Map(fillDaySeries(chatByDay, dayKeys).map((d) => [d.date, d.count]));
+      const byDay = dayKeys.map((date) => ({ date, assistant: assistantMap.get(date) ?? 0, lessonChat: chatMap.get(date) ?? 0 }));
+      const assistantTotal = byDay.reduce((s, d) => s + d.assistant, 0);
+      const lessonChatTotal = byDay.reduce((s, d) => s + d.lessonChat, 0);
 
       return {
         totals: { assistant: assistantTotal, lessonChat: lessonChatTotal, all: assistantTotal + lessonChatTotal },
