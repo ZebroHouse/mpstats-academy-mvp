@@ -19,6 +19,7 @@ import {
 } from '@mpstats/ai';
 import { getUserActiveSubscriptions, getUserAdminBypass, isLessonAccessible, getFirstJobLessonIds } from '../utils/access';
 import { isFeatureEnabled } from '../utils/feature-flags';
+import { buildChatMessageRows } from '../utils/lesson-chat-analytics';
 import type { SearchLessonResult, SearchSnippet } from '@mpstats/shared';
 
 type SummarySource = {
@@ -153,7 +154,7 @@ export const aiRouter = router({
         content: z.string(),
       })).optional().default([]),
     }))
-    .mutation(async ({ input }) => {
+    .mutation(async ({ ctx, input }) => {
       const { lessonId, message, history } = input;
 
       const result = await generateChatResponse(
@@ -161,6 +162,23 @@ export const aiRouter = router({
         message,
         history as ChatMessage[]
       );
+
+      // Best-effort analytics persistence (forward-only). A write failure must
+      // never break or delay the chat response — swallow and log.
+      try {
+        await ctx.prisma.chatMessage.createMany({
+          data: buildChatMessageRows({
+            userId: ctx.user!.id,
+            lessonId,
+            message,
+            answer: result.content,
+            model: result.model,
+            sourceCount: result.sources.length,
+          }),
+        });
+      } catch (err) {
+        console.error('[ai.chat] ChatMessage persist failed (non-fatal):', err);
+      }
 
       return {
         content: result.content,
