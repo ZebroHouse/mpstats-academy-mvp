@@ -21,6 +21,7 @@ import { computeConversionFunnel, churnRate, type FunnelUserRow } from '../utils
 import { extractCheckpoints, tallyCheckpoints } from '../utils/checkpoint-analytics';
 import { assembleReferralFunnel } from '../utils/referral-funnel';
 import { fetchClientRegistry } from '../services/sales-registry';
+import { assistantAnalyticsRouter } from './admin-analytics-assistant';
 import { tallyDuplicatePlatformSubs } from '../utils/offer-duplicates';
 
 /**
@@ -38,6 +39,9 @@ function checkpointChoicesOf(progressState: unknown): Record<string, string> | n
 }
 
 export const adminAnalyticsRouter = router({
+  /** Assistant analytics sub-namespace → admin.analytics.assistant.* */
+  assistant: assistantAnalyticsRouter,
+
   /**
    * Monitor: users holding more than one ACTIVE PLATFORM subscription. The
    * double-initiate race (two concurrent card payments → two 60-day subs) is
