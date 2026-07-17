@@ -13,11 +13,13 @@ import { FREE_DAILY } from '../utils/assistant-quota';
 import {
   enumerateMskDays,
   fillDaySeries,
+  mskDayKey,
   computeQuality,
   labelProblem,
   computeUpsell,
   type RawProblemRow,
 } from '../utils/assistant-analytics';
+import { computeLessonChatQuality } from '../utils/lesson-chat-analytics';
 
 const rangeInput = z.object({ from: z.date(), to: z.date() });
 
@@ -319,6 +321,201 @@ export const assistantAnalyticsRouter = router({
           total: Number(r.total),
           daysCapped: Number(r.daysCapped),
         })),
+      };
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      handleDatabaseError(error);
+    }
+  }),
+
+  /** In-lesson chat pulse: KPI + daily queries + top lessons asked about. */
+  getLessonChatPulse: adminProcedure.input(rangeInput).query(async ({ ctx, input }) => {
+    try {
+      const { from, to } = input;
+      assertRange(from, to);
+      const dayKeys = enumerateMskDays(from, to);
+
+      const byDay = await ctx.prisma.$queryRawUnsafe<Array<{ date: string; count: number }>>(
+        `
+        SELECT to_char((m."createdAt" + interval '3 hours'), 'YYYY-MM-DD') AS date,
+               COUNT(*)::int AS count
+        FROM "ChatMessage" m
+        JOIN "UserProfile" up ON up.id = m."userId"
+        WHERE m.role = 'USER' AND m."createdAt" BETWEEN $1 AND $2 AND up."isTest" = false
+        GROUP BY 1 ORDER BY 1
+        `,
+        from,
+        to,
+      );
+
+      const [totals] = await ctx.prisma.$queryRawUnsafe<
+        Array<{ queries: number; users: number; lessons: number }>
+      >(
+        `
+        SELECT
+          COUNT(*) FILTER (WHERE m.role = 'USER')::int AS queries,
+          COUNT(DISTINCT m."userId")::int AS users,
+          COUNT(DISTINCT m."lessonId")::int AS lessons
+        FROM "ChatMessage" m
+        JOIN "UserProfile" up ON up.id = m."userId"
+        WHERE m."createdAt" BETWEEN $1 AND $2 AND up."isTest" = false
+        `,
+        from,
+        to,
+      );
+
+      const topLessons = await ctx.prisma.$queryRawUnsafe<Array<{ id: string; title: string; count: number }>>(
+        `
+        SELECT l.id AS id, l.title AS title, COUNT(*)::int AS count
+        FROM "ChatMessage" m
+        JOIN "UserProfile" up ON up.id = m."userId"
+        JOIN "Lesson" l ON l.id = m."lessonId"
+        WHERE m.role = 'USER' AND m."createdAt" BETWEEN $1 AND $2 AND up."isTest" = false
+        GROUP BY l.id, l.title ORDER BY count DESC LIMIT 10
+        `,
+        from,
+        to,
+      );
+
+      const queries = Number(totals?.queries ?? 0);
+      const users = Number(totals?.users ?? 0);
+      return {
+        kpi: {
+          queries,
+          users,
+          lessons: Number(totals?.lessons ?? 0),
+          avgPerUser: users === 0 ? 0 : queries / users,
+        },
+        byDay: fillDaySeries(byDay, dayKeys),
+        topLessons: topLessons.map((r) => ({ id: r.id, title: r.title, count: Number(r.count) })),
+      };
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      handleDatabaseError(error);
+    }
+  }),
+
+  /** In-lesson chat quality: no-answer rate + no-grounding (sourceCount=0) rate. */
+  getLessonChatQuality: adminProcedure.input(rangeInput).query(async ({ ctx, input }) => {
+    try {
+      const { from, to } = input;
+      assertRange(from, to);
+      const [row] = await ctx.prisma.$queryRawUnsafe<
+        Array<{ total: number; no_answer: number; no_grounding: number }>
+      >(
+        `
+        SELECT
+          COUNT(*)::int AS total,
+          COUNT(*) FILTER (WHERE m."noAnswer" = true)::int AS no_answer,
+          COUNT(*) FILTER (WHERE m."sourceCount" = 0)::int AS no_grounding
+        FROM "ChatMessage" m
+        JOIN "UserProfile" up ON up.id = m."userId"
+        WHERE m.role = 'ASSISTANT' AND m."createdAt" BETWEEN $1 AND $2 AND up."isTest" = false
+        `,
+        from,
+        to,
+      );
+      return computeLessonChatQuality({
+        total: row?.total ?? 0,
+        noAnswer: row?.no_answer ?? 0,
+        noGrounding: row?.no_grounding ?? 0,
+      });
+    } catch (error) {
+      if (error instanceof TRPCError) throw error;
+      handleDatabaseError(error);
+    }
+  }),
+
+  /** Last N unanswered lesson-chat questions (noAnswer) with the user query + lesson title. */
+  getLessonChatUnanswered: adminProcedure
+    .input(rangeInput.extend({ limit: z.number().int().min(1).max(200).default(50) }))
+    .query(async ({ ctx, input }) => {
+      try {
+        const { from, to, limit } = input;
+        assertRange(from, to);
+        const rows = await ctx.prisma.$queryRawUnsafe<
+          Array<{ createdAt: Date; query: string | null; lessonTitle: string | null }>
+        >(
+          `
+          SELECT
+            m."createdAt" AS "createdAt",
+            q.content AS query,
+            l.title AS "lessonTitle"
+          FROM "ChatMessage" m
+          JOIN "UserProfile" up ON up.id = m."userId"
+          LEFT JOIN "Lesson" l ON l.id = m."lessonId"
+          LEFT JOIN LATERAL (
+            SELECT u.content FROM "ChatMessage" u
+            WHERE u."userId" = m."userId" AND u."lessonId" = m."lessonId"
+              AND u.role = 'USER' AND u."createdAt" <= m."createdAt"
+            ORDER BY u."createdAt" DESC
+            LIMIT 1
+          ) q ON true
+          WHERE m.role = 'ASSISTANT' AND m."noAnswer" = true
+            AND m."createdAt" BETWEEN $1 AND $2 AND up."isTest" = false
+          ORDER BY m."createdAt" DESC
+          LIMIT $3
+          `,
+          from,
+          to,
+          limit,
+        );
+        return {
+          items: rows.map((r) => ({
+            date: mskDayKey(r.createdAt instanceof Date ? r.createdAt : new Date(r.createdAt)),
+            query: r.query ?? '',
+            lessonTitle: r.lessonTitle ?? '—',
+          })),
+        };
+      } catch (error) {
+        if (error instanceof TRPCError) throw error;
+        handleDatabaseError(error);
+      }
+    }),
+
+  /** Cross-cutting AI usage: daily user-queries split by surface (assistant vs lesson chat). */
+  getCrossCutting: adminProcedure.input(rangeInput).query(async ({ ctx, input }) => {
+    try {
+      const { from, to } = input;
+      assertRange(from, to);
+      const dayKeys = enumerateMskDays(from, to);
+
+      // Assistant drawer: AssistantMessage.role is lowercase 'user'.
+      const assistantByDay = await ctx.prisma.$queryRawUnsafe<Array<{ date: string; count: number }>>(
+        `
+        SELECT to_char((m."createdAt" + interval '3 hours'), 'YYYY-MM-DD') AS date, COUNT(*)::int AS count
+        FROM "AssistantMessage" m
+        JOIN "AssistantConversation" c ON c.id = m."conversationId"
+        JOIN "UserProfile" up ON up.id = c."userId"
+        WHERE m.role = 'user' AND m."createdAt" BETWEEN $1 AND $2 AND up."isTest" = false
+        GROUP BY 1 ORDER BY 1
+        `,
+        from,
+        to,
+      );
+
+      // In-lesson chat: ChatMessage.role is UPPERCASE 'USER'.
+      const chatByDay = await ctx.prisma.$queryRawUnsafe<Array<{ date: string; count: number }>>(
+        `
+        SELECT to_char((m."createdAt" + interval '3 hours'), 'YYYY-MM-DD') AS date, COUNT(*)::int AS count
+        FROM "ChatMessage" m
+        JOIN "UserProfile" up ON up.id = m."userId"
+        WHERE m.role = 'USER' AND m."createdAt" BETWEEN $1 AND $2 AND up."isTest" = false
+        GROUP BY 1 ORDER BY 1
+        `,
+        from,
+        to,
+      );
+
+      const a = fillDaySeries(assistantByDay, dayKeys);
+      const ch = fillDaySeries(chatByDay, dayKeys);
+      const byDay = dayKeys.map((date, i) => ({ date, assistant: a[i].count, lessonChat: ch[i].count }));
+      const assistantTotal = a.reduce((s, d) => s + d.count, 0);
+      const lessonChatTotal = ch.reduce((s, d) => s + d.count, 0);
+
+      return {
+        totals: { assistant: assistantTotal, lessonChat: lessonChatTotal, all: assistantTotal + lessonChatTotal },
+        byDay,
       };
     } catch (error) {
       if (error instanceof TRPCError) throw error;
