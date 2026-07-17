@@ -41,6 +41,9 @@ services:
       # Internal /styleguide page visible on staging for design review.
       # Prod keeps this unset (404). Runtime flag — read server-side per request.
       STYLEGUIDE_ENABLED: "true"
+      # Trial 2-for-1 offer — on for staging review (banner + pricing offer mode).
+      # Prod ships dark ("false") until launch sign-off. Runtime flag, no rebuild.
+      OFFER_ENABLED: "true"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/api/health"]

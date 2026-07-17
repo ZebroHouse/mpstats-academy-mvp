@@ -70,6 +70,7 @@ Sibling project `D:/GpT_docs/Ai_MP_manager/` запустил `prisma db push --
 | Post-v1.28 (07-06→07-08) | Контекстный возврат после урока, скролл/мобайл фиксы интерактива, курс `08_ctr`, роль SALES, единые фильтры аналитики, Tochka OAuth LIVE, пост-онбординг первый урок (`f9120da`) — см. `MEMORY.md` |
 | Post-v1.28 (07-12→07-13) | Курс `09_ozon_prodvizhenie` LIVE (51 ур, 1990₽; `afd3424`), реф-код lazy-gen фикс + backfill 391 (`2c438b5`, PR #33) — см. `MEMORY.md` |
 | v1.29 Скидочные промокоды | Shipped 2026-07-13/14 (`2884a7f`): скидка %/фикса на первый платёж для промо- и амбассадор-кодов, рекуррент по полной цене, «Все тарифы» (plan-agnostic), амбассадор `refereeTrialDays=0`=базовый триал, consume-on-success. Фиксы: чек рекуррента 54-ФЗ, кнопка отмены на скидочной подписке. Деплой в обход staging. Детали — `.claude/memory/project_discount_promo_codes.md` |
+| v1.30 Акция «2 месяца по цене одного» | LIVE 2026-07-16 (`a8090d9`): триал-юзер платит 2990₽ → 60 дней PLATFORM → рекуррент 2990/30д с 60-го дня. Модификатор первого периода поверх discount/CP-инфры, `OfferRedemption` once-per-person, окно = весь триал+24ч. Флаг `OFFER_ENABLED` (kill-switch). Баннер (dark-premium) + оффер-полоса/режим на `/pricing` и `/billing` + монитор дублей в `/admin/analytics`. Discount перебивает оффер. Детали — `.claude/memory/project_trial_2for1_offer.md` |
 
 **Remaining work:**
 1. Phase 33-03: CQ Dashboard Setup (на стороне CQ команды).
@@ -116,7 +117,7 @@ _No long-lived branches in flight._ Ветки фаз смерджены; worktr
 
 Полная лента «Last/Previous Session» перенесена в `.claude/memory/session-history.md` (newest-first, 50+ сессий с 2026-03).
 Свежие сессии + durable-факты/гочи — в auto-memory `MEMORY.md`.
-Прод сейчас: `2884a7f` (скидочные промокоды: скидка на первый платёж, «Все тарифы», амбассадор-скидки, фиксы чека рекуррента + кнопки отмены). Ранее: курс Озон `09_ozon_prodvizhenie` (`2c438b5`), `08_ctr`, Tochka OAuth.
+Прод сейчас: `a8090d9` (акция «2 месяца по цене одного» LIVE — движок 60-дн первого периода + баннер + оффер на тарифах/биллинге + монитор дублей, флаг `OFFER_ENABLED=true`). Ранее: скидочные промокоды (`2884a7f`), курс Озон `09_ozon_prodvizhenie` (`2c438b5`), `08_ctr`, Tochka OAuth.
 
 ## Key Decisions
 

@@ -11,6 +11,8 @@ import { Reveal } from '@/components/v8/Reveal';
 import { StickyCTA } from '@/components/v8/StickyCTA';
 import { trpc } from '@/lib/trpc/client';
 import { DiscountedPrice } from '@/components/pricing/DiscountedPrice';
+import { OfferStrip, OFFER_STRIP_HEIGHT } from '@/components/billing/offer/OfferStrip';
+import { ReviewsMarquee } from '@/components/billing/offer/ReviewsMarquee';
 import { openPaymentWidget } from '@/lib/cloudpayments/widget';
 import { reachGoal } from '@/lib/analytics/metrika';
 import { METRIKA_GOALS } from '@/lib/analytics/constants';
@@ -178,6 +180,22 @@ function PricingContent() {
     { planType: 'PLATFORM', code: discountCode ?? undefined },
     { enabled: isAuthenticated },
   );
+
+  // Trial 2-for-1 offer state (server-authoritative; returns 'none' when the
+  // OFFER_ENABLED flag is off, so the strip/offer-mode simply never activate).
+  const { data: offerState } = trpc.offer.getState.useQuery(undefined, {
+    enabled: isAuthenticated,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+
+  // Discount wins over the offer (spec §3.4). platformDiscountQuery already
+  // reflects an entered discount code (it re-runs when discountCode changes),
+  // so gating on it also handles the "entered a code" case — no getState
+  // re-query needed. offerState is server-suppressed for pending ambassador
+  // discounts too.
+  const offerActive = offerState?.state === 'trial_active' || offerState?.state === 'grace';
+  const showOfferMode = Boolean(offerActive && !platformDiscountQuery.data);
 
   const initiatePayment = trpc.billing.initiatePayment.useMutation();
   const activatePromo = trpc.promo.activate.useMutation({
@@ -358,27 +376,40 @@ function PricingContent() {
         onReady={() => setWidgetReady(true)}
       />
 
-      <V8Header onDarkHero={true} />
+      {showOfferMode && offerState && (
+        <div className="fixed inset-x-0 top-0 z-[60]">
+          <OfferStrip state={offerState.state} endsAt={offerState.offerEndsAt} />
+        </div>
+      )}
+      <V8Header onDarkHero={true} topOffset={showOfferMode ? OFFER_STRIP_HEIGHT : 0} />
 
-      {/* ── 1. Hero ────────────────────────────────────── */}
+      {/* ── 1. Hero (compact) ──────────────────────────── */}
       <section
-        className="relative pt-[140px] pb-[80px] sm:pt-[160px] sm:pb-[100px] px-6"
-        style={{ backgroundColor: DARK }}
+        className="relative px-6 pb-[40px] sm:pb-[52px]"
+        style={{ backgroundColor: DARK, paddingTop: (showOfferMode ? OFFER_STRIP_HEIGHT : 0) + 104 }}
       >
-        <div className="max-w-[800px] mx-auto text-center">
-          <h1 className="text-[36px] sm:text-[48px] md:text-[56px] font-bold leading-[1.1] tracking-tight text-white">
+        <div className="max-w-[720px] mx-auto text-center">
+          {showOfferMode && (
+            <div className="mb-4 inline-flex items-center gap-1.5 rounded-full bg-white/10 px-3.5 py-1.5 text-[13px] font-semibold text-white ring-1 ring-white/15">
+              🎁 Только для вас: 2 месяца по цене одного
+            </div>
+          )}
+          <h1 className="text-[28px] sm:text-[36px] md:text-[42px] font-bold leading-[1.12] tracking-tight text-white">
             400+ уроков MPSTATS Academy
             <br />
             за 2 990 ₽ в месяц
           </h1>
-          <p className="mt-6 text-[18px] sm:text-[20px] leading-relaxed text-white/70 max-w-[520px] mx-auto">
+          <p className="mt-4 text-[16px] sm:text-[18px] leading-relaxed text-white/70 max-w-[480px] mx-auto">
             Помесячная подписка без оплаты курса целиком. Изучайте материалы платформы, пользуйтесь AI-инструментами и развивайте навыки за фиксированную сумму в месяц
           </p>
         </div>
       </section>
 
+      {/* ── Reviews marquee ─────────────────────────────── */}
+      <ReviewsMarquee />
+
       {/* ── 2. Pricing Cards + promo ────────────────────── */}
-      <section id="тарифы" className="py-[80px] sm:py-[100px] px-6 bg-white">
+      <section id="тарифы" className="pt-[24px] pb-[72px] sm:pt-[32px] sm:pb-[90px] px-6 bg-white">
         <div className="max-w-[1040px] mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6">
 
@@ -482,6 +513,22 @@ function PricingContent() {
                   <div className="mt-4">
                     <DiscountedPrice discount={platformDiscountQuery.data} onDark={true} />
                   </div>
+                ) : showOfferMode ? (
+                  <div className="mt-4">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-[18px] font-medium text-white/50 line-through">5 980 &#8381;</span>
+                      <span className="text-[36px] sm:text-[44px] font-bold leading-none text-white">2 990 &#8381;</span>
+                      <span className="text-[15px] text-white/60">/ первые 2 месяца</span>
+                    </div>
+                    <p className="mt-2 text-[13px] font-semibold text-white">
+                      {offerState?.state === 'grace'
+                        ? 'Успейте — предложение скоро закроется'
+                        : 'Предложение действует до конца бесплатного доступа'}
+                    </p>
+                    <p className="mt-0.5 text-[12px] text-white/60">
+                      С 3-го месяца — 2 990 ₽/мес. Напомним письмом за 3 дня до списания.
+                    </p>
+                  </div>
                 ) : (
                   <div className="mt-4 flex items-baseline gap-1">
                     <span className="text-[36px] sm:text-[44px] font-bold leading-none text-white">
@@ -513,7 +560,9 @@ function PricingContent() {
                   ? 'Текущий план'
                   : isProcessing
                     ? 'Обработка...'
-                    : 'Оформить подписку'}
+                    : showOfferMode
+                      ? 'Открыть всё за 2 990 ₽'
+                      : 'Оформить подписку'}
               </button>
             </Reveal>
           </div>

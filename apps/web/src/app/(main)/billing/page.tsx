@@ -88,6 +88,18 @@ function BillingContent() {
     { enabled: isAuthenticated },
   );
 
+  // Trial 2-for-1 offer state (server-authoritative; returns 'none' when the
+  // OFFER_ENABLED flag is off). Discount wins client-side (spec §3.4) — same
+  // gating as /pricing. The sticky offer banner (from the (main) layout) sits
+  // above this page; here we reflect the offer in the PLATFORM card price.
+  const { data: offerState } = trpc.offer.getState.useQuery(undefined, {
+    enabled: isAuthenticated,
+    retry: false,
+    refetchOnWindowFocus: false,
+  });
+  const offerActive = offerState?.state === 'trial_active' || offerState?.state === 'grace';
+  const showOfferMode = Boolean(offerActive && !platformDiscountQuery.data);
+
   const initiatePayment = trpc.billing.initiatePayment.useMutation();
   const activatePromo = trpc.promo.activate.useMutation({
     onSuccess: (data) => {
@@ -306,6 +318,22 @@ function BillingContent() {
             <div className="mt-3">
               <DiscountedPrice discount={platformDiscountQuery.data} onDark={true} />
             </div>
+          ) : showOfferMode ? (
+            <div className="mt-3">
+              <div className="flex items-baseline gap-2">
+                <span className="text-[18px] font-medium text-white/50 line-through">5 980 ₽</span>
+                <span className="text-[36px] font-bold leading-none text-white">2 990 ₽</span>
+                <span className="text-body-sm text-white/60">/ первые 2 месяца</span>
+              </div>
+              <p className="mt-1.5 text-body-sm font-semibold text-white">
+                {offerState?.state === 'grace'
+                  ? 'Успейте — предложение скоро закроется'
+                  : 'Предложение действует до конца бесплатного доступа'}
+              </p>
+              <p className="mt-0.5 text-caption text-white/60">
+                С 3-го месяца — 2 990 ₽/мес. Напомним письмом за 3 дня до списания.
+              </p>
+            </div>
           ) : (
             <div className="mt-3 flex items-baseline gap-1">
               <span className="text-[36px] font-bold leading-none text-white">{formatPrice(platformPlan?.price)}</span>
@@ -327,7 +355,13 @@ function BillingContent() {
             disabled={platformBtnDisabled}
             className="mt-7 inline-flex items-center justify-center h-12 rounded-full text-body font-medium bg-white text-mp-blue-600 hover:bg-mp-gray-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            {hasActivePlatformSubscription ? 'Текущий план' : isProcessing ? 'Обработка…' : 'Оформить подписку'}
+            {hasActivePlatformSubscription
+              ? 'Текущий план'
+              : isProcessing
+                ? 'Обработка…'
+                : showOfferMode
+                  ? 'Открыть всё за 2 990 ₽'
+                  : 'Оформить подписку'}
           </button>
         </div>
       </div>
