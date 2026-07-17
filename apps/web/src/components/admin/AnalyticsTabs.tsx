@@ -12,7 +12,7 @@ const TABS = [
   { label: 'Клиенты', href: '/admin/analytics/clients' },
   { label: 'Контент', href: '/admin/analytics/content' },
   { label: 'Чекпоинты', href: '/admin/analytics/checkpoints' },
-  { label: 'Ассистент', href: '/admin/analytics/assistant' },
+  { label: 'AI-запросы', href: '/admin/analytics/assistant' },
 ] as const;
 
 export function AnalyticsTabs({ role }: { role?: string }) {
