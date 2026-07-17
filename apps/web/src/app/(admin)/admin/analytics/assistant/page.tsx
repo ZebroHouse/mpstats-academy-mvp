@@ -77,7 +77,7 @@ export default function AssistantAnalyticsPage() {
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-heading-lg font-bold text-mp-gray-900">Ассистент</h2>
+          <h2 className="text-heading-lg font-bold text-mp-gray-900">AI-запросы</h2>
           <p className="text-body-sm text-mp-gray-500 mt-1">
             Сквозные AI-запросы: drawer-ассистент + чат в уроках (без тестовых)
           </p>
