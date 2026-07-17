@@ -7,9 +7,28 @@ import { StatCard } from '@/components/admin/StatCard';
 import { AnalyticsDateRange, presetRange, rangeToBounds } from '@/components/admin/AnalyticsDateRange';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MessageSquare, Users, MessagesSquare, Gauge } from 'lucide-react';
+import { MessageSquare, Users, MessagesSquare, Gauge, Sparkles } from 'lucide-react';
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
 const pct = (n: number) => `${(n * 100).toFixed(1)}%`;
+
+function ActivityChartMulti({ data }: { data: Array<{ date: string; assistant: number; lessonChat: number }> }) {
+  return (
+    <div>
+      <h3 className="text-body-md font-semibold text-mp-gray-900 mb-4">AI-запросов в день по каналам</h3>
+      <ResponsiveContainer width="100%" height={250}>
+        <LineChart data={data}>
+          <XAxis dataKey="date" tickFormatter={(d: string) => { const p = d.split('-'); return `${p[2]}.${p[1]}`; }} tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} />
+          <YAxis tick={{ fontSize: 11, fill: '#6b7280' }} axisLine={false} tickLine={false} allowDecimals={false} />
+          <Tooltip />
+          <Legend />
+          <Line type="monotone" dataKey="assistant" name="Ассистент" stroke="#16a34a" strokeWidth={2} dot={false} />
+          <Line type="monotone" dataKey="lessonChat" name="Чат в уроках" stroke="#db2777" strokeWidth={2} dot={false} />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
+}
 
 const CATEGORY_LABEL: Record<string, string> = {
   material: 'Материалы',
@@ -49,18 +68,43 @@ export default function AssistantAnalyticsPage() {
   const problems = trpc.admin.analytics.assistant.getProblemMessages.useQuery({ from, to, limit: 50 });
   const demand = trpc.admin.analytics.assistant.getDemand.useQuery({ from, to });
   const upsell = trpc.admin.analytics.assistant.getUpsell.useQuery({ from, to });
+  const crossCutting = trpc.admin.analytics.assistant.getCrossCutting.useQuery({ from, to });
+  const chatPulse = trpc.admin.analytics.assistant.getLessonChatPulse.useQuery({ from, to });
+  const chatQuality = trpc.admin.analytics.assistant.getLessonChatQuality.useQuery({ from, to });
+  const chatUnanswered = trpc.admin.analytics.assistant.getLessonChatUnanswered.useQuery({ from, to, limit: 50 });
 
   return (
     <div className="space-y-6 animate-fade-in">
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
-          <h2 className="text-heading-lg font-bold text-mp-gray-900">Ассистент</h2>
+          <h2 className="text-heading-lg font-bold text-mp-gray-900">AI-запросы</h2>
           <p className="text-body-sm text-mp-gray-500 mt-1">
-            Adoption, качество ответов, спрос и давление квоты (без тестовых)
+            Сквозные AI-запросы: drawer-ассистент + чат в уроках (без тестовых)
           </p>
         </div>
         <AnalyticsDateRange value={range} onChange={setRange} />
       </div>
+
+      {/* Cross-cutting top-line */}
+      <section className="space-y-4">
+        <h3 className="text-body font-semibold text-mp-gray-900">Сквозной срез AI-запросов</h3>
+        {crossCutting.isLoading ? (
+          <div className="grid grid-cols-3 gap-4">
+            {[1, 2, 3].map((i) => <Card key={i} className="p-5"><Skeleton className="h-4 w-24 mb-3" /><Skeleton className="h-8 w-16" /></Card>)}
+          </div>
+        ) : crossCutting.data ? (
+          <div className="grid grid-cols-3 gap-4">
+            <StatCard title="Все AI-запросы" value={crossCutting.data.totals.all} icon={Sparkles} color="blue" />
+            <StatCard title="Ассистент (drawer)" value={crossCutting.data.totals.assistant} icon={MessageSquare} color="green" />
+            <StatCard title="Чат в уроках" value={crossCutting.data.totals.lessonChat} icon={MessagesSquare} color="pink" />
+          </div>
+        ) : null}
+        <Card className="p-5">
+          {crossCutting.isLoading ? <Skeleton className="h-[250px] w-full" /> : (
+            <ActivityChartMulti data={crossCutting.data?.byDay ?? []} />
+          )}
+        </Card>
+      </section>
 
       {/* Section 1 — Пульс */}
       <section className="space-y-4">
@@ -220,6 +264,62 @@ export default function AssistantAnalyticsPage() {
             </Card>
           </>
         ) : null}
+      </section>
+
+      {/* Section 5 — Чат в уроках */}
+      <section className="space-y-4">
+        <h3 className="text-body font-semibold text-mp-gray-900">Чат в уроках</h3>
+        {chatPulse.isLoading ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {[1, 2, 3, 4].map((i) => <Card key={i} className="p-5"><Skeleton className="h-4 w-24 mb-3" /><Skeleton className="h-8 w-16" /></Card>)}
+          </div>
+        ) : chatPulse.data ? (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <StatCard title="Запросов" value={chatPulse.data.kpi.queries} icon={MessageSquare} color="blue" />
+            <StatCard title="Уник. юзеров" value={chatPulse.data.kpi.users} icon={Users} color="green" />
+            <StatCard title="Уроков затронуто" value={chatPulse.data.kpi.lessons} icon={MessagesSquare} color="gray" />
+            <StatCard title="Ср. на юзера" value={chatPulse.data.kpi.avgPerUser.toFixed(1)} icon={Gauge} color="pink" />
+          </div>
+        ) : null}
+
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          <Card className="p-5">
+            {chatPulse.isLoading ? <Skeleton className="h-[250px] w-full" /> :
+              <ActivityChart data={chatPulse.data?.byDay ?? []} title="Запросов в день" color="#db2777" />}
+          </Card>
+          <div className="grid grid-cols-2 gap-4">
+            <StatCard title="«Нет ответа»" value={chatQuality.data ? pct(chatQuality.data.noAnswerRate) : '…'} icon={Gauge} color="pink" trend={chatQuality.data ? `${chatQuality.data.noAnswer} из ${chatQuality.data.total}` : undefined} />
+            <StatCard title="Без источников" value={chatQuality.data ? pct(chatQuality.data.noGroundingRate) : '…'} icon={Gauge} color="gray" trend={chatQuality.data ? `${chatQuality.data.noGrounding} из ${chatQuality.data.total}` : undefined} />
+          </div>
+        </div>
+
+        <TopList title="Топ уроков по вопросам" rows={chatPulse.data?.topLessons ?? []} />
+
+        <Card className="p-5">
+          <h4 className="text-body font-semibold text-mp-gray-900 mb-3">Последние «нет ответа»</h4>
+          {chatUnanswered.isLoading ? <Skeleton className="h-24 w-full" /> :
+            chatUnanswered.data && chatUnanswered.data.items.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-body-sm">
+                  <thead><tr className="border-b border-mp-gray-200">
+                    <th className="text-left py-2 pr-4 text-mp-gray-500 font-medium">Дата</th>
+                    <th className="text-left py-2 px-4 text-mp-gray-500 font-medium">Урок</th>
+                    <th className="text-left py-2 pl-4 text-mp-gray-500 font-medium">Вопрос</th>
+                  </tr></thead>
+                  <tbody>
+                    {/* index key: append-only read list, refetched fresh on range change; no stable id from backend */}
+                    {chatUnanswered.data.items.map((it, i) => (
+                      <tr key={i} className="border-b border-mp-gray-100 last:border-0">
+                        <td className="py-2 pr-4 text-mp-gray-600 whitespace-nowrap">{it.date}</td>
+                        <td className="py-2 px-4 text-mp-gray-700">{it.lessonTitle}</td>
+                        <td className="py-2 pl-4 text-mp-gray-900">{it.query || '—'}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : <p className="text-body-sm text-mp-gray-500">Вопросов без ответа за период нет.</p>}
+        </Card>
       </section>
     </div>
   );

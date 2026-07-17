@@ -447,16 +447,20 @@ enum MessageRole {
 }
 
 model ChatMessage {
-  id        String      @id @default(cuid())
-  userId    String
-  lessonId  String
-  role      MessageRole
-  content   String
-  createdAt DateTime    @default(now())
+  id          String      @id @default(cuid())
+  userId      String
+  lessonId    String
+  role        MessageRole
+  content     String
+  model       String? // модель ответа (assistant-строка); null для user-строки
+  sourceCount Int? // число RAG-цитат (assistant-строка); 0 = нет грундинга
+  noAnswer    Boolean     @default(false) // assistant не нашёл ответ (эвристика)
+  createdAt   DateTime    @default(now())
 
   user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId, lessonId])
+  @@index([createdAt])
 }
 
 // ============== LESSON COMMENTS ==============
