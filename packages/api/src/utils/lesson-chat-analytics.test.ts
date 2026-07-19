@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { isRefusalAnswer, buildChatMessageRows, computeLessonChatQuality } from './lesson-chat-analytics';
+import { isMetaQuestion, buildMetaOrientation } from './lesson-chat-analytics';
 
 describe('isRefusalAnswer', () => {
   it('flags known refusal phrases (case-insensitive)', () => {
@@ -29,6 +30,66 @@ describe('buildChatMessageRows', () => {
   });
   it('marks noAnswer when the answer is a refusal even with sources', () => {
     const rows = buildChatMessageRows({ userId: 'u1', lessonId: 'l1', message: 'q', answer: 'в этом фрагменте урока ответа нет', model: 'm', sourceCount: 3 });
+    expect(rows[1].noAnswer).toBe(true);
+  });
+});
+
+describe('isRefusalAnswer — widened', () => {
+  it('catches the interpolated prod refusal', () => {
+    expect(isRefusalAnswer('В этом фрагменте урока ответа на вопрос «Что ты умеешь?» нет.')).toBe(true);
+  });
+  it('catches the new softened refusal anchor', () => {
+    expect(isRefusalAnswer('В этом уроке это не разбирается. Спросите про настройку рекламы.')).toBe(true);
+  });
+  it('still catches the plain forms', () => {
+    expect(isRefusalAnswer('ответа нет в контексте')).toBe(true);
+    expect(isRefusalAnswer('Извините, не удалось сгенерировать ответ.')).toBe(true);
+  });
+  it('does not flag a normal grounded answer', () => {
+    expect(isRefusalAnswer('ДРР — доля рекламных расходов [1]. Считается как расходы делить на выручку.')).toBe(false);
+  });
+});
+
+describe('isMetaQuestion', () => {
+  it('flags capability / meta questions', () => {
+    expect(isMetaQuestion('Что ты умеешь?')).toBe(true);
+    expect(isMetaQuestion('какой вопрос я тебе могу задать')).toBe(true);
+    expect(isMetaQuestion('кто ты')).toBe(true);
+  });
+  it('flags short greetings', () => {
+    expect(isMetaQuestion('Привет')).toBe(true);
+    expect(isMetaQuestion('привет бот')).toBe(true);
+  });
+  it('does NOT flag real content questions', () => {
+    expect(isMetaQuestion('Что можешь рассказать про юнит-экономику?')).toBe(false);
+    expect(isMetaQuestion('Как настроить рекламную кампанию на Wildberries?')).toBe(false);
+    expect(isMetaQuestion('привет, расскажи как считать ДРР по этому уроку')).toBe(false);
+  });
+  it('does NOT flag empty', () => {
+    expect(isMetaQuestion('   ')).toBe(false);
+  });
+});
+
+describe('buildMetaOrientation', () => {
+  it('includes the lesson title when present', () => {
+    const s = buildMetaOrientation('Настройка автобиддера');
+    expect(s).toContain('«Настройка автобиддера»');
+    expect(s.toLowerCase()).toContain('ассистент');
+  });
+  it('falls back gracefully without a title', () => {
+    const s = buildMetaOrientation(undefined);
+    expect(s).toContain('по этому уроку');
+    expect(s).not.toContain('«»');
+  });
+});
+
+describe('buildChatMessageRows — answered flag', () => {
+  it('forces noAnswer=false for an answered meta orientation even with sourceCount 0', () => {
+    const rows = buildChatMessageRows({ userId: 'u', lessonId: 'l', message: 'что ты умеешь', answer: 'Я — ассистент…', model: 'meta', sourceCount: 0, answered: true });
+    expect(rows[1].noAnswer).toBe(false);
+  });
+  it('still flags a content refusal (no answered flag)', () => {
+    const rows = buildChatMessageRows({ userId: 'u', lessonId: 'l', message: 'q', answer: 'В этом уроке это не разбирается.', model: 'm', sourceCount: 5 });
     expect(rows[1].noAnswer).toBe(true);
   });
 });
