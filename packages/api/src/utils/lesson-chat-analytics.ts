@@ -20,7 +20,9 @@ const REFUSAL_SUBSTRINGS = [
 // NB: JS `\b` is ASCII-only and never matches Cyrillic word boundaries, so Cyrillic-aware
 // lookarounds `(?<![а-яё])…(?![а-яё])` stand in for it. The interpolated quote can contain a
 // «?» (e.g. «умеешь?»), so `?` is NOT a stop char here (only sentence-ending `.`/`!`/newline).
-const REFUSAL_REGEX = /(?<![а-яё])ответа?[^.!\n]{0,60}(?<![а-яё])нет(?![а-яё])/i;
+// Requires GENITIVE «ответа» (the refusal template) — nominative «Ответ …» is a normal
+// sentence subject («Ответ зависит от того … или нет») and must NOT be flagged.
+const REFUSAL_REGEX = /(?<![а-яё])ответа[^.!\n]{0,60}(?<![а-яё])нет(?![а-яё])/i;
 
 export function isRefusalAnswer(content: string): boolean {
   const c = content.toLowerCase();

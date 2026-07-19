@@ -48,6 +48,10 @@ describe('isRefusalAnswer — widened', () => {
   it('does not flag a normal grounded answer', () => {
     expect(isRefusalAnswer('ДРР — доля рекламных расходов [1]. Считается как расходы делить на выручку.')).toBe(false);
   });
+  it('does not flag grounded answers that contain «ответ … нет» in a normal sentence', () => {
+    expect(isRefusalAnswer('Ответ зависит от того, есть у вас карточка или нет.')).toBe(false);
+    expect(isRefusalAnswer('Ответ на ваш вопрос — да или нет, решать вам.')).toBe(false);
+  });
 });
 
 describe('isMetaQuestion', () => {
