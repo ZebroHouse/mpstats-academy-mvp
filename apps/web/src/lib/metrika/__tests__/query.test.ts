@@ -1,5 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { buildByTimeParams, parseByTimeResponse, splitRange, toDateKey } from '../query';
+import {
+  buildByTimeParams,
+  buildTotalsParams,
+  parseByTimeResponse,
+  parseTotalsResponse,
+  splitRange,
+  toDateKey,
+} from '../query';
 
 describe('toDateKey', () => {
   it('форматирует дату в YYYY-MM-DD по UTC', () => {
@@ -51,6 +58,19 @@ describe('buildByTimeParams', () => {
   });
 });
 
+describe('buildTotalsParams', () => {
+  it('всегда ставит фильтр по платформе и НЕ группирует по дням', () => {
+    const p = buildTotalsParams({
+      counterId: '94592073',
+      metrics: ['ym:s:users'],
+      date1: '2026-07-01',
+      date2: '2026-07-07',
+    });
+    expect(p.get('filters')).toBe("ym:s:startURL=*'*platform.mpstats.academy*'");
+    expect(p.get('group')).toBeNull();
+  });
+});
+
 describe('parseByTimeResponse', () => {
   const response = {
     time_intervals: [
@@ -84,5 +104,30 @@ describe('parseByTimeResponse', () => {
   it('падает, если число серий не совпало с числом запрошенных ключей', () => {
     // Молчаливое рассогласование записало бы визиты под ключом уников.
     expect(() => parseByTimeResponse(response, ['visits'])).toThrow(/2 серий.*1 ключ/);
+  });
+});
+
+describe('parseTotalsResponse', () => {
+  it('округляет плоский totals по порядку ключей', () => {
+    expect(parseTotalsResponse({ totals: [3299.4, 1876.6] }, ['visits', 'users'])).toEqual([3299, 1877]);
+  });
+
+  it('падает на рассогласовании числа значений и ключей', () => {
+    expect(() => parseTotalsResponse({ totals: [1, 2] }, ['visits'])).toThrow(/2 значени.*1 ключ/);
+  });
+
+  it('возвращает пустой массив на пустом ответе', () => {
+    expect(parseTotalsResponse({ totals: [] }, [])).toEqual([]);
+  });
+});
+
+describe('splitRange — guard rails', () => {
+  it('бросает на maxDays <= 0 вместо зависания', () => {
+    expect(() => splitRange('2026-07-01', '2026-07-10', 0)).toThrow(/maxDays/);
+    expect(() => splitRange('2026-07-01', '2026-07-10', -5)).toThrow(/maxDays/);
+  });
+
+  it('возвращает пустой результат, если date2 раньше date1 (осознанно легитимно)', () => {
+    expect(splitRange('2026-07-10', '2026-07-01', 30)).toEqual([]);
   });
 });
