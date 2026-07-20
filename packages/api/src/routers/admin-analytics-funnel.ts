@@ -1,6 +1,8 @@
 // packages/api/src/routers/admin-analytics-funnel.ts
 /**
- * Product funnel analytics — mounted at `admin.analytics.funnel.*`.
+ * Product funnel analytics — mounted at `admin.analytics.productFunnel.*`.
+ * Namespace deliberately not `funnel`: the route `/admin/analytics/funnel` is
+ * the OLD tab backed by `getConversionFunnel`, and colliding names read as a bug.
  *
  * Read-only over the MetrikaSnapshot table (behavior) plus Subscription /
  * Payment (money). Nothing here calls the Metrika API: the cron already
@@ -9,14 +11,21 @@
 import { z } from 'zod';
 import { TRPCError } from '@trpc/server';
 import type { PrismaClient } from '@mpstats/db';
-import { FUNNEL_GOAL_STEPS, METRIKA_UNIQUE_WINDOWS, goalMetricKey } from '@mpstats/shared';
+import {
+  FUNNEL_GOAL_STEPS,
+  METRIKA_TRAFFIC_METRICS,
+  METRIKA_UNIQUE_WINDOWS,
+  goalMetricKey,
+} from '@mpstats/shared';
 import { router, adminProcedure } from '../trpc';
 import { handleDatabaseError } from '../utils/db-errors';
 import { buildFunnel, sumDaily, type DailyPoint } from '../utils/product-funnel';
 
 const rangeInput = z.object({ from: z.date(), to: z.date() });
 
-const TRAFFIC_KEYS = ['visits', 'users', 'pageviews'] as const;
+/** Список берём из shared, а не копией: иначе добавленную там метрику
+ *  крон записал бы, а роутер молча отфильтровал. */
+const TRAFFIC_KEYS = METRIKA_TRAFFIC_METRICS;
 type TrafficKey = (typeof TRAFFIC_KEYS)[number];
 
 /** Насколько строка периодных уников может отставать от конца периода.
@@ -65,6 +74,47 @@ async function loadDaily(prisma: PrismaClient, from: Date, to: Date): Promise<Da
   }));
 }
 
+/** Насколько снапшот реально покрывает запрошенный период. */
+export interface SnapshotCoverage {
+  requestedDays: number;
+  coveredDays: number;
+  /** Границы фактически покрытого отрезка, yyyy-mm-dd. null — данных нет вовсе. */
+  firstDay: string | null;
+  lastDay: string | null;
+  complete: boolean;
+}
+
+/**
+ * Снапшот может покрывать не весь запрошенный период: крон по умолчанию
+ * перезаписывает окно в 8 дней, историю добирает только ручной бэкфилл,
+ * а долгий простой оставляет дыру.
+ *
+ * Считать при этом поведение из Метрики за покрытые дни, а деньги из БД —
+ * за весь период нельзя: доля оплат от визитов оказалась бы завышена во
+ * столько раз, во сколько период длиннее покрытия. Поэтому обе половины
+ * воронки считаются по пересечению, а UI подписывает фактическое окно.
+ */
+function coverageOf(daily: DailyPoint[], from: Date, to: Date): SnapshotCoverage {
+  const days = [...new Set(daily.filter((p) => p.metricKey === 'visits').map((p) => p.day))].sort();
+  const requestedDays = inclusiveDaySpan(from, to);
+  return {
+    requestedDays,
+    coveredDays: days.length,
+    firstDay: days[0] ?? null,
+    lastDay: days[days.length - 1] ?? null,
+    complete: days.length >= requestedDays,
+  };
+}
+
+/** Границы, по которым реально считать — пересечение периода и снапшота. */
+function effectiveBounds(coverage: SnapshotCoverage, from: Date, to: Date) {
+  if (!coverage.firstDay || !coverage.lastDay) return { from, to };
+  return {
+    from: new Date(`${coverage.firstDay}T00:00:00.000Z`),
+    to: new Date(`${coverage.lastDay}T23:59:59.999Z`),
+  };
+}
+
 /** Момент последней успешной записи крона — «данные на». */
 async function loadSnapshotAt(prisma: PrismaClient): Promise<Date | null> {
   const freshest = await prisma.metrikaSnapshot.findFirst({
@@ -92,13 +142,11 @@ export const adminAnalyticsFunnelRouter = router({
       // Уники за период берём только из окна нужной длины: сумма дневных
       // уников задваивает людей, вернувшихся на следующий день.
       //
-      // Крон истории уников не ведёт — он перезаписывает один срез, снятый
-      // за вчера. Поэтому строка годится, только если её `day` примыкает
-      // к концу запрошенного периода. Без этой проверки выбор недели в июне
-      // вернул бы уников за прошедшую неделю, поданных как июньские:
-      // цифра тихо неверная, а такие уходят во внешние отчёты.
-      // Длина периода должна совпасть с окном ТОЧНО. Допуск здесь был бы
-      // вреден: выбрав 6 дней, админ получил бы недельную цифру как свою.
+      // Две защиты. Первая: длина периода должна совпасть с окном ТОЧНО —
+      // с допуском выбор 6 дней вернул бы недельную цифру как свою.
+      // Вторая: строка должна примыкать к концу периода, иначе выбор недели
+      // в июне отдал бы уников за прошедшую неделю, поданных как июньские.
+      // Обе ошибки тихие, а цифры отсюда уходят во внешние отчёты.
       const spanDays = inclusiveDaySpan(input.from, input.to);
       const matchedWindow = METRIKA_UNIQUE_WINDOWS.find((w) => w === spanDays) ?? null;
       let periodUsers: PeriodUsers | null = null;
@@ -128,6 +176,7 @@ export const adminAnalyticsFunnelRouter = router({
           /** null = период не совпал с пресетным окном, честных уников нет. */
           periodUsers,
         },
+        coverage: coverageOf(daily, input.from, input.to),
         snapshotAt: await loadSnapshotAt(ctx.prisma),
       };
     } catch (error) {
@@ -142,27 +191,37 @@ export const adminAnalyticsFunnelRouter = router({
       assertRange(input.from, input.to);
       const daily = await loadDaily(ctx.prisma, input.from, input.to);
 
+      const coverage = coverageOf(daily, input.from, input.to);
+      // Обе половины воронки — по одному окну, иначе доли несопоставимы.
+      const eff = effectiveBounds(coverage, input.from, input.to);
+
       const goalVisits = Object.fromEntries(
         FUNNEL_GOAL_STEPS.map((goal) => [goal, sumDaily(daily, goalMetricKey(goal, 'visits'))]),
       ) as Record<(typeof FUNNEL_GOAL_STEPS)[number], number>;
 
-      // Тот же фильтр, что в getTrialConversion (admin-analytics.ts),
-      // иначе новый таб разойдётся с существующим табом «Триал→оплата».
-      const trials = await ctx.prisma.subscription.count({
+      // Тот же фильтр, что в getTrialConversion (admin-analytics.ts).
+      // Считаем УНИКАЛЬНЫХ пользователей, а не строки подписок: у человека
+      // может быть больше одной TRIAL-строки (реферальный пакет заводит новую),
+      // и тогда шаг воронки разошёлся бы с табом «Триал→оплата», который
+      // считает людей, а конверсия делила бы людей на строки.
+      const trialRows = await ctx.prisma.subscription.findMany({
         where: {
           status: 'TRIAL',
-          currentPeriodStart: { gte: input.from, lte: input.to },
+          currentPeriodStart: { gte: eff.from, lte: eff.to },
           user: { isTest: false },
           plan: { hidden: false },
         },
+        select: { userId: true },
+        distinct: ['userId'],
       });
+      const trials = trialRows.length;
 
       // Деньги — только из БД: клиентская цель platform_payment ловит
       // 10-12 оплат за 30 дней там, где БД знает реальное число.
       const paidRows = await ctx.prisma.payment.findMany({
         where: {
           status: 'COMPLETED',
-          paidAt: { gte: input.from, lte: input.to },
+          paidAt: { gte: eff.from, lte: eff.to },
           subscription: { user: { isTest: false }, plan: { hidden: false } },
         },
         select: { subscription: { select: { userId: true } } },
@@ -171,6 +230,7 @@ export const adminAnalyticsFunnelRouter = router({
 
       return {
         steps: buildFunnel({ visits: sumDaily(daily, 'visits'), goalVisits, trials, payments }),
+        coverage,
         snapshotAt: await loadSnapshotAt(ctx.prisma),
       };
     } catch (error) {

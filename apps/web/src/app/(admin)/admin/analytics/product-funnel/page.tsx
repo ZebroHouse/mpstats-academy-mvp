@@ -119,10 +119,11 @@ export default function ProductFunnelPage() {
   const [range, setRange] = useState(presetRange(30));
   const { from, to } = rangeToBounds(range);
 
-  const traffic = trpc.admin.analytics.funnel.getTrafficOverview.useQuery({ from, to });
-  const funnel = trpc.admin.analytics.funnel.getProductFunnel.useQuery({ from, to });
+  const traffic = trpc.admin.analytics.productFunnel.getTrafficOverview.useQuery({ from, to });
+  const funnel = trpc.admin.analytics.productFunnel.getProductFunnel.useQuery({ from, to });
 
   const snapshotAt = traffic.data?.snapshotAt ?? funnel.data?.snapshotAt ?? null;
+  const coverage = funnel.data?.coverage ?? traffic.data?.coverage ?? null;
   // Именно isSuccess, а не «не грузится»: на упавшем запросе snapshotAt тоже
   // null, и сообщение «крон ещё не отработал» соврало бы про причину пустоты.
   const snapshotLoaded = traffic.isSuccess && funnel.isSuccess;
@@ -165,6 +166,21 @@ export default function ProductFunnelPage() {
             </Note>
           </Card>
         ))}
+
+      {/* Неполное покрытие: обе половины воронки считаются по фактическому
+          окну, иначе доли от визитов были бы завышены в разы. */}
+      {coverage && !coverage.complete && coverage.firstDay && coverage.lastDay && (
+        <Card className="p-4 bg-amber-50 border-amber-200">
+          <Note>
+            За выбранный период выгружено {coverage.coveredDays} дней из {coverage.requestedDays}.
+            Чтобы доли не врали, все шаги — и из Метрики, и из базы — посчитаны за{' '}
+            <span className="text-mp-gray-700 font-medium">
+              {formatDay(coverage.firstDay)} — {formatDay(coverage.lastDay)}
+            </span>
+            , а не за весь выбранный период.
+          </Note>
+        </Card>
+      )}
 
       {/* Трафик */}
       <section className="space-y-4">
@@ -212,8 +228,8 @@ export default function ProductFunnelPage() {
                 Уникальных посетителей за этот период мы не показываем. Их нельзя сложить по дням:
                 человек, заходивший в понедельник и во вторник, посчитался бы дважды. Честное число
                 Метрика отдаёт только за готовые периоды ({UNIQUE_PRESETS}) — выберите такой период
-                сверху. За прошлые месяцы уников тоже не будет: срез снимается раз в несколько
-                часов и хранит только последнее окно, а не историю.
+                сверху. За давние периоды прочерк тоже возможен: срезы уников копятся только с того
+                дня, как заработала выгрузка, задним числом их не восстановить.
               </Note>
             )}
           </>

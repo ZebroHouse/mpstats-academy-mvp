@@ -44,7 +44,7 @@ export const adminAnalyticsRouter = router({
   assistant: assistantAnalyticsRouter,
 
   /** Product funnel sub-namespace → admin.analytics.funnel.* */
-  funnel: adminAnalyticsFunnelRouter,
+  productFunnel: adminAnalyticsFunnelRouter,
 
   /**
    * Monitor: users holding more than one ACTIVE PLATFORM subscription. The
