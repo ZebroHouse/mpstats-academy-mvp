@@ -30,7 +30,8 @@ export interface FunnelStep {
   key: FunnelStepKey;
   label: string;
   value: number;
-  /** Конверсия от предыдущего шага, %. null у вершины. */
+  /** Конверсия от предыдущего шага, %. null там, где шаги не вложены
+   *  друг в друга и доля от предыдущего ничего не значит (см. NESTED_AFTER). */
   fromPrev: number | null;
   /** Конверсия от визитов, %. */
   fromTop: number;
@@ -58,6 +59,21 @@ function percent(part: number, whole: number): number {
   return Math.round((part / whole) * 1000) / 10;
 }
 
+/**
+ * Пары шагов, где «доля от предыдущего» осмысленна: второй шаг — подмножество
+ * первого, то есть попасть в него, минуя первый, нельзя.
+ *
+ * Остальные шаги воронки независимы друг от друга: это отдельные цели Метрики,
+ * а не вложенные когорты. Визит открывает урок, не проходя диагностику, поэтому
+ * «конверсия диагностика → урок» на реальных данных даёт 504% и не значит ничего.
+ * Для таких переходов честный ответ — прочерк, а сравнивать их надо по доле
+ * от визитов (`fromTop`), которая осмысленна всегда.
+ */
+const NESTED_AFTER: Partial<Record<FunnelStepKey, FunnelStepKey>> = {
+  diagnosticComplete: 'diagnosticStart',
+  payments: 'trials',
+};
+
 export function buildFunnel(input: {
   visits: number;
   goalVisits: Record<
@@ -78,12 +94,17 @@ export function buildFunnel(input: {
     { key: 'payments', value: input.payments, source: 'db' },
   ];
 
-  return raw.map((step, index) => ({
-    key: step.key,
-    label: LABELS[step.key],
-    value: step.value,
-    fromPrev: index === 0 ? null : percent(step.value, raw[index - 1].value),
-    fromTop: index === 0 ? 100 : percent(step.value, input.visits),
-    source: step.source,
-  }));
+  const valueOf = (key: FunnelStepKey): number => raw.find((s) => s.key === key)?.value ?? 0;
+
+  return raw.map((step, index) => {
+    const nestedIn = NESTED_AFTER[step.key];
+    return {
+      key: step.key,
+      label: LABELS[step.key],
+      value: step.value,
+      fromPrev: nestedIn ? percent(step.value, valueOf(nestedIn)) : null,
+      fromTop: index === 0 ? 100 : percent(step.value, input.visits),
+      source: step.source,
+    };
+  });
 }
