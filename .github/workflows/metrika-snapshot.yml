@@ -1,0 +1,29 @@
+name: Metrika snapshot
+
+on:
+  schedule:
+    # Раз в 6 часов. Почасовой крон бессмысленен: GitHub Actions дрейфует
+    # на 60-100 минут под нагрузкой (см. MAAL-PLATFORM-1), то есть на величину
+    # собственного интервала. Аналитика не операционная, 4 снятия в сутки хватает.
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Сколько дней назад перезаписать (бэкфилл, максимум 400)'
+        required: false
+        default: '8'
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch Metrika snapshot
+        run: |
+          curl -fsSL --max-time 600 \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            "$SITE_URL/api/cron/metrika-snapshot?days=${DAYS:-8}" \
+            || echo "Warning: metrika-snapshot failed"
+        env:
+          SITE_URL: ${{ secrets.SITE_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+          DAYS: ${{ github.event.inputs.days }}
