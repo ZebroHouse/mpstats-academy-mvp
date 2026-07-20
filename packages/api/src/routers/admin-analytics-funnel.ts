@@ -24,6 +24,15 @@ type TrafficKey = (typeof TRAFFIC_KEYS)[number];
  *  чтобы пережить пропущенный прогон и не выдать цифру за чужой период. */
 const SNAPSHOT_EDGE_TOLERANCE_MS = 2 * 86_400_000;
 
+/** Дедуплицированные уники за окно + граница, по которую они посчитаны.
+ *  Экспортируется: тип попадает в выводимую сигнатуру appRouter. */
+export interface PeriodUsers {
+  value: number;
+  windowDays: number;
+  /** Последний день, попавший в срез (yyyy-mm-dd). */
+  throughDay: string;
+}
+
 /**
  * Инклюзивная длина периода в календарных днях. Оба конца сначала сводятся к
  * началу UTC-суток: UI шлёт `to` как 23:59:59.999 (`rangeToBounds`), и сырая
@@ -88,9 +97,11 @@ export const adminAnalyticsFunnelRouter = router({
       // к концу запрошенного периода. Без этой проверки выбор недели в июне
       // вернул бы уников за прошедшую неделю, поданных как июньские:
       // цифра тихо неверная, а такие уходят во внешние отчёты.
+      // Длина периода должна совпасть с окном ТОЧНО. Допуск здесь был бы
+      // вреден: выбрав 6 дней, админ получил бы недельную цифру как свою.
       const spanDays = inclusiveDaySpan(input.from, input.to);
-      const matchedWindow = METRIKA_UNIQUE_WINDOWS.find((w) => Math.abs(w - spanDays) <= 1) ?? null;
-      let periodUsers: number | null = null;
+      const matchedWindow = METRIKA_UNIQUE_WINDOWS.find((w) => w === spanDays) ?? null;
+      let periodUsers: PeriodUsers | null = null;
       if (matchedWindow) {
         const row = await ctx.prisma.metrikaSnapshot.findFirst({
           where: {
@@ -100,7 +111,13 @@ export const adminAnalyticsFunnelRouter = router({
           },
           orderBy: { day: 'desc' },
         });
-        periodUsers = row?.value ?? null;
+        // Окно крона заканчивается вчерашним днём, а период может кончаться
+        // сегодня. Возвращаем не голое число, а границу, по которую оно
+        // посчитано, чтобы UI подписал цифру, а не выдавал её за «ровно
+        // выбранный период».
+        periodUsers = row
+          ? { value: row.value, windowDays: matchedWindow, throughDay: row.day.toISOString().slice(0, 10) }
+          : null;
       }
 
       return {

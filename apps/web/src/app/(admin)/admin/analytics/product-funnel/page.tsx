@@ -34,6 +34,14 @@ const SOURCE_LABEL: Record<'metrika' | 'db', string> = {
 };
 
 const num = (n: number) => n.toLocaleString('ru-RU');
+
+/** yyyy-mm-dd → «19 июля». Подписывает границу, по которую посчитаны уники. */
+const formatDay = (day: string) =>
+  new Date(`${day}T00:00:00.000Z`).toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    timeZone: 'UTC',
+  });
 const pct = (n: number | null) => (n === null ? DASH : `${n.toFixed(1).replace('.', ',')}%`);
 
 const dayTick = (d: string) => {
@@ -182,13 +190,13 @@ export default function ProductFunnelPage() {
               />
               <StatCard
                 title="Уникальные посетители"
-                value={periodUsers === null ? DASH : num(periodUsers)}
+                value={periodUsers === null ? DASH : num(periodUsers.value)}
                 icon={Users}
                 color="green"
                 trend={
                   periodUsers === null
                     ? `Считается только за ${UNIQUE_PRESETS}`
-                    : 'Срез Метрики, а не сумма дней'
+                    : `За ${periodUsers.windowDays} полных суток по ${formatDay(periodUsers.throughDay)}`
                 }
               />
               <StatCard
@@ -203,8 +211,9 @@ export default function ProductFunnelPage() {
               <Note>
                 Уникальных посетителей за этот период мы не показываем. Их нельзя сложить по дням:
                 человек, заходивший в понедельник и во вторник, посчитался бы дважды. Честное число
-                Метрика отдаёт только за готовые периоды ({UNIQUE_PRESETS}), заканчивающиеся
-                сегодня — выберите такой период сверху.
+                Метрика отдаёт только за готовые периоды ({UNIQUE_PRESETS}) — выберите такой период
+                сверху. За прошлые месяцы уников тоже не будет: срез снимается раз в несколько
+                часов и хранит только последнее окно, а не историю.
               </Note>
             )}
           </>
