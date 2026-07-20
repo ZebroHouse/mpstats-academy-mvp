@@ -814,3 +814,21 @@ model AssistantMessage {
 
   @@index([conversationId, createdAt])
 }
+
+/// Подневный снапшот Яндекс.Метрики. Крон пишет, tRPC только читает —
+/// прямые запросы к Метрике из процедур запрещены (лимит 200 req/5min).
+/// windowDays=1 — подневные значения (аддитивны, суммируются за любой период).
+/// windowDays=7|14|30|90 — уники за целое окно: users НЕ аддитивны по дням,
+/// сумма дневных уников завышает реальное число людей.
+/// No FK (mirrors UserActivityDay).
+model MetrikaSnapshot {
+  metricKey  String
+  day        DateTime @db.Date
+  windowDays Int      @default(1)
+  value      Int
+  fetchedAt  DateTime @default(now())
+
+  @@id([metricKey, day, windowDays])
+  @@index([day])
+  @@index([windowDays, day])
+}
