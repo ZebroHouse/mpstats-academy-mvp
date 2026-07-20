@@ -22,6 +22,7 @@ import { extractCheckpoints, tallyCheckpoints } from '../utils/checkpoint-analyt
 import { assembleReferralFunnel } from '../utils/referral-funnel';
 import { fetchClientRegistry } from '../services/sales-registry';
 import { assistantAnalyticsRouter } from './admin-analytics-assistant';
+import { adminAnalyticsFunnelRouter } from './admin-analytics-funnel';
 import { tallyDuplicatePlatformSubs } from '../utils/offer-duplicates';
 
 /**
@@ -41,6 +42,9 @@ function checkpointChoicesOf(progressState: unknown): Record<string, string> | n
 export const adminAnalyticsRouter = router({
   /** Assistant analytics sub-namespace → admin.analytics.assistant.* */
   assistant: assistantAnalyticsRouter,
+
+  /** Product funnel sub-namespace → admin.analytics.funnel.* */
+  funnel: adminAnalyticsFunnelRouter,
 
   /**
    * Monitor: users holding more than one ACTIVE PLATFORM subscription. The
