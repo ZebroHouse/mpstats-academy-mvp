@@ -512,7 +512,9 @@ export function parseTotalsResponse(response: TotalsResponse, metricKeys: string
 - [ ] **Step 4: Запустить тест, убедиться что проходит**
 
 Run: `pnpm --filter web test -- query.test`
-Expected: PASS, 8 тестов.
+Expected: PASS.
+
+Тесты на `parseTotalsResponse` и `buildTotalsParams` обязательны наравне с остальными: обе несут живую логику (throw на рассогласовании, округление, критичный фильтр по платформе), и без них половина парс-поверхности осталась бы непокрытой. `splitRange` должна бросать на `maxDays < 1` — иначе `cursor += 0` вешает крон-роут насмерть, без ошибки и без лога.
 
 - [ ] **Step 5: Commit**
 
@@ -656,6 +658,7 @@ Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>"
 // apps/web/src/app/api/cron/metrika-snapshot/route.ts
 import { NextResponse } from 'next/server';
 import { prisma } from '@mpstats/db/client';
+import { Prisma } from '@mpstats/db';
 import {
   METRIKA_GOAL_IDS,
   METRIKA_TRAFFIC_METRICS,
@@ -684,6 +687,33 @@ const MAX_WINDOW_DAYS = 400;
 const CHUNK_DAYS = 60;
 
 const GOAL_KEYS = Object.keys(METRIKA_GOAL_IDS) as MetrikaGoalKey[];
+/** Батч на один INSERT. Бэкфилл за год — это 19 ключей × 365 дней ≈ 7000 строк;
+ *  построчный upsert по удалённой Supabase не уложится в таймаут крона. */
+const UPSERT_CHUNK = 500;
+
+interface UpsertRow {
+  metricKey: string;
+  day: string;
+  windowDays: number;
+  value: number;
+}
+
+/** Идемпотентная запись пачками: повторный прогон крона перезаписывает
+ *  значения, а не плодит дубли (первичный ключ — metricKey+day+windowDays). */
+async function upsertSnapshotRows(rows: UpsertRow[]): Promise<void> {
+  for (let i = 0; i < rows.length; i += UPSERT_CHUNK) {
+    const chunk = rows.slice(i, i + UPSERT_CHUNK);
+    const values = chunk.map(
+      (r) => Prisma.sql`(${r.metricKey}, ${r.day}::date, ${r.windowDays}, ${r.value}, NOW())`,
+    );
+    await prisma.$executeRaw`
+      INSERT INTO "MetrikaSnapshot" ("metricKey", "day", "windowDays", "value", "fetchedAt")
+      VALUES ${Prisma.join(values)}
+      ON CONFLICT ("metricKey", "day", "windowDays")
+      DO UPDATE SET "value" = EXCLUDED."value", "fetchedAt" = EXCLUDED."fetchedAt"
+    `;
+  }
+}
 
 async function handle(request: Request) {
   const auth = request.headers.get('authorization');
@@ -737,31 +767,13 @@ async function handle(request: Request) {
       rows.push(...parseByTimeResponse(goals as never, goalKeys));
     }
 
-    for (const row of rows) {
-      await prisma.metrikaSnapshot.upsert({
-        where: {
-          metricKey_day_windowDays: {
-            metricKey: row.metricKey,
-            day: new Date(`${row.day}T00:00:00.000Z`),
-            windowDays: 1,
-          },
-        },
-        create: {
-          metricKey: row.metricKey,
-          day: new Date(`${row.day}T00:00:00.000Z`),
-          windowDays: 1,
-          value: row.value,
-          fetchedAt: new Date(),
-        },
-        update: { value: row.value, fetchedAt: new Date() },
-      });
-    }
+    await upsertSnapshotRows(rows.map((r) => ({ ...r, windowDays: 1 })));
 
     // Периодные уники: users не аддитивны по дням, поэтому для пресетных окон
     // снимаем дедуплицированное значение отдельным запросом за целый период.
     const yesterday = new Date(today.getTime() - 86_400_000);
-    const uniqueDay = new Date(`${toDateKey(yesterday)}T00:00:00.000Z`);
-    let uniqueRows = 0;
+    const uniqueDayKey = toDateKey(yesterday);
+    const periodRows: UpsertRow[] = [];
 
     for (const period of METRIKA_UNIQUE_WINDOWS) {
       const periodStart = toDateKey(new Date(yesterday.getTime() - (period - 1) * 86_400_000));
@@ -776,17 +788,21 @@ async function handle(request: Request) {
       );
       const [users, visits] = parseTotalsResponse(response as never, ['users', 'visits']);
 
-      for (const [metricKey, value] of [['users', users], ['visits', visits]] as const) {
-        await prisma.metrikaSnapshot.upsert({
-          where: { metricKey_day_windowDays: { metricKey, day: uniqueDay, windowDays: period } },
-          create: { metricKey, day: uniqueDay, windowDays: period, value, fetchedAt: new Date() },
-          update: { value, fetchedAt: new Date() },
-        });
-        uniqueRows++;
-      }
+      periodRows.push(
+        { metricKey: 'users', day: uniqueDayKey, windowDays: period, value: users },
+        { metricKey: 'visits', day: uniqueDayKey, windowDays: period, value: visits },
+      );
     }
 
-    return NextResponse.json({ ok: true, from: date1, to: date2, dailyRows: rows.length, uniqueRows });
+    await upsertSnapshotRows(periodRows);
+
+    return NextResponse.json({
+      ok: true,
+      from: date1,
+      to: date2,
+      dailyRows: rows.length,
+      uniqueRows: periodRows.length,
+    });
   } catch (error) {
     // Падение Метрики не должно ронять крон: снапшот остаётся прежним,
     // админка покажет последние успешные данные с отметкой даты.
