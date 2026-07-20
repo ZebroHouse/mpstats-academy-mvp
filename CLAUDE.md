@@ -71,6 +71,9 @@ Sibling project `D:/GpT_docs/Ai_MP_manager/` запустил `prisma db push --
 | Post-v1.28 (07-12→07-13) | Курс `09_ozon_prodvizhenie` LIVE (51 ур, 1990₽; `afd3424`), реф-код lazy-gen фикс + backfill 391 (`2c438b5`, PR #33) — см. `MEMORY.md` |
 | v1.29 Скидочные промокоды | Shipped 2026-07-13/14 (`2884a7f`): скидка %/фикса на первый платёж для промо- и амбассадор-кодов, рекуррент по полной цене, «Все тарифы» (plan-agnostic), амбассадор `refereeTrialDays=0`=базовый триал, consume-on-success. Фиксы: чек рекуррента 54-ФЗ, кнопка отмены на скидочной подписке. Деплой в обход staging. Детали — `.claude/memory/project_discount_promo_codes.md` |
 | v1.30 Акция «2 месяца по цене одного» | LIVE 2026-07-16 (`a8090d9`): триал-юзер платит 2990₽ → 60 дней PLATFORM → рекуррент 2990/30д с 60-го дня. Модификатор первого периода поверх discount/CP-инфры, `OfferRedemption` once-per-person, окно = весь триал+24ч. Флаг `OFFER_ENABLED` (kill-switch). Баннер (dark-premium) + оффер-полоса/режим на `/pricing` и `/billing` + монитор дублей в `/admin/analytics`. Discount перебивает оффер. Детали — `.claude/memory/project_trial_2for1_offer.md` |
+| v1.31 Аналитика AI-ассистента | Shipped 2026-07-17 (`3f577c3`): таб «Ассистент» в `/admin/analytics` над `AssistantMessage` — 4 секции (Пульс/Качество/Спрос/Апселл), read-only, без миграций, admin-only. Паттерн Phase 63. Детали — `project_assistant_analytics_tab.md` |
+| v1.32 Сквозная AI-аналитика | Shipped 2026-07-17 (`05a980c`): персист чата в уроках (`ai.chat` → дормантная `ChatMessage`, +3 additive-колонки, forward-only, best-effort) + таб переименован в «AI-запросы» (сквозной топ-лайн по каналам + секция «Чат в уроках», доля «нет ответа» = сигнал RAG-покрытия). КРИТ: `ChatMessage.role` — ЗАГЛАВНЫЕ `USER`/`ASSISTANT`. Детали — `project_ai_usage_analytics.md` |
+| v1.33 Качество чата в уроках | Shipped 2026-07-20 (`63bb4b7`): мета-вопросы → тёплая ориентировка (short-circuit до RAG); контент-промах → полезный отказ «В этом уроке это не разбирается» (без пересказа экран-артефактов, источники на отказе скрыты); `isRefusalAnswer` чинён (кириллич. lookaround вместо `\b`, родит. «ответа»). Триггер — прод-жалоба owner. Детали — `project_lesson_chat_quality.md` |
 
 **Remaining work:**
 1. Phase 33-03: CQ Dashboard Setup (на стороне CQ команды).
@@ -117,7 +120,7 @@ _No long-lived branches in flight._ Ветки фаз смерджены; worktr
 
 Полная лента «Last/Previous Session» перенесена в `.claude/memory/session-history.md` (newest-first, 50+ сессий с 2026-03).
 Свежие сессии + durable-факты/гочи — в auto-memory `MEMORY.md`.
-Прод сейчас: `a8090d9` (акция «2 месяца по цене одного» LIVE — движок 60-дн первого периода + баннер + оффер на тарифах/биллинге + монитор дублей, флаг `OFFER_ENABLED=true`). Ранее: скидочные промокоды (`2884a7f`), курс Озон `09_ozon_prodvizhenie` (`2c438b5`), `08_ctr`, Tochka OAuth.
+Прод сейчас: `63bb4b7` (качество чата в уроках — мета-вопросы→ориентировка, полезный отказ, честная noAnswer-метрика). Ранее: сквозная AI-аналитика + таб «AI-запросы» (`05a980c`), аналитика ассистента (`3f577c3`), акция «2 месяца по цене одного» (`a8090d9`, `OFFER_ENABLED=true`), скидочные промокоды (`2884a7f`).
 
 ## Key Decisions
 
