@@ -19,7 +19,7 @@ import {
 } from '@mpstats/ai';
 import { getUserActiveSubscriptions, getUserAdminBypass, isLessonAccessible, getFirstJobLessonIds } from '../utils/access';
 import { isFeatureEnabled } from '../utils/feature-flags';
-import { buildChatMessageRows } from '../utils/lesson-chat-analytics';
+import { buildChatMessageRows, isMetaQuestion, buildMetaOrientation, isRefusalAnswer } from '../utils/lesson-chat-analytics';
 import type { SearchLessonResult, SearchSnippet } from '@mpstats/shared';
 
 type SummarySource = {
@@ -157,6 +157,22 @@ export const aiRouter = router({
     .mutation(async ({ ctx, input }) => {
       const { lessonId, message, history } = input;
 
+      // Meta/greeting questions ("что ты умеешь", "привет") are about the assistant,
+      // not lesson content — RAG either refuses or grabs irrelevant slides. Short-circuit
+      // with a warm orientation built from the lesson title; no RAG call.
+      if (isMetaQuestion(message)) {
+        const lesson = await ctx.prisma.lesson.findUnique({ where: { id: lessonId }, select: { title: true } });
+        const content = buildMetaOrientation(lesson?.title ?? undefined);
+        try {
+          await ctx.prisma.chatMessage.createMany({
+            data: buildChatMessageRows({ userId: ctx.user!.id, lessonId, message, answer: content, model: 'meta', sourceCount: 0, answered: true }),
+          });
+        } catch (err) {
+          console.error('[ai.chat] ChatMessage persist failed (non-fatal):', err);
+        }
+        return { content, sources: [], model: 'meta' };
+      }
+
       const result = await generateChatResponse(
         lessonId,
         message,
@@ -180,9 +196,11 @@ export const aiRouter = router({
         console.error('[ai.chat] ChatMessage persist failed (non-fatal):', err);
       }
 
+      // A refusal («В этом уроке это не разбирается») isn't grounded in the
+      // retrieved chunks — don't surface them as "sources" (self-contradictory).
       return {
         content: result.content,
-        sources: result.sources,
+        sources: isRefusalAnswer(result.content) ? [] : result.sources,
         model: result.model,
       };
     }),
