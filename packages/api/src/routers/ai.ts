@@ -19,7 +19,7 @@ import {
 } from '@mpstats/ai';
 import { getUserActiveSubscriptions, getUserAdminBypass, isLessonAccessible, getFirstJobLessonIds } from '../utils/access';
 import { isFeatureEnabled } from '../utils/feature-flags';
-import { buildChatMessageRows, isMetaQuestion, buildMetaOrientation } from '../utils/lesson-chat-analytics';
+import { buildChatMessageRows, isMetaQuestion, buildMetaOrientation, isRefusalAnswer } from '../utils/lesson-chat-analytics';
 import type { SearchLessonResult, SearchSnippet } from '@mpstats/shared';
 
 type SummarySource = {
@@ -196,9 +196,11 @@ export const aiRouter = router({
         console.error('[ai.chat] ChatMessage persist failed (non-fatal):', err);
       }
 
+      // A refusal («В этом уроке это не разбирается») isn't grounded in the
+      // retrieved chunks — don't surface them as "sources" (self-contradictory).
       return {
         content: result.content,
-        sources: result.sources,
+        sources: isRefusalAnswer(result.content) ? [] : result.sources,
         model: result.model,
       };
     }),
