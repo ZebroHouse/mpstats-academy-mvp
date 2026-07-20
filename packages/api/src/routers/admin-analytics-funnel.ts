@@ -19,6 +19,11 @@ const rangeInput = z.object({ from: z.date(), to: z.date() });
 const TRAFFIC_KEYS = ['visits', 'users', 'pageviews'] as const;
 type TrafficKey = (typeof TRAFFIC_KEYS)[number];
 
+/** Насколько строка периодных уников может отставать от конца периода.
+ *  Срез снимается за вчера, крон ходит раз в 6 часов — двух суток хватает,
+ *  чтобы пережить пропущенный прогон и не выдать цифру за чужой период. */
+const SNAPSHOT_EDGE_TOLERANCE_MS = 2 * 86_400_000;
+
 /**
  * Инклюзивная длина периода в календарных днях. Оба конца сначала сводятся к
  * началу UTC-суток: UI шлёт `to` как 23:59:59.999 (`rangeToBounds`), и сырая
@@ -77,12 +82,22 @@ export const adminAnalyticsFunnelRouter = router({
 
       // Уники за период берём только из окна нужной длины: сумма дневных
       // уников задваивает людей, вернувшихся на следующий день.
+      //
+      // Крон истории уников не ведёт — он перезаписывает один срез, снятый
+      // за вчера. Поэтому строка годится, только если её `day` примыкает
+      // к концу запрошенного периода. Без этой проверки выбор недели в июне
+      // вернул бы уников за прошедшую неделю, поданных как июньские:
+      // цифра тихо неверная, а такие уходят во внешние отчёты.
       const spanDays = inclusiveDaySpan(input.from, input.to);
       const matchedWindow = METRIKA_UNIQUE_WINDOWS.find((w) => Math.abs(w - spanDays) <= 1) ?? null;
       let periodUsers: number | null = null;
       if (matchedWindow) {
         const row = await ctx.prisma.metrikaSnapshot.findFirst({
-          where: { metricKey: 'users', windowDays: matchedWindow },
+          where: {
+            metricKey: 'users',
+            windowDays: matchedWindow,
+            day: { gte: new Date(input.to.getTime() - SNAPSHOT_EDGE_TOLERANCE_MS), lte: input.to },
+          },
           orderBy: { day: 'desc' },
         });
         periodUsers = row?.value ?? null;
