@@ -82,28 +82,43 @@
 ## Task 1: Таблица снапшота
 
 **Files:**
+- Create: `packages/db/prisma/migrations/20260720000000_add_metrika_snapshot/migration.sql`
 - Modify: `packages/db/prisma/schema.prisma`
 
-Миграция применяется **через Supabase Management API сырым SQL**, а не `prisma db push`. Правило проекта (`MAAL/CLAUDE.md`, инцидент 2026-05-12): локальный dev смотрит в прод-Supabase, `db push`/`migrate` против неё запрещены. Порядок как в v1.32: сначала SQL через Mgmt API, потом зеркалим в `schema.prisma`, потом `db:generate`. Таблица новая — операция строго аддитивная, существующих таблиц не касается.
+Миграция применяется **через Supabase Management API сырым SQL**, а не `prisma db push`. Правило проекта (`MAAL/CLAUDE.md`, инцидент 2026-05-12): локальный dev смотрит в прод-Supabase, `db push`/`migrate` против неё запрещены. Порядок как в v1.32: файл миграции → SQL через Mgmt API → запись в `_prisma_migrations` → зеркалим в `schema.prisma` → `db:generate`. Таблица новая, операция строго аддитивная.
 
-- [ ] **Step 1: Применить SQL через Supabase Mgmt API**
+**Этот таск выполняет контроллер сессии, а не субагент** — DDL против прод-БД с 158 живыми пользователями не делегируется.
 
-Токен и процедура — `.claude/memory/reference_supabase_migration_via_mgmt_api.md`. SQL:
+- [ ] **Step 1: Создать файл миграции**
+
+`packages/db/prisma/migrations/20260720000000_add_metrika_snapshot/migration.sql`. Форма скопирована с `20260629010000_add_referral_code_click_day` (та же day-bucket таблица без FK):
 
 ```sql
-CREATE TABLE IF NOT EXISTS "MetrikaSnapshot" (
-  "metricKey"  TEXT NOT NULL,
-  "day"        DATE NOT NULL,
-  "windowDays" INTEGER NOT NULL DEFAULT 1,
-  "value"      INTEGER NOT NULL,
-  "fetchedAt"  TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT "MetrikaSnapshot_pkey" PRIMARY KEY ("metricKey", "day", "windowDays")
+-- Подневный снапшот Яндекс.Метрики для продуктовой воронки в админке.
+-- Additive; наполняется кроном /api/cron/metrika-snapshot.
+-- windowDays=1 — подневные аддитивные метрики; windowDays=7|14|30|90 —
+-- дедуплицированные уники за окно (users не суммируются по дням).
+CREATE TABLE "MetrikaSnapshot" (
+    "metricKey" TEXT NOT NULL,
+    "day" DATE NOT NULL,
+    "windowDays" INTEGER NOT NULL DEFAULT 1,
+    "value" INTEGER NOT NULL,
+    "fetchedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT "MetrikaSnapshot_pkey" PRIMARY KEY ("metricKey","day","windowDays")
 );
-CREATE INDEX IF NOT EXISTS "MetrikaSnapshot_day_idx" ON "MetrikaSnapshot"("day");
-CREATE INDEX IF NOT EXISTS "MetrikaSnapshot_windowDays_day_idx" ON "MetrikaSnapshot"("windowDays", "day");
+
+CREATE INDEX "MetrikaSnapshot_day_idx" ON "MetrikaSnapshot"("day");
+
+CREATE INDEX "MetrikaSnapshot_windowDays_day_idx" ON "MetrikaSnapshot"("windowDays","day");
 ```
 
-- [ ] **Step 2: Проверить, что таблица создалась**
+- [ ] **Step 2: Применить SQL через Supabase Mgmt API и записать в `_prisma_migrations`**
+
+Процедура — `.claude/memory/reference_supabase_migration_via_mgmt_api.md`. Токен Mgmt API брать оттуда, **в файлы плана и коммиты не переносить**.
+
+Порядок: посчитать sha256 от `migration.sql` → выполнить SQL через `POST /v1/projects/saecuecevicwjkpmaoot/database/query` → вставить строку в `_prisma_migrations` с этим checksum и именем папки `20260720000000_add_metrika_snapshot`, чтобы локальный `prisma migrate status` считал миграцию применённой.
+
+- [ ] **Step 3: Проверить, что таблица создалась**
 
 Через тот же Mgmt API:
 ```sql
@@ -111,7 +126,7 @@ SELECT column_name, data_type FROM information_schema.columns WHERE table_name =
 ```
 Ожидаемо 5 строк: `metricKey text`, `day date`, `windowDays integer`, `value integer`, `fetchedAt timestamp without time zone`.
 
-- [ ] **Step 3: Зеркалить модель в schema.prisma**
+- [ ] **Step 4: Зеркалить модель в schema.prisma**
 
 Дописать в конец `packages/db/prisma/schema.prisma`, рядом с `UserActivityDay` / `ReferralCodeClickDay` (у них тот же стиль: композитный `@@id`, `@db.Date`, без FK):
 
@@ -135,15 +150,15 @@ model MetrikaSnapshot {
 }
 ```
 
-- [ ] **Step 4: Сгенерировать клиент и проверить типы**
+- [ ] **Step 5: Сгенерировать клиент и проверить типы**
 
 Run: `pnpm db:generate && pnpm typecheck`
 Expected: без ошибок; `prisma.metrikaSnapshot` доступен.
 
-- [ ] **Step 5: Commit**
+- [ ] **Step 6: Commit**
 
 ```bash
-git add packages/db/prisma/schema.prisma
+git add packages/db/prisma/schema.prisma packages/db/prisma/migrations/20260720000000_add_metrika_snapshot/
 git commit -m "feat(db): add MetrikaSnapshot table for traffic funnel
 
 Крон будет складывать сюда подневные значения Метрики, чтобы tRPC-процедуры
@@ -196,11 +211,6 @@ export type MetrikaTrafficMetric = (typeof METRIKA_TRAFFIC_METRICS)[number];
 /** Окна, для которых крон снимает периодные (дедуплицированные) уники.
  *  Совпадают с пресетами DEFAULT_RANGE_DAYS в AnalyticsDateRange. */
 export const METRIKA_UNIQUE_WINDOWS = [7, 14, 30, 90] as const;
-
-/** Ключ строки снапшота для трафиковой метрики. */
-export function trafficMetricKey(metric: MetrikaTrafficMetric): string {
-  return metric;
-}
 
 /** Ключ строки снапшота для цели. `visits` — аддитивная метрика шага воронки,
  *  `users` — люди (не аддитивны по дням). `reaches` осознанно не храним:

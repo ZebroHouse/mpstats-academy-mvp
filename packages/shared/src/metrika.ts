@@ -26,11 +26,6 @@ export type MetrikaTrafficMetric = (typeof METRIKA_TRAFFIC_METRICS)[number];
  *  Совпадают с пресетами DEFAULT_RANGE_DAYS в AnalyticsDateRange. */
 export const METRIKA_UNIQUE_WINDOWS = [7, 14, 30, 90] as const;
 
-/** Ключ строки снапшота для трафиковой метрики. */
-export function trafficMetricKey(metric: MetrikaTrafficMetric): string {
-  return metric;
-}
-
 /** Ключ строки снапшота для цели. `visits` — аддитивная метрика шага воронки,
  *  `users` — люди (не аддитивны по дням). `reaches` осознанно не храним:
  *  это счётчик срабатываний, он ломает порядок шагов воронки. */
