@@ -13,6 +13,7 @@ const TABS = [
   { label: 'Контент', href: '/admin/analytics/content' },
   { label: 'Чекпоинты', href: '/admin/analytics/checkpoints' },
   { label: 'AI-запросы', href: '/admin/analytics/assistant' },
+  { label: 'Продуктовая воронка', href: '/admin/analytics/product-funnel' },
 ] as const;
 
 export function AnalyticsTabs({ role }: { role?: string }) {
