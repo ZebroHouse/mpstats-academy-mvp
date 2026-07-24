@@ -8,6 +8,7 @@ import { LearningHero } from '@/components/learning/LearningHero';
 import { MarketplaceSwitch } from '@/components/learning/MarketplaceSwitch';
 import { JobCatalog, type ProgressFilter } from '@/components/learning/JobCatalog';
 import { LearningTabs } from '@/components/learning/LearningTabs';
+import { EmergencyFeaturedCard } from '@/components/learning/EmergencyFeaturedCard';
 import { trpc } from '@/lib/trpc/client';
 import { cn } from '@/lib/utils';
 
@@ -28,6 +29,7 @@ export default function SolutionsPage() {
 
   const { data: jobAxes, isLoading: jobsLoading, error: jobsError } =
     trpc.job.getCatalog.useQuery({ marketplace });
+  const emergency = trpc.job.getEmergencyFeatured.useQuery();
 
   // ── error card (DB unavailable / generic) ───────────────────────────────────
   if (jobsError && isDatabaseUnavailable(jobsError.message)) {
@@ -91,6 +93,9 @@ export default function SolutionsPage() {
 
       {/* Job catalog */}
       <div className="space-y-4">
+        {marketplace === 'WB' && emergency.data?.job && (
+          <EmergencyFeaturedCard job={emergency.data.job} />
+        )}
         {jobsLoading && <div className="h-32 bg-mp-gray-200 rounded-xl animate-pulse" />}
         {jobsError && !isDatabaseUnavailable(jobsError.message) && (
           <p className="text-body-sm text-red-500 py-6 text-center">Не удалось загрузить решения.</p>
