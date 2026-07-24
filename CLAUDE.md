@@ -74,6 +74,7 @@ Sibling project `D:/GpT_docs/Ai_MP_manager/` запустил `prisma db push --
 | v1.31 Аналитика AI-ассистента | Shipped 2026-07-17 (`3f577c3`): таб «Ассистент» в `/admin/analytics` над `AssistantMessage` — 4 секции (Пульс/Качество/Спрос/Апселл), read-only, без миграций, admin-only. Паттерн Phase 63. Детали — `project_assistant_analytics_tab.md` |
 | v1.32 Сквозная AI-аналитика | Shipped 2026-07-17 (`05a980c`): персист чата в уроках (`ai.chat` → дормантная `ChatMessage`, +3 additive-колонки, forward-only, best-effort) + таб переименован в «AI-запросы» (сквозной топ-лайн по каналам + секция «Чат в уроках», доля «нет ответа» = сигнал RAG-покрытия). КРИТ: `ChatMessage.role` — ЗАГЛАВНЫЕ `USER`/`ASSISTANT`. Детали — `project_ai_usage_analytics.md` |
 | v1.33 Качество чата в уроках | Shipped 2026-07-20 (`63bb4b7`): мета-вопросы → тёплая ориентировка (short-circuit до RAG); контент-промах → полезный отказ «В этом уроке это не разбирается» (без пересказа экран-артефактов, источники на отказе скрыты); `isRefusalAnswer` чинён (кириллич. lookaround вместо `\b`, родит. «ответа»). Триггер — прод-жалоба owner. Детали — `project_lesson_chat_quality.md` |
+| v1.34 ЧП-блок «Склады WB под ударом» | LIVE 2026-07-24 (`04f9345`, `EMERGENCY_BANNER_ENABLED=true`): экстренный Job `wb-warehouse-crisis-2026` (вебинар 23.07 + 2 текста), баннер в слоте первого-урока (вариант B, всем), пин в `/learn/solutions` (WB), 3 урока бесплатны через аллоулист `EMERGENCY_FREE_LESSON_IDS` в `getFirstJobLessonIds`. Джоба `isPublished=false` навсегда, гейт — только рантайм-флаг. **Kill-switch:** флаг→`false`+`up -d web` (возможно снятие). Vision скипнут. Детали — `project_emergency_warehouse_crisis_block.md` |
 
 **Remaining work:**
 1. Phase 33-03: CQ Dashboard Setup (на стороне CQ команды).
@@ -120,7 +121,7 @@ _No long-lived branches in flight._ Ветки фаз смерджены; worktr
 
 Полная лента «Last/Previous Session» перенесена в `.claude/memory/session-history.md` (newest-first, 50+ сессий с 2026-03).
 Свежие сессии + durable-факты/гочи — в auto-memory `MEMORY.md`.
-Прод сейчас: `63bb4b7` (качество чата в уроках — мета-вопросы→ориентировка, полезный отказ, честная noAnswer-метрика). Ранее: сквозная AI-аналитика + таб «AI-запросы» (`05a980c`), аналитика ассистента (`3f577c3`), акция «2 месяца по цене одного» (`a8090d9`, `OFFER_ENABLED=true`), скидочные промокоды (`2884a7f`).
+Прод сейчас: `04f9345` (ЧП-блок «Склады WB под ударом» — экстренный Job + баннер витрины + пин каталога под флагом `EMERGENCY_BANNER_ENABLED=true`, kill-switch готов). Ранее: качество чата в уроках (`63bb4b7`), сквозная AI-аналитика + таб «AI-запросы» (`05a980c`), аналитика ассистента (`3f577c3`), акция «2 месяца по цене одного» (`a8090d9`, `OFFER_ENABLED=true`).
 
 ## Key Decisions
 
