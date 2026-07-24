@@ -8,6 +8,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Shelf } from '@/components/learning/Shelf';
 import { HeroFirstLesson } from '@/components/dashboard/HeroFirstLesson';
+import { EmergencyBanner } from '@/components/dashboard/EmergencyBanner';
 import { DatabaseError } from '@/components/shared/DatabaseError';
 import { trpc } from '@/lib/trpc/client';
 
@@ -41,6 +42,7 @@ export default function DashboardPage() {
   const { data: profile } = trpc.profile.get.useQuery();
   const { data: dashboard, isLoading, error } = trpc.profile.getDashboard.useQuery();
   const storefront = trpc.dashboard.getStorefront.useQuery();
+  const emergency = trpc.job.getEmergencyFeatured.useQuery();
 
   const name = profile?.name || 'Пользователь';
 
@@ -143,7 +145,11 @@ export default function DashboardPage() {
         );
       })()}
 
-      <HeroFirstLesson />
+      {emergency.data?.job ? (
+        <EmergencyBanner job={emergency.data.job} />
+      ) : (
+        <HeroFirstLesson />
+      )}
 
       {/* Compact entry row — 4 icon-inline buttons (incl. diagnostic), each with own BentoCard tone */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 animate-slide-up" style={{ animationDelay: '50ms' }}>
