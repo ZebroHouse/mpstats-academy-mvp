@@ -1,6 +1,7 @@
 import type { PrismaClient } from '@mpstats/db';
 import { isOzonCourse } from '@mpstats/shared';
 import { isFeatureEnabled } from './feature-flags';
+import { EMERGENCY_FREE_LESSON_IDS } from './emergency';
 
 /**
  * Does a COURSE subscription unlock `courseId`?
@@ -61,6 +62,8 @@ export async function getUserActiveSubscriptions(
  * least one of those lessons (perf), then returns only the requested first
  * lessons. We still load every JobLesson row of each matching job — a single
  * requested lesson alone can't tell us whether it's the job's minimum.
+ *
+ * Плюс явный аллоулист `EMERGENCY_FREE_LESSON_IDS` (spec §D).
  */
 export async function getFirstJobLessonIds(
   prisma: PrismaClient,
@@ -89,6 +92,13 @@ export async function getFirstJobLessonIds(
     if (r.order !== minOrderByJob.get(r.jobId)) continue;
     if (restrict && !restrict.has(r.lessonId)) continue;
     firstSet.add(r.lessonId);
+  }
+
+  // Free-lesson allowlist (spec §D, ЧП-набор): эти уроки бесплатны везде, где
+  // access-проверка проходит через этот чокпоинт, независимо от членства в джобе.
+  for (const id of EMERGENCY_FREE_LESSON_IDS) {
+    if (restrict && !restrict.has(id)) continue;
+    firstSet.add(id);
   }
   return firstSet;
 }

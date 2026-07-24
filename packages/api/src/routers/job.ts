@@ -4,6 +4,7 @@ import { handleDatabaseError } from '../utils/db-errors';
 import { getUserActiveSubscriptions, getUserAdminBypass, isLessonAccessible, getFirstJobLessonIds } from '../utils/access';
 import { isFeatureEnabled } from '../utils/feature-flags';
 import { extractLessonIds } from '../utils/lesson-ids';
+import { EMERGENCY_JOB_SLUG, emergencyBannerEnabled } from '../utils/emergency';
 import type { JobCatalogAxis, JobDetail, JobMarketplace } from '@mpstats/shared';
 
 const AXIS_TITLES: Record<string, string> = {
@@ -119,6 +120,32 @@ export const jobRouter = router({
       }
     }),
 
+  // Экстренный ЧП-блок: единый источник для баннера витрины и пина в каталоге.
+  // Гейт — только флаг (spec §C). Джоба остаётся isPublished=false (нет в обычном
+  // каталоге), поэтому грузим по slug без фильтра isPublished.
+  getEmergencyFeatured: protectedProcedure.query(async ({ ctx }) => {
+    if (!emergencyBannerEnabled()) return { enabled: false as const, job: null };
+    const job = await ctx.prisma.job.findFirst({
+      where: { slug: EMERGENCY_JOB_SLUG },
+      select: {
+        slug: true, title: true, description: true, marketplace: true,
+        lessons: {
+          where: { lesson: { isHidden: false, course: { isHidden: false } } },
+          select: { lessonId: true },
+        },
+      },
+    });
+    if (!job) return { enabled: true as const, job: null };
+    return {
+      enabled: true as const,
+      job: {
+        slug: job.slug, title: job.title, description: job.description,
+        marketplace: job.marketplace as 'WB' | 'OZON' | 'BOTH',
+        lessonCount: job.lessons.length,
+      },
+    };
+  }),
+
   // Лёгкий резолв названия задачи по slug — для контекстных хлебных крошек.
   // НЕ тянет lessons/subs/billing (в отличие от getJob).
   getTitleBySlug: protectedProcedure
@@ -129,7 +156,7 @@ export const jobRouter = router({
           where: { slug: input.slug },
           select: { slug: true, title: true, isPublished: true },
         });
-        if (!job || !job.isPublished) return null;
+        if (!job || (!job.isPublished && job.slug !== EMERGENCY_JOB_SLUG)) return null;
         return { slug: job.slug, title: job.title };
       } catch (error) {
         handleDatabaseError(error);
@@ -164,7 +191,7 @@ export const jobRouter = router({
             select: { addedJobs: true },
           }),
         ]);
-        if (!job || !job.isPublished) return null;
+        if (!job || (!job.isPublished && job.slug !== EMERGENCY_JOB_SLUG)) return null;
 
         const addedJobs: string[] = Array.isArray(lp?.addedJobs) ? (lp!.addedJobs as string[]) : [];
         const isInTrack = addedJobs.includes(job.id);
