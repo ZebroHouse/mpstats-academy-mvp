@@ -1,6 +1,8 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { trpc } from '@/lib/trpc/client';
 
 interface Props {
   job: { slug: string; title: string; description: string; lessonCount: number };
@@ -8,9 +10,19 @@ interface Props {
 
 /** Закреплённая ЧП-карточка над осями каталога решений (spec §C2). */
 export function EmergencyFeaturedCard({ job }: Props) {
+  const track = trpc.job.recordEmergencyEvent.useMutation();
+  const impressionFired = useRef(false);
+  useEffect(() => {
+    if (impressionFired.current) return; // guard от double-invoke (React 18 StrictMode)
+    impressionFired.current = true;
+    track.mutate({ surface: 'PIN', kind: 'IMPRESSION' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <Link
       href={`/learn/job/${job.slug}`}
+      onClick={() => track.mutate({ surface: 'PIN', kind: 'CLICK' })}
       className="block rounded-2xl border border-red-300 bg-gradient-to-r from-red-50 to-orange-50 p-5 shadow-mp-card transition-shadow hover:shadow-mp-card-hover"
     >
       <p className="text-body-sm font-semibold uppercase tracking-wide text-red-600">

@@ -1,6 +1,8 @@
 'use client';
 
+import { useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { trpc } from '@/lib/trpc/client';
 
 interface Props {
   job: { slug: string; title: string; lessonCount: number };
@@ -11,9 +13,19 @@ interface Props {
  * Виден всем юзерам, снимается только kill-switch'ем (EMERGENCY_BANNER_ENABLED).
  */
 export function EmergencyBanner({ job }: Props) {
+  const track = trpc.job.recordEmergencyEvent.useMutation();
+  const impressionFired = useRef(false);
+  useEffect(() => {
+    if (impressionFired.current) return; // guard от double-invoke (React 18 StrictMode)
+    impressionFired.current = true;
+    track.mutate({ surface: 'BANNER', kind: 'IMPRESSION' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <Link
       href={`/learn/job/${job.slug}`}
+      onClick={() => track.mutate({ surface: 'BANNER', kind: 'CLICK' })}
       className="block rounded-2xl border border-red-300 bg-gradient-to-r from-red-50 to-orange-50 p-5 shadow-mp-card transition-shadow hover:shadow-mp-card-hover"
     >
       <div className="flex items-start gap-4">

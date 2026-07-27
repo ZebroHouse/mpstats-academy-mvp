@@ -146,6 +146,25 @@ export const jobRouter = router({
     };
   }),
 
+  // Захват показов/кликов ЧП-блока (spec 2026-07-27). Env-gated: пишем только на
+  // проде (EMERGENCY_TRACK_ENABLED=true), т.к. staging делит ту же БД. off → no-op.
+  recordEmergencyEvent: protectedProcedure
+    .input(z.object({
+      surface: z.enum(['BANNER', 'PIN']),
+      kind: z.enum(['IMPRESSION', 'CLICK']),
+    }))
+    .mutation(async ({ ctx, input }) => {
+      if (process.env.EMERGENCY_TRACK_ENABLED !== 'true') return { recorded: false as const };
+      const now = new Date();
+      const day = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+      await ctx.prisma.emergencyBlockEventDay.upsert({
+        where: { surface_kind_day: { surface: input.surface, kind: input.kind, day } },
+        create: { surface: input.surface, kind: input.kind, day, count: 1 },
+        update: { count: { increment: 1 } },
+      });
+      return { recorded: true as const };
+    }),
+
   // Лёгкий резолв названия задачи по slug — для контекстных хлебных крошек.
   // НЕ тянет lessons/subs/billing (в отличие от getJob).
   getTitleBySlug: protectedProcedure
