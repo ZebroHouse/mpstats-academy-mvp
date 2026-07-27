@@ -784,6 +784,19 @@ model ReferralCodeClickDay {
   @@index([day])
 }
 
+/// Day-bucketed счётчик показов/кликов ЧП-блока (баннер витрины / пин решений).
+/// Без PII. Пишется мутацией job.recordEmergencyEvent (env-gated EMERGENCY_TRACK_ENABLED).
+model EmergencyBlockEventDay {
+  surface   String // BANNER | PIN
+  kind      String // IMPRESSION | CLICK
+  day       DateTime @db.Date
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@id([surface, kind, day])
+  @@index([day])
+}
+
 model AssistantConversation {
   id        String   @id @default(cuid())
   userId    String
