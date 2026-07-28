@@ -39,11 +39,16 @@ export async function resolveApplicableOffer(args: {
   prisma: PrismaClient;
   userId: string;
   planType: SubscriptionType;
+  intervalDays: number;
   suppressForDiscount: boolean;
 }): Promise<ResolvedOffer | null> {
-  const { prisma, userId, planType, suppressForDiscount } = args;
+  const { prisma, userId, planType, intervalDays, suppressForDiscount } = args;
   if (!isOfferEnabled()) return null; // kill-switch — offer off ⇒ engine invisible
   if (planType !== 'PLATFORM') return null;
+  // Offer is a monthly-only surface: a 90/180-day buyer must keep their full
+  // selected period as the first period — the offer must never overwrite it
+  // with 60 days (spec §3.5 / plan Task 3 Step 1).
+  if (intervalDays !== 30) return null;
   if (suppressForDiscount) return null;
 
   const now = new Date();

@@ -73,9 +73,13 @@ export async function resolveOfferBannerState(args: {
   if (!isOfferEnabled()) return { state: 'none', offerEndsAt: null };
 
   // Suppress the offer if a discount would win at checkout (spec §3.4) — mirror
-  // billing.initiatePayment / the old offer.getState.
+  // billing.initiatePayment / the old offer.getState. The banner is the
+  // monthly-offer surface, so the base-price lookup and the offer resolve
+  // below are both pinned to the 30-day PLATFORM plan (plan Task 3 Step 2 —
+  // otherwise this would pick an arbitrary PLATFORM row now that 90/180-day
+  // rows exist).
   const platformPlan = await prisma.subscriptionPlan.findFirst({
-    where: { type: 'PLATFORM', hidden: false, isActive: true },
+    where: { type: 'PLATFORM', intervalDays: 30, hidden: false, isActive: true },
     select: { price: true },
   });
   const pendingDiscount = platformPlan
@@ -92,6 +96,7 @@ export async function resolveOfferBannerState(args: {
     prisma,
     userId,
     planType: 'PLATFORM',
+    intervalDays: 30,
     suppressForDiscount: pendingDiscount != null,
   });
   if (offer) return deriveOfferState(offer);

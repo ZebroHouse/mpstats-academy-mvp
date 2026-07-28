@@ -173,6 +173,7 @@ export const billingRouter = router({
         prisma: ctx.prisma,
         userId: ctx.user.id,
         planType: input.planType,
+        intervalDays: input.intervalDays,
         suppressForDiscount: discount != null,
       });
       const firstPeriodDays = offer ? offer.firstPeriodDays : plan.intervalDays;

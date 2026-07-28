@@ -52,6 +52,7 @@ describe('resolveApplicableOffer', () => {
       prisma: fakePrisma({ trialEnd }),
       userId: 'u1',
       planType: 'PLATFORM',
+      intervalDays: 30,
       suppressForDiscount: false,
     });
     expect(offer).not.toBeNull();
@@ -64,7 +65,7 @@ describe('resolveApplicableOffer', () => {
     const trialEnd = new Date(Date.now() - 3 * 60 * 60 * 1000); // ended 3h ago
     const offer = await resolveApplicableOffer({
       prisma: fakePrisma({ trialEnd }),
-      userId: 'u1', planType: 'PLATFORM', suppressForDiscount: false,
+      userId: 'u1', planType: 'PLATFORM', intervalDays: 30, suppressForDiscount: false,
     });
     expect(offer).not.toBeNull();
     expect(offer!.inGrace).toBe(true);
@@ -74,7 +75,7 @@ describe('resolveApplicableOffer', () => {
     const trialEnd = new Date(Date.now() - 25 * 60 * 60 * 1000); // ended 25h ago
     const offer = await resolveApplicableOffer({
       prisma: fakePrisma({ trialEnd }),
-      userId: 'u1', planType: 'PLATFORM', suppressForDiscount: false,
+      userId: 'u1', planType: 'PLATFORM', intervalDays: 30, suppressForDiscount: false,
     });
     expect(offer).toBeNull();
   });
@@ -82,7 +83,15 @@ describe('resolveApplicableOffer', () => {
   it('returns null for COURSE plan', async () => {
     const offer = await resolveApplicableOffer({
       prisma: fakePrisma({ trialEnd: new Date(Date.now() + DAY) }),
-      userId: 'u1', planType: 'COURSE', suppressForDiscount: false,
+      userId: 'u1', planType: 'COURSE', intervalDays: 30, suppressForDiscount: false,
+    });
+    expect(offer).toBeNull();
+  });
+
+  it('returns null for a non-30-day interval (90/180-day plans keep their own first period)', async () => {
+    const offer = await resolveApplicableOffer({
+      prisma: fakePrisma({ trialEnd: new Date(Date.now() + DAY) }),
+      userId: 'u1', planType: 'PLATFORM', intervalDays: 90, suppressForDiscount: false,
     });
     expect(offer).toBeNull();
   });
@@ -90,7 +99,7 @@ describe('resolveApplicableOffer', () => {
   it('returns null when a discount is being applied', async () => {
     const offer = await resolveApplicableOffer({
       prisma: fakePrisma({ trialEnd: new Date(Date.now() + DAY) }),
-      userId: 'u1', planType: 'PLATFORM', suppressForDiscount: true,
+      userId: 'u1', planType: 'PLATFORM', intervalDays: 30, suppressForDiscount: true,
     });
     expect(offer).toBeNull();
   });
@@ -98,7 +107,7 @@ describe('resolveApplicableOffer', () => {
   it('returns null when the offer was already redeemed', async () => {
     const offer = await resolveApplicableOffer({
       prisma: fakePrisma({ trialEnd: new Date(Date.now() + DAY), redeemed: true }),
-      userId: 'u1', planType: 'PLATFORM', suppressForDiscount: false,
+      userId: 'u1', planType: 'PLATFORM', intervalDays: 30, suppressForDiscount: false,
     });
     expect(offer).toBeNull();
   });
@@ -106,7 +115,7 @@ describe('resolveApplicableOffer', () => {
   it('returns null when the user already has an active paid PLATFORM sub', async () => {
     const offer = await resolveApplicableOffer({
       prisma: fakePrisma({ trialEnd: new Date(Date.now() + DAY), paidActive: true }),
-      userId: 'u1', planType: 'PLATFORM', suppressForDiscount: false,
+      userId: 'u1', planType: 'PLATFORM', intervalDays: 30, suppressForDiscount: false,
     });
     expect(offer).toBeNull();
   });
@@ -119,7 +128,7 @@ describe('resolveApplicableOffer', () => {
         paidStatus: 'CANCELLED',
         paidPeriodEnd: new Date(Date.now() + 15 * DAY),
       }),
-      userId: 'u1', planType: 'PLATFORM', suppressForDiscount: false,
+      userId: 'u1', planType: 'PLATFORM', intervalDays: 30, suppressForDiscount: false,
     });
     expect(offer).toBeNull();
   });
@@ -127,7 +136,7 @@ describe('resolveApplicableOffer', () => {
   it('returns null when the user has no trial at all', async () => {
     const offer = await resolveApplicableOffer({
       prisma: fakePrisma({ trialEnd: null }),
-      userId: 'u1', planType: 'PLATFORM', suppressForDiscount: false,
+      userId: 'u1', planType: 'PLATFORM', intervalDays: 30, suppressForDiscount: false,
     });
     expect(offer).toBeNull();
   });
@@ -136,7 +145,7 @@ describe('resolveApplicableOffer', () => {
     process.env.OFFER_ENABLED = 'false';
     const offer = await resolveApplicableOffer({
       prisma: fakePrisma({ trialEnd: new Date(Date.now() + 2 * DAY) }),
-      userId: 'u1', planType: 'PLATFORM', suppressForDiscount: false,
+      userId: 'u1', planType: 'PLATFORM', intervalDays: 30, suppressForDiscount: false,
     });
     expect(offer).toBeNull();
   });

@@ -100,7 +100,9 @@ export default function AnalyticsOverviewPage() {
           {(offerDuplicates.data?.total ?? 0) > 0 && (
             <ul className="mt-4 space-y-1 text-body-sm text-mp-gray-700">
               {offerDuplicates.data!.rows.map((r) => (
-                <li key={r.userId} className="font-mono">{r.userId} — {r.count} подписки</li>
+                <li key={`${r.userId}-${r.intervalDays}`} className="font-mono">
+                  {r.userId} ({r.intervalDays}д) — {r.count} подписки
+                </li>
               ))}
             </ul>
           )}

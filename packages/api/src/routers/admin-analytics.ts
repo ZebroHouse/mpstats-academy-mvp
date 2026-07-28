@@ -48,22 +48,26 @@ export const adminAnalyticsRouter = router({
   productFunnel: adminAnalyticsFunnelRouter,
 
   /**
-   * Monitor: users holding more than one ACTIVE PLATFORM subscription. The
-   * double-initiate race (two concurrent card payments → two 60-day subs) is
-   * accepted, not hard-locked — this is the tripwire. Steady state total = 0.
+   * Monitor: users holding more than one ACTIVE PLATFORM subscription OF THE
+   * SAME intervalDays. The double-initiate race (two concurrent card payments
+   * on the same tier → two subs) is accepted, not hard-locked — this is the
+   * tripwire. A legitimate 30d→90d tier switch (mid-period upgrade is not
+   * supported by this track, but a user could still end up holding two
+   * different-tier PLATFORM subs through other paths) must NOT be flagged —
+   * "duplicate" is scoped to (userId, plan.intervalDays), not just
+   * (userId, PLATFORM). Steady state total = 0.
    */
   getOfferDuplicates: adminProcedure.query(async ({ ctx }) => {
     const now = new Date();
-    const grouped = await ctx.prisma.subscription.groupBy({
-      by: ['userId'],
+    const rows = await ctx.prisma.subscription.findMany({
       where: {
         plan: { type: 'PLATFORM' },
         status: { in: ['ACTIVE', 'PAST_DUE'] },
         currentPeriodEnd: { gt: now },
       },
-      _count: { _all: true },
+      select: { userId: true, plan: { select: { intervalDays: true } } },
     });
-    return tallyDuplicatePlatformSubs(grouped);
+    return tallyDuplicatePlatformSubs(rows);
   }),
 
   /**

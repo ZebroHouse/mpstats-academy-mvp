@@ -27,9 +27,11 @@ export const BASE_TRIAL_DAYS = 3;
 export async function createTrialSubscription(opts: CreateTrialOpts) {
   const tx = opts.prismaClient ?? defaultPrisma;
 
-  // Find PLATFORM plan id
+  // Find PLATFORM plan id — pinned to the 30-day base plan (all trials are
+  // base-tier grants; multi-month PLATFORM rows must never be picked here).
+  // hidden:false keeps this off the hidden test plan (99edef8c-…).
   const platformPlan = await tx.subscriptionPlan.findFirst({
-    where: { type: 'PLATFORM', isActive: true },
+    where: { type: 'PLATFORM', intervalDays: 30, hidden: false, isActive: true },
     select: { id: true },
   });
   if (!platformPlan) {

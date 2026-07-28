@@ -53,8 +53,12 @@ export async function activatePackage(packageId: string, userId: string): Promis
         },
       });
     } else {
+      // Pinned to the 30-day base PLATFORM plan (referral bonus grants are
+      // base-tier trials, never a multi-month tier) — hidden:false keeps this
+      // off the hidden test plan (99edef8c-…), which this lookup previously
+      // had no filter against at all.
       const platformPlan = await tx.subscriptionPlan.findFirst({
-        where: { type: 'PLATFORM', isActive: true },
+        where: { type: 'PLATFORM', intervalDays: 30, hidden: false, isActive: true },
         select: { id: true },
       });
       if (!platformPlan) {
