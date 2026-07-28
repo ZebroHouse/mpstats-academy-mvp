@@ -16,11 +16,20 @@ interface UiMessage {
   materials?: AssistantMaterialRef[];
 }
 
+/** Сценарные чипы приветствия: клик засевает текст в поле ввода (не отправляет). */
+const WELCOME_CHIPS: { label: string; seed: string }[] = [
+  { label: 'С чего начать', seed: 'С чего мне начать в Академии?' },
+  { label: 'Найти материал по задаче', seed: 'Помоги найти материал по задаче: ' },
+  { label: 'Разобраться с проблемой', seed: 'Помоги разобраться: ' },
+  { label: 'Провести в раздел', seed: 'Куда мне перейти, чтобы ' },
+];
+
 export function AssistantConversation({ userName }: { userName?: string | null } = {}) {
   const utils = trpc.useUtils();
   const [messages, setMessages] = useState<UiMessage[]>([]);
   const [input, setInput] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // Never serve a stale cache on remount (drawer reopen) — always refetch so
   // the latest server thread (incl. exchanges from a prior open) shows up.
@@ -112,9 +121,27 @@ export function AssistantConversation({ userName }: { userName?: string | null }
 
       <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto bg-mp-gray-50 p-4">
         {messages.length === 0 && (
-          <p className="mt-8 text-center text-sm text-mp-gray-500">
-            Спроси про уроки платформы или про твой бизнес на маркетплейсе — например «из чего складывается ДРР?»
-          </p>
+          <div className="mt-6 space-y-4">
+            <p className="text-sm text-mp-gray-700">
+              {userName ? `${userName}, привет!` : 'Привет!'} Я помогу быстро сориентироваться в Академии.
+              Опишите задачу или вопрос — подберу нужный урок, инструкцию, чек-лист или шаблон.
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {WELCOME_CHIPS.map((chip) => (
+                <button
+                  key={chip.label}
+                  type="button"
+                  onClick={() => {
+                    setInput(chip.seed);
+                    inputRef.current?.focus();
+                  }}
+                  className="rounded-full border border-mp-gray-200 bg-white px-3 py-1.5 text-xs font-medium text-mp-gray-700 transition-colors hover:border-mp-blue-300 hover:bg-mp-blue-50 hover:text-mp-blue-700"
+                >
+                  {chip.label}
+                </button>
+              ))}
+            </div>
+          </div>
         )}
         {messages.map((m, i) => (
           <div key={i} className={m.role === 'user' ? 'flex justify-end' : ''}>
@@ -153,6 +180,7 @@ export function AssistantConversation({ userName }: { userName?: string | null }
           ))}
         <div className="flex items-center gap-2 rounded-xl border border-mp-gray-200 bg-mp-gray-50 py-1 pl-3 pr-1">
           <input
+            ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => {
