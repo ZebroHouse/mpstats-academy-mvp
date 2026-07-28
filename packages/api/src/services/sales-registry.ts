@@ -7,6 +7,7 @@
 
 import { Prisma, type PrismaClient } from '@mpstats/db';
 import { assembleClientRegistry, type RegistryRow, type RegistrySource } from '../utils/client-registry';
+import { partnerFilter } from '../utils/analytics-filters';
 
 export interface RegistryRange {
   from: Date;
@@ -18,6 +19,8 @@ export interface RegistryRange {
    *    recent payers even if they registered long before the window.
    */
   dateField?: 'registration' | 'payment';
+  /** false (дефолт) — исключить партнёрские регистрации (курс инструментов MPSTATS). */
+  includePartner?: boolean;
 }
 
 /** Failsafe cap on rows pulled per export (range is also bounded by callers). */
@@ -36,14 +39,14 @@ export async function fetchClientRegistry(
       where: {
         status: 'COMPLETED',
         paidAt: { gte: range.from, lte: range.to },
-        subscription: { user: { isTest: false } },
+        subscription: { user: { isTest: false, ...partnerFilter(range.includePartner ?? false) } },
       },
       select: { subscription: { select: { userId: true } } },
     });
     const payerIds = [...new Set(payments.map((p) => p.subscription.userId))];
     profiles = payerIds.length
       ? await prisma.userProfile.findMany({
-          where: { id: { in: payerIds }, isTest: false },
+          where: { id: { in: payerIds }, isTest: false, ...partnerFilter(range.includePartner ?? false) },
           select: { id: true, name: true, phone: true, createdAt: true },
           orderBy: { createdAt: 'desc' },
           take: MAX_REGISTRY_ROWS,
@@ -51,7 +54,7 @@ export async function fetchClientRegistry(
       : [];
   } else {
     profiles = await prisma.userProfile.findMany({
-      where: { createdAt: { gte: range.from, lte: range.to }, isTest: false },
+      where: { createdAt: { gte: range.from, lte: range.to }, isTest: false, ...partnerFilter(range.includePartner ?? false) },
       select: { id: true, name: true, phone: true, createdAt: true },
       orderBy: { createdAt: 'desc' },
       take: MAX_REGISTRY_ROWS,
