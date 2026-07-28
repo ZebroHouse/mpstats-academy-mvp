@@ -33,9 +33,12 @@ function formatRub(price: number): string {
 export function DiscountedPrice({
   discount,
   onDark,
+  periodLabel = '/мес',
 }: {
   discount: ResolvedDiscount;
   onDark: boolean;
+  /** Suffix after the price, e.g. "/мес", "/3 мес", "/6 мес". Defaults to "/мес" (30-day plan). */
+  periodLabel?: string;
 }) {
   const caption =
     discount.type === 'PERCENT'
@@ -62,7 +65,7 @@ export function DiscountedPrice({
           {formatRub(discount.originalPrice)}
         </span>
         <span className={cn('text-[17px]', onDark ? 'text-white/50' : 'text-mp-gray-400')}>
-          /мес
+          {periodLabel}
         </span>
       </div>
       <p
