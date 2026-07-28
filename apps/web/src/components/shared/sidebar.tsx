@@ -22,7 +22,7 @@ interface NavSubItem {
 // «Обучение 2.0» sub-routes (D-01) — canon labels, no «трек»/«плейбук»/«джоба»
 export const learnSubItems: NavSubItem[] = [
   { title: 'Персональный план', href: '/learn/plan' },
-  { title: 'Решения под задачу', href: '/learn/solutions' },
+  { title: 'Решения', href: '/learn/solutions' },
   { title: 'База знаний', href: '/learn/library' },
   { title: 'Избранное', href: '/learn/favorites' },
 ];

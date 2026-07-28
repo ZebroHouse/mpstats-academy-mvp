@@ -32,7 +32,7 @@ const ENTRY_TONE_STYLES: Record<EntryTone, { bg: React.CSSProperties; wrapper: s
 // задачу» / «Найти быстрый ответ» drop into browsable content), diagnostic next
 // (the way to BUILD a plan), «Продолжить мой план» last (empty until there is one).
 const ENTRY_BUTTONS: Array<{ href: string; icon: React.ElementType; label: string; dataTour?: string; tone: EntryTone }> = [
-  { href: '/learn/solutions',icon: Target,        label: 'Решить задачу',        dataTour: undefined,                   tone: 'dark' },
+  { href: '/learn/solutions',icon: Target,        label: 'Найти решение',        dataTour: undefined,                   tone: 'dark' },
   { href: '/learn/library',  icon: Search,        label: 'Найти быстрый ответ',  dataTour: undefined,                   tone: 'pink' },
   { href: '/diagnostic',     icon: BarChart3,     label: 'Пройти диагностику',   dataTour: 'dashboard-diagnostic-cta',  tone: 'orange' },
   { href: '/learn/plan',     icon: CalendarCheck, label: 'Продолжить мой план',  dataTour: 'dashboard-learn-cta',       tone: 'blue' },
