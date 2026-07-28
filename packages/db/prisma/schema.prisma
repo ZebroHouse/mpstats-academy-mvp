@@ -31,6 +31,7 @@ model UserProfile {
   role                    Role      @default(USER)
   isActive                Boolean   @default(true)
   isTest                  Boolean   @default(false) // Phase 63: excludes user from revenue/funnel analytics
+  isPartnerEntry          Boolean   @default(false) // 2026-07: partner-course arrivals (mirrors auth.users partner_source); analytics toggle excludes them
   yandexId                String?   @unique // For Phase 17 Yandex ID OAuth binding
   tochkaId                String?   @unique // Tochka ID OAuth binding (2026-07)
   phone                   String?
