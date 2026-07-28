@@ -438,7 +438,7 @@ export const profileRouter = router({
   // Mark a tour as completed for the current user (idempotent).
   // Stored per-user so onboarding doesn't restart on a new device.
   markTourCompleted: protectedProcedure
-    .input(z.object({ page: z.enum(['dashboard', 'learn', 'lesson']) }))
+    .input(z.object({ page: z.enum(['dashboard', 'learn', 'lesson', 'assistant']) }))
     .mutation(async ({ ctx, input }) => {
       try {
         await ensureUserProfile(ctx.prisma, ctx.user);
