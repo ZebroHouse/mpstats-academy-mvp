@@ -16,7 +16,7 @@ interface UiMessage {
   materials?: AssistantMaterialRef[];
 }
 
-export function AssistantConversation() {
+export function AssistantConversation({ userName }: { userName?: string | null } = {}) {
   const utils = trpc.useUtils();
   const [messages, setMessages] = useState<UiMessage[]>([]);
   const [input, setInput] = useState('');

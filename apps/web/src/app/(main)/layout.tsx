@@ -61,7 +61,7 @@ export default async function MainLayout({
   // Fetch UserProfile for UserNav (single source of truth per D-04, D-05)
   const profile = await prisma.userProfile.findUnique({
     where: { id: user.id },
-    select: { name: true, avatarUrl: true, onboardingCompletedAt: true },
+    select: { name: true, avatarUrl: true, onboardingCompletedAt: true, toursCompleted: true },
   });
 
   // Onboarding guard (Phase 56): users who never passed the /welcome wizard
@@ -123,7 +123,11 @@ export default async function MainLayout({
               <div className="hidden md:block" />
               {/* Help + User nav */}
               <div className="flex items-center gap-2">
-                <AssistantLauncher enabled={assistantEnabled} />
+                <AssistantLauncher
+                  enabled={assistantEnabled}
+                  userName={profile?.name ?? user.user_metadata?.full_name ?? null}
+                  assistantSeen={profile?.toursCompleted?.includes('assistant') ?? false}
+                />
                 <TrialCountdown />
                 <NotificationBell />
                 <HelpCircleButton />
