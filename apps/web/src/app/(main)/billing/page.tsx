@@ -13,34 +13,19 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Script from 'next/script';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
-import { DiscountedPrice } from '@/components/pricing/DiscountedPrice';
+import { PlanPeriodCards, type PlanIntervalDays } from '@/components/pricing/PlanPeriodCards';
+import { PricingFaq } from '@/components/pricing/PricingFaq';
+import { WhatsIncluded } from '@/components/pricing/WhatsIncluded';
+import { ReviewsMarquee } from '@/components/billing/offer/ReviewsMarquee';
 import { trpc } from '@/lib/trpc/client';
 import { openPaymentWidget } from '@/lib/cloudpayments/widget';
 import { reachGoal } from '@/lib/analytics/metrika';
 import { METRIKA_GOALS } from '@/lib/analytics/constants';
 
-const PLATFORM_FEATURES = [
-  'Все 4 курса платформы',
-  '400+ уроков, 150+ часов контента',
-  'AI-диагностика',
-  'AI-ассистент',
-  'Персональный план обучения',
-  'Новые материалы и обновления',
-];
 const PROMO_STORAGE_KEY = 'pending_promo_code';
 
-function Check({ light }: { light?: boolean }) {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={light ? '#fff' : '#2C4FF8'} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  );
-}
-
-function formatPrice(price?: number): string {
-  if (typeof price !== 'number') return '—';
-  return `${price.toLocaleString('ru-RU')} ₽`;
-}
+/** intervalDays (30/90/180) → CloudPayments recurrent `period` (months). */
+const RECURRENT_PERIOD_MONTHS: Record<PlanIntervalDays, number> = { 30: 1, 90: 3, 180: 6 };
 
 function BillingContent() {
   const router = useRouter();
@@ -69,8 +54,8 @@ function BillingContent() {
   // Discount preview — covers both an entered discount code and a pending
   // ambassador discount (server decides precedence). Runs with code undefined
   // so a referred user sees their ambassador discount without typing anything.
-  // intervalDays defaults to 30 server-side — this page only buys the base
-  // monthly plan; the 3-card period selector lands in Task 6.
+  // Discounts only ever apply to the 1-month (30-day) plan (spec §3.5/3.6) —
+  // the 3/6-month cards show plain price + volume discount instead.
   const platformDiscountQuery = trpc.billing.getApplicableDiscount.useQuery(
     { planType: 'PLATFORM', intervalDays: 30, code: discountCode ?? undefined },
     { enabled: isAuthenticated },
@@ -79,7 +64,7 @@ function BillingContent() {
   // Trial 2-for-1 offer state (server-authoritative; returns 'none' when the
   // OFFER_ENABLED flag is off). Discount wins client-side (spec §3.4) — same
   // gating as /pricing. The sticky offer banner (from the (main) layout) sits
-  // above this page; here we reflect the offer in the PLATFORM card price.
+  // above this page; here we reflect the offer in the 1-month card price.
   const { data: offerState } = trpc.offer.getState.useQuery(undefined, {
     enabled: isAuthenticated,
     retry: false,
@@ -124,8 +109,6 @@ function BillingContent() {
     }
   };
 
-  const platformPlan = plans?.find((p) => p.type === 'PLATFORM');
-
   useEffect(() => {
     reachGoal(METRIKA_GOALS.PRICING_VIEW);
   }, []);
@@ -149,22 +132,21 @@ function BillingContent() {
     subscription.plan.type === 'PLATFORM' &&
     ['ACTIVE', 'PAST_DUE'].includes(subscription.status);
 
-  // Buys the base monthly (30-day) PLATFORM plan. The 3-card period selector
-  // (1/3/6 months, intervalDays choice) lands in Task 6 — for now this page
-  // only offers the monthly plan.
-  const handlePayment = async () => {
+  // Buys the PLATFORM plan for the period the user picked on the card
+  // (1/3/6 months → intervalDays 30/90/180). The chosen intervalDays flows
+  // straight through to initiatePayment and the CP recurrent period below —
+  // this is the only source of truth for what gets charged.
+  const handlePayment = async (intervalDays: PlanIntervalDays) => {
     setIsProcessing(true);
     try {
-      const intervalDays = 30;
       const result = await initiatePayment.mutateAsync({
         planType: 'PLATFORM',
         intervalDays,
         promoCode: discountCode ?? undefined,
       });
-      // CP recurrent period is derived from the same intervalDays sent to
+      // CP recurrent period is derived from the SAME intervalDays sent to
       // initiatePayment above — 30/90/180 days → 1/3/6 months. Keeps the
-      // recurring-charge cadence in lockstep with the purchased plan once
-      // Task 6 wires intervalDays to the period selector (1/3/6 months).
+      // recurring-charge cadence in lockstep with the purchased plan.
       const success = await openPaymentWidget({
         publicId: process.env.NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID!,
         description: result.description,
@@ -172,7 +154,13 @@ function BillingContent() {
         currency: 'RUB',
         accountId: result.userId,
         invoiceId: result.subscriptionId,
-        recurrent: { interval: 'Month', period: intervalDays / 30, startDate: result.recurrentStartDate, amount: result.recurrentAmount, receipt: result.recurrentReceipt },
+        recurrent: {
+          interval: 'Month',
+          period: RECURRENT_PERIOD_MONTHS[intervalDays],
+          startDate: result.recurrentStartDate,
+          amount: result.recurrentAmount,
+          receipt: result.recurrentReceipt,
+        },
         receipt: result.receipt,
       });
       if (success) {
@@ -208,7 +196,28 @@ function BillingContent() {
 
   const promoBusy = activatePromo.isPending || isValidating;
 
-  const platformBtnDisabled = Boolean(isProcessing || !widgetReady || hasActivePlatformSubscription);
+  const activeIntervalDays = hasActivePlatformSubscription
+    ? (subscription!.plan.intervalDays as PlanIntervalDays)
+    : undefined;
+
+  const offerContent =
+    showOfferMode && offerState ? (
+      <div>
+        <div className="flex items-baseline gap-2">
+          <span className="text-[18px] font-medium text-mp-gray-400 line-through">5 980 ₽</span>
+          <span className="text-[32px] sm:text-[36px] font-bold leading-none text-mp-gray-900">2 990 ₽</span>
+          <span className="text-[13px] sm:text-[14px] text-mp-gray-500">/ первые 2 месяца</span>
+        </div>
+        <p className="mt-2 text-[13px] font-semibold text-mp-blue-600">
+          {offerState.state === 'grace'
+            ? 'Успейте — предложение скоро закроется'
+            : 'Предложение действует до конца бесплатного доступа'}
+        </p>
+        <p className="mt-0.5 text-[12px] text-mp-gray-400">
+          С 3-го месяца — 2 990 ₽/мес. Напомним письмом за 3 дня до списания.
+        </p>
+      </div>
+    ) : undefined;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -222,68 +231,21 @@ function BillingContent() {
       <div className="animate-slide-up">
         <h1 className="text-display-sm text-mp-gray-900">Тарифы</h1>
         <p className="text-body text-mp-gray-500 mt-1">
-          Помесячная подписка — выберите доступ к одному курсу или ко всей платформе
+          Полный доступ ко всей платформе — выберите период оплаты
         </p>
       </div>
 
       {/* Plan cards */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 animate-slide-up" style={{ animationDelay: '50ms' }}>
-        {/* PLATFORM */}
-        <div className="rounded-2xl p-6 sm:p-8 flex flex-col relative overflow-hidden bg-mp-blue-500 text-white">
-          <span className="absolute top-5 right-5 px-3 py-1 rounded-full text-caption font-medium text-white" style={{ backgroundColor: '#ff6b16' }}>
-            Рекомендуем
-          </span>
-          <h2 className="text-heading-lg font-bold text-white">Полный доступ</h2>
-          {platformDiscountQuery.data ? (
-            <div className="mt-3">
-              <DiscountedPrice discount={platformDiscountQuery.data} onDark={true} />
-            </div>
-          ) : showOfferMode ? (
-            <div className="mt-3">
-              <div className="flex items-baseline gap-2">
-                <span className="text-[18px] font-medium text-white/50 line-through">5 980 ₽</span>
-                <span className="text-[36px] font-bold leading-none text-white">2 990 ₽</span>
-                <span className="text-body-sm text-white/60">/ первые 2 месяца</span>
-              </div>
-              <p className="mt-1.5 text-body-sm font-semibold text-white">
-                {offerState?.state === 'grace'
-                  ? 'Успейте — предложение скоро закроется'
-                  : 'Предложение действует до конца бесплатного доступа'}
-              </p>
-              <p className="mt-0.5 text-caption text-white/60">
-                С 3-го месяца — 2 990 ₽/мес. Напомним письмом за 3 дня до списания.
-              </p>
-            </div>
-          ) : (
-            <div className="mt-3 flex items-baseline gap-1">
-              <span className="text-[36px] font-bold leading-none text-white">{formatPrice(platformPlan?.price)}</span>
-              <span className="text-body-sm text-white/50">/мес</span>
-            </div>
-          )}
-
-          <ul className="mt-6 flex flex-col gap-3 flex-1">
-            {PLATFORM_FEATURES.map((f) => (
-              <li key={f} className="flex items-center gap-3">
-                <Check light />
-                <span className="text-body-sm text-white/85">{f}</span>
-              </li>
-            ))}
-          </ul>
-
-          <button
-            onClick={() => handlePayment()}
-            disabled={platformBtnDisabled}
-            className="mt-7 inline-flex items-center justify-center h-12 rounded-full text-body font-medium bg-white text-mp-blue-600 hover:bg-mp-gray-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-          >
-            {hasActivePlatformSubscription
-              ? 'Текущий план'
-              : isProcessing
-                ? 'Обработка…'
-                : showOfferMode
-                  ? 'Открыть всё за 2 990 ₽'
-                  : 'Оформить подписку'}
-          </button>
-        </div>
+      <div className="animate-slide-up" style={{ animationDelay: '50ms' }}>
+        <PlanPeriodCards
+          plans={plans}
+          onSelect={handlePayment}
+          loading={isProcessing || !widgetReady}
+          activeIntervalDays={activeIntervalDays}
+          discount={platformDiscountQuery.data ?? undefined}
+          showOfferMode={showOfferMode}
+          offerContent={offerContent}
+        />
       </div>
 
       {/* Promo */}
@@ -312,6 +274,21 @@ function BillingContent() {
           </button>
         </div>
         {promoError && <p className="mt-2 text-center text-body-sm text-red-600">{promoError}</p>}
+      </div>
+
+      {/* Reviews — parity with /pricing (spec §3.4a) */}
+      <div className="animate-slide-up" style={{ animationDelay: '150ms' }}>
+        <ReviewsMarquee />
+      </div>
+
+      {/* What's included */}
+      <div className="animate-slide-up" style={{ animationDelay: '200ms' }}>
+        <WhatsIncluded />
+      </div>
+
+      {/* FAQ */}
+      <div className="animate-slide-up" style={{ animationDelay: '250ms' }}>
+        <PricingFaq />
       </div>
     </div>
   );

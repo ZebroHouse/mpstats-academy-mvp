@@ -10,12 +10,17 @@ import { V8Footer } from '@/components/v8/V8Footer';
 import { Reveal } from '@/components/v8/Reveal';
 import { StickyCTA } from '@/components/v8/StickyCTA';
 import { trpc } from '@/lib/trpc/client';
-import { DiscountedPrice } from '@/components/pricing/DiscountedPrice';
+import { PlanPeriodCards, type PlanIntervalDays } from '@/components/pricing/PlanPeriodCards';
+import { PricingFaq } from '@/components/pricing/PricingFaq';
+import { WhatsIncluded } from '@/components/pricing/WhatsIncluded';
 import { OfferStrip, OFFER_STRIP_HEIGHT } from '@/components/billing/offer/OfferStrip';
 import { ReviewsMarquee } from '@/components/billing/offer/ReviewsMarquee';
 import { openPaymentWidget } from '@/lib/cloudpayments/widget';
 import { reachGoal } from '@/lib/analytics/metrika';
 import { METRIKA_GOALS } from '@/lib/analytics/constants';
+
+/** intervalDays (30/90/180) → CloudPayments recurrent `period` (months). */
+const RECURRENT_PERIOD_MONTHS: Record<PlanIntervalDays, number> = { 30: 1, 90: 3, 180: 6 };
 
 const onest = Onest({
   subsets: ['latin', 'cyrillic'],
@@ -26,105 +31,13 @@ const onest = Onest({
 /* ── Brand tokens ──────────────────────────────────────── */
 const BLUE = '#2C4FF8';
 const BLUE_HOVER = '#1D39C1';
-const ORANGE = '#ff6b16';
 const DARK = '#0F172A';
 const GRAY_BG = '#f4f4f4';
 const TEXT = '#121212';
 
 /* ── Data ──────────────────────────────────────────────── */
 
-const PLATFORM_FEATURES = [
-  'Все 4 курса платформы',
-  '400+ уроков, 150+ часов контента',
-  'AI-диагностика',
-  'AI-ассистент',
-  'Персональный план обучения',
-  'Новые материалы и обновления',
-];
-
-const COMPARISON_ROWS = [
-  { feature: 'Курс',               course: 'Один на выбор', platform: 'Все курсы платформы' },
-  { feature: 'AI-диагностика',     course: false,           platform: true },
-  { feature: 'Персональный план',  course: true,            platform: true },
-  { feature: 'AI-ассистент',       course: true,            platform: true },
-  { feature: 'Уроки',              course: '~70',           platform: '400+' },
-  { feature: 'Новые материалы',    course: true,            platform: true },
-];
-
-const FAQS = [
-  { q: 'Когда списывается оплата?', a: 'Оплата списывается при оформлении подписки. Следующее списание происходит через 30 дней. За 3 дня до списания мы напомним о продлении и отправим уведомление.' },
-  { q: 'Можно ли сменить тариф?', a: 'Да. В любой момент можно перейти с подписки на курс на полный доступ. Новый тариф начнет действовать сразу.' },
-  { q: 'Можно ли отключить подписку?', a: 'Да. Подписку можно отключить в личном кабинете в любое время. Доступ к платформе сохранится до конца оплаченного периода.' },
-  { q: 'Есть ли пробный период?', a: 'Нет. Но вы можете бесплатно пройти AI-диагностику и получить рекомендации по обучению до оформления подписки.' },
-  { q: 'Что входит в тариф «Полный доступ»?', a: 'Все материалы платформы без ограничений: 4 курса, 400+ уроков, 150+ часов контента, AI-диагностика, персональный план обучения и AI-ассистент.' },
-  { q: 'Чем отличается подписка на курс от полного доступа?', a: 'Подписка на курс открывает один выбранный курс. Полный доступ включает все курсы, уроки и дополнительные материалы платформы.' },
-  { q: 'Можно ли оплатить обучение от лица компании?', a: 'Да. Мы работаем с юридическими лицами и предоставляем закрывающие документы. Для оформления напишите на support@mpstats.academy.' },
-];
-
 const PROMO_STORAGE_KEY = 'pending_promo_code';
-
-/* ── Icons ─────────────────────────────────────────────── */
-
-function ChevronDown({ open }: { open: boolean }) {
-  return (
-    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-      className={`transition-transform duration-200 ${open ? 'rotate-180' : ''}`}>
-      <polyline points="6 9 12 15 18 9" />
-    </svg>
-  );
-}
-
-function CheckIcon({ color = BLUE }: { color?: string }) {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0">
-      <polyline points="20 6 9 17 4 12" />
-    </svg>
-  );
-}
-
-function DashIcon() {
-  return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#121212" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="flex-shrink-0 opacity-20">
-      <line x1="5" y1="12" x2="19" y2="12" />
-    </svg>
-  );
-}
-
-/* ── FAQ Item ──────────────────────────────────────────── */
-
-function FaqItem({ q, a }: { q: string; a: string }) {
-  const [open, setOpen] = useState(false);
-  return (
-    <div className="border-b border-[#121212]/10 last:border-b-0">
-      <button
-        onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between py-6 text-left cursor-pointer"
-      >
-        <span className="text-[17px] sm:text-[19px] font-medium pr-4" style={{ color: TEXT }}>{q}</span>
-        <span className="flex-shrink-0" style={{ color: TEXT }}><ChevronDown open={open} /></span>
-      </button>
-      <div className={`overflow-hidden transition-all duration-300 ${open ? 'max-h-[400px] pb-6' : 'max-h-0'}`}>
-        <p className="text-[15px] sm:text-[16px] leading-relaxed" style={{ color: TEXT, opacity: 0.7 }}>{a}</p>
-      </div>
-    </div>
-  );
-}
-
-/* ── Comparison Cell ──────────────────────────────────── */
-
-function ComparisonCell({ value, highlighted }: { value: boolean | string; highlighted?: boolean }) {
-  if (typeof value === 'string') {
-    return (
-      <span className={`text-[16px] sm:text-[18px] font-medium ${highlighted ? 'text-white' : ''}`} style={!highlighted ? { color: TEXT } : undefined}>
-        {value}
-      </span>
-    );
-  }
-  if (value) {
-    return <CheckIcon color={highlighted ? '#ffffff' : BLUE} />;
-  }
-  return <DashIcon />;
-}
 
 /* ── Page Content ──────────────────────────────────────── */
 
@@ -155,8 +68,8 @@ function PricingContent() {
   const utils = trpc.useUtils();
 
   // Discount preview — покрывает и введённый discount-код, и pending ambassador-скидку
-  // (precedence решает сервер). intervalDays defaults to 30 server-side — this page
-  // only buys the base monthly plan; the 3-card period selector lands in Task 6.
+  // (precedence решает сервер). Discounts only ever apply to the 1-month (30-day)
+  // plan (spec §3.5/3.6) — the 3/6-month cards show plain price + volume discount.
   const platformDiscountQuery = trpc.billing.getApplicableDiscount.useQuery(
     { planType: 'PLATFORM', intervalDays: 30, code: discountCode ?? undefined },
     { enabled: isAuthenticated },
@@ -254,23 +167,22 @@ function PricingContent() {
     subscription.plan.type === 'PLATFORM' &&
     ['ACTIVE', 'PAST_DUE'].includes(subscription.status);
 
-  // Buys the base monthly (30-day) PLATFORM plan. The 3-card period selector
-  // (1/3/6 months, intervalDays choice) lands in Task 6 — for now this page
-  // only offers the monthly plan.
-  const handlePayment = async () => {
+  // Buys the PLATFORM plan for the period the user picked on the card
+  // (1/3/6 months → intervalDays 30/90/180). The chosen intervalDays flows
+  // straight through to initiatePayment and the CP recurrent period below —
+  // this is the only source of truth for what gets charged.
+  const handlePayment = async (intervalDays: PlanIntervalDays) => {
     setIsProcessing(true);
     try {
-      const intervalDays = 30;
       const result = await initiatePayment.mutateAsync({
         planType: 'PLATFORM',
         intervalDays,
         promoCode: discountCode ?? undefined,
       });
 
-      // CP recurrent period is derived from the same intervalDays sent to
+      // CP recurrent period is derived from the SAME intervalDays sent to
       // initiatePayment above — 30/90/180 days → 1/3/6 months. Keeps the
-      // recurring-charge cadence in lockstep with the purchased plan once
-      // Task 6 wires intervalDays to the period selector (1/3/6 months).
+      // recurring-charge cadence in lockstep with the purchased plan.
       const success = await openPaymentWidget({
         publicId: process.env.NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID!,
         description: result.description,
@@ -280,7 +192,7 @@ function PricingContent() {
         invoiceId: result.subscriptionId,
         recurrent: {
           interval: 'Month',
-          period: intervalDays / 30,
+          period: RECURRENT_PERIOD_MONTHS[intervalDays],
           amount: result.recurrentAmount,
           startDate: result.recurrentStartDate,
           receipt: result.recurrentReceipt,
@@ -309,6 +221,29 @@ function PricingContent() {
     }
   };
 
+  const activeIntervalDays = hasActivePlatformSubscription
+    ? (subscription!.plan.intervalDays as PlanIntervalDays)
+    : undefined;
+
+  const offerContent =
+    showOfferMode && offerState ? (
+      <div>
+        <div className="flex items-baseline gap-2">
+          <span className="text-[18px] font-medium text-mp-gray-400 line-through">5 980 ₽</span>
+          <span className="text-[32px] sm:text-[36px] font-bold leading-none text-mp-gray-900">2 990 ₽</span>
+          <span className="text-[13px] sm:text-[14px] text-mp-gray-500">/ первые 2 месяца</span>
+        </div>
+        <p className="mt-2 text-[13px] font-semibold text-mp-blue-600">
+          {offerState.state === 'grace'
+            ? 'Успейте — предложение скоро закроется'
+            : 'Предложение действует до конца бесплатного доступа'}
+        </p>
+        <p className="mt-0.5 text-[12px] text-mp-gray-400">
+          С 3-го месяца — 2 990 ₽/мес. Напомним письмом за 3 дня до списания.
+        </p>
+      </div>
+    ) : undefined;
+
   const handlePromoApply = () => {
     const trimmed = promoCode.trim().toUpperCase();
     if (!trimmed) {
@@ -330,8 +265,6 @@ function PricingContent() {
   };
 
   const promoBusy = activatePromo.isPending || isValidating;
-
-  const platformBtnDisabled = Boolean(isProcessing || !widgetReady || hasActivePlatformSubscription);
 
   return (
     <div className={onest.className} style={{ color: TEXT }}>
@@ -376,80 +309,19 @@ function PricingContent() {
       {/* ── 2. Pricing Cards + promo ────────────────────── */}
       <section id="тарифы" className="pt-[24px] pb-[72px] sm:pt-[32px] sm:pb-[90px] px-6 bg-white">
         <div className="max-w-[1040px] mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6">
+          <Reveal delay={100}>
+            <PlanPeriodCards
+              plans={plans}
+              onSelect={handlePayment}
+              loading={isProcessing || !widgetReady}
+              activeIntervalDays={activeIntervalDays}
+              discount={platformDiscountQuery.data ?? undefined}
+              showOfferMode={showOfferMode}
+              offerContent={offerContent}
+            />
+          </Reveal>
 
-            {/* PLATFORM card */}
-            <Reveal className="rounded-[40px] p-7 sm:p-9 flex flex-col relative overflow-hidden transition-transform duration-300 hover:-translate-y-1" style={{ backgroundColor: BLUE }} delay={100}>
-              <span
-                className="absolute top-5 right-5 sm:top-6 sm:right-6 px-3.5 py-1 rounded-full text-[12px] font-medium text-white"
-                style={{ backgroundColor: ORANGE }}
-              >
-                Рекомендуем
-              </span>
-
-              <div>
-                <h3 className="text-[22px] sm:text-[24px] font-bold text-white">
-                  Полный доступ
-                </h3>
-                {platformDiscountQuery.data ? (
-                  <div className="mt-4">
-                    <DiscountedPrice discount={platformDiscountQuery.data} onDark={true} />
-                  </div>
-                ) : showOfferMode ? (
-                  <div className="mt-4">
-                    <div className="flex items-baseline gap-2">
-                      <span className="text-[18px] font-medium text-white/50 line-through">5 980 &#8381;</span>
-                      <span className="text-[36px] sm:text-[44px] font-bold leading-none text-white">2 990 &#8381;</span>
-                      <span className="text-[15px] text-white/60">/ первые 2 месяца</span>
-                    </div>
-                    <p className="mt-2 text-[13px] font-semibold text-white">
-                      {offerState?.state === 'grace'
-                        ? 'Успейте — предложение скоро закроется'
-                        : 'Предложение действует до конца бесплатного доступа'}
-                    </p>
-                    <p className="mt-0.5 text-[12px] text-white/60">
-                      С 3-го месяца — 2 990 ₽/мес. Напомним письмом за 3 дня до списания.
-                    </p>
-                  </div>
-                ) : (
-                  <div className="mt-4 flex items-baseline gap-1">
-                    <span className="text-[36px] sm:text-[44px] font-bold leading-none text-white">
-                      2 990 &#8381;
-                    </span>
-                    <span className="text-[17px] text-white/50">
-                      /мес
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              <ul className="mt-6 flex flex-col gap-3 flex-1">
-                {PLATFORM_FEATURES.map((f) => (
-                  <li key={f} className="flex items-center gap-3">
-                    <CheckIcon color="#ffffff" />
-                    <span className="text-[14px] sm:text-[15px] text-white/85">{f}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <button
-                onClick={() => handlePayment()}
-                disabled={platformBtnDisabled}
-                className="mt-8 inline-flex items-center justify-center h-[52px] sm:h-[56px] rounded-full text-[15px] font-medium transition-opacity hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
-                style={{ backgroundColor: '#ffffff', color: BLUE }}
-              >
-                {hasActivePlatformSubscription
-                  ? 'Текущий план'
-                  : isProcessing
-                    ? 'Обработка...'
-                    : showOfferMode
-                      ? 'Открыть всё за 2 990 ₽'
-                      : 'Оформить подписку'}
-              </button>
-            </Reveal>
-          </div>
-
-          {/* Promo code — under both cards */}
+          {/* Promo code — under the cards */}
           <div className="mt-8 sm:mt-10 mx-auto w-full max-w-[420px]">
             <p className="text-center text-[13px] font-medium uppercase tracking-wider mb-3" style={{ color: TEXT, opacity: 0.45 }}>
               Есть промокод?
@@ -486,111 +358,21 @@ function PricingContent() {
         </div>
       </section>
 
-      {/* ── 3. Comparison Table ─────────────────────────── */}
-      <section id="сравнение" className="py-[80px] sm:py-[100px] px-6" style={{ backgroundColor: GRAY_BG }}>
-        <div className="max-w-[800px] mx-auto">
-          <h2 className="text-[28px] sm:text-[36px] font-bold text-center mb-12" style={{ color: TEXT }}>
-            Сравнение тарифов
-          </h2>
-
-          <div className="rounded-[40px] overflow-hidden bg-white">
-            {/* Header row */}
-            <div className="grid grid-cols-3 gap-0">
-              <div className="p-5 sm:p-6" />
-              <div className="p-5 sm:p-6 text-center">
-                <span className="text-[14px] sm:text-[16px] font-medium" style={{ color: TEXT, opacity: 0.6 }}>Подписка на курс</span>
-              </div>
-              <div className="p-5 sm:p-6 text-center rounded-tr-[40px]" style={{ backgroundColor: BLUE }}>
-                <span className="text-[14px] sm:text-[16px] font-medium text-white">Полный доступ</span>
-              </div>
-            </div>
-
-            {/* Data rows */}
-            {COMPARISON_ROWS.map((row, i) => (
-              <div key={row.feature} className="grid grid-cols-3 gap-0" style={{ borderTop: '1px solid rgba(18,18,18,0.06)' }}>
-                <div className="p-5 sm:p-6 flex items-center">
-                  <span className="text-[14px] sm:text-[16px]" style={{ color: TEXT }}>{row.feature}</span>
-                </div>
-                <div className="p-5 sm:p-6 flex items-center justify-center">
-                  <ComparisonCell value={row.course} />
-                </div>
-                <div
-                  className="p-5 sm:p-6 flex items-center justify-center"
-                  style={{
-                    backgroundColor: BLUE,
-                    ...(i === COMPARISON_ROWS.length - 1 ? { borderBottomRightRadius: '40px' } : {}),
-                  }}
-                >
-                  <ComparisonCell value={row.platform} highlighted />
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* ── 3. What's included ──────────────────────────── */}
+      <section id="что-входит" className="py-[80px] sm:py-[100px] px-6 bg-white">
+        <Reveal>
+          <WhatsIncluded />
+        </Reveal>
       </section>
 
-      {/* ── 4. Retention — 3 ценности ───────────────────── */}
-      <section className="py-[80px] sm:py-[100px] px-6 bg-white">
-        <div className="max-w-[1160px] mx-auto">
-          <h2 className="text-[24px] sm:text-[32px] md:text-[36px] font-bold text-center mb-4 leading-tight" style={{ color: TEXT }}>
-            Что входит в полный доступ
-          </h2>
-          <p className="text-center text-[15px] sm:text-[17px] leading-relaxed max-w-[620px] mx-auto mb-10 sm:mb-14" style={{ color: TEXT, opacity: 0.6 }}>
-            Все возможности платформы в одной подписке
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-[1040px] mx-auto">
-            {/* 01 — Доступ */}
-            <Reveal className="rounded-[32px] p-8 bg-white border border-[#121212]/10 transition-transform duration-300 hover:-translate-y-1" delay={0}>
-              <span className="text-[32px] sm:text-[36px] font-bold leading-none" style={{ color: BLUE, opacity: 0.25 }}>01</span>
-              <h3 className="mt-4 text-[18px] sm:text-[20px] font-bold leading-tight" style={{ color: TEXT }}>
-                4 курса
-              </h3>
-              <p className="mt-3 text-[14px] sm:text-[15px] leading-relaxed" style={{ color: TEXT, opacity: 0.7 }}>
-                400+ уроков, практикумы, разборы кабинетов и дополнительные материалы.
-              </p>
-            </Reveal>
-
-            {/* 02 — Персонализация (accent) */}
-            <Reveal className="rounded-[32px] p-8 transition-transform duration-300 hover:-translate-y-1" style={{ backgroundColor: BLUE }} delay={100}>
-              <span className="text-[32px] sm:text-[36px] font-bold text-white/40 leading-none">02</span>
-              <h3 className="mt-4 text-[18px] sm:text-[20px] font-bold leading-tight text-white">
-                Персональный маршрут обучения
-              </h3>
-              <p className="mt-3 text-[14px] sm:text-[15px] leading-relaxed text-white/85">
-                Не нужно самостоятельно выбирать уроки — AI подскажет следующие шаги в обучении.
-              </p>
-            </Reveal>
-
-            {/* 03 — Живая платформа */}
-            <Reveal className="rounded-[32px] p-8 bg-white border border-[#121212]/10 transition-transform duration-300 hover:-translate-y-1" delay={200}>
-              <span className="text-[32px] sm:text-[36px] font-bold leading-none" style={{ color: BLUE, opacity: 0.25 }}>03</span>
-              <h3 className="mt-4 text-[18px] sm:text-[20px] font-bold leading-tight" style={{ color: TEXT }}>
-                Актуальные материалы
-              </h3>
-              <p className="mt-3 text-[14px] sm:text-[15px] leading-relaxed" style={{ color: TEXT, opacity: 0.7 }}>
-                Добавляем новые уроки и учитываем изменения Wildberries и Ozon.
-              </p>
-            </Reveal>
-          </div>
-        </div>
-      </section>
-
-
-      {/* ── 6. FAQ ─────────────────────────────────────── */}
+      {/* ── 4. FAQ ───────────────────────────────────────── */}
       <section id="faq" className="py-[80px] sm:py-[100px] px-6" style={{ backgroundColor: GRAY_BG }}>
         <div className="max-w-[720px] mx-auto">
-          <h2 className="text-[28px] sm:text-[36px] font-bold text-center mb-12" style={{ color: TEXT }}>
-            Часто задаваемые вопросы
-          </h2>
-          <div className="rounded-[40px] bg-white p-6 sm:p-10">
-            {FAQS.map((faq) => (
-              <FaqItem key={faq.q} q={faq.q} a={faq.a} />
-            ))}
-          </div>
+          <PricingFaq />
         </div>
       </section>
 
-      {/* ── 7. CTA ─────────────────────────────────────── */}
+      {/* ── 5. CTA ───────────────────────────────────────── */}
       <section className="py-[80px] sm:py-[100px] px-6" style={{ backgroundColor: DARK }}>
         <div className="max-w-[600px] mx-auto text-center">
           <h2 className="text-[28px] sm:text-[36px] md:text-[44px] font-bold leading-tight text-white">
