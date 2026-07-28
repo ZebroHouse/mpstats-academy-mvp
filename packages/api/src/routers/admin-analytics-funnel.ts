@@ -20,6 +20,7 @@ import {
 import { router, adminProcedure } from '../trpc';
 import { handleDatabaseError } from '../utils/db-errors';
 import { buildFunnel, sumDaily, type DailyPoint } from '../utils/product-funnel';
+import { partnerFilter } from '../utils/analytics-filters';
 
 const rangeInput = z.object({ from: z.date(), to: z.date() });
 
@@ -186,7 +187,7 @@ export const adminAnalyticsFunnelRouter = router({
   }),
 
   /** Сквозная воронка: поведение из снапшота, триал и оплаты из БД. */
-  getProductFunnel: adminProcedure.input(rangeInput).query(async ({ ctx, input }) => {
+  getProductFunnel: adminProcedure.input(rangeInput.extend({ includePartner: z.boolean().default(false) })).query(async ({ ctx, input }) => {
     try {
       assertRange(input.from, input.to);
       const daily = await loadDaily(ctx.prisma, input.from, input.to);
@@ -208,7 +209,7 @@ export const adminAnalyticsFunnelRouter = router({
         where: {
           status: 'TRIAL',
           currentPeriodStart: { gte: eff.from, lte: eff.to },
-          user: { isTest: false },
+          user: { isTest: false, ...partnerFilter(input.includePartner) },
           plan: { hidden: false },
         },
         select: { userId: true },
@@ -222,7 +223,7 @@ export const adminAnalyticsFunnelRouter = router({
         where: {
           status: 'COMPLETED',
           paidAt: { gte: eff.from, lte: eff.to },
-          subscription: { user: { isTest: false }, plan: { hidden: false } },
+          subscription: { user: { isTest: false, ...partnerFilter(input.includePartner) }, plan: { hidden: false } },
         },
         select: { subscription: { select: { userId: true } } },
       });
