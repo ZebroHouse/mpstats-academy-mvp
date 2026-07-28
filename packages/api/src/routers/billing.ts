@@ -73,7 +73,8 @@ export const billingRouter = router({
   getApplicableDiscount: protectedProcedure
     .input(
       z.object({
-        planType: z.enum(['COURSE', 'PLATFORM']),
+        planType: z.literal('PLATFORM'),
+        intervalDays: z.union([z.literal(30), z.literal(90), z.literal(180)]).default(30),
         code: z
           .string()
           .min(1)
@@ -87,7 +88,12 @@ export const billingRouter = router({
       if (!enabled) return null;
 
       const plan = await ctx.prisma.subscriptionPlan.findFirst({
-        where: { type: input.planType, hidden: false, isActive: true },
+        where: {
+          type: input.planType,
+          intervalDays: input.intervalDays,
+          hidden: false,
+          isActive: true,
+        },
       });
       if (!plan) return null;
 
@@ -117,8 +123,8 @@ export const billingRouter = router({
   initiatePayment: protectedProcedure
     .input(
       z.object({
-        planType: z.enum(['COURSE', 'PLATFORM']),
-        courseId: z.string().optional(),
+        planType: z.literal('PLATFORM'),
+        intervalDays: z.union([z.literal(30), z.literal(90), z.literal(180)]).default(30),
         promoCode: z
           .string()
           .min(1)
@@ -133,25 +139,17 @@ export const billingRouter = router({
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Billing is not enabled' });
       }
 
-      // Validate courseId requirements
-      if (input.planType === 'COURSE' && !input.courseId) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'courseId is required for COURSE plan',
-        });
-      }
-      if (input.planType === 'PLATFORM' && input.courseId) {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'courseId must not be provided for PLATFORM plan',
-        });
-      }
-
-      // Find public plan of requested type. With @unique dropped from
-      // SubscriptionPlan.type to allow hidden test plans, the public plan
-      // must be resolved by filtering hidden:false explicitly.
+      // Find public plan of requested type+period. With @unique dropped from
+      // SubscriptionPlan.type to allow hidden test plans (and now multiple
+      // PLATFORM rows per intervalDays), the public plan must be resolved by
+      // filtering hidden:false + intervalDays explicitly.
       const plan = await ctx.prisma.subscriptionPlan.findFirst({
-        where: { type: input.planType, hidden: false, isActive: true },
+        where: {
+          type: input.planType,
+          intervalDays: input.intervalDays,
+          hidden: false,
+          isActive: true,
+        },
       });
       if (!plan) {
         throw new TRPCError({ code: 'NOT_FOUND', message: 'Plan not found or inactive' });
@@ -179,26 +177,13 @@ export const billingRouter = router({
       });
       const firstPeriodDays = offer ? offer.firstPeriodDays : plan.intervalDays;
 
-      // Verify course exists if COURSE plan; capture title for receipt label
-      let courseTitle: string | undefined;
-      if (input.planType === 'COURSE' && input.courseId) {
-        const course = await ctx.prisma.course.findUnique({
-          where: { id: input.courseId },
-          select: { title: true },
-        });
-        if (!course) {
-          throw new TRPCError({ code: 'NOT_FOUND', message: 'Course not found' });
-        }
-        courseTitle = course.title;
-      }
-
       const now = new Date();
 
-      // Check for existing subscription of same type for same course.
-      // ACTIVE/PAST_DUE only block if still within billing period
-      // (currentPeriodEnd > now). Otherwise the user has effectively
-      // expired access (EXPIRED is computed lazily, not stored) and
-      // should be allowed to subscribe again.
+      // Check for existing subscription of same type. ACTIVE/PAST_DUE only
+      // block if still within billing period (currentPeriodEnd > now).
+      // Otherwise the user has effectively expired access (EXPIRED is
+      // computed lazily, not stored) and should be allowed to subscribe
+      // again.
       //
       // TRIAL is intentionally NOT a blocker: the base trial is a PLATFORM
       // subscription (see createTrialSubscription), so counting it here made
@@ -206,11 +191,16 @@ export const billingRouter = router({
       // active. Paying converts a trial into a SEPARATE paid row (the trial
       // row is never mutated — see trial-subscription.ts invariant), and
       // handlePaymentSuccess stacks the paid period after the trial ends.
+      //
+      // Note: this does not disambiguate by intervalDays/planId — any
+      // ACTIVE/PAST_DUE PLATFORM subscription (any period) blocks a new
+      // purchase. No mid-period tier switching in this track (owner
+      // decision, plan Task 2 Step 1).
       const existing = await ctx.prisma.subscription.findFirst({
         where: {
           userId: ctx.user.id,
           plan: { type: input.planType },
-          ...(input.courseId ? { courseId: input.courseId } : { courseId: null }),
+          courseId: null,
           OR: [
             { status: 'PENDING' },
             { status: { in: ['ACTIVE', 'PAST_DUE'] }, currentPeriodEnd: { gt: now } },
@@ -240,7 +230,7 @@ export const billingRouter = router({
         data: {
           userId: ctx.user.id,
           planId: plan.id,
-          courseId: input.courseId ?? null,
+          courseId: null,
           status: 'PENDING',
           currentPeriodStart: now,
           currentPeriodEnd: now, // Will be set properly by webhook on payment success
@@ -262,7 +252,6 @@ export const billingRouter = router({
         plan: { type: plan.type, intervalDays: firstPeriodDays },
         user: { email: ctx.user.email },
         amount: firstAmount,
-        courseTitle,
       });
 
       // Separate receipt for the recurrent (auto-charge) at the FULL plan price.
@@ -274,13 +263,9 @@ export const billingRouter = router({
         plan: { type: plan.type, intervalDays: plan.intervalDays },
         user: { email: ctx.user.email },
         amount: plan.price,
-        courseTitle,
       });
 
-      const description =
-        input.planType === 'COURSE' && courseTitle
-          ? `MPSTATS Academy — курс «${courseTitle}» (${firstPeriodDays} дней)`
-          : `MPSTATS Academy — полный доступ (${firstPeriodDays} дней)`;
+      const description = `MPSTATS Academy — полный доступ (${firstPeriodDays} дней)`;
 
       // Recurrent start date for the CloudPayments widget. When the user is on
       // an active trial, the paid period stacks AFTER the trial ends (see

@@ -33,20 +33,6 @@ const TEXT = '#121212';
 
 /* ── Data ──────────────────────────────────────────────── */
 
-const COURSE_FEATURES = [
-  'Все материалы курса',
-  'AI-ассистент',
-  'Персональный план обучения',
-];
-
-// Короткие подписи для pill-chips. Backend id → короткое имя
-const COURSE_SHORT_LABEL: Record<string, string> = {
-  '01_analytics': 'Аналитика',
-  '02_ads':       'Реклама WB',
-  '03_ai':        'Нейросети',
-  '05_ozon':      'Ozon',
-};
-
 const PLATFORM_FEATURES = [
   'Все 4 курса платформы',
   '400+ уроков, 150+ часов контента',
@@ -148,7 +134,6 @@ function PricingContent() {
 
   const [widgetReady, setWidgetReady] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [selectedCourseId, setSelectedCourseId] = useState('');
 
   const [promoCode, setPromoCode] = useState(searchParams.get('promo') || '');
   const [promoError, setPromoError] = useState('');
@@ -157,7 +142,6 @@ function PricingContent() {
 
   // tRPC queries — все tolerant к неавторизованным
   const { data: plans } = trpc.billing.getPlans.useQuery();
-  const { data: courses } = trpc.billing.getCourses.useQuery();
   const { data: subscription } = trpc.billing.getSubscription.useQuery(undefined, {
     retry: false,
     refetchOnWindowFocus: false,
@@ -171,13 +155,10 @@ function PricingContent() {
   const utils = trpc.useUtils();
 
   // Discount preview — покрывает и введённый discount-код, и pending ambassador-скидку
-  // (precedence решает сервер). Запрос на план, т.к. код нацелен на конкретный тип плана.
-  const courseDiscountQuery = trpc.billing.getApplicableDiscount.useQuery(
-    { planType: 'COURSE', code: discountCode ?? undefined },
-    { enabled: isAuthenticated },
-  );
+  // (precedence решает сервер). intervalDays defaults to 30 server-side — this page
+  // only buys the base monthly plan; the 3-card period selector lands in Task 6.
   const platformDiscountQuery = trpc.billing.getApplicableDiscount.useQuery(
-    { planType: 'PLATFORM', code: discountCode ?? undefined },
+    { planType: 'PLATFORM', intervalDays: 30, code: discountCode ?? undefined },
     { enabled: isAuthenticated },
   );
 
@@ -233,18 +214,6 @@ function PricingContent() {
     }
   };
 
-  // Filter courses для pill-chips
-  const courseOptions = (courses || [])
-    .filter((c) => COURSE_SHORT_LABEL[c.id])
-    .map((c) => ({ id: c.id, name: COURSE_SHORT_LABEL[c.id] }));
-
-  // Default first course id
-  useEffect(() => {
-    if (!selectedCourseId && courseOptions.length > 0) {
-      setSelectedCourseId(courseOptions[0].id);
-    }
-  }, [courseOptions, selectedCourseId]);
-
   // Metrika pricing view
   useEffect(() => {
     reachGoal(METRIKA_GOALS.PRICING_VIEW);
@@ -280,28 +249,20 @@ function PricingContent() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoActivated, isAuthenticated, promoFromUrl, activatePromo, isValidating]);
 
-  const hasActiveCourseSubscription =
-    subscription &&
-    subscription.plan.type === 'COURSE' &&
-    ['ACTIVE', 'PAST_DUE'].includes(subscription.status) &&
-    subscription.courseId === selectedCourseId;
-
   const hasActivePlatformSubscription =
     subscription &&
     subscription.plan.type === 'PLATFORM' &&
     ['ACTIVE', 'PAST_DUE'].includes(subscription.status);
 
-  const handlePayment = async (planType: 'COURSE' | 'PLATFORM') => {
-    if (planType === 'COURSE' && !selectedCourseId) {
-      toast.error('Выберите курс');
-      return;
-    }
-
+  // Buys the base monthly (30-day) PLATFORM plan. The 3-card period selector
+  // (1/3/6 months, intervalDays choice) lands in Task 6 — for now this page
+  // only offers the monthly plan.
+  const handlePayment = async () => {
     setIsProcessing(true);
     try {
       const result = await initiatePayment.mutateAsync({
-        planType,
-        courseId: planType === 'COURSE' ? selectedCourseId : undefined,
+        planType: 'PLATFORM',
+        intervalDays: 30,
         promoCode: discountCode ?? undefined,
       });
 
@@ -323,7 +284,7 @@ function PricingContent() {
       });
 
       if (success) {
-        reachGoal(METRIKA_GOALS.PAYMENT, { planType, amount: result.amount, currency: 'RUB' });
+        reachGoal(METRIKA_GOALS.PAYMENT, { planType: 'PLATFORM', amount: result.amount, currency: 'RUB' });
         toast.success('Оплата прошла успешно', { description: 'Подписка активируется в течение минуты.' });
         setTimeout(() => router.push('/profile'), 2000);
       } else {
@@ -365,7 +326,6 @@ function PricingContent() {
 
   const promoBusy = activatePromo.isPending || isValidating;
 
-  const courseBtnDisabled = Boolean(isProcessing || !widgetReady || !selectedCourseId || hasActiveCourseSubscription);
   const platformBtnDisabled = Boolean(isProcessing || !widgetReady || hasActivePlatformSubscription);
 
   return (
@@ -412,89 +372,6 @@ function PricingContent() {
       <section id="тарифы" className="pt-[24px] pb-[72px] sm:pt-[32px] sm:pb-[90px] px-6 bg-white">
         <div className="max-w-[1040px] mx-auto">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6">
-
-            {/* COURSE card */}
-            <Reveal className="rounded-[40px] border border-[#121212]/10 p-7 sm:p-9 flex flex-col transition-transform duration-300 hover:-translate-y-1" delay={0}>
-              <div>
-                <h3 className="text-[22px] sm:text-[24px] font-bold" style={{ color: TEXT }}>
-                  Подписка на курс
-                </h3>
-                {courseDiscountQuery.data ? (
-                  <div className="mt-4">
-                    <DiscountedPrice discount={courseDiscountQuery.data} onDark={false} />
-                  </div>
-                ) : (
-                  <div className="mt-4 flex items-baseline gap-1">
-                    <span className="text-[36px] sm:text-[44px] font-bold leading-none" style={{ color: TEXT }}>
-                      1 990 &#8381;
-                    </span>
-                    <span className="text-[17px]" style={{ color: TEXT, opacity: 0.5 }}>
-                      /мес
-                    </span>
-                  </div>
-                )}
-              </div>
-
-              {/* Course picker */}
-              <div className="mt-6">
-                <p className="text-[12px] font-medium uppercase tracking-wider mb-3" style={{ color: TEXT, opacity: 0.45 }}>
-                  Выберите курс
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {courseOptions.length === 0 ? (
-                    <span className="text-[13px]" style={{ color: TEXT, opacity: 0.5 }}>Загрузка...</span>
-                  ) : (
-                    courseOptions.map((c) => {
-                      const active = selectedCourseId === c.id;
-                      return (
-                        <button
-                          key={c.id}
-                          onClick={() => setSelectedCourseId(c.id)}
-                          className="px-4 py-2 rounded-full text-[13px] sm:text-[14px] font-medium transition-colors cursor-pointer"
-                          style={{
-                            backgroundColor: active ? BLUE : 'rgba(18,18,18,0.05)',
-                            color: active ? 'white' : TEXT,
-                          }}
-                        >
-                          {c.name}
-                        </button>
-                      );
-                    })
-                  )}
-                </div>
-              </div>
-
-              <ul className="mt-6 flex flex-col gap-3 flex-1">
-                {COURSE_FEATURES.map((f) => (
-                  <li key={f} className="flex items-center gap-3">
-                    <CheckIcon />
-                    <span className="text-[14px] sm:text-[15px]" style={{ color: TEXT, opacity: 0.8 }}>{f}</span>
-                  </li>
-                ))}
-              </ul>
-
-              <button
-                onClick={() => handlePayment('COURSE')}
-                disabled={courseBtnDisabled}
-                className="mt-8 inline-flex items-center justify-center h-[52px] sm:h-[56px] rounded-full text-[15px] font-medium border-2 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{ borderColor: BLUE, color: BLUE, backgroundColor: 'transparent' }}
-                onMouseEnter={(e) => {
-                  if (courseBtnDisabled) return;
-                  e.currentTarget.style.backgroundColor = BLUE;
-                  e.currentTarget.style.color = '#fff';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.backgroundColor = 'transparent';
-                  e.currentTarget.style.color = BLUE;
-                }}
-              >
-                {hasActiveCourseSubscription
-                  ? 'Текущий план'
-                  : isProcessing
-                    ? 'Обработка...'
-                    : 'Оформить подписку'}
-              </button>
-            </Reveal>
 
             {/* PLATFORM card */}
             <Reveal className="rounded-[40px] p-7 sm:p-9 flex flex-col relative overflow-hidden transition-transform duration-300 hover:-translate-y-1" style={{ backgroundColor: BLUE }} delay={100}>
@@ -551,7 +428,7 @@ function PricingContent() {
               </ul>
 
               <button
-                onClick={() => handlePayment('PLATFORM')}
+                onClick={() => handlePayment()}
                 disabled={platformBtnDisabled}
                 className="mt-8 inline-flex items-center justify-center h-[52px] sm:h-[56px] rounded-full text-[15px] font-medium transition-opacity hover:opacity-90 disabled:opacity-60 disabled:cursor-not-allowed"
                 style={{ backgroundColor: '#ffffff', color: BLUE }}

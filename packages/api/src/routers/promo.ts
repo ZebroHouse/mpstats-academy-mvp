@@ -135,10 +135,13 @@ export const promoRouter = router({
       }
 
       // Find matching public subscription plan by type. @unique on type
-      // was dropped to support hidden test plans — promo codes must only
-      // bind against the public (non-hidden) plan of the requested type.
+      // was dropped to support hidden test plans (and now multiple PLATFORM
+      // rows per intervalDays) — promo codes must only bind against the
+      // public (non-hidden) plan of the requested type. Duration-code grants
+      // are pinned to the base 30-day PLATFORM plan (owner decision, plan
+      // Task 2 Step 3) — a promo code cannot target a specific multi-month tier.
       const plan = await ctx.prisma.subscriptionPlan.findFirst({
-        where: { type: promo.planType, hidden: false, isActive: true },
+        where: { type: promo.planType, intervalDays: 30, hidden: false, isActive: true },
       });
       if (!plan) {
         throw new TRPCError({
@@ -257,17 +260,6 @@ export const promoRouter = router({
         ),
     )
     .mutation(async ({ ctx, input }) => {
-      // Validate courseId for COURSE type
-      if (input.planType === 'COURSE' && !input.courseId) {
-        throw new TRPCError({ code: 'BAD_REQUEST', message: 'Выберите курс для типа COURSE' });
-      }
-      if (input.courseId && input.planType !== 'COURSE') {
-        throw new TRPCError({
-          code: 'BAD_REQUEST',
-          message: 'courseId допустим только для тарифа COURSE',
-        });
-      }
-
       // Auto-generate code if not provided
       const code =
         input.code ||
