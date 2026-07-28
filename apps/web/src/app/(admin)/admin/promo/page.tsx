@@ -39,8 +39,7 @@ export default function AdminPromoPage() {
   // Form state
   const [formMode, setFormMode] = useState<'duration' | 'discount'>('duration');
   // 'ALL' (discount-only) → payload omits planType so the discount hits every plan.
-  const [formPlanScope, setFormPlanScope] = useState<'ALL' | 'PLATFORM' | 'COURSE'>('PLATFORM');
-  const [formCourseId, setFormCourseId] = useState('');
+  const [formPlanScope, setFormPlanScope] = useState<'ALL' | 'PLATFORM'>('PLATFORM');
   const [formDuration, setFormDuration] = useState(30);
   const [formCustomDuration, setFormCustomDuration] = useState('');
   const [formDiscountType, setFormDiscountType] = useState<'PERCENT' | 'FIXED'>('PERCENT');
@@ -54,7 +53,6 @@ export default function AdminPromoPage() {
 
   // Queries
   const promoCodes = trpc.promo.getPromoCodes.useQuery();
-  const courses = trpc.billing.getCourses.useQuery();
 
   // Mutations
   const createPromo = trpc.promo.createPromoCode.useMutation({
@@ -82,7 +80,6 @@ export default function AdminPromoPage() {
   function resetForm() {
     setFormMode('duration');
     setFormPlanScope('PLATFORM');
-    setFormCourseId('');
     setFormDuration(30);
     setFormCustomDuration('');
     setFormDiscountType('PERCENT');
@@ -97,12 +94,7 @@ export default function AdminPromoPage() {
     const base = {
       code: formCode || undefined,
       // 'ALL' scope (discount only) omits planType → discount applies to any plan.
-      ...(formPlanScope === 'ALL'
-        ? {}
-        : {
-            planType: formPlanScope,
-            courseId: formPlanScope === 'COURSE' ? formCourseId || undefined : undefined,
-          }),
+      ...(formPlanScope === 'ALL' ? {} : { planType: formPlanScope }),
       maxUses: formMaxUses,
       expiresAt: formNoExpiry ? undefined : formExpiresAt || undefined,
     };
@@ -185,7 +177,7 @@ export default function AdminPromoPage() {
                 {formMode === 'discount' && (
                   <button
                     type="button"
-                    onClick={() => { setFormPlanScope('ALL'); setFormCourseId(''); }}
+                    onClick={() => setFormPlanScope('ALL')}
                     className={`px-4 py-2 rounded-lg text-body-sm font-medium border transition-colors ${
                       formPlanScope === 'ALL'
                         ? 'bg-mp-blue-50 border-mp-blue-300 text-mp-blue-700'
@@ -197,7 +189,7 @@ export default function AdminPromoPage() {
                 )}
                 <button
                   type="button"
-                  onClick={() => { setFormPlanScope('PLATFORM'); setFormCourseId(''); }}
+                  onClick={() => setFormPlanScope('PLATFORM')}
                   className={`px-4 py-2 rounded-lg text-body-sm font-medium border transition-colors ${
                     formPlanScope === 'PLATFORM'
                       ? 'bg-mp-blue-50 border-mp-blue-300 text-mp-blue-700'
@@ -206,38 +198,8 @@ export default function AdminPromoPage() {
                 >
                   Платформа
                 </button>
-                <button
-                  type="button"
-                  onClick={() => setFormPlanScope('COURSE')}
-                  className={`px-4 py-2 rounded-lg text-body-sm font-medium border transition-colors ${
-                    formPlanScope === 'COURSE'
-                      ? 'bg-mp-blue-50 border-mp-blue-300 text-mp-blue-700'
-                      : 'border-mp-gray-200 text-mp-gray-600 hover:bg-mp-gray-50'
-                  }`}
-                >
-                  Курс
-                </button>
               </div>
             </div>
-
-            {/* Course select (only for COURSE scope) */}
-            {formPlanScope === 'COURSE' && (
-              <div>
-                <label className="block text-body-sm font-medium text-mp-gray-700 mb-1.5">
-                  Курс
-                </label>
-                <select
-                  value={formCourseId}
-                  onChange={(e) => setFormCourseId(e.target.value)}
-                  className="w-full rounded-lg border border-mp-gray-200 px-3 py-2 text-body-sm focus:outline-none focus:ring-2 focus:ring-mp-blue-500 focus:border-transparent"
-                >
-                  <option value="">Выберите курс...</option>
-                  {courses.data?.map((c) => (
-                    <option key={c.id} value={c.id}>{c.title}</option>
-                  ))}
-                </select>
-              </div>
-            )}
 
             {/* Code mode: access days vs discount */}
             <div>
@@ -266,7 +228,6 @@ export default function AdminPromoPage() {
                     setFormMode('discount');
                     // Default discount codes to «Все тарифы».
                     setFormPlanScope('ALL');
-                    setFormCourseId('');
                   }}
                   className={`px-4 py-2 rounded-lg text-body-sm font-medium border transition-colors ${
                     formMode === 'discount'

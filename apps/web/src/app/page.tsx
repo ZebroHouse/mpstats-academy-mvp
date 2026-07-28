@@ -84,7 +84,7 @@ const faqs = [
   },
   {
     q: 'Сколько стоит подписка?',
-    a: 'Подписка на один курс стоит 1 990 ₽/мес. Полный доступ ко всей платформе — 2 990 ₽/мес. В этот тариф входят AI-диагностика, персональный план обучения и AI-ассистент.',
+    a: 'Полный доступ ко всей платформе стоит от 2 990 ₽ в месяц. При оплате сразу за 3 или 6 месяцев цена ниже — с выгодой до 22%. В тариф входят все курсы, AI-диагностика, персональный план обучения и AI-ассистент.',
   },
   {
     q: 'Какие маркетплейсы охватывает платформа?',
@@ -101,18 +101,6 @@ const faqs = [
 ];
 
 const plans = [
-  {
-    name: 'Подписка на курс',
-    price: '1 990',
-    period: '/мес',
-    features: [
-      'Один курс на выбор',
-      'Все уроки по выбранной теме',
-      'AI-ассистент в каждом уроке',
-      'Персональный план обучения',
-    ],
-    highlighted: false,
-  },
   {
     name: 'Полный доступ',
     price: '2 990',
@@ -675,7 +663,7 @@ export default function DesignNewV8() {
           <h2 className="text-[24px] sm:text-[32px] md:text-[40px] font-bold tracking-tight text-center mb-10 sm:mb-14">
             Тарифы
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-[760px] mx-auto">
+          <div className="grid grid-cols-1 gap-4 max-w-[420px] mx-auto">
             {plans.map((plan, i) => (
               <Reveal
                 key={plan.name}
@@ -722,6 +710,10 @@ export default function DesignNewV8() {
               </Reveal>
             ))}
           </div>
+          <p className="mt-6 text-center text-[13px] sm:text-[14px]" style={{ color: TEXT, opacity: 0.5 }}>
+            При оплате за 3 или 6 месяцев — выгода до 22%.{' '}
+            <a href="/pricing" className="underline" style={{ color: BLUE, opacity: 1 }}>Смотреть все тарифы</a>
+          </p>
         </div>
       </section>
 

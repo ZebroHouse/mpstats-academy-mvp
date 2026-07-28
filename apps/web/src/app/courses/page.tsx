@@ -129,7 +129,7 @@ export default function DesignNewV8CoursesPage() {
             400+ уроков по 5 направлениям
           </h1>
           <p className="mt-5 sm:mt-6 text-base sm:text-lg text-white/70 max-w-[640px] mx-auto leading-relaxed">
-            Выберите один курс или откройте доступ ко всей библиотеке материалов без ограничений
+            Откройте доступ ко всей библиотеке материалов — без ограничений по темам и урокам
           </p>
         </div>
       </section>
@@ -222,24 +222,15 @@ export default function DesignNewV8CoursesPage() {
       <section className="py-16 sm:py-24 bg-white">
         <div className="max-w-[1160px] mx-auto px-4 sm:px-6 text-center">
           <p className="text-base sm:text-lg text-[#121212]/70">
-            Подписка на курс{' '}
-            <span className="font-bold text-[#121212]">1 990 &#8381;/мес</span>
-            {' '}&middot;{' '}
             Полный доступ{' '}
-            <span className="font-bold text-[#121212]">2 990 &#8381;/мес</span>
+            <span className="font-bold text-[#121212]">от 2 990 &#8381;/мес</span>
           </p>
           <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-3">
             <Link
               href="/pricing"
-              className="w-full sm:w-auto px-8 h-[52px] sm:h-[62px] inline-flex items-center justify-center rounded-full text-sm font-semibold border-2 border-[#121212] text-[#121212] hover:bg-[#121212] hover:text-white transition-colors"
-            >
-              Выбрать курс
-            </Link>
-            <Link
-              href="/pricing"
               className="w-full sm:w-auto px-8 h-[52px] sm:h-[62px] inline-flex items-center justify-center rounded-full text-sm font-semibold bg-[#2C4FF8] text-white hover:bg-[#1D39C1] transition-colors"
             >
-              Полный доступ
+              Оформить подписку
             </Link>
           </div>
         </div>
