@@ -138,8 +138,8 @@ async function createPartnerUser(
 async function upsertPartnerProfile(userId: string, name: string | undefined, phone: string | undefined): Promise<void> {
   await prisma.userProfile.upsert({
     where: { id: userId },
-    update: { ...(phone ? { phone } : {}) },
-    create: { id: userId, name: name ?? null, phone: phone ?? null },
+    update: { isPartnerEntry: true, ...(phone ? { phone } : {}) },
+    create: { id: userId, name: name ?? null, phone: phone ?? null, isPartnerEntry: true },
   }).catch((e) => Sentry.captureException(e, { tags: { area: 'partner-entry', stage: 'profile-upsert' } }));
 }
 
