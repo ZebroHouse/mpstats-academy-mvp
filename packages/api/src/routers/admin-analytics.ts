@@ -24,6 +24,7 @@ import { fetchClientRegistry } from '../services/sales-registry';
 import { assistantAnalyticsRouter } from './admin-analytics-assistant';
 import { adminAnalyticsFunnelRouter } from './admin-analytics-funnel';
 import { tallyDuplicatePlatformSubs } from '../utils/offer-duplicates';
+import { partnerFilter } from '../utils/analytics-filters';
 
 /**
  * Pulls a valid checkpointChoices map out of a persisted `progressState`.
@@ -451,6 +452,7 @@ export const adminAnalyticsRouter = router({
       days: z.number().int().min(1).max(90).default(30),
       from: z.date().optional(),
       to: z.date().optional(),
+      includePartner: z.boolean().default(false),
     }))
     .query(async ({ ctx, input }) => {
       try {
@@ -461,7 +463,7 @@ export const adminAnalyticsRouter = router({
         }
 
         const registered = await ctx.prisma.userProfile.findMany({
-          where: { createdAt: { gte: from, lte: to }, isTest: false },
+          where: { createdAt: { gte: from, lte: to }, isTest: false, ...partnerFilter(input.includePartner) },
           select: { id: true },
         });
         const ids = registered.map((u) => u.id);
@@ -498,6 +500,7 @@ export const adminAnalyticsRouter = router({
       days: z.number().int().min(1).max(90).default(90),
       from: z.date().optional(),
       to: z.date().optional(),
+      includePartner: z.boolean().default(false),
     }))
     .query(async ({ ctx, input }) => {
       try {
@@ -508,7 +511,7 @@ export const adminAnalyticsRouter = router({
         }
 
         const trials = await ctx.prisma.subscription.findMany({
-          where: { status: 'TRIAL', currentPeriodStart: { gte: from, lte: to } },
+          where: { status: 'TRIAL', currentPeriodStart: { gte: from, lte: to }, user: partnerFilter(input.includePartner) },
           select: {
             userId: true,
             currentPeriodStart: true,
@@ -519,7 +522,7 @@ export const adminAnalyticsRouter = router({
         });
 
         const payments = await ctx.prisma.payment.findMany({
-          where: { status: 'COMPLETED' },
+          where: { status: 'COMPLETED', subscription: { user: partnerFilter(input.includePartner) } },
           select: {
             paidAt: true,
             subscription: { select: { userId: true, user: { select: { isTest: true } }, plan: { select: { hidden: true } } } },
