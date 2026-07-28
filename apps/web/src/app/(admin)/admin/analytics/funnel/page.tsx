@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { trpc } from '@/lib/trpc/client';
 import { StatCard } from '@/components/admin/StatCard';
 import { AnalyticsDateRange, presetRange, rangeToBounds } from '@/components/admin/AnalyticsDateRange';
+import { PartnerTrafficToggle } from '@/components/admin/PartnerTrafficToggle';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { UserPlus, ClipboardCheck, CreditCard, FlaskConical, TrendingDown, Share2 } from 'lucide-react';
@@ -12,9 +13,10 @@ const rub = (n: number) => `${n.toLocaleString('ru-RU')} ₽`;
 
 export default function AnalyticsFunnelPage() {
   const [range, setRange] = useState(presetRange(30));
+  const [includePartner, setIncludePartner] = useState(false);
   const { from, to } = rangeToBounds(range);
-  const funnel = trpc.admin.analytics.getConversionFunnel.useQuery({ from, to });
-  const trial = trpc.admin.analytics.getTrialConversion.useQuery({ from, to });
+  const funnel = trpc.admin.analytics.getConversionFunnel.useQuery({ from, to, includePartner });
+  const trial = trpc.admin.analytics.getTrialConversion.useQuery({ from, to, includePartner });
   const churn = trpc.admin.analytics.getChurn.useQuery({ from, to });
   const attr = trpc.admin.analytics.getAttribution.useQuery({ from, to });
 
@@ -28,9 +30,12 @@ export default function AnalyticsFunnelPage() {
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h2 className="text-heading-lg font-bold text-mp-gray-900">Воронка</h2>
-          <p className="text-body-sm text-mp-gray-500 mt-1">Конверсия, trial→paid, отток, источники (без тестовых)</p>
+          <p className="text-body-sm text-mp-gray-500 mt-1">Конверсия, trial→paid, отток, источники (без тестовых{includePartner ? '' : ', без партнёрских'})</p>
         </div>
-        <AnalyticsDateRange value={range} onChange={setRange} />
+        <div className="flex items-end gap-3 flex-wrap">
+          <PartnerTrafficToggle value={includePartner} onChange={setIncludePartner} />
+          <AnalyticsDateRange value={range} onChange={setRange} />
+        </div>
       </div>
 
       {/* Conversion funnel */}
