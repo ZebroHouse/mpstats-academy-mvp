@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { trpc } from '@/lib/trpc/client';
 import { AnalyticsDateRange, presetRange, rangeToBounds } from '@/components/admin/AnalyticsDateRange';
+import { PartnerTrafficToggle } from '@/components/admin/PartnerTrafficToggle';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -28,14 +29,15 @@ export default function AnalyticsClientsPage() {
   // Which date the window filters on. 'payment' surfaces clients who paid in the
   // window even if they registered earlier (e.g. an SBP one-off from an old signup).
   const [dateField, setDateField] = useState<'registration' | 'payment'>('registration');
+  const [includePartner, setIncludePartner] = useState(false);
 
   // Inclusive Date bounds in UTC.
   const bounds = useMemo(() => rangeToBounds(range), [range]);
 
-  const q = trpc.admin.analytics.getClientRegistry.useQuery({ ...bounds, dateField });
+  const q = trpc.admin.analytics.getClientRegistry.useQuery({ ...bounds, dateField, includePartner });
   const rows = q.data?.rows ?? [];
 
-  const csvHref = `/api/admin/client-registry?from=${encodeURIComponent(bounds.from.toISOString())}&to=${encodeURIComponent(bounds.to.toISOString())}&dateField=${dateField}`;
+  const csvHref = `/api/admin/client-registry?from=${encodeURIComponent(bounds.from.toISOString())}&to=${encodeURIComponent(bounds.to.toISOString())}&dateField=${dateField}&includePartner=${includePartner}`;
 
   return (
     <div className="space-y-6 animate-fade-in">
@@ -61,6 +63,7 @@ export default function AnalyticsClientsPage() {
               ))}
             </div>
           </div>
+          <PartnerTrafficToggle value={includePartner} onChange={setIncludePartner} />
           <AnalyticsDateRange value={range} onChange={setRange} />
           <Button asChild variant="outline">
             <a href={csvHref} download>
