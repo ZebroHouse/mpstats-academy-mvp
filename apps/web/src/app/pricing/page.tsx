@@ -260,12 +260,17 @@ function PricingContent() {
   const handlePayment = async () => {
     setIsProcessing(true);
     try {
+      const intervalDays = 30;
       const result = await initiatePayment.mutateAsync({
         planType: 'PLATFORM',
-        intervalDays: 30,
+        intervalDays,
         promoCode: discountCode ?? undefined,
       });
 
+      // CP recurrent period is derived from the same intervalDays sent to
+      // initiatePayment above — 30/90/180 days → 1/3/6 months. Keeps the
+      // recurring-charge cadence in lockstep with the purchased plan once
+      // Task 6 wires intervalDays to the period selector (1/3/6 months).
       const success = await openPaymentWidget({
         publicId: process.env.NEXT_PUBLIC_CLOUDPAYMENTS_PUBLIC_ID!,
         description: result.description,
@@ -275,7 +280,7 @@ function PricingContent() {
         invoiceId: result.subscriptionId,
         recurrent: {
           interval: 'Month',
-          period: 1,
+          period: intervalDays / 30,
           amount: result.recurrentAmount,
           startDate: result.recurrentStartDate,
           receipt: result.recurrentReceipt,
