@@ -11,6 +11,7 @@ import {
 } from '@/components/admin/AnalyticsDateRange';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
+import { PartnerTrafficToggle } from '@/components/admin/PartnerTrafficToggle';
 import { MousePointerClick, Users, Eye, Info } from 'lucide-react';
 import {
   LineChart,
@@ -117,10 +118,11 @@ function Note({ children }: { children: React.ReactNode }) {
 
 export default function ProductFunnelPage() {
   const [range, setRange] = useState(presetRange(30));
+  const [includePartner, setIncludePartner] = useState(false);
   const { from, to } = rangeToBounds(range);
 
   const traffic = trpc.admin.analytics.productFunnel.getTrafficOverview.useQuery({ from, to });
-  const funnel = trpc.admin.analytics.productFunnel.getProductFunnel.useQuery({ from, to });
+  const funnel = trpc.admin.analytics.productFunnel.getProductFunnel.useQuery({ from, to, includePartner });
 
   const snapshotAt = traffic.data?.snapshotAt ?? funnel.data?.snapshotAt ?? null;
   const coverage = funnel.data?.coverage ?? traffic.data?.coverage ?? null;
@@ -138,7 +140,10 @@ export default function ProductFunnelPage() {
             Путь от визита на сайт до оплаты: поведение из Яндекс.Метрики, деньги из базы
           </p>
         </div>
-        <AnalyticsDateRange value={range} onChange={setRange} />
+        <div className="flex items-end gap-3 flex-wrap">
+          <PartnerTrafficToggle value={includePartner} onChange={setIncludePartner} />
+          <AnalyticsDateRange value={range} onChange={setRange} />
+        </div>
       </div>
 
       {/* Свежесть данных */}
@@ -322,6 +327,11 @@ export default function ProductFunnelPage() {
             Колонка «Источник» показывает, кто дал число. Шаги из Метрики считают поведение и
             занижены на тех, у кого блокировщик рекламы. Триал и оплата берутся из базы — это те же
             цифры, что в табе «Выручка».
+          </Note>
+          <Note>
+            Тумблер «Партнёрский трафик» меняет только шаги из базы — «Триал» и «Оплата».
+            Шаги из Метрики (визиты, регистрация) он не трогает: партнёрский вход создаёт
+            пользователя на сервере, минуя страницу регистрации, где считаются цели Метрики.
           </Note>
         </div>
       </section>
