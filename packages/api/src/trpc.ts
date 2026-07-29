@@ -7,12 +7,21 @@ import { createRateLimitMiddleware } from './middleware/rate-limit';
 export interface Context {
   prisma: PrismaClient;
   user: User | null;
+  ip: string | null;
+  userAgent: string | null;
 }
 
-export const createTRPCContext = (user: User | null): Context => {
+export const createTRPCContext = (user: User | null, req?: Request): Context => {
+  const headers = req?.headers;
+  const forwardedFor = headers?.get('x-forwarded-for') ?? null;
+  const ip = forwardedFor?.split(',')[0]?.trim() || headers?.get('x-real-ip') || null;
+  const userAgent = headers?.get('user-agent') ?? null;
+
   return {
     prisma,
     user,
+    ip,
+    userAgent,
   };
 };
 
