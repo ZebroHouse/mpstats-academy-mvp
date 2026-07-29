@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { LegalPageLayout } from '@/components/legal/LegalPageLayout';
+import { LEGAL_VERSIONS, formatLegalDate } from '@/lib/legal/versions';
 
 export const metadata: Metadata = {
   title: 'Согласие на обработку ПДн',
@@ -8,7 +9,10 @@ export const metadata: Metadata = {
 
 export default function PdnPage() {
   return (
-    <LegalPageLayout title="Согласие на обработку персональных данных" lastUpdated="25 марта 2026">
+    <LegalPageLayout
+      title="Согласие на обработку персональных данных"
+      lastUpdated={formatLegalDate(LEGAL_VERSIONS.PDN)}
+    >
       <p>
         Настоящим я, Пользователь платформы{' '}
         <a href="https://platform.mpstats.academy/">platform.mpstats.academy</a>{' '}

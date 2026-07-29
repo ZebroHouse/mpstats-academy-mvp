@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { LegalPageLayout } from '@/components/legal/LegalPageLayout';
+import { LEGAL_VERSIONS, formatLegalDate } from '@/lib/legal/versions';
 
 export const metadata: Metadata = {
   title: 'Оферта',
@@ -8,7 +9,10 @@ export const metadata: Metadata = {
 
 export default function OfferPage() {
   return (
-    <LegalPageLayout title="Оферта на оказание информационных онлайн-услуг" lastUpdated="25 марта 2026">
+    <LegalPageLayout
+      title="Оферта на оказание информационных онлайн-услуг"
+      lastUpdated={formatLegalDate(LEGAL_VERSIONS.OFFER)}
+    >
       <p>
         Настоящий документ являет предложением Общества с ограниченной ответственностью
         &laquo;МПСТАТС ПРОДВИЖЕНИЕ&raquo; (далее &mdash; Исполнитель) заключить договор на
