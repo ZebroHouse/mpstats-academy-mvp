@@ -27,6 +27,7 @@ function input(overrides: Partial<RegistryInput> = {}): RegistryInput {
       { userId: 'u1', trialEndsAt: new Date('2026-06-23T08:00:00Z') },
       { userId: 'u3', trialEndsAt: new Date('2026-06-25T08:00:00Z') },
     ],
+    consents: [],
     ...overrides,
   };
 }
