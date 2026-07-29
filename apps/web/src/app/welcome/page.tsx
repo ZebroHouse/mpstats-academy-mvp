@@ -43,6 +43,7 @@ export default function WelcomePage() {
   const [step, setStep] = useState<Step>(1);
   const [goals, setGoals] = useState<string[]>([]);
   const [goalText, setGoalText] = useState('');
+  const [acceptLegal, setAcceptLegal] = useState(false);
   const [marketplaces, setMarketplaces] = useState<string[]>([]);
   const [experienceLevel, setExperienceLevel] = useState<string | null>(null);
 
@@ -94,10 +95,12 @@ export default function WelcomePage() {
   };
 
   // Each question is required — the next button stays disabled until the current
-  // step has an answer (prod bug 2026-06-05: empty steps were skippable).
+  // step has an answer (prod bug 2026-06-05: empty steps were skippable). Step 1
+  // also requires the legal-acceptance checkbox (offer + PDN consent) — a hard
+  // gate, not just a nudge.
   const canAdvance =
     step === 1
-      ? goals.length > 0 || goalText.trim().length > 0
+      ? (goals.length > 0 || goalText.trim().length > 0) && acceptLegal
       : step === 2
         ? marketplaces.length > 0
         : experienceLevel !== null;
@@ -123,6 +126,8 @@ export default function WelcomePage() {
             goalText={goalText}
             onGoalsChange={setGoals}
             onGoalTextChange={setGoalText}
+            acceptLegal={acceptLegal}
+            onAcceptLegalChange={setAcceptLegal}
           />
         )}
 

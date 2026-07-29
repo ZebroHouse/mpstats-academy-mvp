@@ -4,6 +4,7 @@ import { ensureUserProfile } from '../utils/ensure-user-profile';
 import { handleDatabaseError } from '../utils/db-errors';
 import { cqSetUserProps, cqTrackEvent } from '../utils/carrotquest';
 import { sendAcademyLead } from '../utils/albato-lead';
+import { recordConsents } from '../services/consent';
 
 // Locked qualification keys (CONTEXT.md Data Model). z.enum whitelists reject
 // tampered keys before they reach the DB (Security V5 / threat T-56-04).
@@ -100,6 +101,15 @@ export const onboardingRouter = router({
         // leads too, just distinguishable from organic platform leads.
         const isPartnerUser = ctx.user.user_metadata?.partner_source === 'mpstats';
         if (wasFirstCompletion) {
+          // Legal consent audit trail — the wizard's step-1 checkbox blocks
+          // advancing without accepting the offer + PDN consent, so first
+          // completion is the right moment to record it. Best-effort: never
+          // throws, never blocks onboarding.
+          await recordConsents(ctx.prisma, ctx.user.id, ['OFFER', 'PDN'], 'ONBOARDING', {
+            ip: ctx.ip,
+            userAgent: ctx.userAgent,
+          });
+
           try {
             const [referral, trialSub] = await Promise.all([
               ctx.prisma.referral.findUnique({
