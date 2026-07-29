@@ -3,8 +3,28 @@
 import { createClient } from '@/lib/supabase/server';
 import { redirect } from 'next/navigation';
 import { revalidatePath } from 'next/cache';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { YandexProvider, TochkaProvider } from '@/lib/auth/oauth-providers';
+import { prisma } from '@mpstats/db/client';
+import { recordConsents } from '@mpstats/api';
+import type { ConsentKind } from '@mpstats/db';
+
+/**
+ * Best-effort client IP from proxy headers, for contexts (server actions) that
+ * only have `headers()` and not a raw `Request`. Same first-hop parsing as
+ * `clientIp(request)` in `apps/web/src/lib/rate-limit.ts` — kept as a separate
+ * helper here since server actions can't construct/receive a `Request`.
+ */
+function clientIpFromHeaders(h: Awaited<ReturnType<typeof headers>>): string | null {
+  const xff = h.get('x-forwarded-for');
+  if (xff) {
+    const first = xff.split(',')[0]?.trim();
+    if (first) return first;
+  }
+  const real = h.get('x-real-ip');
+  if (real?.trim()) return real.trim();
+  return null;
+}
 
 
 export type AuthResult = {
@@ -22,6 +42,7 @@ export async function signUp(formData: FormData): Promise<AuthResult> {
   const name = formData.get('name') as string;
   const phone = formData.get('phone') as string;
   const promo = (formData.get('promo') as string | null)?.trim().toUpperCase() || null;
+  const advConsent = formData.get('adv_consent') === 'true';
 
   if (!email || !password) {
     return { error: 'Email и пароль обязательны' };
@@ -77,6 +98,17 @@ export async function signUp(formData: FormData): Promise<AuthResult> {
       return { error: 'Некорректный email' };
     }
     return { error: error.message };
+  }
+
+  // Best-effort consent record — the checkbox action happened now, at submission
+  // time, regardless of DOI confirmation status. Never blocks registration.
+  if (data.user?.id) {
+    const kinds: ConsentKind[] = ['OFFER', 'PDN', ...(advConsent ? (['ADV'] as const) : [])];
+    const h = await headers();
+    await recordConsents(prisma, data.user.id, kinds, 'REGISTER', {
+      ip: clientIpFromHeaders(h),
+      userAgent: h.get('user-agent'),
+    });
   }
 
   // pa_registration_completed fires in auth/callback/route.ts after DOI confirmation
