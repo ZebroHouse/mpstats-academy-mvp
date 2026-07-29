@@ -38,6 +38,19 @@ describe('recordConsents', () => {
     expect(ctx).toMatchObject({ tags: { area: 'consent', source: 'REGISTER' } });
   });
 
+  it('is best-effort even when Sentry itself throws: still never rethrows', async () => {
+    const prisma = makePrisma(() => Promise.reject(new Error('db down')));
+    captureException.mockImplementationOnce(() => {
+      throw new Error('sentry transport down');
+    });
+
+    await expect(
+      recordConsents(prisma, 'user-1b', ['OFFER'], 'REGISTER'),
+    ).resolves.toBeUndefined();
+
+    expect(captureException).toHaveBeenCalledTimes(1);
+  });
+
   it('writes one row per kind via a single createMany call with correct fields', async () => {
     const prisma = makePrisma(() => Promise.resolve({ count: 2 }));
 

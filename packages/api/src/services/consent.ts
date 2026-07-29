@@ -75,7 +75,17 @@ export async function recordConsents(
     }));
     await prisma.userConsent.createMany({ data });
   } catch (e) {
-    const sentry = await getSentry();
-    sentry.captureException(e, { tags: { area: 'consent', source } });
+    // Best-effort means best-effort all the way down: the error-reporting
+    // path itself must never be able to escape recordConsents. If getSentry()
+    // or captureException() throws synchronously (e.g. a misbehaving Sentry
+    // transport), swallow it too — losing an error report is acceptable,
+    // breaking the caller's primary flow (register/OAuth/checkout/onboarding)
+    // is not.
+    try {
+      const sentry = await getSentry();
+      sentry.captureException(e, { tags: { area: 'consent', source } });
+    } catch {
+      // Swallow — see comment above.
+    }
   }
 }

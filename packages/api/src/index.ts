@@ -18,3 +18,4 @@ export {
   resolveOfferBannerState,
   type OfferBannerState,
 } from './services/offer/banner-state';
+export { recordConsents, type RecordConsentsMeta } from './services/consent';
