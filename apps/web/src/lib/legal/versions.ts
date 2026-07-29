@@ -1,17 +1,12 @@
 /**
  * Single source of truth for legal document revision dates.
  *
- * Update the relevant key here whenever a legal document (offer, PDN consent,
- * ad-distribution consent) is amended — the visible "Последнее обновление"
- * date on the corresponding /legal/* page is sourced from this constant.
+ * Canonical constant now lives in `@mpstats/shared` (packages/shared) because
+ * `packages/api` also needs it (recordConsents) and cannot import from
+ * apps/web. Re-exported here so existing imports of `LEGAL_VERSIONS` /
+ * `LegalConsentKind` from this module keep working unchanged.
  */
-export const LEGAL_VERSIONS = {
-  OFFER: '2026-07-28',
-  PDN: '2026-07-28',
-  ADV: '2026-07-28',
-} as const;
-
-export type LegalConsentKind = keyof typeof LEGAL_VERSIONS;
+export { LEGAL_VERSIONS, type LegalConsentKind } from '@mpstats/shared';
 
 const RU_MONTHS = [
   'января', 'февраля', 'марта', 'апреля', 'мая', 'июня',
