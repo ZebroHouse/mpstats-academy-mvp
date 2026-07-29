@@ -10,6 +10,7 @@
 
 import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import Script from 'next/script';
 import { toast } from 'sonner';
 import { Input } from '@/components/ui/input';
@@ -249,6 +250,15 @@ function BillingContent() {
           offerContent={offerContent}
         />
       </div>
+
+      {/* Checkout consent notice — legal-consent audit trail spec */}
+      <p className="text-center text-[13px] leading-relaxed text-mp-gray-400 max-w-[480px] mx-auto animate-slide-up" style={{ animationDelay: '75ms' }}>
+        Нажимая «Оформить подписку», вы принимаете условия{' '}
+        <Link href="/legal/offer" target="_blank" className="underline hover:no-underline">
+          оферты
+        </Link>{' '}
+        и соглашаетесь на автоматическое продление подписки.
+      </p>
 
       {/* Promo */}
       <div className="mx-auto w-full max-w-[420px] animate-slide-up" style={{ animationDelay: '100ms' }}>

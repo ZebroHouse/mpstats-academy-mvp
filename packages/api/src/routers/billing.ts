@@ -5,6 +5,7 @@ import { isFeatureEnabled } from '../utils/feature-flags';
 import { cancelCloudPaymentsSubscription } from '../utils/cloudpayments';
 import { resolveApplicableDiscount } from '../services/discount/resolve';
 import { resolveApplicableOffer } from '../services/offer/resolve';
+import { recordConsents } from '../services/consent';
 import { buildReceipt } from '@mpstats/shared';
 
 /**
@@ -238,6 +239,15 @@ export const billingRouter = router({
           promoCodeId: discount?.source === 'promo' ? discount.promoCodeId : null,
           offerFirstPeriodDays: offer ? offer.firstPeriodDays : null,
         },
+      });
+
+      // Legal consent audit trail — every checkout attempt is the strongest
+      // acceptance signal we have (stronger than the onboarding checkbox),
+      // so we log it on each PENDING subscription creation, not just once.
+      // Best-effort: never throws, never blocks the payment flow.
+      await recordConsents(ctx.prisma, ctx.user.id, ['OFFER'], 'CHECKOUT', {
+        ip: ctx.ip,
+        userAgent: ctx.userAgent,
       });
 
       // Create PENDING payment
