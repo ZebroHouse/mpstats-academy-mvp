@@ -64,6 +64,41 @@ model UserProfile {
   ambassadorCodesCreated ReferralCode[]           @relation("AmbassadorCodesCreatedBy")
   assistantConversations AssistantConversation[]
   offerRedemption        OfferRedemption?
+  consents               UserConsent[]
+}
+
+// ============== LEGAL CONSENT (append-only audit trail) ==============
+
+enum ConsentKind {
+  OFFER
+  PDN
+  ADV
+}
+
+enum ConsentSource {
+  REGISTER
+  OAUTH_YANDEX
+  OAUTH_TOCHKA
+  PARTNER_ENTRY
+  CHECKOUT
+  ONBOARDING
+  BACKFILL
+}
+
+model UserConsent {
+  id         String        @id @default(cuid())
+  userId     String
+  kind       ConsentKind
+  version    String // версия документа на момент акцепта, напр. "2026-07-28"
+  source     ConsentSource
+  acceptedAt DateTime      @default(now())
+  ip         String?
+  userAgent  String?
+
+  user UserProfile @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, kind])
+  @@index([acceptedAt])
 }
 
 // ============== DIAGNOSTIC ==============
