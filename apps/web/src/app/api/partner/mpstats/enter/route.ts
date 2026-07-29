@@ -72,10 +72,14 @@ export async function GET(request: Request): Promise<Response> {
       await upsertPartnerProfile(userId, name, phone);
       await ensureBaseTrial(userId); // partner arrivals get the same base 3-day trial as everyone else (idempotent)
       // Passive consent — one row per brand-new partner arrival, best-effort.
-      await recordConsents(prisma, userId, ['OFFER', 'PDN'], 'PARTNER_ENTRY', {
-        ip: clientIp(request),
-        userAgent: request.headers.get('user-agent'),
-      });
+      // Only for genuinely new users: an existing user re-arriving via a signed
+      // partner link must not append a fresh consent row every visit.
+      if (!existingUser) {
+        await recordConsents(prisma, userId, ['OFFER', 'PDN'], 'PARTNER_ENTRY', {
+          ip: clientIp(request),
+          userAgent: request.headers.get('user-agent'),
+        });
+      }
       void firePartnerEntryLead(userId, { email, name, phone, moduleCode: moduleCode || undefined });
       return establishSession(admin, email, target, origin);
     }
