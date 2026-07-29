@@ -24,6 +24,31 @@ function fmtDateTime(iso: string | null): string {
   });
 }
 
+function fmtDate(iso: string): string {
+  return new Date(iso).toLocaleDateString('ru-RU', { day: '2-digit', month: '2-digit', year: 'numeric' });
+}
+
+const CONSENT_LABELS: Record<string, string> = {
+  OFFER: 'Оферта',
+  PDN: 'ПДн',
+  ADV: 'Реклама',
+};
+
+/** Read-only render of the latest acceptance per consent kind, e.g. «Оферта: 28.07.2026 (CHECKOUT)». */
+function ConsentSummaryCell({ consents }: { consents: Record<string, { acceptedAt: string; version: string; source: string }> }) {
+  const entries = Object.entries(consents ?? {});
+  if (entries.length === 0) return <span className="text-mp-gray-400">—</span>;
+  return (
+    <div className="flex flex-col gap-0.5">
+      {entries.map(([kind, c]) => (
+        <span key={kind} className="text-mp-gray-700 whitespace-nowrap">
+          {CONSENT_LABELS[kind] ?? kind}: {fmtDate(c.acceptedAt)} ({c.source})
+        </span>
+      ))}
+    </div>
+  );
+}
+
 export default function AnalyticsClientsPage() {
   const [range, setRange] = useState(presetRange(30));
   // Which date the window filters on. 'payment' surfaces clients who paid in the
@@ -94,19 +119,20 @@ export default function AnalyticsClientsPage() {
                 <th className="text-left px-4 py-3 font-medium text-mp-gray-700">Дата оплаты</th>
                 <th className="text-right px-4 py-3 font-medium text-mp-gray-700">Сумма</th>
                 <th className="text-left px-4 py-3 font-medium text-mp-gray-700">Тариф</th>
+                <th className="text-left px-4 py-3 font-medium text-mp-gray-700">Согласия</th>
               </tr>
             </thead>
             <tbody>
               {q.isLoading && (
-                <tr><td colSpan={10} className="p-6"><Skeleton className="h-40 w-full" /></td></tr>
+                <tr><td colSpan={11} className="p-6"><Skeleton className="h-40 w-full" /></td></tr>
               )}
               {!q.isLoading && q.error && (
-                <tr><td colSpan={10} className="p-8 text-center text-red-600">
+                <tr><td colSpan={11} className="p-8 text-center text-red-600">
                   Ошибка загрузки: {q.error.message}
                 </td></tr>
               )}
               {!q.isLoading && !q.error && rows.length === 0 && (
-                <tr><td colSpan={10} className="p-8 text-center text-mp-gray-500">Нет клиентов за период.</td></tr>
+                <tr><td colSpan={11} className="p-8 text-center text-mp-gray-500">Нет клиентов за период.</td></tr>
               )}
               {rows.map((r) => (
                 <tr key={r.userId} className="border-b border-mp-gray-100 hover:bg-mp-gray-50/50">
@@ -126,6 +152,7 @@ export default function AnalyticsClientsPage() {
                     {r.lastPaidAmount != null ? `${r.lastPaidAmount.toLocaleString('ru-RU')} ₽` : '—'}
                   </td>
                   <td className="px-4 py-3 text-mp-gray-700">{r.plan || '—'}</td>
+                  <td className="px-4 py-3"><ConsentSummaryCell consents={r.consents} /></td>
                 </tr>
               ))}
             </tbody>

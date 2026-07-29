@@ -33,6 +33,18 @@ export interface RegistryPayment {
   planName: string | null;
 }
 
+/** One consent acceptance row (UserConsent), pre-aggregation. */
+export interface RegistryConsent {
+  userId: string;
+  kind: string; // ConsentKind: OFFER | PDN | ADV
+  version: string;
+  source: string; // ConsentSource
+  acceptedAt: Date;
+}
+
+/** Latest acceptance per consent kind, keyed by kind (OFFER/PDN/ADV). */
+export type ConsentSummary = Record<string, { acceptedAt: string; version: string; source: string }>;
+
 export interface RegistryInput {
   users: RegistryUser[];
   sources: RegistrySource[];
@@ -41,6 +53,8 @@ export interface RegistryInput {
   checkoutUserIds: string[];
   /** Per-user trial end (TRIAL subscription currentPeriodEnd), if any. */
   trials: Array<{ userId: string; trialEndsAt: Date }>;
+  /** Legal consent acceptances (UserConsent) — latest per (userId, kind) is derived here. */
+  consents: RegistryConsent[];
 }
 
 export interface RegistryRow {
@@ -56,6 +70,8 @@ export interface RegistryRow {
   lastPaidAt: string | null; // ISO
   lastPaidAmount: number | null;
   plan: string;
+  /** Latest acceptance per consent kind (OFFER/PDN/ADV), if any. */
+  consents: ConsentSummary;
 }
 
 const STATUS_LABELS: Record<PaymentStatusBucket, string> = {
@@ -82,6 +98,18 @@ export function assembleClientRegistry(input: RegistryInput): RegistryRow[] {
   for (const p of input.payments) {
     if (!payByUser.has(p.userId)) payByUser.set(p.userId, []);
     payByUser.get(p.userId)!.push(p);
+  }
+
+  // Latest acceptance per (userId, kind). Keep the newest acceptedAt seen for
+  // each key — works regardless of input ordering.
+  const consentByUser = new Map<string, ConsentSummary>();
+  for (const c of input.consents) {
+    const summary = consentByUser.get(c.userId) ?? {};
+    const existing = summary[c.kind];
+    if (!existing || c.acceptedAt.getTime() > new Date(existing.acceptedAt).getTime()) {
+      summary[c.kind] = { acceptedAt: c.acceptedAt.toISOString(), version: c.version, source: c.source };
+    }
+    consentByUser.set(c.userId, summary);
   }
 
   return input.users.map((u) => {
@@ -130,6 +158,7 @@ export function assembleClientRegistry(input: RegistryInput): RegistryRow[] {
       lastPaidAt,
       lastPaidAmount,
       plan,
+      consents: consentByUser.get(u.id) ?? {},
     };
   });
 }
