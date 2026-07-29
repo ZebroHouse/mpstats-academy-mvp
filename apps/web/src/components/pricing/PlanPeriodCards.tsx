@@ -4,6 +4,30 @@ import type { ReactNode } from 'react';
 import { cn } from '@/lib/utils';
 import { DiscountedPrice, type ResolvedDiscount } from './DiscountedPrice';
 
+/**
+ * Promo/ambassador discounts are period-agnostic in KIND (same type+value
+ * regardless of which plan the user buys) — only the base price differs per
+ * card. The server resolves type/value/label once (off the 30-day plan,
+ * see `getApplicableDiscount`); this component applies that same type+value
+ * to EACH card's own `plan.price` so the displayed first-payment price always
+ * matches what `initiatePayment` → `computeDiscountedAmount(plan.price, discount)`
+ * will actually charge for that intervalDays. Mirrors
+ * `packages/api/src/utils/discount.ts` computeDiscountedAmount exactly —
+ * keep the two formulas in lockstep if either changes.
+ */
+export type DiscountKind = Pick<ResolvedDiscount, 'type' | 'value' | 'label'>;
+
+const MIN_CHARGE_RUB = 1;
+
+function computeDiscountedPrice(basePrice: number, discount: DiscountKind): number {
+  const value = Math.max(0, discount.value);
+  const reduced =
+    discount.type === 'PERCENT'
+      ? basePrice - Math.round((basePrice * value) / 100)
+      : basePrice - value;
+  return Math.max(MIN_CHARGE_RUB, reduced);
+}
+
 /** The three PLATFORM period variants Pricing 2.0 sells. */
 export type PlanIntervalDays = 30 | 90 | 180;
 
@@ -65,14 +89,18 @@ export interface PlanPeriodCardsProps {
   /** The period the user is already subscribed to (its CTA reads "Текущий план" and disables). */
   activeIntervalDays?: PlanIntervalDays;
   /**
-   * Discount preview for the 1-month plan only (discounts and the offer never
-   * apply to 3/6-month plans — spec §3.5/3.6). When present it takes priority
-   * over `showOfferMode`.
+   * Resolved promo/ambassador discount (type+value+label only — see
+   * `DiscountKind`). Applies to ALL THREE period cards: the discount
+   * compounds on top of each card's volume-discounted `plan.price`, first
+   * payment only (recurrent stays full price). The 2-for-1 trial OFFER is
+   * NOT a discount and stays 1-month-only — see `showOfferMode` below.
+   * A discount takes priority over `showOfferMode` on the 1-month card.
    */
-  discount?: ResolvedDiscount;
+  discount?: DiscountKind;
   /**
    * Trial "2 months for the price of one" offer — only ever shown on the
-   * 1-month card. Pass the already-built offer markup; this component just
+   * 1-month card (it is not a discount and does not extend to 3/6-month
+   * plans). Pass the already-built offer markup; this component just
    * decides which card it renders in and skips the plain price there.
    */
   showOfferMode?: boolean;
@@ -107,8 +135,24 @@ export function PlanPeriodCards({
         const plan = platformPlans.find((p) => p.intervalDays === config.intervalDays);
         const isActive = activeIntervalDays === config.intervalDays;
         const isOfferCard = config.intervalDays === 30 && showOfferMode;
-        const isDiscountCard = config.intervalDays === 30 && Boolean(discount);
+        // Discount applies to every period card (not just 1-month) — compute
+        // this card's own discounted price from its own plan.price.
+        const isDiscountCard = Boolean(discount) && Boolean(plan);
+        const cardDiscount: ResolvedDiscount | undefined =
+          isDiscountCard && discount && plan
+            ? {
+                type: discount.type,
+                value: discount.value,
+                label: discount.label,
+                originalPrice: plan.price,
+                discountedPrice: computeDiscountedPrice(plan.price, discount),
+              }
+            : undefined;
         const monthly = plan ? monthlyEquivalent(plan.price, config.months) : undefined;
+        const discountedMonthly =
+          cardDiscount && config.months > 1
+            ? monthlyEquivalent(cardDiscount.discountedPrice, config.months)
+            : undefined;
 
         return (
           <div
@@ -151,8 +195,24 @@ export function PlanPeriodCards({
                       Загрузка...
                     </span>
                   </div>
-                ) : isDiscountCard && discount ? (
-                  <DiscountedPrice discount={discount} onDark={Boolean(config.accent)} />
+                ) : isDiscountCard && cardDiscount ? (
+                  <>
+                    <DiscountedPrice
+                      discount={cardDiscount}
+                      onDark={Boolean(config.accent)}
+                      periodLabel={config.months === 1 ? '/мес' : ''}
+                    />
+                    {discountedMonthly !== undefined && (
+                      <p
+                        className={cn(
+                          'mt-1.5 text-[13px] sm:text-[14px]',
+                          config.accent ? 'text-white/70' : 'text-mp-gray-500',
+                        )}
+                      >
+                        ≈ {formatRub(discountedMonthly)} в месяц
+                      </p>
+                    )}
+                  </>
                 ) : isOfferCard && offerContent ? (
                   offerContent
                 ) : (

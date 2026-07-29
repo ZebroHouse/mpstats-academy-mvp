@@ -68,8 +68,10 @@ function PricingContent() {
   const utils = trpc.useUtils();
 
   // Discount preview — покрывает и введённый discount-код, и pending ambassador-скидку
-  // (precedence решает сервер). Discounts only ever apply to the 1-month (30-day)
-  // plan (spec §3.5/3.6) — the 3/6-month cards show plain price + volume discount.
+  // (precedence решает сервер). Discount TYPE+VALUE is period-agnostic — resolved
+  // once here off the 30-day plan, then PlanPeriodCards applies it to EACH card's
+  // own plan.price (discounts compound on all three tiers, first payment only;
+  // the 2-for-1 trial offer stays 1-month-only and is not a discount).
   const platformDiscountQuery = trpc.billing.getApplicableDiscount.useQuery(
     { planType: 'PLATFORM', intervalDays: 30, code: discountCode ?? undefined },
     { enabled: isAuthenticated },
