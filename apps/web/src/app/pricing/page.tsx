@@ -2,6 +2,7 @@
 
 import { Suspense, useState, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import Script from 'next/script';
 import { Onest } from 'next/font/google';
 import { toast } from 'sonner';
@@ -566,6 +567,18 @@ function PricingContent() {
               </button>
             </Reveal>
           </div>
+
+          {/* Checkout consent notice — legal-consent audit trail spec */}
+          <p
+            className="mt-6 text-center text-[13px] leading-relaxed max-w-[480px] mx-auto"
+            style={{ color: TEXT, opacity: 0.45 }}
+          >
+            Нажимая «Оформить подписку», вы принимаете условия{' '}
+            <Link href="/legal/offer" target="_blank" className="underline hover:no-underline">
+              оферты
+            </Link>{' '}
+            и соглашаетесь на автоматическое продление подписки.
+          </p>
 
           {/* Promo code — under both cards */}
           <div className="mt-8 sm:mt-10 mx-auto w-full max-w-[420px]">
