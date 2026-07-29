@@ -7,7 +7,8 @@ import { TochkaProvider } from '@/lib/auth/oauth-providers';
 import { getSupabaseAdmin } from '@/lib/auth/supabase-admin';
 import { REFERRAL_COOKIE_NAME, isValidRefCodeShape } from '@/lib/referral/attribution';
 import { issueReferralOnSignup } from '@/lib/referral/issue';
-import { ensureBaseTrial } from '@mpstats/api';
+import { ensureBaseTrial, recordConsents } from '@mpstats/api';
+import { clientIp } from '@/lib/rate-limit';
 
 export const dynamic = 'force-dynamic';
 
@@ -224,6 +225,14 @@ export async function GET(request: Request): Promise<Response> {
         // No referral code → grant the base auto-trial (idempotent, swallows errors).
         await ensureBaseTrial(supabaseUserId);
       }
+
+      // Passive consent — Tochka OAuth has no explicit checkbox, but a new
+      // account is only created here by the user's own action. Best-effort,
+      // never blocks the redirect.
+      await recordConsents(prisma, supabaseUserId, ['OFFER', 'PDN'], 'OAUTH_TOCHKA', {
+        ip: clientIp(request),
+        userAgent: request.headers.get('user-agent'),
+      });
     }
 
     return response;
