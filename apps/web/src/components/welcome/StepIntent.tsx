@@ -1,7 +1,9 @@
 'use client';
 
 import { Check } from 'lucide-react';
+import Link from 'next/link';
 import { Textarea } from '@/components/ui/textarea';
+import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { GOAL_OPTIONS } from './options';
 
@@ -11,10 +13,14 @@ interface StepIntentProps {
   goalText: string;
   onGoalsChange: (goals: string[]) => void;
   onGoalTextChange: (text: string) => void;
+  acceptLegal: boolean;
+  onAcceptLegalChange: (accepted: boolean) => void;
 }
 
 /**
- * Wizard step 1 — intent capture: 7 multi-select goal chips + optional free text.
+ * Wizard step 1 — intent capture: 7 multi-select goal chips + optional free text,
+ * plus a blocking legal-acceptance checkbox (offer + PDN processing consent).
+ * Advancing past step 1 is gated on `acceptLegal` in the parent wizard.
  */
 export function StepIntent({
   userName,
@@ -22,6 +28,8 @@ export function StepIntent({
   goalText,
   onGoalsChange,
   onGoalTextChange,
+  acceptLegal,
+  onAcceptLegalChange,
 }: StepIntentProps) {
   const toggleGoal = (key: string) => {
     onGoalsChange(
@@ -87,6 +95,34 @@ export function StepIntent({
           Это нужно только для персонализации. Ответы можно изменить в профиле.
         </p>
       </div>
+
+      <label className="flex items-start gap-2 cursor-pointer">
+        <Checkbox
+          checked={acceptLegal}
+          onCheckedChange={(v) => onAcceptLegalChange(v === true)}
+          className="mt-0.5"
+        />
+        <span className="text-body-sm text-mp-gray-600 leading-tight">
+          Я принимаю условия{' '}
+          <Link
+            href="/legal/offer"
+            target="_blank"
+            rel="noopener"
+            className="text-mp-blue-600 hover:underline"
+          >
+            оферты
+          </Link>{' '}
+          и{' '}
+          <Link
+            href="/legal/pdn"
+            target="_blank"
+            rel="noopener"
+            className="text-mp-blue-600 hover:underline"
+          >
+            согласие на обработку персональных данных
+          </Link>
+        </span>
+      </label>
     </div>
   );
 }
