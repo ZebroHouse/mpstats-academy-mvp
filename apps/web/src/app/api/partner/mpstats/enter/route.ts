@@ -2,7 +2,7 @@
 import { NextResponse } from 'next/server';
 import * as Sentry from '@sentry/nextjs';
 import { prisma } from '@mpstats/db/client';
-import { ensureBaseTrial } from '@mpstats/api';
+import { ensureBaseTrial, recordConsents } from '@mpstats/api';
 import { getSupabaseAdmin } from '@/lib/auth/supabase-admin';
 import { createClient } from '@/lib/supabase/server';
 import { resolvePartnerLessonId } from '@/lib/partner/resolve-module';
@@ -71,6 +71,11 @@ export async function GET(request: Request): Promise<Response> {
       if (!userId) return NextResponse.redirect(new URL('/login?error=partner_entry', origin));
       await upsertPartnerProfile(userId, name, phone);
       await ensureBaseTrial(userId); // partner arrivals get the same base 3-day trial as everyone else (idempotent)
+      // Passive consent — one row per brand-new partner arrival, best-effort.
+      await recordConsents(prisma, userId, ['OFFER', 'PDN'], 'PARTNER_ENTRY', {
+        ip: clientIp(request),
+        userAgent: request.headers.get('user-agent'),
+      });
       void firePartnerEntryLead(userId, { email, name, phone, moduleCode: moduleCode || undefined });
       return establishSession(admin, email, target, origin);
     }
@@ -104,6 +109,11 @@ export async function GET(request: Request): Promise<Response> {
 
     await upsertPartnerProfile(userId, name, phone);
     await ensureBaseTrial(userId); // partner arrivals get the same base 3-day trial as everyone else (idempotent)
+    // Passive consent — one row per brand-new partner arrival, best-effort.
+    await recordConsents(prisma, userId, ['OFFER', 'PDN'], 'PARTNER_ENTRY', {
+      ip: clientIp(request),
+      userAgent: request.headers.get('user-agent'),
+    });
     void firePartnerEntryLead(userId, { email, name, phone, moduleCode: moduleCode || undefined });
     const onboardingTarget = `/welcome?next=${encodeURIComponent(target)}`;
     return establishSession(admin, email, onboardingTarget, origin);
