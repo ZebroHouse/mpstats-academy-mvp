@@ -16,18 +16,29 @@ interface UiMessage {
   materials?: AssistantMaterialRef[];
 }
 
-/** Сценарные чипы приветствия: клик засевает текст в поле ввода (не отправляет). */
-const WELCOME_CHIPS: { label: string; seed: string }[] = [
-  { label: 'С чего начать', seed: 'С чего мне начать в Академии?' },
+/**
+ * Сценарные чипы приветствия.
+ * `send: true` — законченный вопрос, кликом сразу отправляется (сам себя грундит в карте).
+ * иначе — незаконченный префикс: засевается в поле, юзер дописывает. Пустой префикс
+ * отправить нельзя (гард ниже по SEED_PREFIXES) — вместо MISS показываем подсказку.
+ */
+const WELCOME_CHIPS: { label: string; seed: string; send?: boolean }[] = [
+  { label: 'С чего начать', seed: 'С чего мне начать в Академии?', send: true },
   { label: 'Найти материал по задаче', seed: 'Помоги найти материал по задаче: ' },
   { label: 'Разобраться с проблемой', seed: 'Помоги разобраться: ' },
-  { label: 'Провести в раздел', seed: 'Куда мне перейти, чтобы ' },
+  { label: 'Что ты умеешь', seed: 'Что ты умеешь?', send: true },
 ];
+
+// Незаконченные префиксы (trimmed) — отправка «как есть» блокируется.
+const SEED_PREFIXES = new Set(
+  WELCOME_CHIPS.filter((c) => !c.send).map((c) => c.seed.trim()),
+);
 
 export function AssistantConversation({ userName }: { userName?: string | null } = {}) {
   const utils = trpc.useUtils();
   const [messages, setMessages] = useState<UiMessage[]>([]);
   const [input, setInput] = useState('');
+  const [hint, setHint] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -96,12 +107,24 @@ export function AssistantConversation({ userName }: { userName?: string | null }
 
   const outOfQuota = quota ? quota.remaining <= 0 : false;
 
-  function send() {
-    const msg = input.trim();
+  function submit(raw: string) {
+    const msg = raw.trim();
     if (!msg || sendMutation.isPending || outOfQuota) return;
+    // Незаконченный префикс-чип: не отправляем в пустоту (иначе консьерж → MISS),
+    // а подсказываем дописать.
+    if (SEED_PREFIXES.has(msg)) {
+      setHint('Допишите, с чем помочь — и я подберу материал 🙂');
+      inputRef.current?.focus();
+      return;
+    }
+    setHint(null);
     setInput('');
     setMessages((prev) => [...prev, { role: 'user', content: msg }]);
     sendMutation.mutate({ message: msg });
+  }
+
+  function send() {
+    submit(input);
   }
 
   return (
@@ -132,6 +155,11 @@ export function AssistantConversation({ userName }: { userName?: string | null }
                   key={chip.label}
                   type="button"
                   onClick={() => {
+                    if (chip.send) {
+                      submit(chip.seed);
+                      return;
+                    }
+                    setHint(null);
                     setInput(chip.seed);
                     inputRef.current?.focus();
                   }}
@@ -178,11 +206,19 @@ export function AssistantConversation({ userName }: { userName?: string | null }
               Осталось {quota.remaining} из {quota.limit} бесплатных вопросов сегодня
             </div>
           ))}
+        {hint && (
+          <div className="mb-2 rounded-lg bg-mp-blue-50 px-3 py-2 text-xs text-mp-blue-700">
+            {hint}
+          </div>
+        )}
         <div className="flex items-center gap-2 rounded-xl border border-mp-gray-200 bg-mp-gray-50 py-1 pl-3 pr-1">
           <input
             ref={inputRef}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
+            onChange={(e) => {
+              setInput(e.target.value);
+              if (hint) setHint(null);
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter') send();
             }}
