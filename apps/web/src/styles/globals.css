@@ -272,40 +272,47 @@ html, body {
     animation: shimmer 1.5s ease-in-out infinite;
   }
 
-  /* AI-assistant launcher: rotating conic-gradient border (Gemini-style).
-     ::before = spinning gradient ring, ::after = inner fill mask leaving a 2px edge.
-     prefers-reduced-motion is handled globally below (freezes the spin). */
+  /* AI-assistant launcher: solid gradient ring of uniform thickness whose
+     colors flow calmly along the perimeter — no rotation, no corner pulsing.
+     A masked gradient border (padding-box vs border-box XOR) draws the ring;
+     the shimmer comes from scrolling the gradient, not spinning a shape.
+     prefers-reduced-motion is handled globally below (freezes the flow). */
   .assistant-glow {
     position: relative;
     z-index: 0;
-    overflow: hidden;
     border-radius: 9999px;
     background: transparent;
   }
   .assistant-glow::before {
     content: '';
     position: absolute;
-    z-index: -2;
-    left: -50%;
-    top: -50%;
-    width: 200%;
-    height: 200%;
-    background: conic-gradient(from 0deg, #2C4FF8, #8b5cf6, #ec4899, #22d3ee, #2C4FF8);
-    animation: assistantSpin 3s linear infinite;
-  }
-  .assistant-glow::after {
-    content: '';
-    position: absolute;
+    inset: 0;
     z-index: -1;
-    inset: 2px;
-    border-radius: 9999px;
-    background: white;
+    border-radius: inherit;
+    padding: 1.5px; /* ring thickness */
+    background: linear-gradient(
+      90deg,
+      #2C4FF8,
+      #8b5cf6,
+      #ec4899,
+      #22d3ee,
+      #8b5cf6,
+      #2C4FF8
+    );
+    background-size: 200% 100%;
+    animation: assistantFlow 6s linear infinite;
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
   }
 }
 
-@keyframes assistantSpin {
+@keyframes assistantFlow {
   to {
-    transform: rotate(1turn);
+    background-position: -200% 0;
   }
 }
 
