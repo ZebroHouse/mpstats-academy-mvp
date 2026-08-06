@@ -12,6 +12,7 @@ import { shuffleOptions } from '../diagnostic/option-shuffler';
 import { toDiagnosticQuestionSource, buildAnswerSourceData } from '../diagnostic/question-source';
 import { getRecommendedJobsFromGaps } from '../utils/job-matcher';
 import { cqSetUserProps, cqTrackEvent } from '../utils/carrotquest';
+import { parseDeviceType } from '@mpstats/shared';
 import type { PrismaClient } from '@mpstats/db';
 import {
   SKILL_LABELS,
@@ -578,6 +579,7 @@ export const diagnosticRouter = router({
           status: 'IN_PROGRESS',
           currentQuestion: 0,
           questions: [] as any,
+          device: parseDeviceType(ctx.userAgent),
         },
       });
 
