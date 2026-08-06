@@ -5,3 +5,4 @@ export * from './courses';
 export * from './metrika';
 export * from './legal-versions';
 export * from './device';
+export * from './active-time';
