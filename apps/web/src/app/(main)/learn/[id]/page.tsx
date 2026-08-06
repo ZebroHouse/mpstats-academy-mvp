@@ -320,14 +320,19 @@ export default function LessonPage() {
   const { data: watchProgress } = trpc.learning.getWatchProgress.useQuery({ lessonId });
 
   // Журнал заходов (аналитика контента). Полностью побочный — на урок не влияет.
+  // enabled = урок точно открыт: данные загрузились и он не заперт.
+  // Заперт — LockOverlay ниже рендерит только паywall-карточку, без единого
+  // слова урока, для любого contentType; строка о заходе туда неотличима
+  // от честного нулевого просмотра и раздула бы «количество открытий»
+  // пейволл-показами, поэтому её не заводим вовсе. Пока data?.lesson ещё
+  // undefined (загрузка), мы не знаем, заперт ли урок — тоже enabled=false.
   // selfTick = хук сам ведёт часы, потому что на экране реально показан
   // текстовый/интерактивный контент, чью позицию больше некому докладывать.
-  // Не «нет видео» — иначе накопили бы время на скелетоне загрузки (data
-  // ещё undefined) и на LockOverlay (lesson.locked, см. рендер ниже) —
-  // паywall-карточка без единого слова урока. Поля locked/contentType те же,
-  // что рендер-код использует для ветвления (lesson.locked, строка ~707;
-  // lesson.contentType === 'VIDEO', строка ~719).
+  // Не «нет видео» — иначе накопили бы время на скелетоне загрузки. Поля
+  // locked/contentType те же, что рендер-код использует для ветвления
+  // (lesson.locked, строка ~707; lesson.contentType === 'VIDEO', строка ~719).
   const contentView = useContentView(lessonId, {
+    enabled: !!data?.lesson && !data.lesson.locked,
     selfTick: !!data?.lesson && !data.lesson.locked && data.lesson.contentType !== 'VIDEO',
   });
 

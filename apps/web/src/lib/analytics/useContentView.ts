@@ -86,18 +86,26 @@ function sendExitPing(payload: PingPayload): boolean {
  * урок за паywall'ом, видео ещё не залито — на экране либо ничего, либо
  * плеер, который сам зовёт trackPosition; тикать самостоятельно значит
  * приписывать секунды просмотра тому, чего пользователь не видел.
+ *
+ * `enabled` — должен ли этот вызов вообще заводить строку журнала.
+ * По умолчанию true. Потребитель передаёт false, пока не может честно
+ * сказать «урок открыт» (идёт загрузка, lesson ещё undefined) или когда
+ * точно знает, что это не открытие (урок заперт): LockOverlay — карточка
+ * оплаты без единого слова урока, и строка о заходе туда была бы
+ * неотличима от настоящего нулевого просмотра, раздувая счётчик открытий
+ * пейволл-показами. Смена false→true уже после монтирования (данные урока
+ * подгрузились, урок оказался открыт) заводит журнал с этого момента —
+ * эффект ниже держит `enabled` в зависимостях, как и `lessonId`.
  */
-export function useContentView(lessonId: string, options: { selfTick?: boolean } = {}) {
+export function useContentView(lessonId: string, options: { selfTick?: boolean; enabled?: boolean } = {}) {
   const selfTick = options.selfTick ?? false;
+  const enabled = options.enabled ?? true;
 
   const viewIdRef = useRef<string | null>(null);
   const activeSecondsRef = useRef(0);
   const percentRef = useRef(0);
   const prevPositionRef = useRef(0);
   const prevTickAtRef = useRef<number | null>(null);
-  // Снимок накопленного на момент ухода с урока (см. эффект ниже) — на
-  // случай, если startView ещё не успел ответить к этому моменту.
-  const exitSnapshotRef = useRef({ activeSeconds: 0, percent: 0 });
 
   const startView = trpc.contentView.startView.useMutation();
   const pingView = trpc.contentView.pingView.useMutation();
@@ -109,7 +117,9 @@ export function useContentView(lessonId: string, options: { selfTick?: boolean }
   const pingRef = useRef(pingView);
   pingRef.current = pingView;
 
-  // Смена урока = новый просмотр: сбрасываем всё и заводим строку заново.
+  // Смена урока (или enabled false→true) = новый просмотр: сбрасываем всё
+  // и заводим строку заново. Пока enabled=false — открытие не пишем вовсе
+  // (пейволл/загрузка, см. докстрing выше).
   useEffect(() => {
     viewIdRef.current = null;
     activeSecondsRef.current = 0;
@@ -117,26 +127,40 @@ export function useContentView(lessonId: string, options: { selfTick?: boolean }
     prevPositionRef.current = 0;
     prevTickAtRef.current = null;
 
+    if (!enabled) return;
+
     let cancelled = false;
+    // Снимок накопленного на момент ухода с урока — на случай, если
+    // startView ещё не успел ответить к этому моменту. Локальная
+    // переменная ЭТОГО вызова эффекта, а не общий ref: её видят только
+    // cleanup и .then этого же навигационного события. Раньше это был
+    // общий ref на все вызовы хука — на быстром A→B→C переходе, где
+    // startView лесона A ещё летит, когда отрабатывает cleanup лесона B,
+    // cleanup B перезаписывал снимок, и поздний .then лесона A досылал
+    // пинг под viewId лесона A, но с накопленными секундами лесона B.
+    // pingView пишет через GREATEST, так что раздутое значение
+    // приживалось навсегда без пути исправления.
+    let exitSnapshot = { activeSeconds: 0, percent: 0 };
+
     startRef.current
       .mutateAsync({ lessonId })
       .then((r) => {
         if (cancelled) {
-          // Ушли с этого урока (сменили lessonId или размонтировались) до
-          // того, как startView успел ответить. viewIdRef/activeSecondsRef
-          // к этому моменту уже могут принадлежать следующему уроку —
-          // трогать их нельзя. Но строка на сервере уже создана, и то время,
-          // что успели накопить до ухода (снято в cleanup этого же эффекта),
-          // никуда не делось — досылаем его отдельным пингом под свежий
-          // viewId. Без этого сервер получает фантомный нулевой визит на
-          // каждый уход, случившийся быстрее ответа startView.
-          const snap = exitSnapshotRef.current;
-          if (r.viewId && snap.activeSeconds >= MIN_REPORTABLE_SECONDS) {
+          // Ушли с этого урока (сменили lessonId, enabled стал false или
+          // размонтировались) до того, как startView успел ответить.
+          // viewIdRef/activeSecondsRef к этому моменту уже могут
+          // принадлежать следующему уроку — трогать их нельзя. Но строка
+          // на сервере уже создана, и то время, что успели накопить до
+          // ухода (снято в cleanup этого же эффекта), никуда не делось —
+          // досылаем его отдельным пингом под свежий viewId. Без этого
+          // сервер получает фантомный нулевой визит на каждый уход,
+          // случившийся быстрее ответа startView.
+          if (r.viewId && exitSnapshot.activeSeconds >= MIN_REPORTABLE_SECONDS) {
             pingRef.current.mutate({
               viewId: r.viewId,
-              activeSeconds: Math.round(snap.activeSeconds),
-              percent: Math.round(snap.percent),
-              completed: snap.percent >= 90,
+              activeSeconds: Math.round(exitSnapshot.activeSeconds),
+              percent: Math.round(exitSnapshot.percent),
+              completed: exitSnapshot.percent >= 90,
             });
           }
           return;
@@ -147,9 +171,9 @@ export function useContentView(lessonId: string, options: { selfTick?: boolean }
 
     return () => {
       cancelled = true;
-      exitSnapshotRef.current = { activeSeconds: activeSecondsRef.current, percent: percentRef.current };
+      exitSnapshot = { activeSeconds: activeSecondsRef.current, percent: percentRef.current };
     };
-  }, [lessonId]);
+  }, [lessonId, enabled]);
 
   const flush = useCallback(() => {
     const viewId = viewIdRef.current;
