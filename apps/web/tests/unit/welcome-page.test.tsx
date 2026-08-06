@@ -37,6 +37,11 @@ vi.mock('@/lib/trpc/client', () => ({
       complete: {
         useMutation: () => ({ mutate: mutateMock, isPending: false }),
       },
+      // Email-registrant path: already consented at /register → no onboarding
+      // checkbox, step 1 gated on goals only. (required:true path covered separately.)
+      requiresLegalConsent: {
+        useQuery: () => ({ data: { required: false } }),
+      },
     },
     intent: {
       resolve: {

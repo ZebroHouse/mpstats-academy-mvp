@@ -50,6 +50,14 @@ export default function WelcomePage() {
   const { data: profile } = trpc.profile.get.useQuery();
   const userName = profile?.name?.trim().split(' ')[0] || null;
 
+  // Whether to show/require the legal-acceptance checkbox on step 1. Email
+  // registrants already accepted offer + PDN at /register, so they skip it;
+  // OAuth (Yandex/Tochka) and partner-entry users must accept it here. While
+  // this loads (`undefined`), step 1 stays gated so an OAuth user can't advance
+  // before the requirement is known.
+  const { data: consentPrompt } = trpc.onboarding.requiresLegalConsent.useQuery();
+  const requireLegal = consentPrompt?.required === true;
+
   // All hooks must be declared before any conditional rendering.
   const complete = trpc.onboarding.complete.useMutation({
     onError: () => toast.error('Не удалось сохранить ответы. Попробуйте ещё раз.'),
@@ -100,7 +108,9 @@ export default function WelcomePage() {
   // gate, not just a nudge.
   const canAdvance =
     step === 1
-      ? (goals.length > 0 || goalText.trim().length > 0) && acceptLegal
+      ? (goals.length > 0 || goalText.trim().length > 0) &&
+        consentPrompt !== undefined &&
+        (!requireLegal || acceptLegal)
       : step === 2
         ? marketplaces.length > 0
         : experienceLevel !== null;
@@ -128,6 +138,7 @@ export default function WelcomePage() {
             onGoalTextChange={setGoalText}
             acceptLegal={acceptLegal}
             onAcceptLegalChange={setAcceptLegal}
+            showLegal={requireLegal}
           />
         )}
 

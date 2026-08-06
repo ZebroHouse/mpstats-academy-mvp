@@ -24,6 +24,9 @@ vi.mock('@/lib/trpc/client', () => ({
       complete: {
         useMutation: () => ({ mutate: completeMutateMock, isPending: false }),
       },
+      requiresLegalConsent: {
+        useQuery: () => ({ data: { required: false } }),
+      },
     },
     intent: {
       resolve: {

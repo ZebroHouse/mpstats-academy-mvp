@@ -34,6 +34,24 @@ export const onboardingRouter = router({
     }
   }),
 
+  // Whether the welcome wizard must show its legal-acceptance checkbox.
+  // Email registrants already accepted offer + PDN at /register (an explicit
+  // REGISTER-source consent), so re-asking them on onboarding is a duplicate.
+  // OAuth (Yandex/Tochka) and partner-entry users only carry a passive consent
+  // recorded at their callback — for them the wizard checkbox is the first
+  // explicit acceptance, so it must be shown and required.
+  requiresLegalConsent: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      const explicit = await ctx.prisma.userConsent.findFirst({
+        where: { userId: ctx.user.id, source: 'REGISTER' },
+        select: { id: true },
+      });
+      return { required: !explicit };
+    } catch (error) {
+      handleDatabaseError(error);
+    }
+  }),
+
   // Single persistence point of the welcome wizard. Called once at the fork.
   // Hard `where: { id: ctx.user.id }` — userId from server session, never from
   // input (threat T-56-05). Marks onboarding done so the (main) guard stops
@@ -101,14 +119,27 @@ export const onboardingRouter = router({
         // leads too, just distinguishable from organic platform leads.
         const isPartnerUser = ctx.user.user_metadata?.partner_source === 'mpstats';
         if (wasFirstCompletion) {
-          // Legal consent audit trail — the wizard's step-1 checkbox blocks
-          // advancing without accepting the offer + PDN consent, so first
-          // completion is the right moment to record it. Best-effort: never
-          // throws, never blocks onboarding.
-          await recordConsents(ctx.prisma, ctx.user.id, ['OFFER', 'PDN'], 'ONBOARDING', {
-            ip: ctx.ip,
-            userAgent: ctx.userAgent,
-          });
+          // Legal consent audit trail — the wizard's step-1 checkbox is the
+          // explicit acceptance for users who did NOT consent at registration
+          // (OAuth/partner passive-consent paths). Email registrants already
+          // hold a REGISTER-source consent, so the wizard hides the checkbox
+          // from them — and we must not log a consent they didn't actively give.
+          // Wrapped best-effort: neither the lookup nor the write may ever block
+          // or fail onboarding completion.
+          try {
+            const hasExplicitRegisterConsent = await ctx.prisma.userConsent.findFirst({
+              where: { userId: ctx.user.id, source: 'REGISTER' },
+              select: { id: true },
+            });
+            if (!hasExplicitRegisterConsent) {
+              await recordConsents(ctx.prisma, ctx.user.id, ['OFFER', 'PDN'], 'ONBOARDING', {
+                ip: ctx.ip,
+                userAgent: ctx.userAgent,
+              });
+            }
+          } catch {
+            // Consent bookkeeping is best-effort — never break onboarding.
+          }
 
           try {
             const [referral, trialSub] = await Promise.all([

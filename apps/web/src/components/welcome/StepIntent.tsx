@@ -15,12 +15,16 @@ interface StepIntentProps {
   onGoalTextChange: (text: string) => void;
   acceptLegal: boolean;
   onAcceptLegalChange: (accepted: boolean) => void;
+  /** Show the legal-acceptance checkbox. Hidden for email registrants who
+   *  already accepted offer + PDN at /register (see welcome page gate). */
+  showLegal: boolean;
 }
 
 /**
  * Wizard step 1 — intent capture: 7 multi-select goal chips + optional free text,
- * plus a blocking legal-acceptance checkbox (offer + PDN processing consent).
- * Advancing past step 1 is gated on `acceptLegal` in the parent wizard.
+ * plus a legal-acceptance checkbox (offer + PDN processing consent) shown only to
+ * users who didn't consent at registration (OAuth/partner). When shown, advancing
+ * past step 1 is gated on `acceptLegal` in the parent wizard.
  */
 export function StepIntent({
   userName,
@@ -30,6 +34,7 @@ export function StepIntent({
   onGoalTextChange,
   acceptLegal,
   onAcceptLegalChange,
+  showLegal,
 }: StepIntentProps) {
   const toggleGoal = (key: string) => {
     onGoalsChange(
@@ -96,33 +101,35 @@ export function StepIntent({
         </p>
       </div>
 
-      <label className="flex items-start gap-2 cursor-pointer">
-        <Checkbox
-          checked={acceptLegal}
-          onCheckedChange={(v) => onAcceptLegalChange(v === true)}
-          className="mt-0.5"
-        />
-        <span className="text-body-sm text-mp-gray-600 leading-tight">
-          Я принимаю условия{' '}
-          <Link
-            href="/legal/offer"
-            target="_blank"
-            rel="noopener"
-            className="text-mp-blue-600 hover:underline"
-          >
-            оферты
-          </Link>{' '}
-          и{' '}
-          <Link
-            href="/legal/pdn"
-            target="_blank"
-            rel="noopener"
-            className="text-mp-blue-600 hover:underline"
-          >
-            согласие на обработку персональных данных
-          </Link>
-        </span>
-      </label>
+      {showLegal && (
+        <label className="flex items-start gap-2 cursor-pointer">
+          <Checkbox
+            checked={acceptLegal}
+            onCheckedChange={(v) => onAcceptLegalChange(v === true)}
+            className="mt-0.5"
+          />
+          <span className="text-body-sm text-mp-gray-600 leading-tight">
+            Я принимаю условия{' '}
+            <Link
+              href="/legal/offer"
+              target="_blank"
+              rel="noopener"
+              className="text-mp-blue-600 hover:underline"
+            >
+              оферты
+            </Link>{' '}
+            и{' '}
+            <Link
+              href="/legal/pdn"
+              target="_blank"
+              rel="noopener"
+              className="text-mp-blue-600 hover:underline"
+            >
+              согласие на обработку персональных данных
+            </Link>
+          </span>
+        </label>
+      )}
     </div>
   );
 }

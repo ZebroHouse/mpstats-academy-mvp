@@ -39,6 +39,12 @@ const ctxPrismaStub = {
   // Reads scoped inside the first-completion lead block.
   referral: { findUnique: vi.fn().mockResolvedValue(null) },
   subscription: { findFirst: vi.fn().mockResolvedValue(null) },
+  // Legal consent audit trail. Default: no prior REGISTER consent (OAuth/partner
+  // path) → the ONBOARDING consent is recorded via createMany.
+  userConsent: {
+    findFirst: vi.fn().mockResolvedValue(null),
+    createMany: vi.fn().mockResolvedValue({ count: 2 }),
+  },
 };
 
 const ctx = {
@@ -209,6 +215,54 @@ describe('onboarding.complete', () => {
 
     await expect(result).resolves.not.toThrow();
     expect(ctxPrismaStub.userProfile.update).toHaveBeenCalledTimes(1);
+  });
+
+  it('records an ONBOARDING consent when the user has no REGISTER consent (OAuth/partner)', async () => {
+    ctxPrismaStub.userConsent.findFirst.mockResolvedValueOnce(null);
+
+    await caller().complete({ marketplaces: ['WB'] });
+
+    // Looked up the explicit registration consent…
+    expect(ctxPrismaStub.userConsent.findFirst).toHaveBeenCalledWith(
+      expect.objectContaining({ where: { userId: 'user-1', source: 'REGISTER' } }),
+    );
+    // …found none → recorded the wizard's ONBOARDING acceptance.
+    expect(ctxPrismaStub.userConsent.createMany).toHaveBeenCalledTimes(1);
+    const rows = ctxPrismaStub.userConsent.createMany.mock.calls[0][0].data;
+    expect(rows.every((r: any) => r.source === 'ONBOARDING')).toBe(true);
+  });
+
+  it('does NOT record an ONBOARDING consent when the user already consented at /register', async () => {
+    ctxPrismaStub.userConsent.findFirst.mockResolvedValueOnce({ id: 'consent-1' });
+
+    await caller().complete({ marketplaces: ['WB'] });
+
+    // Explicit REGISTER consent exists → the wizard hid the checkbox, so no
+    // ONBOARDING row is written (we don't log a consent the user didn't give).
+    expect(ctxPrismaStub.userConsent.createMany).not.toHaveBeenCalled();
+  });
+
+  it('completes even if the consent lookup throws (best-effort, never blocks)', async () => {
+    ctxPrismaStub.userConsent.findFirst.mockRejectedValueOnce(new Error('DB down'));
+
+    const result = caller().complete({ marketplaces: ['WB'] });
+
+    await expect(result).resolves.not.toThrow();
+    expect(ctxPrismaStub.userProfile.update).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('onboarding.requiresLegalConsent', () => {
+  it('requires the checkbox when there is no REGISTER consent (OAuth/partner)', async () => {
+    ctxPrismaStub.userConsent.findFirst.mockResolvedValueOnce(null);
+    const result = await caller().requiresLegalConsent();
+    expect(result).toEqual({ required: true });
+  });
+
+  it('skips the checkbox when a REGISTER consent exists (email registrant)', async () => {
+    ctxPrismaStub.userConsent.findFirst.mockResolvedValueOnce({ id: 'consent-1' });
+    const result = await caller().requiresLegalConsent();
+    expect(result).toEqual({ required: false });
   });
 });
 
