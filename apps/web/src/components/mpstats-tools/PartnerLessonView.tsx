@@ -178,8 +178,13 @@ export function PartnerLessonView({ lessonId }: { lessonId: string }) {
   const { data: lesson, isLoading, error } = trpc.partner.getLesson.useQuery({ lessonId });
   const { data: watchProgress } = trpc.learning.getWatchProgress.useQuery({ lessonId });
 
-  // Журнал заходов (аналитика контента). Партнёрские уроки все видео.
-  const contentView = useContentView(lessonId, { hasPlayer: true });
+  // Журнал заходов (аналитика контента). НИКОГДА не тикаем сами здесь —
+  // намеренное решение, не забытый TODO. Партнёрские уроки все видео, и
+  // когда videoId ещё не залит, страница рендерит плейсхолдер «видео готовится
+  // к публикации» (см. hasVideo ниже), а не контент. Секунды на этом
+  // плейсхолдере были бы такой же фабрикацией, как секунды на LockOverlay:
+  // строка с нулевой активностью там — честная запись, смотреть было нечего.
+  const contentView = useContentView(lessonId, { selfTick: false });
 
   const handleTimecodeClick = (seconds: number) => {
     playerRef.current?.seekTo(seconds);

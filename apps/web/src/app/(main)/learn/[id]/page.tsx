@@ -320,10 +320,15 @@ export default function LessonPage() {
   const { data: watchProgress } = trpc.learning.getWatchProgress.useQuery({ lessonId });
 
   // Журнал заходов (аналитика контента). Полностью побочный — на урок не влияет.
-  // Страница рендерит плеер только для VIDEO (см. contentType === 'VIDEO' ниже);
-  // для TEXT/INTERACTIVE onTimeUpdate не сработает, и хук должен тикать сам.
+  // selfTick = хук сам ведёт часы, потому что на экране реально показан
+  // текстовый/интерактивный контент, чью позицию больше некому докладывать.
+  // Не «нет видео» — иначе накопили бы время на скелетоне загрузки (data
+  // ещё undefined) и на LockOverlay (lesson.locked, см. рендер ниже) —
+  // паywall-карточка без единого слова урока. Поля locked/contentType те же,
+  // что рендер-код использует для ветвления (lesson.locked, строка ~707;
+  // lesson.contentType === 'VIDEO', строка ~719).
   const contentView = useContentView(lessonId, {
-    hasPlayer: data?.lesson?.contentType === 'VIDEO',
+    selfTick: !!data?.lesson && !data.lesson.locked && data.lesson.contentType !== 'VIDEO',
   });
 
   // Sync completedRef with initial lesson status (prevent toast for already-completed lessons)

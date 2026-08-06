@@ -78,9 +78,17 @@ function sendExitPing(payload: PingPayload): boolean {
  *
  * Пинг шлёт НАКОПЛЕННОЕ с начала просмотра, а не дельту: потерянный пинг
  * тогда не теряет данные, следующий их догоняет.
+ *
+ * `selfTick` — не «есть ли плеер», а «должен ли хук сам вести часы».
+ * Хук ведёт часы САМ только тогда, когда потребитель говорит: на экране
+ * реально показывается контент, позицию которого больше некому докладывать
+ * (текстовый/интерактивный урок). Во всех остальных случаях — идёт загрузка,
+ * урок за паywall'ом, видео ещё не залито — на экране либо ничего, либо
+ * плеер, который сам зовёт trackPosition; тикать самостоятельно значит
+ * приписывать секунды просмотра тому, чего пользователь не видел.
  */
-export function useContentView(lessonId: string, options: { hasPlayer?: boolean } = {}) {
-  const hasPlayer = options.hasPlayer ?? false;
+export function useContentView(lessonId: string, options: { selfTick?: boolean } = {}) {
+  const selfTick = options.selfTick ?? false;
 
   const viewIdRef = useRef<string | null>(null);
   const activeSecondsRef = useRef(0);
@@ -225,10 +233,11 @@ export function useContentView(lessonId: string, options: { hasPlayer?: boolean 
   // Уроки без плеера: тикаем сами, пока вкладка видима. Синтетическая позиция
   // растёт на секунду за такт, поэтому накопитель из shared работает как есть.
   useEffect(() => {
-    if (hasPlayer) return;
-    // hasPlayer может смениться после монтирования (пока урок ещё грузится,
-    // потребитель передаёт false, после загрузки — true для видео). Без
-    // сброса prevPositionRef/prevTickAtRef синтетическая позиция тикера
+    if (!selfTick) return;
+    // selfTick может смениться после монтирования (пока урок ещё грузится
+    // или пока не ясно, что показывать, потребитель передаёт false; когда
+    // на экране появляется реальный текстовый/интерактивный контент — true).
+    // Без сброса prevPositionRef/prevTickAtRef синтетическая позиция тикера
     // просочилась бы в пространство позиций реального плеера — тот начинает
     // отсчёт с 0, а accumulateActiveSeconds молча не считает ничего, пока
     // позиция плеера не догонит оставленное тикером значение.
@@ -249,7 +258,7 @@ export function useContentView(lessonId: string, options: { hasPlayer?: boolean 
       prevPositionRef.current = 0;
       prevTickAtRef.current = null;
     };
-  }, [hasPlayer, trackPosition]);
+  }, [selfTick, trackPosition]);
 
   // Стабильная ссылка обязательна: потребители кладут этот объект в deps
   // своего useCallback. Новый литерал на каждый рендер пересоздавал бы их
