@@ -1649,7 +1649,9 @@ git commit -m "feat(analytics): wire content journal into lesson pages
 Если в репозитории есть `.env.example` — добавить строку с комментарием:
 
 ```
-# Журнал заходов в уроки и устройства (аналитика контента). 'true' включает запись.
+# Журнал заходов в урок (ContentView.startView/pingView). 'true' включает запись.
+# НЕ гейтит UserDeviceDay (хартбит) и DiagnosticSession.device — те пишутся
+# всегда, независимо от этого флага.
 CONTENT_JOURNAL_ENABLED=false
 ```
 
@@ -1715,7 +1717,7 @@ sed -i 's/CONTENT_JOURNAL_ENABLED=true/CONTENT_JOURNAL_ENABLED=false/' .env.stag
 docker compose -p maal-staging -f docker-compose.staging.yml up -d web
 ```
 
-Открыть урок ещё раз, повторить запрос из шага 4. Ожидаемое: новых строк в `ContentView` **нет**, урок при этом открывается и работает нормально.
+Открыть урок ещё раз, повторить запрос из шага 4. Ожидаемое: новых строк в `ContentView` **нет**, урок при этом открывается и работает нормально. **Не проверять это на `UserDeviceDay`/`DiagnosticSession.device` — они не гейтятся флагом и продолжат писаться; это ожидаемое поведение, не повод считать рубильник сломанным.**
 
 Вернуть флаг в `true` после проверки.
 
