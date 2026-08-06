@@ -131,6 +131,7 @@ model DiagnosticSession {
   completedAt     DateTime?
   currentQuestion Int              @default(0)
   questions       Json? // Persisted question set (array of DiagnosticQuestion objects)
+  device          String? // MOBILE | TABLET | DESKTOP | UNKNOWN — устройство на старте диагностики
 
   user    UserProfile        @relation(fields: [userId], references: [id], onDelete: Cascade)
   answers DiagnosticAnswer[]
@@ -830,6 +831,44 @@ model EmergencyBlockEventDay {
   createdAt DateTime @default(now())
 
   @@id([surface, kind, day])
+  @@index([day])
+}
+
+/// Журнал заходов в урок. Строка на каждое открытие, а не на пару юзер-урок —
+/// в отличие от LessonProgress, который хранит только конечное состояние.
+/// Без FK — как UserActivityDay: защита от каскадов на общей прод-БД.
+/// courseId и contentType денормализованы намеренно: почти каждый запрос
+/// аналитики группирует по курсу, а копия ещё и фиксирует исторический факт
+/// (урок мог переехать в другой курс или сменить тип уже после просмотра).
+model ContentView {
+  id            String   @id @default(cuid())
+  userId        String // = UserProfile.id
+  lessonId      String
+  courseId      String
+  contentType   String // VIDEO | TEXT | INTERACTIVE — снимок на момент захода
+  device        String // MOBILE | TABLET | DESKTOP | UNKNOWN
+  activeSeconds Int      @default(0)
+  maxPercent    Int      @default(0)
+  completed     Boolean  @default(false)
+  startedAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@index([lessonId, startedAt])
+  @@index([courseId, startedAt])
+  @@index([userId, startedAt])
+  @@index([startedAt])
+}
+
+/// Устройства пользователя по дням. Несколько строк за день на одного человека —
+/// это и есть сигнал «переходы между устройствами». Отдельная таблица, а не
+/// колонка в UserActivityDay: там PK (userId, day), устройство сломало бы его.
+model UserDeviceDay {
+  userId    String
+  day       DateTime @db.Date
+  device    String // MOBILE | TABLET | DESKTOP | UNKNOWN
+  createdAt DateTime @default(now())
+
+  @@id([userId, day, device])
   @@index([day])
 }
 
