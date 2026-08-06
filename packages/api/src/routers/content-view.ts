@@ -34,10 +34,22 @@ export const contentViewRouter = router({
     .mutation(async ({ ctx, input }): Promise<{ viewId: string | null }> => {
       if (process.env.CONTENT_JOURNAL_ENABLED !== 'true') return { viewId: null };
       try {
+        // Once, reused below for both the dedup lookup and the create — the
+        // same device always parses to the same string, so this cannot cause
+        // false splits, only removes a second parse of the same input.
+        const device = parseDeviceType(ctx.userAgent);
+
         const recent = await ctx.prisma.contentView.findFirst({
           where: {
             userId: ctx.user.id,
             lessonId: input.lessonId,
+            // device в ключе дедупликации: без него ноутбук и телефон,
+            // открывшие один урок в пределах окна, схлопывались бы в одну
+            // строку под device первого захода — переход между устройствами
+            // (одна из метрик, ради которых собирается этот журнал)
+            // становился бы неотличим от повторного открытия с того же
+            // устройства.
+            device,
             // startedAt, не updatedAt: updatedAt = @updatedAt и двигается
             // каждым pingView, поэтому окно на нём никогда не закрывалось бы —
             // 40 минут просмотра с релоадом посередине склеились бы в один
@@ -63,7 +75,7 @@ export const contentViewRouter = router({
             lessonId: input.lessonId,
             courseId: lesson.courseId,
             contentType: lesson.contentType,
-            device: parseDeviceType(ctx.userAgent),
+            device,
           },
           select: { id: true },
         });

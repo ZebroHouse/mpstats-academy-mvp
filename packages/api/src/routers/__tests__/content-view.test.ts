@@ -76,6 +76,21 @@ describe('contentView.startView', () => {
     expect(prisma.contentView.findFirst.mock.calls[0][0].where.userId).toBe('u1');
   });
 
+  it('дедуп-ключ включает устройство — совпадает с тем, что уходит в create', async () => {
+    // Finding: без device в where кросс-девайсный заход (тот же урок,
+    // другое устройство, в пределах DEDUP_WINDOW_MS) склеивался бы с чужой
+    // строкой другого устройства — «переходы между устройствами» переставали
+    // бы существовать в данных. device парсится один раз и используется и
+    // в where, и в create — значения обязаны совпасть.
+    process.env.CONTENT_JOURNAL_ENABLED = 'true';
+    const MOBILE_UA = 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15';
+    const { caller, prisma } = makeCtx({}, MOBILE_UA);
+    await caller.startView({ lessonId: 'L1' });
+    const where = prisma.contentView.findFirst.mock.calls[0][0].where;
+    expect(where.device).toBe('MOBILE');
+    expect(prisma.contentView.create.mock.calls[0][0].data.device).toBe('MOBILE');
+  });
+
   it('окно дедупликации — ключ startedAt, около 2 минут назад', async () => {
     // Finding 1: было updatedAt (двигается каждым pingView → окно никогда не
     // закрывалось бы). Finding 5: было `toBeGreaterThanOrEqual(120_000)` на
