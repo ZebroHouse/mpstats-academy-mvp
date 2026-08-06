@@ -7,9 +7,17 @@ import { router, protectedProcedure } from '../trpc';
  */
 function makeHarness(userAgent: string | null, opts: { failDeviceUpsert?: boolean } = {}) {
   const userDeviceDay = {
-    upsert: vi.fn().mockImplementation(() =>
-      opts.failDeviceUpsert ? Promise.reject(new Error('boom')) : Promise.resolve({})
-    ),
+    // Synchronous throw (not a rejected promise) — this is the only failure
+    // mode that actually exercises the inner try/catch around the upsert
+    // call in trpc.ts. A rejected promise is already contained by the
+    // upsert's own `.catch()` regardless of the surrounding try/catch, so it
+    // would not distinguish "isolation present" from "isolation removed".
+    upsert: vi.fn().mockImplementation(() => {
+      if (opts.failDeviceUpsert) {
+        throw new Error('boom');
+      }
+      return Promise.resolve({});
+    }),
   };
   const prisma = {
     userProfile: {
@@ -63,6 +71,13 @@ describe('heartbeat: запись устройства', () => {
     const { caller, prisma } = makeHarness('Mozilla/5.0 (Windows NT 10.0; Win64; x64)', { failDeviceUpsert: true });
     expect(await caller.ping()).toBe('pong');
     await flush();
+    // Proves the failure path was actually entered — without this, the test
+    // would pass even if the whole device-recording block were deleted.
+    expect(prisma.userDeviceDay.upsert).toHaveBeenCalledTimes(1);
+    // Proves isolation: the synchronous throw from upsert() must not stop
+    // execution before it reaches the userProfile.update() call that follows
+    // it in the same .then() callback. Without the inner try/catch, this
+    // throw would abort the callback and userProfile.update would never run.
     expect(prisma.userProfile.update).toHaveBeenCalled();
   });
 });
