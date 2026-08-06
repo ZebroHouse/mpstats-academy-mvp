@@ -4,3 +4,4 @@ export * from './notifications';
 export * from './courses';
 export * from './metrika';
 export * from './legal-versions';
+export * from './device';
