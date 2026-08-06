@@ -1094,7 +1094,7 @@ git commit -m "feat(analytics): record device on diagnostic session start
 ```ts
 'use client';
 
-import { useCallback, useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { accumulateActiveSeconds } from '@mpstats/shared';
 import { trpc } from '@/lib/trpc/client';
 
@@ -1206,7 +1206,10 @@ export function useContentView(lessonId: string, options: { hasPlayer?: boolean 
     return () => clearInterval(interval);
   }, [hasPlayer, trackPosition]);
 
-  return { trackPosition };
+  // Стабильная ссылка обязательна: потребители кладут этот объект в deps
+  // своего useCallback. Новый литерал на каждый рендер пересоздавал бы их
+  // обработчики без всякой причины.
+  return useMemo(() => ({ trackPosition }), [trackPosition]);
 }
 ```
 
@@ -1276,7 +1279,7 @@ import { useContentView } from '@/lib/analytics/useContentView';
   }, [lessonId, contentView]);
 ```
 
-`trackPosition` обёрнут в `useCallback` с пустыми deps, ссылка стабильна — цикла ре-рендеров не будет.
+`trackPosition` обёрнут в `useCallback` с пустыми deps, а сам возвращаемый объект — в `useMemo`, поэтому ссылка стабильна и цикла пересозданий не будет.
 
 - [ ] **Step 2: Подключить на партнёрской странице**
 
