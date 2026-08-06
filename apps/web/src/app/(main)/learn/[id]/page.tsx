@@ -21,6 +21,7 @@ import type { InteractiveProgressState } from '@mpstats/shared';
 import { trpc } from '@/lib/trpc/client';
 import { reachGoal } from '@/lib/analytics/metrika';
 import { METRIKA_GOALS } from '@/lib/analytics/constants';
+import { useContentView } from '@/lib/analytics/useContentView';
 import { SafeMarkdown } from '@/components/shared/SafeMarkdown';
 import { CommentSection } from '@/components/comments/CommentSection';
 import { cn } from '@/lib/utils';
@@ -318,6 +319,13 @@ export default function LessonPage() {
   );
   const { data: watchProgress } = trpc.learning.getWatchProgress.useQuery({ lessonId });
 
+  // Журнал заходов (аналитика контента). Полностью побочный — на урок не влияет.
+  // Страница рендерит плеер только для VIDEO (см. contentType === 'VIDEO' ниже);
+  // для TEXT/INTERACTIVE onTimeUpdate не сработает, и хук должен тикать сам.
+  const contentView = useContentView(lessonId, {
+    hasPlayer: data?.lesson?.contentType === 'VIDEO',
+  });
+
   // Sync completedRef with initial lesson status (prevent toast for already-completed lessons)
   useEffect(() => {
     if (data?.lesson?.status === 'COMPLETED') {
@@ -406,6 +414,7 @@ export default function LessonPage() {
   // Throttled save handler (every 15 seconds) — stores in refs, no re-renders.
   // onTimeUpdate fires every ~1s from the timer; we only save periodically.
   const handleTimeUpdate = useCallback((currentTime: number, duration: number) => {
+    contentView.trackPosition(currentTime, duration);
     lastPositionRef.current = currentTime;
     lastDurationRef.current = duration;
 
@@ -422,7 +431,7 @@ export default function LessonPage() {
         });
       }
     }, 15_000);
-  }, [lessonId]);
+  }, [lessonId, contentView]);
 
   // Save on tab hide / page unload (final position capture)
   // visibilitychange → hidden is the most reliable signal across browsers

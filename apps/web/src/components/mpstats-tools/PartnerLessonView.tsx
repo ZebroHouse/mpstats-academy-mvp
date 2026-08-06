@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { VideoPlayer, type PlayerHandle } from '@/components/video/KinescopePlayer';
 import { TimecodeLink } from '@/components/video/TimecodeLink';
 import { trpc } from '@/lib/trpc/client';
+import { useContentView } from '@/lib/analytics/useContentView';
 import { SafeMarkdown } from '@/components/shared/SafeMarkdown';
 import { cn } from '@/lib/utils';
 import { Send } from 'lucide-react';
@@ -177,6 +178,9 @@ export function PartnerLessonView({ lessonId }: { lessonId: string }) {
   const { data: lesson, isLoading, error } = trpc.partner.getLesson.useQuery({ lessonId });
   const { data: watchProgress } = trpc.learning.getWatchProgress.useQuery({ lessonId });
 
+  // Журнал заходов (аналитика контента). Партнёрские уроки все видео.
+  const contentView = useContentView(lessonId, { hasPlayer: true });
+
   const handleTimecodeClick = (seconds: number) => {
     playerRef.current?.seekTo(seconds);
     document.getElementById('video-player')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
@@ -197,6 +201,7 @@ export function PartnerLessonView({ lessonId }: { lessonId: string }) {
   // Throttled save handler (every 15 seconds) — stores in refs, no re-renders.
   const handleTimeUpdate = useCallback(
     (currentTime: number, duration: number) => {
+      contentView.trackPosition(currentTime, duration);
       lastPositionRef.current = currentTime;
       lastDurationRef.current = duration;
 
@@ -213,7 +218,7 @@ export function PartnerLessonView({ lessonId }: { lessonId: string }) {
         }
       }, 15_000);
     },
-    [lessonId]
+    [lessonId, contentView]
   );
 
   // Save on tab hide / page unload (final position capture) — mirrors reference page.
