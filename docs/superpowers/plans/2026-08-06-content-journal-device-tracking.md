@@ -320,7 +320,7 @@ git commit -m "feat(analytics): active watch time accumulator
 - Consumes: ничего
 - Produces: Prisma-модели `ContentView`, `UserDeviceDay`, поле `DiagnosticSession.device`. Далее используются как `ctx.prisma.contentView`, `ctx.prisma.userDeviceDay`.
 
-⚠️ **Шаг 5 выполняет DDL против живой прод-базы.** Операции строго аддитивные и идемпотентные (`IF NOT EXISTS`), но перед запуском нужно явное «да» от владельца.
+⚠️ **Шаг 6 выполняет DDL против живой прод-базы.** Операции строго аддитивные и идемпотентные (`IF NOT EXISTS`), но перед запуском нужно явное «да» от владельца.
 
 - [ ] **Step 1: Добавить модели в схему**
 
@@ -451,7 +451,27 @@ function readMgmtToken(): string {
 })().catch((e) => { console.error(e); process.exit(1); });
 ```
 
-- [ ] **Step 5: Проверить SQL глазами и применить**
+- [ ] **Step 5: Pre-flight — убедиться, что имена таблиц свободны**
+
+`CREATE TABLE IF NOT EXISTS` молча ничего не делает, если таблица с таким именем уже есть — а в этой БД сосед однажды уже создавал свои таблицы без спроса. Перед применением DDL проверить через тот же Mgmt API fetch, что используется в скрипте:
+
+```bash
+NODE_OPTIONS=--dns-result-order=ipv4first npx tsx -e "
+const { readFileSync } = require('node:fs');
+const token = readFileSync('.secrets/supabase-mgmt-token.md', 'utf8').match(/sbp_[A-Za-z0-9]+/)[0];
+(async () => {
+  const res = await fetch('https://api.supabase.com/v1/projects/saecuecevicwjkpmaoot/database/query', {
+    method: 'POST',
+    headers: { Authorization: \`Bearer \${token}\`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ query: \`SELECT to_regclass('public.\"ContentView\"'), to_regclass('public.\"UserDeviceDay\"');\` }),
+  });
+  console.log(await res.text());
+})();
+"
+```
+Expected: оба значения `null`. **Если хотя бы одно не null — остановиться и разобраться с владельцем**, не запускать `CREATE TABLE IF NOT EXISTS` вслепую поверх чужой таблицы с этим именем.
+
+- [ ] **Step 6: Проверить SQL глазами и применить**
 
 Сначала убедиться, что в скрипте нет разрушительных операций:
 
@@ -465,26 +485,36 @@ Expected: пусто. Если что-то нашлось — **останови
 ```bash
 NODE_OPTIONS=--dns-result-order=ipv4first npx tsx scripts/migrate-content-journal.ts
 ```
-Expected: `✅ migration applied.`
+Expected: `✅ migration applied.` ⚠️ Скрипт читает токен из `.secrets/supabase-mgmt-token.md`, а `.secrets/` в gitignore и существует только в основном чекауте — запускать из основного `MAAL`, либо сначала скопировать файл токена в этот worktree.
 
-- [ ] **Step 6: Проверить, что объекты появились**
+- [ ] **Step 7: Проверить, что объекты появились**
+
+Count() ничего не говорит о форме таблицы — он компилируется в `SELECT COUNT(*)`, без единой колонки. Проверка должна реально задеть каждую колонку, чтобы несовпадение формы упало здесь, а не в проде рантайм-ошибкой:
 
 ```bash
 NODE_OPTIONS=--dns-result-order=ipv4first npx tsx -e "
 const { PrismaClient } = require('@prisma/client');
 const p = new PrismaClient();
 (async () => {
-  console.log('ContentView rows:', await p.contentView.count());
-  console.log('UserDeviceDay rows:', await p.userDeviceDay.count());
+  const cv = await p.contentView.findFirst({ select: {
+    id: true, userId: true, lessonId: true, courseId: true, contentType: true,
+    device: true, activeSeconds: true, maxPercent: true, completed: true,
+    startedAt: true, updatedAt: true,
+  } });
+  console.log('ContentView columns OK, row:', cv);
+  const udd = await p.userDeviceDay.findFirst({ select: {
+    userId: true, day: true, device: true, createdAt: true,
+  } });
+  console.log('UserDeviceDay columns OK, row:', udd);
   const s = await p.diagnosticSession.findFirst({ select: { id: true, device: true } });
   console.log('DiagnosticSession.device доступна:', s === null || 'device' in s);
   await p.\$disconnect();
 })();
 "
 ```
-Expected: обе таблицы существуют и пусты (`0`), колонка `device` читается.
+Expected: оба `findFirst` выполняются без ошибки (таблицы пустые — `null`, а не exception о несуществующей колонке), колонка `device` на `DiagnosticSession` читается.
 
-- [ ] **Step 7: Коммит**
+- [ ] **Step 8: Коммит**
 
 ```bash
 git add packages/db/prisma/schema.prisma scripts/migrate-content-journal.ts
@@ -492,8 +522,9 @@ git commit -m "feat(db): ContentView + UserDeviceDay tables, DiagnosticSession.d
 
 Аддитивная миграция через Mgmt API — prisma db push против этой базы
 запрещён (инцидент 2026-05-12). Без FK, как UserActivityDay: каскады на
-общей прод-базе однажды уже стоили 24 таблицы. Применена до кода, иначе
-хартбит начал бы писать в несуществующую таблицу у каждого юзера."
+общей прод-базе однажды уже стоили 24 таблицы. Должна быть применена до
+деплоя кода, иначе хартбит начнёт писать в несуществующую таблицу у
+каждого юзера."
 ```
 
 ---
