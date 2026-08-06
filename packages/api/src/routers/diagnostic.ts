@@ -12,10 +12,10 @@ import { shuffleOptions } from '../diagnostic/option-shuffler';
 import { toDiagnosticQuestionSource, buildAnswerSourceData } from '../diagnostic/question-source';
 import { getRecommendedJobsFromGaps } from '../utils/job-matcher';
 import { cqSetUserProps, cqTrackEvent } from '../utils/carrotquest';
-import { parseDeviceType } from '@mpstats/shared';
 import type { PrismaClient } from '@mpstats/db';
 import {
   SKILL_LABELS,
+  parseDeviceType,
 } from '@mpstats/shared';
 import type {
   DiagnosticResult,
