@@ -18,6 +18,7 @@ import { partnerRouter } from './routers/partner';
 import { dashboardRouter } from './routers/dashboard';
 import { assistantRouter } from './routers/assistant';
 import { offerRouter } from './routers/offer';
+import { contentViewRouter } from './routers/content-view';
 
 export const appRouter = router({
   profile: profileRouter,
@@ -39,6 +40,7 @@ export const appRouter = router({
   dashboard: dashboardRouter,
   assistant: assistantRouter,
   offer: offerRouter,
+  contentView: contentViewRouter,
 });
 
 export type AppRouter = typeof appRouter;
