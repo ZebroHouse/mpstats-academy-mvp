@@ -3,6 +3,11 @@ import { contentViewRouter } from '../content-view';
 
 const DESKTOP_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36';
 
+// Совпадает с DEDUP_WINDOW_MS внутри content-view.ts. Не импортируем его,
+// потому что модуль его не экспортирует (он приватный) — дублирование
+// константы здесь честнее, чем расширять публичный API роутера ради теста.
+const DEDUP_WINDOW_MS = 2 * 60 * 1000;
+
 function makeCtx(overrides: Record<string, any> = {}, userAgent: string | null = DESKTOP_UA) {
   const prisma = {
     userProfile: { findUnique: vi.fn().mockResolvedValue({ lastActiveAt: new Date() }), update: vi.fn() },
@@ -17,6 +22,10 @@ function makeCtx(overrides: Record<string, any> = {}, userAgent: string | null =
       create: vi.fn().mockResolvedValue({ id: 'view-1' }),
       update: vi.fn().mockResolvedValue({}),
     },
+    // pingView writes via a single tagged-template $executeRaw call now
+    // (Finding 2) — default to "1 row affected" so happy-path tests don't
+    // need to restate it.
+    $executeRaw: vi.fn().mockResolvedValue(1),
     ...overrides,
   };
   return {
@@ -58,14 +67,33 @@ describe('contentView.startView', () => {
     expect(prisma.contentView.create).not.toHaveBeenCalled();
   });
 
-  it('окно дедупликации — ровно 2 минуты назад', async () => {
+  it('дедуп-запрос ограничен вызывающим пользователем', async () => {
+    // Minor finding: без userId в where startView мог бы отдать чужой
+    // viewId — просто самый свежий заход в урок кем угодно.
+    process.env.CONTENT_JOURNAL_ENABLED = 'true';
+    const { caller, prisma } = makeCtx();
+    await caller.startView({ lessonId: 'L1' });
+    expect(prisma.contentView.findFirst.mock.calls[0][0].where.userId).toBe('u1');
+  });
+
+  it('окно дедупликации — ключ startedAt, около 2 минут назад', async () => {
+    // Finding 1: было updatedAt (двигается каждым pingView → окно никогда не
+    // закрывалось бы). Finding 5: было `toBeGreaterThanOrEqual(120_000)` на
+    // разнице с before, что гонится с реальной задержкой между Date.now()
+    // в тесте и Date.now() внутри хендлера — ловили ~1/5 падений на 1мс.
+    // Берём clock и до, и после вызова: gte вычисляется где-то между ними,
+    // значит gte лежит строго в [before - WINDOW, after - WINDOW]. Без
+    // фейковых таймеров, без гонки, без допуска "плюс несколько мс".
     process.env.CONTENT_JOURNAL_ENABLED = 'true';
     const { caller, prisma } = makeCtx();
     const before = Date.now();
     await caller.startView({ lessonId: 'L1' });
-    const gte = prisma.contentView.findFirst.mock.calls[0][0].where.updatedAt.gte as Date;
-    expect(before - gte.getTime()).toBeGreaterThanOrEqual(120_000);
-    expect(before - gte.getTime()).toBeLessThan(125_000);
+    const after = Date.now();
+    const where = prisma.contentView.findFirst.mock.calls[0][0].where;
+    const gte = where.startedAt.gte as Date;
+    expect(where.updatedAt).toBeUndefined();
+    expect(gte.getTime()).toBeGreaterThanOrEqual(before - DEDUP_WINDOW_MS);
+    expect(gte.getTime()).toBeLessThanOrEqual(after - DEDUP_WINDOW_MS);
   });
 
   it('несуществующий урок → viewId null', async () => {
@@ -91,66 +119,89 @@ describe('contentView.pingView', () => {
   const OLD = process.env.CONTENT_JOURNAL_ENABLED;
   afterEach(() => { process.env.CONTENT_JOURNAL_ENABLED = OLD; });
 
-  function ctxWithView(view: any) {
-    return makeCtx({
-      contentView: {
-        findFirst: vi.fn(),
-        findUnique: vi.fn().mockResolvedValue(view),
-        create: vi.fn(),
-        update: vi.fn().mockResolvedValue({}),
-      },
-    });
+  // pingView не читает строку перед записью больше (Finding 2) — сравнение
+  // "накоплено vs пришло" теперь делает GREATEST внутри одного UPDATE.
+  // Реальная параллельность (две вкладки бьющие в один viewId одновременно)
+  // проверяется базой данных, а не юнит-тестом — это правильный трейдофф:
+  // такой тест либо ничего не гонял бы по-настоящему (мок синхронный), либо
+  // тестировал бы сам Postgres. Мы фиксируем контракт вокруг него: что запрос
+  // атомарный, один, параметризованный и содержит GREATEST/OR.
+  function ctxWithExecuteRaw(affectedRows: number) {
+    return makeCtx({ $executeRaw: vi.fn().mockResolvedValue(affectedRows) });
   }
 
   it('флаг off → no-op', async () => {
     process.env.CONTENT_JOURNAL_ENABLED = 'false';
-    const { caller, prisma } = ctxWithView({ userId: 'u1', activeSeconds: 0, maxPercent: 0, completed: false });
+    const { caller, prisma } = ctxWithExecuteRaw(1);
     expect(await caller.pingView({ viewId: 'v1', activeSeconds: 30, percent: 10 })).toEqual({ ok: false });
-    expect(prisma.contentView.update).not.toHaveBeenCalled();
+    expect(prisma.$executeRaw).not.toHaveBeenCalled();
   });
 
-  it('пишет накопленные секунды и процент', async () => {
+  it('пишет через атомарный UPDATE с GREATEST по обеим числовым колонкам и OR по completed', async () => {
     process.env.CONTENT_JOURNAL_ENABLED = 'true';
-    const { caller, prisma } = ctxWithView({ userId: 'u1', activeSeconds: 10, maxPercent: 5, completed: false });
-    expect(await caller.pingView({ viewId: 'v1', activeSeconds: 30, percent: 40 })).toEqual({ ok: true });
-    expect(prisma.contentView.update.mock.calls[0][0].data).toMatchObject({
-      activeSeconds: 30, maxPercent: 40, completed: false,
-    });
+    const { caller, prisma } = ctxWithExecuteRaw(1);
+    expect(await caller.pingView({ viewId: 'v1', activeSeconds: 30, percent: 40, completed: true })).toEqual({ ok: true });
+
+    expect(prisma.$executeRaw).toHaveBeenCalledTimes(1);
+    const [strings, ...values] = prisma.$executeRaw.mock.calls[0];
+    const sql = strings.join('');
+    expect(sql).toContain('GREATEST("activeSeconds"');
+    expect(sql).toContain('GREATEST("maxPercent"');
+    expect(sql).toContain('"completed" OR');
+    expect(sql).toContain('WHERE "id" =');
+    expect(sql).toContain('AND "userId" =');
+    // Параметры идут по месту подстановки: activeSeconds, percent, completed, viewId, userId.
+    expect(values).toEqual([30, 40, true, 'v1', 'u1']);
   });
 
-  it('пинг с меньшим значением не уменьшает накопленное', async () => {
+  it('completed не передан → в запрос уходит false, не undefined', async () => {
     process.env.CONTENT_JOURNAL_ENABLED = 'true';
-    const { caller, prisma } = ctxWithView({ userId: 'u1', activeSeconds: 50, maxPercent: 60, completed: false });
-    await caller.pingView({ viewId: 'v1', activeSeconds: 20, percent: 30 });
-    expect(prisma.contentView.update.mock.calls[0][0].data).toMatchObject({
-      activeSeconds: 50, maxPercent: 60,
-    });
+    const { caller, prisma } = ctxWithExecuteRaw(1);
+    await caller.pingView({ viewId: 'v1', activeSeconds: 30, percent: 40 });
+    const [, , , completedParam] = prisma.$executeRaw.mock.calls[0];
+    expect(completedParam).toBe(false);
   });
 
-  it('завершённость не откатывается', async () => {
+  it('0 затронутых строк (чужой или несуществующий viewId) → отказ', async () => {
+    // Проверка владельца теперь живёт в самом WHERE — TOCTOU-окна между
+    // "прочитали и проверили" и "записали" больше нет.
     process.env.CONTENT_JOURNAL_ENABLED = 'true';
-    const { caller, prisma } = ctxWithView({ userId: 'u1', activeSeconds: 50, maxPercent: 95, completed: true });
-    await caller.pingView({ viewId: 'v1', activeSeconds: 60, percent: 95, completed: false });
-    expect(prisma.contentView.update.mock.calls[0][0].data).toMatchObject({ completed: true });
-  });
-
-  it('чужой viewId → отказ без записи', async () => {
-    process.env.CONTENT_JOURNAL_ENABLED = 'true';
-    const { caller, prisma } = ctxWithView({ userId: 'someone-else', activeSeconds: 0, maxPercent: 0, completed: false });
+    const { caller, prisma } = ctxWithExecuteRaw(0);
     expect(await caller.pingView({ viewId: 'v1', activeSeconds: 30, percent: 10 })).toEqual({ ok: false });
-    expect(prisma.contentView.update).not.toHaveBeenCalled();
+    expect(prisma.$executeRaw).toHaveBeenCalledTimes(1);
   });
 
-  it('несуществующий viewId → отказ', async () => {
+  it('пустой viewId → отказ без обращения к БД', async () => {
     process.env.CONTENT_JOURNAL_ENABLED = 'true';
-    const { caller, prisma } = ctxWithView(null);
-    expect(await caller.pingView({ viewId: 'ghost', activeSeconds: 30, percent: 10 })).toEqual({ ok: false });
-    expect(prisma.contentView.update).not.toHaveBeenCalled();
+    const { caller, prisma } = ctxWithExecuteRaw(1);
+    expect(await caller.pingView({ viewId: '', activeSeconds: 30, percent: 10 })).toEqual({ ok: false });
+    expect(prisma.$executeRaw).not.toHaveBeenCalled();
   });
 
-  it('процент вне 0..100 → zod reject', async () => {
+  it('дробный/NaN percent не роняет мутацию — округляется и подменяется нулём', async () => {
+    // Finding 3: раньше percent был z.number().int().min(0).max(100), и
+    // реальный клиент (position / duration * 100) регулярно присылает
+    // дробные или временно NaN значения → zod бросал BAD_REQUEST наружу.
     process.env.CONTENT_JOURNAL_ENABLED = 'true';
-    const { caller } = ctxWithView({ userId: 'u1', activeSeconds: 0, maxPercent: 0, completed: false });
-    await expect(caller.pingView({ viewId: 'v1', activeSeconds: 10, percent: 101 })).rejects.toThrow();
+    const { caller: c1, prisma: p1 } = ctxWithExecuteRaw(1);
+    await expect(c1.pingView({ viewId: 'v1', activeSeconds: 10.4, percent: 42.6 })).resolves.toEqual({ ok: true });
+    expect(p1.$executeRaw.mock.calls[0].slice(1, 3)).toEqual([10, 43]);
+
+    const { caller: c2, prisma: p2 } = ctxWithExecuteRaw(1);
+    await expect(c2.pingView({ viewId: 'v1', activeSeconds: 10, percent: NaN })).resolves.toEqual({ ok: true });
+    expect(p2.$executeRaw.mock.calls[0].slice(1, 3)).toEqual([10, 0]);
+  });
+
+  it('percent/activeSeconds вне диапазона зажимаются, а не отклоняются', async () => {
+    process.env.CONTENT_JOURNAL_ENABLED = 'true';
+    const { caller, prisma } = ctxWithExecuteRaw(1);
+    await caller.pingView({ viewId: 'v1', activeSeconds: 999_999, percent: 101 });
+    expect(prisma.$executeRaw.mock.calls[0].slice(1, 3)).toEqual([86_400, 100]);
+  });
+
+  it('падение БД (Finding 4) не пробрасывается наружу', async () => {
+    process.env.CONTENT_JOURNAL_ENABLED = 'true';
+    const { caller } = makeCtx({ $executeRaw: vi.fn().mockRejectedValue(new Error('db down')) });
+    await expect(caller.pingView({ viewId: 'v1', activeSeconds: 30, percent: 10 })).resolves.toEqual({ ok: false });
   });
 });

@@ -674,6 +674,8 @@ git commit -m "feat(analytics): record device type in existing heartbeat
 
 ### Task 5: Роутер журнала просмотров
 
+> **Fix round 1 (после ревью):** ниже — уже исправленная версия. Ревью нашло пять Important-находок в исходном тексте плана: неверная колонка дедупликации (`updatedAt` вместо `startedAt`), нементальная гонка read-then-write в `pingView`, живой throw-путь через `.int()` в zod-схеме, отсутствующий тест на падение `pingView`, и врождённо гоняющийся тест окна дедупликации. Все пять — дефекты плана, не расхождения при реализации; код и тест ниже отражают исправленную версию, которая реально в репозитории.
+
 Пара мутаций в своём неймспейсе. Намеренно не встраивается в `learning.saveWatchProgress`: у того логика «без регрессий» — он держит максимум процента и не откатывает `COMPLETED`, что верно для состояния и неверно для журнала. Журналу нужен честный факт каждого захода, включая тот, где посмотрели меньше, чем в прошлый раз.
 
 **Files:**
@@ -697,6 +699,11 @@ import { contentViewRouter } from '../content-view';
 
 const DESKTOP_UA = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36';
 
+// Совпадает с DEDUP_WINDOW_MS внутри content-view.ts. Не импортируем его,
+// потому что модуль его не экспортирует (он приватный) — дублирование
+// константы здесь честнее, чем расширять публичный API роутера ради теста.
+const DEDUP_WINDOW_MS = 2 * 60 * 1000;
+
 function makeCtx(overrides: Record<string, any> = {}, userAgent: string | null = DESKTOP_UA) {
   const prisma = {
     userProfile: { findUnique: vi.fn().mockResolvedValue({ lastActiveAt: new Date() }), update: vi.fn() },
@@ -711,6 +718,10 @@ function makeCtx(overrides: Record<string, any> = {}, userAgent: string | null =
       create: vi.fn().mockResolvedValue({ id: 'view-1' }),
       update: vi.fn().mockResolvedValue({}),
     },
+    // pingView writes via a single tagged-template $executeRaw call now
+    // (Finding 2) — default to "1 row affected" so happy-path tests don't
+    // need to restate it.
+    $executeRaw: vi.fn().mockResolvedValue(1),
     ...overrides,
   };
   return {
@@ -752,14 +763,33 @@ describe('contentView.startView', () => {
     expect(prisma.contentView.create).not.toHaveBeenCalled();
   });
 
-  it('окно дедупликации — ровно 2 минуты назад', async () => {
+  it('дедуп-запрос ограничен вызывающим пользователем', async () => {
+    // Minor finding: без userId в where startView мог бы отдать чужой
+    // viewId — просто самый свежий заход в урок кем угодно.
+    process.env.CONTENT_JOURNAL_ENABLED = 'true';
+    const { caller, prisma } = makeCtx();
+    await caller.startView({ lessonId: 'L1' });
+    expect(prisma.contentView.findFirst.mock.calls[0][0].where.userId).toBe('u1');
+  });
+
+  it('окно дедупликации — ключ startedAt, около 2 минут назад', async () => {
+    // Finding 1: было updatedAt (двигается каждым pingView → окно никогда не
+    // закрывалось бы). Finding 5: было `toBeGreaterThanOrEqual(120_000)` на
+    // разнице с before, что гонится с реальной задержкой между Date.now()
+    // в тесте и Date.now() внутри хендлера — ловили ~1/5 падений на 1мс.
+    // Берём clock и до, и после вызова: gte вычисляется где-то между ними,
+    // значит gte лежит строго в [before - WINDOW, after - WINDOW]. Без
+    // фейковых таймеров, без гонки, без допуска "плюс несколько мс".
     process.env.CONTENT_JOURNAL_ENABLED = 'true';
     const { caller, prisma } = makeCtx();
     const before = Date.now();
     await caller.startView({ lessonId: 'L1' });
-    const gte = prisma.contentView.findFirst.mock.calls[0][0].where.updatedAt.gte as Date;
-    expect(before - gte.getTime()).toBeGreaterThanOrEqual(120_000);
-    expect(before - gte.getTime()).toBeLessThan(125_000);
+    const after = Date.now();
+    const where = prisma.contentView.findFirst.mock.calls[0][0].where;
+    const gte = where.startedAt.gte as Date;
+    expect(where.updatedAt).toBeUndefined();
+    expect(gte.getTime()).toBeGreaterThanOrEqual(before - DEDUP_WINDOW_MS);
+    expect(gte.getTime()).toBeLessThanOrEqual(after - DEDUP_WINDOW_MS);
   });
 
   it('несуществующий урок → viewId null', async () => {
@@ -785,67 +815,90 @@ describe('contentView.pingView', () => {
   const OLD = process.env.CONTENT_JOURNAL_ENABLED;
   afterEach(() => { process.env.CONTENT_JOURNAL_ENABLED = OLD; });
 
-  function ctxWithView(view: any) {
-    return makeCtx({
-      contentView: {
-        findFirst: vi.fn(),
-        findUnique: vi.fn().mockResolvedValue(view),
-        create: vi.fn(),
-        update: vi.fn().mockResolvedValue({}),
-      },
-    });
+  // pingView не читает строку перед записью больше (Finding 2) — сравнение
+  // "накоплено vs пришло" теперь делает GREATEST внутри одного UPDATE.
+  // Реальная параллельность (две вкладки бьющие в один viewId одновременно)
+  // проверяется базой данных, а не юнит-тестом — это правильный трейдофф:
+  // такой тест либо ничего не гонял бы по-настоящему (мок синхронный), либо
+  // тестировал бы сам Postgres. Мы фиксируем контракт вокруг него: что запрос
+  // атомарный, один, параметризованный и содержит GREATEST/OR.
+  function ctxWithExecuteRaw(affectedRows: number) {
+    return makeCtx({ $executeRaw: vi.fn().mockResolvedValue(affectedRows) });
   }
 
   it('флаг off → no-op', async () => {
     process.env.CONTENT_JOURNAL_ENABLED = 'false';
-    const { caller, prisma } = ctxWithView({ userId: 'u1', activeSeconds: 0, maxPercent: 0, completed: false });
+    const { caller, prisma } = ctxWithExecuteRaw(1);
     expect(await caller.pingView({ viewId: 'v1', activeSeconds: 30, percent: 10 })).toEqual({ ok: false });
-    expect(prisma.contentView.update).not.toHaveBeenCalled();
+    expect(prisma.$executeRaw).not.toHaveBeenCalled();
   });
 
-  it('пишет накопленные секунды и процент', async () => {
+  it('пишет через атомарный UPDATE с GREATEST по обеим числовым колонкам и OR по completed', async () => {
     process.env.CONTENT_JOURNAL_ENABLED = 'true';
-    const { caller, prisma } = ctxWithView({ userId: 'u1', activeSeconds: 10, maxPercent: 5, completed: false });
-    expect(await caller.pingView({ viewId: 'v1', activeSeconds: 30, percent: 40 })).toEqual({ ok: true });
-    expect(prisma.contentView.update.mock.calls[0][0].data).toMatchObject({
-      activeSeconds: 30, maxPercent: 40, completed: false,
-    });
+    const { caller, prisma } = ctxWithExecuteRaw(1);
+    expect(await caller.pingView({ viewId: 'v1', activeSeconds: 30, percent: 40, completed: true })).toEqual({ ok: true });
+
+    expect(prisma.$executeRaw).toHaveBeenCalledTimes(1);
+    const [strings, ...values] = prisma.$executeRaw.mock.calls[0];
+    const sql = strings.join('');
+    expect(sql).toContain('GREATEST("activeSeconds"');
+    expect(sql).toContain('GREATEST("maxPercent"');
+    expect(sql).toContain('"completed" OR');
+    expect(sql).toContain('WHERE "id" =');
+    expect(sql).toContain('AND "userId" =');
+    // Параметры идут по месту подстановки: activeSeconds, percent, completed, viewId, userId.
+    expect(values).toEqual([30, 40, true, 'v1', 'u1']);
   });
 
-  it('пинг с меньшим значением не уменьшает накопленное', async () => {
+  it('completed не передан → в запрос уходит false, не undefined', async () => {
     process.env.CONTENT_JOURNAL_ENABLED = 'true';
-    const { caller, prisma } = ctxWithView({ userId: 'u1', activeSeconds: 50, maxPercent: 60, completed: false });
-    await caller.pingView({ viewId: 'v1', activeSeconds: 20, percent: 30 });
-    expect(prisma.contentView.update.mock.calls[0][0].data).toMatchObject({
-      activeSeconds: 50, maxPercent: 60,
-    });
+    const { caller, prisma } = ctxWithExecuteRaw(1);
+    await caller.pingView({ viewId: 'v1', activeSeconds: 30, percent: 40 });
+    const [, , , completedParam] = prisma.$executeRaw.mock.calls[0];
+    expect(completedParam).toBe(false);
   });
 
-  it('завершённость не откатывается', async () => {
+  it('0 затронутых строк (чужой или несуществующий viewId) → отказ', async () => {
+    // Проверка владельца теперь живёт в самом WHERE — TOCTOU-окна между
+    // "прочитали и проверили" и "записали" больше нет.
     process.env.CONTENT_JOURNAL_ENABLED = 'true';
-    const { caller, prisma } = ctxWithView({ userId: 'u1', activeSeconds: 50, maxPercent: 95, completed: true });
-    await caller.pingView({ viewId: 'v1', activeSeconds: 60, percent: 95, completed: false });
-    expect(prisma.contentView.update.mock.calls[0][0].data).toMatchObject({ completed: true });
-  });
-
-  it('чужой viewId → отказ без записи', async () => {
-    process.env.CONTENT_JOURNAL_ENABLED = 'true';
-    const { caller, prisma } = ctxWithView({ userId: 'someone-else', activeSeconds: 0, maxPercent: 0, completed: false });
+    const { caller, prisma } = ctxWithExecuteRaw(0);
     expect(await caller.pingView({ viewId: 'v1', activeSeconds: 30, percent: 10 })).toEqual({ ok: false });
-    expect(prisma.contentView.update).not.toHaveBeenCalled();
+    expect(prisma.$executeRaw).toHaveBeenCalledTimes(1);
   });
 
-  it('несуществующий viewId → отказ', async () => {
+  it('пустой viewId → отказ без обращения к БД', async () => {
     process.env.CONTENT_JOURNAL_ENABLED = 'true';
-    const { caller, prisma } = ctxWithView(null);
-    expect(await caller.pingView({ viewId: 'ghost', activeSeconds: 30, percent: 10 })).toEqual({ ok: false });
-    expect(prisma.contentView.update).not.toHaveBeenCalled();
+    const { caller, prisma } = ctxWithExecuteRaw(1);
+    expect(await caller.pingView({ viewId: '', activeSeconds: 30, percent: 10 })).toEqual({ ok: false });
+    expect(prisma.$executeRaw).not.toHaveBeenCalled();
   });
 
-  it('процент вне 0..100 → zod reject', async () => {
+  it('дробный/NaN percent не роняет мутацию — округляется и подменяется нулём', async () => {
+    // Finding 3: раньше percent был z.number().int().min(0).max(100), и
+    // реальный клиент (position / duration * 100) регулярно присылает
+    // дробные или временно NaN значения → zod бросал BAD_REQUEST наружу.
     process.env.CONTENT_JOURNAL_ENABLED = 'true';
-    const { caller } = ctxWithView({ userId: 'u1', activeSeconds: 0, maxPercent: 0, completed: false });
-    await expect(caller.pingView({ viewId: 'v1', activeSeconds: 10, percent: 101 })).rejects.toThrow();
+    const { caller: c1, prisma: p1 } = ctxWithExecuteRaw(1);
+    await expect(c1.pingView({ viewId: 'v1', activeSeconds: 10.4, percent: 42.6 })).resolves.toEqual({ ok: true });
+    expect(p1.$executeRaw.mock.calls[0].slice(1, 3)).toEqual([10, 43]);
+
+    const { caller: c2, prisma: p2 } = ctxWithExecuteRaw(1);
+    await expect(c2.pingView({ viewId: 'v1', activeSeconds: 10, percent: NaN })).resolves.toEqual({ ok: true });
+    expect(p2.$executeRaw.mock.calls[0].slice(1, 3)).toEqual([10, 0]);
+  });
+
+  it('percent/activeSeconds вне диапазона зажимаются, а не отклоняются', async () => {
+    process.env.CONTENT_JOURNAL_ENABLED = 'true';
+    const { caller, prisma } = ctxWithExecuteRaw(1);
+    await caller.pingView({ viewId: 'v1', activeSeconds: 999_999, percent: 101 });
+    expect(prisma.$executeRaw.mock.calls[0].slice(1, 3)).toEqual([86_400, 100]);
+  });
+
+  it('падение БД (Finding 4) не пробрасывается наружу', async () => {
+    process.env.CONTENT_JOURNAL_ENABLED = 'true';
+    const { caller } = makeCtx({ $executeRaw: vi.fn().mockRejectedValue(new Error('db down')) });
+    await expect(caller.pingView({ viewId: 'v1', activeSeconds: 30, percent: 10 })).resolves.toEqual({ ok: false });
   });
 });
 ```
@@ -872,12 +925,23 @@ import { router, protectedProcedure } from '../trpc';
  *
  * Весь роутер — побочный эффект: он не имеет права уронить страницу урока.
  * Любая ошибка проглатывается, наружу уходит null/false, клиент просто
- * перестаёт пинговать.
+ * перестаёт пинговать. Это касается и входа: схема pingView ничего не
+ * отклоняет с throw — плохой ввод превращается в 0/false внутри хендлера
+ * (см. finiteOrZero ниже), а не в BAD_REQUEST наружу.
  */
 
 /** Гасит двойной монтаж React и случайный рефетч. Реальный повторный заход
  *  в тот же урок за две минуты — не осмысленное действие. */
 const DEDUP_WINDOW_MS = 2 * 60 * 1000;
+
+/** Клиент считает activeSeconds/percent на лету (position / duration * 100) —
+ *  дробные значения и временный NaN, пока плеер ещё инициализируется, это
+ *  норма, а не ошибка ввода. Схема принимает любое конечное число и подменяет
+ *  всё остальное нулём; обрезка в осмысленный диапазон (0..86400 / 0..100) —
+ *  уже в хендлере после округления. Раньше здесь стояли .int().min().max(),
+ *  и дробный процент от реального плеера ронял мутацию с BAD_REQUEST —
+ *  нарушая ровно то обещание про «никогда не throw», которое даёт докстринг. */
+const finiteOrZero = z.number().finite().catch(0);
 
 export const contentViewRouter = router({
   startView: protectedProcedure
@@ -889,9 +953,15 @@ export const contentViewRouter = router({
           where: {
             userId: ctx.user.id,
             lessonId: input.lessonId,
-            updatedAt: { gte: new Date(Date.now() - DEDUP_WINDOW_MS) },
+            // startedAt, не updatedAt: updatedAt = @updatedAt и двигается
+            // каждым pingView, поэтому окно на нём никогда не закрывалось бы —
+            // 40 минут просмотра с релоадом посередине склеились бы в один
+            // визит, и более честные (меньшие) цифры второго захода потерялись
+            // бы под Math.max в pingView. startedAt неизменен и уже
+            // проиндексирован (@@index([userId, startedAt])); updatedAt — нет.
+            startedAt: { gte: new Date(Date.now() - DEDUP_WINDOW_MS) },
           },
-          orderBy: { updatedAt: 'desc' },
+          orderBy: { startedAt: 'desc' },
           select: { id: true },
         });
         if (recent) return { viewId: recent.id };
@@ -921,32 +991,40 @@ export const contentViewRouter = router({
 
   pingView: protectedProcedure
     .input(z.object({
-      viewId: z.string().min(1),
+      viewId: z.string().catch(''),
       // Потолок в сутки — защита от испорченного клиентского счётчика.
-      activeSeconds: z.number().int().min(0).max(86_400),
-      percent: z.number().int().min(0).max(100),
-      completed: z.boolean().optional(),
+      activeSeconds: finiteOrZero,
+      percent: finiteOrZero,
+      completed: z.any().optional().transform((v) => v === true),
     }))
     .mutation(async ({ ctx, input }): Promise<{ ok: boolean }> => {
       if (process.env.CONTENT_JOURNAL_ENABLED !== 'true') return { ok: false };
+      // Пустой viewId после catch('') — тот же отказ, что раньше давал zod
+      // .min(1) через throw. БД трогать незачем.
+      if (!input.viewId) return { ok: false };
       try {
-        const current = await ctx.prisma.contentView.findUnique({
-          where: { id: input.viewId },
-          select: { userId: true, activeSeconds: true, maxPercent: true, completed: true },
-        });
-        // Проверка владельца обязательна: viewId приходит с клиента.
-        if (!current || current.userId !== ctx.user.id) return { ok: false };
+        const activeSeconds = Math.min(86_400, Math.max(0, Math.round(input.activeSeconds)));
+        const percent = Math.min(100, Math.max(0, Math.round(input.percent)));
 
-        // Максимум, а не присланное значение: пинги могут прийти не по порядку.
-        await ctx.prisma.contentView.update({
-          where: { id: input.viewId },
-          data: {
-            activeSeconds: Math.max(current.activeSeconds, input.activeSeconds),
-            maxPercent: Math.max(current.maxPercent, input.percent),
-            completed: current.completed || input.completed === true,
-          },
-        });
-        return { ok: true };
+        // Один атомарный UPDATE вместо read-then-write. Две вкладки на одном
+        // уроке делят viewId (дедуп в startView возвращает ту же строку), и
+        // при read-then-write обе читают одно и то же значение до того, как
+        // другая успевает записать — более поздний, но меньший write отменяет
+        // более ранний больший. GREATEST в самой БД делает эту гонку
+        // невозможной. WHERE несёт и проверку владельца — чужой или
+        // несуществующий viewId просто не находит строк (affected = 0), без
+        // отдельного окна между проверкой и записью.
+        const affected = await ctx.prisma.$executeRaw`
+          UPDATE "ContentView"
+          SET "activeSeconds" = GREATEST("activeSeconds", ${activeSeconds}),
+              "maxPercent" = GREATEST("maxPercent", ${percent}),
+              "completed" = "completed" OR ${input.completed},
+              "updatedAt" = NOW()
+          WHERE "id" = ${input.viewId} AND "userId" = ${ctx.user.id}
+        `;
+        // Raw SQL обходит @updatedAt Prisma, поэтому updatedAt = NOW() выше
+        // выставлен вручную.
+        return { ok: affected === 1 };
       } catch (err) {
         console.error('[contentView.pingView] failed:', err);
         return { ok: false };
@@ -972,7 +1050,7 @@ import { contentViewRouter } from './routers/content-view';
 - [ ] **Step 5: Прогнать тесты**
 
 Run: `pnpm --filter @mpstats/api test -- content-view`
-Expected: PASS, 13 тестов.
+Expected: PASS, 15 тестов (13 исходных + тест на userId в дедупе + тест на падение `pingView`, оба добавлены fix round 1). Прогнать 5 раз подряд — именно это доказывает, что тест окна дедупликации (Finding 5) больше не гоняется.
 
 - [ ] **Step 6: Проверить типы**
 
@@ -982,12 +1060,19 @@ Expected: PASS.
 - [ ] **Step 7: Коммит**
 
 ```bash
-git add packages/api/src/routers/content-view.ts packages/api/src/routers/__tests__/content-view.test.ts packages/api/src/root.ts
-git commit -m "feat(analytics): contentView.startView/pingView journal mutations
+git add packages/api/src/routers/content-view.ts packages/api/src/routers/__tests__/content-view.test.ts packages/api/src/root.ts docs/superpowers/plans/2026-08-06-content-journal-device-tracking.md
+git commit -m "fix(analytics): dedup on startedAt, atomic pingView, total zod schema
 
-Отдельно от saveWatchProgress намеренно: у того логика «без регрессий»,
-журналу же нужен честный факт каждого захода. Проверка владельца viewId
-обязательна — идентификатор приходит с клиента. Под CONTENT_JOURNAL_ENABLED."
+Fix round 1 по итогам ревью — пять Important-находок в исходной версии:
+дедуп на updatedAt никогда не закрывался (двигается каждым pingView) —
+ключ startedAt, уже проиндексирован; pingView читал-потом-писал —
+гонка между вкладками могла откатить activeSeconds/completed назад,
+теперь один атомарный $executeRaw с GREATEST/OR, проверка владельца
+в WHERE; percent/activeSeconds были .int() — дробный процент от реального
+плеера ронял мутацию с BAD_REQUEST, схема теперь тотальная (finiteOrZero
++ округление/зажим в хендлере); добавлен тест на падение pingView;
+тест окна дедупликации был гоняющимся (~1/5) — граничит по before/after
+вместо одного Date.now()."
 ```
 
 ---
