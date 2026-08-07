@@ -22,6 +22,7 @@ import { trpc } from '@/lib/trpc/client';
 import { reachGoal } from '@/lib/analytics/metrika';
 import { METRIKA_GOALS } from '@/lib/analytics/constants';
 import { useContentView } from '@/lib/analytics/useContentView';
+import { sendTrpcBeacon } from '@/lib/trpc/beacon';
 import { SafeMarkdown } from '@/components/shared/SafeMarkdown';
 import { CommentSection } from '@/components/comments/CommentSection';
 import { cn } from '@/lib/utils';
@@ -449,26 +450,17 @@ export default function LessonPage() {
   useEffect(() => {
     const flushBeacon = () => {
       if (lastPositionRef.current < 5 || lastDurationRef.current <= 0) return;
-      const payload = JSON.stringify({
+      const input = {
         lessonId,
         position: lastPositionRef.current,
         duration: lastDurationRef.current,
-      });
-      try {
-        const sent = navigator.sendBeacon?.(
-          '/api/trpc/learning.saveWatchProgress',
-          new Blob([JSON.stringify({ json: payload })], { type: 'application/json' })
-        );
-        if (sent) return;
-      } catch {
-        /* fall through to mutation */
-      }
-      // Best effort — mutation might not complete during unload
-      saveWatchProgressRef.current.mutate({
-        lessonId,
-        position: lastPositionRef.current,
-        duration: lastDurationRef.current,
-      });
+      };
+      // Формат запроса живёт в одном месте — писавшаяся тут вручную копия
+      // сериализовала тело дважды и теряла ?batch=1, из-за чего сервер молча
+      // отбрасывал финальное сохранение позиции при закрытии вкладки.
+      if (sendTrpcBeacon('learning.saveWatchProgress', input)) return;
+      // Транспорта нет вовсе — обычная мутация как последняя попытка.
+      saveWatchProgressRef.current.mutate(input);
     };
 
     const handleVisibility = () => {

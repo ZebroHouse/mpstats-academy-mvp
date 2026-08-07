@@ -2,8 +2,8 @@
 
 import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { accumulateActiveSeconds } from '@mpstats/shared';
-import superjson from 'superjson';
 import { trpc } from '@/lib/trpc/client';
+import { sendTrpcBeacon } from '@/lib/trpc/beacon';
 
 /** Реже, чем saveWatchProgress (15с): журналу не нужна свежесть, нужна полнота. */
 const PING_INTERVAL_MS = 60_000;
@@ -12,63 +12,21 @@ const SELF_TICK_MS = 1_000;
 /** Ниже секунды писать нечего — это открыл и сразу закрыл. */
 const MIN_REPORTABLE_SECONDS = 1;
 
-/**
- * Путь pingView в формате, который строит httpBatchLink (см. provider.tsx —
- * обе ветки splitLink батчат, простого httpLink в приложении нет): ?batch=1
- * в URL и тело {"0": superjson.serialize(input)}. Без ?batch=1
- * fetchRequestHandler разберёт тело как одиночный вызов и ждёт другой
- * конверт — ручной beacon-запрос обязан повторить именно батч-форму, иначе
- * сервер получит и молча отбросит не то, что ожидает клиент.
- */
-const PING_VIEW_BEACON_URL = '/api/trpc/contentView.pingView?batch=1';
-
 type PingPayload = { viewId: string; activeSeconds: number; percent: number; completed: boolean };
 
-function buildBeaconBody(payload: PingPayload): string {
-  return JSON.stringify({ 0: superjson.serialize(payload) });
-}
-
 /**
- * Отправляет пинг транспортом, который переживает реальную выгрузку страницы:
- * сперва sendBeacon, при его отсутствии/неудаче — fetch с keepalive (оба не
- * блокируют unload и не рвутся браузером на середине). Возвращает false,
- * только если ни один из них недоступен вовсе — тогда вызывающий код сам
- * решает, откатываться ли на обычную мутацию.
+ * Отправляет пинг транспортом, который переживает реальную выгрузку страницы.
+ * Формат запроса и выбор транспорта живут в `@/lib/trpc/beacon` — одной копией
+ * на всё приложение, потому что написанная на глаз вторая копия молча не
+ * работает (так и случилось с `saveWatchProgress` в странице урока).
  *
- * Обычный fetch (то, что делает pingRef.current.mutate) здесь не годится:
- * браузер обрывает такой запрос в момент фактической выгрузки страницы —
- * самый частый случай, короткий заход короче PING_INTERVAL_MS, закрытый
- * закрытием вкладки, вообще не долетел бы до сервера.
+ * Обычный fetch (то, что делает `pingRef.current.mutate`) здесь не годится:
+ * браузер обрывает такой запрос в момент фактической выгрузки страницы — и
+ * короткий заход, короче `PING_INTERVAL_MS` и закрытый закрытием вкладки, не
+ * долетел бы до сервера вообще.
  */
 function sendExitPing(payload: PingPayload): boolean {
-  const body = buildBeaconBody(payload);
-
-  if (typeof navigator !== 'undefined' && typeof navigator.sendBeacon === 'function') {
-    try {
-      if (navigator.sendBeacon(PING_VIEW_BEACON_URL, new Blob([body], { type: 'application/json' }))) {
-        return true;
-      }
-    } catch {
-      /* sendBeacon недоступен по факту — падаем на fetch keepalive ниже */
-    }
-  }
-
-  if (typeof fetch === 'function') {
-    try {
-      fetch(PING_VIEW_BEACON_URL, {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body,
-        keepalive: true,
-        credentials: 'same-origin',
-      }).catch(() => { /* best effort — страница всё равно уходит */ });
-      return true;
-    } catch {
-      /* синхронный throw из fetch — окружение действительно не даёт beacon-транспорт */
-    }
-  }
-
-  return false;
+  return sendTrpcBeacon('contentView.pingView', payload);
 }
 
 /**
