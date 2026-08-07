@@ -1,6 +1,6 @@
 # CLAUDE.md — MPSTATS Academy MVP
 
-**Last updated:** 2026-07-13
+**Last updated:** 2026-08-07
 
 > Детали по сессиям, спринтам, Supabase, деплою, CQ, staging — в `.claude/memory/`.
 > Индекс: `.claude/memory/MEMORY.md`. Полная лента сессий: `.claude/memory/session-history.md`.
@@ -76,12 +76,16 @@ Sibling project `D:/GpT_docs/Ai_MP_manager/` запустил `prisma db push --
 | v1.33 Качество чата в уроках | Shipped 2026-07-20 (`63bb4b7`): мета-вопросы → тёплая ориентировка (short-circuit до RAG); контент-промах → полезный отказ «В этом уроке это не разбирается» (без пересказа экран-артефактов, источники на отказе скрыты); `isRefusalAnswer` чинён (кириллич. lookaround вместо `\b`, родит. «ответа»). Триггер — прод-жалоба owner. Детали — `project_lesson_chat_quality.md` |
 | v1.34 ЧП-блок «Склады WB под ударом» | LIVE 2026-07-24 (`04f9345`, `EMERGENCY_BANNER_ENABLED=true`): экстренный Job `wb-warehouse-crisis-2026` (вебинар 23.07 + 2 текста), баннер в слоте первого-урока (вариант B, всем), пин в `/learn/solutions` (WB), 3 урока бесплатны через аллоулист `EMERGENCY_FREE_LESSON_IDS` в `getFirstJobLessonIds`. Джоба `isPublished=false` навсегда, гейт — только рантайм-флаг. **Kill-switch:** флаг→`false`+`up -d web` (возможно снятие). Vision скипнут. Детали — `project_emergency_warehouse_crisis_block.md` |
 | v1.34.1 Трекинг ЧП-блока | LIVE 2026-07-27 (`f98c204`, `EMERGENCY_TRACK_ENABLED=true`): счётчик `EmergencyBlockEventDay` (показ/клик по BANNER/PIN, аддит. миграция через Mgmt API), мутация `job.recordEmergencyEvent` (env-gated), impression/click из баннера+пина. Отчёт по запросу: `npx tsx scripts/crisis-job-stats.ts`. Каветат: счётчик не исключает test/admin. Детали — `project_emergency_warehouse_crisis_block.md` |
+| v1.35 Журнал контента и устройств | LIVE 2026-08-07 (`023ffc8`, `CONTENT_JOURNAL_ENABLED=true`): спека A запроса методологов — сбор данных без UI. `ContentView` (строка на каждый заход в урок: устройство, активное время, макс. процент), `UserDeviceDay` (устройства по дням, пишется в хартбите), `DiagnosticSession.device`. Копит для будущих дашбордов (спеки B и C). **🔴 МИГРАЦИЯ ВСЕГДА ПЕРВОЙ:** флаг НЕ защищает — Prisma тянет `RETURNING` по всем полям, поэтому код без колонки `DiagnosticSession.device` роняет старт диагностики у всех. Сюда же фикс молча сломанного beacon `saveWatchProgress` (`23442ca`) — формат вынесен в `apps/web/src/lib/trpc/beacon.ts`. Детали и ограничения для спек B/C — `project_content_journal_device_tracking.md` |
 
 **Remaining work:**
 1. Phase 33-03: CQ Dashboard Setup (на стороне CQ команды).
 2. Ads playbooks — внешние долги от методологов (1 урок дозаписать, 3 пустые задачи, Ozon-версии 9 задач). Раскладка: `scripts/job-mapping/results/ADS-PLAYBOOKS-DEBT.md`.
 3. Аналитика+AI плейбуки — внешние долги (1 draft-задача, 6 уроков, вся Ozon-сторона аналитики). Список: `scripts/job-mapping/results/ANALYTICS-AI-DEBT.md`.
 4. Vision-RAG бэклог — 102 урока без визуального слоя (хэндов `.claude/handoffs/2026-07-07-vision-rag-backlog.md`).
+5. **Дашборды аналитики контента — спеки B и C** (продолжение спеки A, журнал уже копит с 2026-08-07). B — «Контент 2.0»: детализация по курсам/урокам/пользователям, фильтры, экспорт. C — «Устройства»: 9 метрик из запроса методологов, часть из своих таблиц, часть из Метрики. Начинать не раньше, чем накопится 2-4 недели данных — на пустых таблицах не видно, какие разрезы осмысленны. Ограничения, которые ОБЯЗАНЫ попасть в обе спеки, — в `project_content_journal_device_tracking.md`.
+6. **Письмо методологам** — честная рамка «что получите / чего не будет / что только вперёд». Таблица готова в `docs/superpowers/specs/2026-08-06-content-journal-device-tracking-design.md`. Сказать прямо: первый этап данных не показывает, он копит.
+7. **Выровнять миграции Prisma** — 14 таблиц созданы мимо каталога. Нужна базовая миграция, DDL снимать с реальной базы (теневая БД или `pg_dump`), не писать по памяти. Рецепт — в памяти `gotcha_prisma_migrations_drift.md`. Отдельная задача на день.
 
 ## Active Branches
 
@@ -122,7 +126,7 @@ _No long-lived branches in flight._ Ветки фаз смерджены; worktr
 
 Полная лента «Last/Previous Session» перенесена в `.claude/memory/session-history.md` (newest-first, 50+ сессий с 2026-03).
 Свежие сессии + durable-факты/гочи — в auto-memory `MEMORY.md`.
-Прод сейчас: `f98c204` (трекинг ЧП-блока — счётчик показ/клик BANNER/PIN, `EMERGENCY_TRACK_ENABLED=true`). Ранее: ЧП-блок «Склады WB под ударом» (`04f9345`, `EMERGENCY_BANNER_ENABLED=true`), качество чата в уроках (`63bb4b7`), сквозная AI-аналитика (`05a980c`), аналитика ассистента (`3f577c3`), акция «2 месяца по цене одного» (`a8090d9`).
+Прод сейчас: `023ffc8` (журнал контента и устройств, `CONTENT_JOURNAL_ENABLED=true` + фикс beacon `saveWatchProgress`). Ранее: пул треков 1/2/4 без тарифов 2.0 (`d57c7ad`, master переписан force-push), трекинг ЧП-блока (`f98c204`), ЧП-блок «Склады WB» (`04f9345`), качество чата в уроках (`63bb4b7`), сквозная AI-аналитика (`05a980c`), акция «2 месяца по цене одного» (`a8090d9`).
 
 ## Key Decisions
 
