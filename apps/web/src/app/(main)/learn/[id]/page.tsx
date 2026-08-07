@@ -21,6 +21,7 @@ import type { InteractiveProgressState } from '@mpstats/shared';
 import { trpc } from '@/lib/trpc/client';
 import { reachGoal } from '@/lib/analytics/metrika';
 import { METRIKA_GOALS } from '@/lib/analytics/constants';
+import { useContentView } from '@/lib/analytics/useContentView';
 import { SafeMarkdown } from '@/components/shared/SafeMarkdown';
 import { CommentSection } from '@/components/comments/CommentSection';
 import { cn } from '@/lib/utils';
@@ -318,6 +319,23 @@ export default function LessonPage() {
   );
   const { data: watchProgress } = trpc.learning.getWatchProgress.useQuery({ lessonId });
 
+  // Журнал заходов (аналитика контента). Полностью побочный — на урок не влияет.
+  // enabled = урок точно открыт: данные загрузились и он не заперт.
+  // Заперт — LockOverlay ниже рендерит только паywall-карточку, без единого
+  // слова урока, для любого contentType; строка о заходе туда неотличима
+  // от честного нулевого просмотра и раздула бы «количество открытий»
+  // пейволл-показами, поэтому её не заводим вовсе. Пока data?.lesson ещё
+  // undefined (загрузка), мы не знаем, заперт ли урок — тоже enabled=false.
+  // selfTick = хук сам ведёт часы, потому что на экране реально показан
+  // текстовый/интерактивный контент, чью позицию больше некому докладывать.
+  // Не «нет видео» — иначе накопили бы время на скелетоне загрузки. Поля
+  // locked/contentType те же, что рендер-код использует для ветвления
+  // (lesson.locked, строка ~707; lesson.contentType === 'VIDEO', строка ~719).
+  const contentView = useContentView(lessonId, {
+    enabled: !!data?.lesson && !data.lesson.locked,
+    selfTick: !!data?.lesson && !data.lesson.locked && data.lesson.contentType !== 'VIDEO',
+  });
+
   // Sync completedRef with initial lesson status (prevent toast for already-completed lessons)
   useEffect(() => {
     if (data?.lesson?.status === 'COMPLETED') {
@@ -406,6 +424,7 @@ export default function LessonPage() {
   // Throttled save handler (every 15 seconds) — stores in refs, no re-renders.
   // onTimeUpdate fires every ~1s from the timer; we only save periodically.
   const handleTimeUpdate = useCallback((currentTime: number, duration: number) => {
+    contentView.trackPosition(currentTime, duration);
     lastPositionRef.current = currentTime;
     lastDurationRef.current = duration;
 
@@ -422,7 +441,7 @@ export default function LessonPage() {
         });
       }
     }, 15_000);
-  }, [lessonId]);
+  }, [lessonId, contentView]);
 
   // Save on tab hide / page unload (final position capture)
   // visibilitychange → hidden is the most reliable signal across browsers

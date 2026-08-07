@@ -2,6 +2,7 @@ import { initTRPC, TRPCError } from '@trpc/server';
 import superjson from 'superjson';
 import type { User } from '@supabase/supabase-js';
 import { prisma, type PrismaClient } from '@mpstats/db';
+import { parseDeviceType } from '@mpstats/shared';
 import { createRateLimitMiddleware } from './middleware/rate-limit';
 
 export interface Context {
@@ -68,6 +69,22 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
       } catch (err) {
         // Synchronous throw (e.g. model unavailable) — never affect lastActiveAt.
         console.error('[tRPC] userActivityDay upsert threw:', err);
+      }
+
+      // Тип устройства за день. Отдельная таблица (PK userId+day+device):
+      // несколько строк за день на человека — это и есть сигнал «переходы
+      // между устройствами». Своя изоляция ошибок, как у userActivityDay.
+      try {
+        const device = parseDeviceType(ctx.userAgent);
+        ctx.prisma.userDeviceDay.upsert({
+          where: { userId_day_device: { userId, day, device } },
+          create: { userId, day, device },
+          update: {},
+        }).catch(err => {
+          console.error('[tRPC] userDeviceDay upsert failed:', err);
+        });
+      } catch (err) {
+        console.error('[tRPC] userDeviceDay upsert threw:', err);
       }
 
       return ctx.prisma.userProfile.update({

@@ -15,6 +15,7 @@ import { cqSetUserProps, cqTrackEvent } from '../utils/carrotquest';
 import type { PrismaClient } from '@mpstats/db';
 import {
   SKILL_LABELS,
+  parseDeviceType,
 } from '@mpstats/shared';
 import type {
   DiagnosticResult,
@@ -578,6 +579,7 @@ export const diagnosticRouter = router({
           status: 'IN_PROGRESS',
           currentQuestion: 0,
           questions: [] as any,
+          device: parseDeviceType(ctx.userAgent),
         },
       });
 
